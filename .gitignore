@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Environment
+.env
+
+# FastAPI / Python tooling
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+build/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Logs
+*.log
+
+# Docker
+postgres_data/
+
+# testing
+/coverage
+
+# misc
+.eslintcache
+.idea
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# upload exams
+uploads/
