@@ -7,3 +7,4 @@ consiga detectar as tabelas durante o autogenerate das migrations.
 
 from app.modules.statuses.model import Status
 from app.modules.roles.model import Role
+from app.modules.permissions.model import Permission
