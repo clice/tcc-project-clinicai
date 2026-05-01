@@ -1,11 +1,18 @@
+/**
+ * Breadcrumb da aplicação.
+ *
+ * Exibe o caminho atual da navegação
+ * com base nas rotas cadastradas.
+ */
+
 import React from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { routes } from '../routes'
+import { routes } from 'src/routes'
 
 import { CBreadcrumb, CBreadcrumbItem } from '@coreui/react'
 
-const AppBreadcrumb = () => {
+const Breadcrumbs = () => {
   const currentLocation = useLocation().pathname
 
   const getRouteName = (pathname, routes) => {
@@ -48,4 +55,4 @@ const AppBreadcrumb = () => {
   )
 }
 
-export default React.memo(AppBreadcrumb)
+export default React.memo(Breadcrumbs)
