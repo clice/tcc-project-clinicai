@@ -13,3 +13,4 @@ from app.modules.clinics.model import Clinic
 from app.modules.users.model import User
 from app.modules.patients.model import Patient
 from app.modules.exams.model import Exam
+from app.modules.ai_analysis.model import AIAnalysis
