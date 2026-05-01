@@ -1,0 +1,41 @@
+"""
+Centraliza as configurações da aplicação.
+
+Este arquivo lê as variáveis de ambiente do projeto e disponibiliza
+uma instância única de configuração para uso em todo o backend.
+"""
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """
+    Classe central de configurações da aplicação.
+
+    Todas as variáveis declaradas aqui são carregadas do arquivo .env
+    e podem ser usadas em qualquer parte do backend por meio da
+    instância única `settings`.
+    """
+    
+    # Nome do projeto
+    project_name: str = "ClinicAI"
+
+    # URL de conexão com o banco PostgreSQL
+    database_url: str
+
+    # Configurações de autenticação JWT
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int = 60
+    refresh_token_expire_minutes: int = 10080
+
+    # Configuração do Pydantic para leitura do arquivo .env
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+# Instância única de configurações da aplicação
+settings = Settings()
