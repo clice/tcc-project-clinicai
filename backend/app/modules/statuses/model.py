@@ -6,6 +6,7 @@ de diferentes módulos do sistema.
 """
 
 from sqlalchemy import Column, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
@@ -45,7 +46,13 @@ class Status(Base):
         onupdate=func.now(), 
         nullable=False,
     )
-    
+
+    # Relacionamentos com outras tabelas do sistema
+    users = relationship("User", back_populates="status")
+    clinics = relationship("Clinic", back_populates="status")
+    patients = relationship("Patient", back_populates="status")
+    exams = relationship("Exam", back_populates="status")
+
 
     def __repr__(self):
         """

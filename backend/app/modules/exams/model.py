@@ -60,6 +60,13 @@ class Exam(Base):
     doctor = relationship("User", foreign_keys=[doctor_id])
     status = relationship("Status", back_populates="exams")
 
+    ai_analysis = relationship(
+        "AIAnalysis",
+        back_populates="exam",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
 
     def __repr__(self):
         return (

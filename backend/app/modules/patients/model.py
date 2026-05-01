@@ -5,7 +5,7 @@ A tabela patients armazena os dados dos pacientes vinculados às clínicas.
 Pacientes não devem ser excluídos fisicamente, apenas inativados por status.
 """
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -66,6 +66,7 @@ class Patient(Base):
     clinic = relationship("Clinic", back_populates="patients")
     doctor = relationship("User", foreign_keys=[doctor_id])
     status = relationship("Status", back_populates="patients")
+    exams = relationship("Exam", back_populates="patient")
 
 
     def __repr__(self):

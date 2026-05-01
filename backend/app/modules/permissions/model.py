@@ -6,6 +6,7 @@ dentro do sistema, como criar usuários, visualizar clínicas ou atualizar exame
 """
 
 from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
@@ -38,6 +39,12 @@ class Permission(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+    # Relacionamento com a tabela associativa role_permissions.
+    role_permissions = relationship(
+        "RolePermission",
+        back_populates="permission",
     )
 
 

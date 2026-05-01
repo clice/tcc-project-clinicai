@@ -6,6 +6,7 @@ como administrador master, administrador da clínica, médico e funcionário.
 """
 
 from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.core.database import Base
@@ -38,6 +39,10 @@ class Role(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+    # Relacionamentos com outras tabelas do sistema
+    users = relationship("User", back_populates="role")
+    role_permissions = relationship("RolePermission", back_populates="role")
 
 
     def __repr__(self):
