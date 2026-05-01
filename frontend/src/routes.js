@@ -12,6 +12,22 @@ const ComingSoon = React.lazy(() => import('./views/coming-soon/ComingSoon'))
 
 ////////// CONFIGURATIONS
 
+// ROLES
+const RolesList = React.lazy(() => import('./views/roles/RolesList'))
+const RoleForm = React.lazy(() => import('./views/roles/RoleForm'))
+
+const CreateRole = () => React.createElement(RoleForm, { mode: 'create' })
+const EditRole = () => React.createElement(RoleForm, { mode: 'edit' })
+const ViewRole = () => React.createElement(RoleForm, { mode: 'view' })
+
+// PERMISSIONS
+const PermissionsList = React.lazy(() => import('./views/permissions/PermissionsList'))
+const PermissionForm = React.lazy(() => import('./views/permissions/PermissionForm'))
+
+const CreatePermission = () => React.createElement(PermissionForm, { mode: 'create' })
+const EditPermission = () => React.createElement(PermissionForm, { mode: 'edit' })
+const ViewPermission = () => React.createElement(PermissionForm, { mode: 'view' })
+
 // STATUSES
 const StatusesList = React.lazy(() => import('./views/statuses/StatusesList'))
 const StatusForm = React.lazy(() => import('./views/statuses/StatusForm'))
@@ -26,6 +42,18 @@ export const routes = [
 
   ////////// CONFIGURATIONS
 
+  // ROLES
+  { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master']},
+  { path: '/roles/create', name: 'Adicionar Perfil', element: CreateRole, roles: ['admin_master']},
+  { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master']},
+  { path: '/roles/:id', name: 'Detalhes do Perfil', element: ViewRole, roles: ['admin_master']},
+
+  // PERMISSIONS
+  { path: '/permissions', name: 'Permissões', element: PermissionsList, roles: ['admin_master']},
+  { path: '/permissions/create', name: 'Adicionar Permissão', element: CreatePermission, roles: ['admin_master']},
+  { path: '/permissions/:id/edit', name: 'Editar Permissão', element: EditPermission, roles: ['admin_master']},
+  { path: '/permissions/:id', name: 'Detalhes da Permissão', element: ViewPermission, roles: ['admin_master']},
+
   // STATUSES
   { path: '/statuses', name: 'Status', element: StatusesList, roles: ['admin_master'] },
   { path: '/statuses/create', name: 'Adicionar Status', element: CreateStatus, roles: ['admin_master'] },
@@ -36,9 +64,6 @@ export const routes = [
   { path: '/clinics', name: 'Clínicas', element: ComingSoon },
   { path: '/patients', name: 'Pacientes', element: ComingSoon },
   { path: '/exams', name: 'Exams', element: ComingSoon },
-  { path: '/roles', name: 'Perfis', element: ComingSoon },
-  { path: '/permissions', name: 'Permissões', element: ComingSoon },
-  { path: '/statuses', name: 'Status', element: ComingSoon },
   { path: '/audit-logs', name: 'Logs', element: ComingSoon },
 ]
 

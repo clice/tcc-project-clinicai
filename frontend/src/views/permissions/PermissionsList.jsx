@@ -1,3 +1,7 @@
+/**
+ * Listagem do módulo de Permissions usando mocks.
+ */
+
 import React, { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
@@ -5,17 +9,20 @@ import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { statuses as statusesMock } from 'src/mocks/data'
+import { permissions as permissionsMock } from 'src/mocks/data'
 
-const appliesToLabels = {
+const moduleLabels = {
   users: 'Usuários',
   clinics: 'Clínicas',
   patients: 'Pacientes',
   exams: 'Exames',
+  roles: 'Perfis',
+  permissions: 'Permissões',
+  statuses: 'Status',
 }
 
-const StatusesList = () => {
-  const [statuses] = useState(statusesMock)
+const PermissionsList = () => {
+  const [permissions] = useState(permissionsMock)
   const [error] = useState('')
   const [isLoading] = useState(false)
 
@@ -23,25 +30,25 @@ const StatusesList = () => {
     () => [
       {
         accessorKey: 'name',
-        header: 'Nome Técnico',
+        header: 'Nome técnico',
       },
       {
         accessorKey: 'display_name',
-        header: 'Nome de Exibição',
-      },
-      {
-        accessorKey: 'applies_to',
-        header: 'Aplicado em',
-        cell: ({ row }) => (
-          <CBadge color="info" className="text-uppercase">
-            {appliesToLabels[row.original.applies_to] || row.original.applies_to}
-          </CBadge>
-        ),
+        header: 'Nome de exibição',
       },
       {
         accessorKey: 'description',
         header: 'Descrição',
         cell: ({ row }) => row.original.description || '-',
+      },
+      {
+        accessorKey: 'module',
+        header: 'Módulo',
+        cell: ({ getValue }) => (
+          <CBadge color="info">
+            {moduleLabels[getValue()] || getValue()}
+          </CBadge>
+        ),
       },
       {
         accessorKey: 'updated_at',
@@ -53,8 +60,8 @@ const StatusesList = () => {
         enableSorting: false,
         cell: ({ row }) => (
           <AppActionButtons
-            viewTo={`/statuses/${row.original.id}`}
-            editTo={`/statuses/${row.original.id}/edit`}
+            viewTo={`/permissions/${row.original.id}`}
+            editTo={`/permissions/${row.original.id}/edit`}
           />
         ),
       },
@@ -66,14 +73,15 @@ const StatusesList = () => {
     <>
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
-          <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">Status do Sistema</h1>
+          <div className="text-body-secondary">Configurações</div>
+          <h1 className="h3 mb-0">Permissões</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie os estados usados por usuários, clínicas, pacientes e exames.
+            Gerencie permissões técnicas usadas no controle de acesso.
           </p>
         </div>
-        <CButton color="primary" size="lg" as={Link} to="/statuses/create">
-          Cadastrar Status
+
+        <CButton color="primary" size="lg" as={Link} to="/permissions/create">
+          Cadastrar Permissão
         </CButton>
       </div>
 
@@ -82,12 +90,12 @@ const StatusesList = () => {
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando status...</p>
+            <p className="text-body-secondary mb-0">Carregando permissões...</p>
           ) : (
             <AppTable
-              data={statuses}
+              data={permissions}
               columns={columns}
-              placeholder="Filtrar status"
+              emptyMessage="Nenhuma permissão encontrada."
             />
           )}
         </CCardBody>
@@ -96,4 +104,4 @@ const StatusesList = () => {
   )
 }
 
-export default StatusesList
+export default PermissionsList
