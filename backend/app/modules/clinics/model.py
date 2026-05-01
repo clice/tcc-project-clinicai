@@ -6,7 +6,7 @@ A clínica representa uma unidade cadastrada no sistema e poderá ter usuários,
 pacientes e exames vinculados futuramente.
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 

@@ -57,7 +57,6 @@ class User(Base):
     role = relationship("Role", back_populates="users")
     status = relationship("Status", back_populates="users")
     clinic = relationship("Clinic", back_populates="users")
-    audit_logs = relationship("AuditLog", back_populates="user")
 
 
     def __repr__(self):
