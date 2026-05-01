@@ -12,3 +12,4 @@ from app.modules.role_permissions.model import RolePermission
 from app.modules.clinics.model import Clinic
 from app.modules.users.model import User
 from app.modules.patients.model import Patient
+from app.modules.exams.model import Exam
