@@ -3,6 +3,7 @@
  */
 
 import React from 'react'
+import AuditLogsList from './views/audit-logs/AuditLogsList'
 
 // DASHBOARD
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
@@ -37,6 +38,9 @@ const UserForm = React.lazy(() => import('./views/users/UserForm'))
 const CreateUser = () => React.createElement(UserForm, { mode: 'create' })
 const EditUser = () => React.createElement(UserForm, { mode: 'edit' })
 const ViewUser = () => React.createElement(UserForm, { mode: 'view' })
+
+// AUDIT LOGS
+const AugitLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'))
 
 ////////// CONFIGURATIONS
 
@@ -89,6 +93,9 @@ export const routes = [
   { path: '/users/create', name: 'Adicionar Usuário', element: CreateUser, roles: ['admin_master']},
   { path: '/users/:id/edit', name: 'Editar Usuário', element: EditUser, roles: ['admin_master']},
   { path: '/users/:id', name: 'Detalhes do Usuário', element: ViewUser, roles: ['admin_master']},
+
+  // AUDIT LOGS
+  { path: '/audit-logs', name: 'Logs de Auditoria', element: AuditLogsList, roles: ['admin_master']},
 
   ////////// CONFIGURATIONS
 

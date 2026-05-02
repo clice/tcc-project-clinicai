@@ -30,6 +30,7 @@ const _nav = [
   },
 
   ////////// ADMIN
+
   {
     component: CNavTitle,
     name: 'Administrativo',
@@ -70,6 +71,7 @@ const _nav = [
   },
 
   ////////// SYSTEM
+
   {
     component: CNavTitle,
     name: 'Sistema',
@@ -97,6 +99,9 @@ const _nav = [
       text: 'EM BREVE',
     },
   }, 
+
+  ////////// CONFIGURATIONS
+  
   {
     component: CNavGroup,
     name: 'Configurações',
