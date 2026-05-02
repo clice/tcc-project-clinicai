@@ -7,7 +7,17 @@ atualização parcial e resposta da API.
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, Field, field_validator
+
+from app.common.validators import (
+    normalize_optional_email,
+    normalize_optional_text,
+    normalize_phone,
+    normalize_required_text,
+    normalize_state,
+    normalize_zip_code,
+    validate_cpf,
+)
 
 
 class PatientBase(BaseModel):
@@ -32,6 +42,50 @@ class PatientBase(BaseModel):
     neighborhood: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return normalize_required_text(value, "Nome do paciente é obrigatório.")
+
+    @field_validator(
+        "sex",
+        "address",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+    )
+    @classmethod
+    def normalize_text_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
+
+    @field_validator("state")
+    @classmethod
+    def normalize_state_field(cls, value: str | None) -> str | None:
+        return normalize_state(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf_field(cls, value: str) -> str:
+        cleaned = validate_cpf(value)
+        assert cleaned is not None
+        return cleaned
+
+    @field_validator("zip_code")
+    @classmethod
+    def normalize_zip_code_field(cls, value: str | None) -> str | None:
+        return normalize_zip_code(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        return normalize_phone(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(value)
 
 
 class PatientCreate(PatientBase):
@@ -65,6 +119,51 @@ class PatientUpdate(BaseModel):
     neighborhood: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        return normalize_required_text(value, "Nome do paciente é obrigatório.")
+
+    @field_validator(
+        "sex",
+        "address",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+    )
+    @classmethod
+    def normalize_text_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
+
+    @field_validator("state")
+    @classmethod
+    def normalize_state_field(cls, value: str | None) -> str | None:
+        return normalize_state(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf_field(cls, value: str | None) -> str | None:
+        return validate_cpf(value, required=False)
+
+    @field_validator("zip_code")
+    @classmethod
+    def normalize_zip_code_field(cls, value: str | None) -> str | None:
+        return normalize_zip_code(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        return normalize_phone(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(value)
 
 
 class PatientResponse(BaseModel):
