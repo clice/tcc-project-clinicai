@@ -19,16 +19,10 @@ class AIAnalysis(Base):
 
     __tablename__ = "ai_analysis"
 
+    # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
-    exam_id = Column(
-        Integer,
-        ForeignKey("exams.id"),
-        nullable=False,
-        unique=True,
-        index=True,
-    )
-
+    # Campos da tabela
     prediction_label = Column(String(80), nullable=False)
     prediction_class = Column(Integer, nullable=True)
     confidence = Column(Float, nullable=False)
@@ -42,6 +36,15 @@ class AIAnalysis(Base):
 
     ai_notes = Column(Text, nullable=True)
     raw_response = Column(Text, nullable=True)
+    
+    # Relacionamento principal
+    exam_id = Column(
+        Integer,
+        ForeignKey("exams.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
 
     created_at = Column(
         DateTime(timezone=True),

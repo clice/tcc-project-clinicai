@@ -97,7 +97,7 @@ def seed_exams(
         "exam_endoscopy_pending": get_or_create_exam(
             db=db,
             clinic_id=primary_clinic.id,
-            patient_id=patients["patient_primary"].id,
+            patient_id=patients["patient_example_1"].id,
             doctor_id=users.get("doctor_primary").id if users.get("doctor_primary") else None,
             status_id=statuses["exam_pending"].id,
             exam_type="endoscopy",
@@ -116,9 +116,9 @@ def seed_exams(
         "exam_colonoscopy_completed": get_or_create_exam(
             db=db,
             clinic_id=primary_clinic.id,
-            patient_id=patients["patient_secondary"].id,
+            patient_id=patients["patient_example_2"].id,
             doctor_id=users.get("doctor_primary").id if users.get("doctor_primary") else None,
-            status_id=statuses["exam_completed"].id,
+            status_id=statuses["exam_analyzed"].id,
             exam_type="colonoscopy",
             exam_date=date(2026, 5, 2),
             title="Colonoscopia completa",
@@ -135,7 +135,7 @@ def seed_exams(
         "exam_endoscopy_in_analysis": get_or_create_exam(
             db=db,
             clinic_id=specialized_clinic.id,
-            patient_id=patients["patient_third"].id,
+            patient_id=patients["patient_elderly"].id,
             doctor_id=users.get("doctor_secondary").id if users.get("doctor_secondary") else None,
             status_id=statuses["exam_in_analysis"].id,
             exam_type="endoscopy",

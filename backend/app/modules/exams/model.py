@@ -66,7 +66,7 @@ class Exam(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
-
+    
 
     def __repr__(self):
         return (

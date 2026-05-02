@@ -42,22 +42,22 @@ def run_seed() -> None:
         seed_role_permissions(db, roles, permissions)
         print("Role permissions criadas/verificadas.")
         
-        seed_clinics(db, statuses)
+        clinics = seed_clinics(db, statuses)
         print("Clinics criadas/verificadas.")
         
-        seed_users(db)
+        users = seed_users(db, roles, statuses, clinics)
         print("Users criados/verificados.")
         
-        seed_patients(db)
+        patients = seed_patients(db)
         print("Patients criados/verificados.")
         
-        seed_exams(db)
+        exams = seed_exams(db, clinics, patients, users, statuses)
         print("Exames criados/verificados.")
         
-        exams = seed_ai_analysis(db)
+        seed_ai_analysis(db, exams)
         print("AI analysis criados/verificados.")
         
-        seed_audit_logs(db, exams)
+        seed_audit_logs(db)
         print("Audit logs criados/verificados.")
 
         print("Seeds executados com sucesso.")

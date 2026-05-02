@@ -23,22 +23,19 @@ class AuditLog(Base):
     # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
-
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=True, index=True)
-
+    # Campos da tabela
     action = Column(String(100), nullable=False, index=True)
     entity = Column(String(100), nullable=False, index=True)
     entity_id = Column(Integer, nullable=True, index=True)
     description = Column(Text, nullable=True)
-
-    # Dados anteriores e novos da entidade
     old_data = Column(JSON, nullable=True)
     new_data = Column(JSON, nullable=True)
-
-    # Informações da requisição
     ip_address = Column(String(100), nullable=True)
     user_agent = Column(Text, nullable=True)
+    
+    # Relacionamento principal
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=True, index=True)
 
     # Data de criação do log
     created_at = Column(
@@ -48,8 +45,8 @@ class AuditLog(Base):
     )
 
     # Relacionamentos ORM
-    user = relationship("User")
-    clinic = relationship("Clinic")
+    user = relationship("User", back_populates="audit_logs")    
+    clinic = relationship("Clinic", back_populates="audit_logs")
 
 
     def __repr__(self):

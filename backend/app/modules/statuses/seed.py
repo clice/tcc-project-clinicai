@@ -111,12 +111,12 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             applies_to="exam",
             description="Exame com arquivo enviado ao sistema.",
         ),
-        "exam_processing": get_or_create_status(
+        "exam_in_analysis": get_or_create_status(
             db,
-            name="processing",
-            display_name="Em processamento",
+            name="in_analysis",
+            display_name="Em análise",
             applies_to="exam",
-            description="Exame em processamento ou aguardando análise da IA.",
+            description="Exame em análise ou aguardando análise da IA.",
         ),
         "exam_analyzed": get_or_create_status(
             db,
