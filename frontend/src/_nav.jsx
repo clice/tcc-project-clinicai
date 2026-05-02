@@ -37,17 +37,6 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Usuários',
-    to: '/users',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
-  },
-  {
-    component: CNavItem,
     name: 'Clínicas',
     to: '/clinics',
     icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
@@ -85,7 +74,7 @@ const _nav = [
     component: CNavTitle,
     name: 'Sistema',
     roles: ['admin_master'],
-  },
+  },  
   {
     component: CNavGroup,
     name: 'Configurações',
@@ -124,6 +113,17 @@ const _nav = [
         },
       },
     ],
+  },
+  {
+    component: CNavItem,
+    name: 'Usuários',
+    to: '/users',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+    roles: ['admin_master'],
+    badge: {
+      color: 'info',
+      text: 'EM BREVE',
+    },
   },
   {
     component: CNavItem,
