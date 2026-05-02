@@ -29,6 +29,14 @@ const CreatePatient = () => React.createElement(PatientForm, { mode: 'create' })
 const EditPatient = () => React.createElement(PatientForm, { mode: 'edit' })
 const ViewPatient = () => React.createElement(PatientForm, { mode: 'view' })
 
+// EXAMS
+const ExamsList = React.lazy(() => import('./views/exams/ExamsList'))
+const ExamForm = React.lazy(() => import('./views/exams/ExamForm'))
+
+const CreateExam = () => React.createElement(ExamForm, { mode: 'create' })
+const EditExam = () => React.createElement(ExamForm, { mode: 'edit' })
+const ViewExam = () => React.createElement(ExamForm, { mode: 'view' })
+
 ////////// SYSTEM
 
 // USER
@@ -85,6 +93,13 @@ export const routes = [
   { path: '/patients/create', name: 'Adicionar Paciente', element: CreatePatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
   { path: '/patients/:id/edit', name: 'Editar Paciente', element: EditPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
   { path: '/patients/:id', name: 'Detalhes do Paciente', element: ViewPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  { path: '/clinics/:id', name: 'Detalhes da Clínica', element: ViewClinic, roles: ['admin_master']},
+
+  // EXAMS
+  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
 
   /////////// SYSTEM
 
@@ -116,9 +131,6 @@ export const routes = [
   { path: '/statuses/create', name: 'Adicionar Status', element: CreateStatus, roles: ['admin_master'] },
   { path: '/statuses/:id/edit', name: 'Editar Status', element: EditStatus, roles: ['admin_master'] },
   { path: '/statuses/:id', name: 'Detalhes do Status', element: ViewStatus, roles: ['admin_master'] },
-
-  { path: '/exams', name: 'Exams', element: ComingSoon },
-  { path: '/audit-logs', name: 'Logs', element: ComingSoon },
 ]
 
 export default routes
