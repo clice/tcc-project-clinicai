@@ -8,6 +8,7 @@ de cada módulo na ordem correta de dependência.
 from app.core.database import SessionLocal
 
 from app.modules.statuses.seed import seed_statuses
+from app.modules.roles.seed import seed_roles
 
 
 def run_seed() -> None:
@@ -23,6 +24,9 @@ def run_seed() -> None:
         # Base inicial do sistema        
         seed_statuses(db)
         print("Statuses criados/verificados.")
+        
+        seed_roles(db)
+        print("Roles criados/verificados.")
 
         print("Seeds executados com sucesso.")
 

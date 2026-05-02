@@ -7,7 +7,9 @@ mantendo o main.py mais limpo e organizado.
 
 from fastapi import FastAPI
 
+from app.modules.roles.router import router as roles_router
 from app.modules.statuses.router import router as statuses_router
+
 
 
 def register_routes(app: FastAPI) -> None:
@@ -17,3 +19,4 @@ def register_routes(app: FastAPI) -> None:
 
     # Tabelas estruturais / administrativas
     app.include_router(statuses_router)
+    app.include_router(roles_router)
