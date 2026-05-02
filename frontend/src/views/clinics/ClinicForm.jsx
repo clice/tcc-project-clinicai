@@ -1,5 +1,10 @@
 /**
- * Formulário do módulo de Clinics usando mocks.
+ * Formulário do módulo de Clinics.
+ *
+ * Usado para:
+ * - criar clínica;
+ * - visualizar clínica;
+ * - editar clínica.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
@@ -20,7 +25,10 @@ import {
   CRow,
 } from '@coreui/react'
 
-import { clinics as clinicsMock, statuses as statusesMock } from 'src/mocks/data'
+import { addressService } from 'src/services/addressService'
+import { clinicService } from 'src/services/clinicService'
+import { statusService } from 'src/services/statusService'
+
 import {
   formatCnpjBR,
   formatPhoneBR,
@@ -42,33 +50,6 @@ const emptyClinic = {
   city: '',
   state: '',
   status_id: '',
-}
-
-const mockedAddressesByZipCode = {
-  63010010: {
-    zip_code: '63010010',
-    address: 'Rua das Flores',
-    complement: 'Próximo à praça central',
-    neighborhood: 'Centro',
-    city: 'Barbalha',
-    state: 'CE',
-  },
-  63020020: {
-    zip_code: '63020020',
-    address: 'Avenida Brasil',
-    complement: 'Sala 204',
-    neighborhood: 'Jardim América',
-    city: 'Juazeiro do Norte',
-    state: 'CE',
-  },
-  63100030: {
-    zip_code: '63100030',
-    address: 'Praça da Liberdade',
-    complement: '',
-    neighborhood: 'Centro',
-    city: 'Crato',
-    state: 'CE',
-  },
 }
 
 const ClinicForm = ({ mode = 'create' }) => {
@@ -94,56 +75,56 @@ const ClinicForm = ({ mode = 'create' }) => {
   }, [isCreateMode, isEditMode])
 
   useEffect(() => {
-    setIsLoading(true)
-    setError('')
+    const loadPageData = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
 
-    const clinicStatuses = statusesMock.filter(
-      (status) => status.applies_to === 'clinics',
-    )
+        const statusData = await statusService.list()
 
-    setStatuses(clinicStatuses)
+        /**
+         * O backend valida que a clínica use apenas status com applies_to = clinic.
+         */
+        setStatuses(
+          Array.isArray(statusData)
+            ? statusData.filter((status) => status.applies_to === 'clinic')
+            : [],
+        )
 
-    if (isCreateMode) {
-      const activeClinicStatus = clinicStatuses.find(
-        (status) => status.name === 'active',
-      )
+        if (!isCreateMode) {
+          const clinicData = await clinicService.getById(id)
 
-      setForm({
-        ...emptyClinic,
-        status_id: activeClinicStatus ? String(activeClinicStatus.id) : '',
-      })
-
-      setIsLoading(false)
-      return
+          setForm({
+            name: clinicData.name ?? '',
+            cnpj: clinicData.cnpj ? formatCnpjBR(clinicData.cnpj) : '',
+            email: clinicData.email ?? '',
+            phone: clinicData.phone ? formatPhoneBR(clinicData.phone) : '',
+            mobile_phone: clinicData.mobile_phone
+              ? formatPhoneBR(clinicData.mobile_phone)
+              : '',
+            zip_code: clinicData.zip_code ? formatZipCodeBR(clinicData.zip_code) : '',
+            address: clinicData.address ?? '',
+            number: clinicData.number ?? '',
+            complement: clinicData.complement ?? '',
+            neighborhood: clinicData.neighborhood ?? '',
+            city: clinicData.city ?? '',
+            state: clinicData.state ?? '',
+            status_id: clinicData.status_id ?? '',
+          })
+        }
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Erro ao carregar dados da clínica.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const clinicData = clinicsMock.find((clinic) => String(clinic.id) === String(id))
-
-    if (!clinicData) {
-      setError('Clínica não encontrada no mock.')
-      setIsLoading(false)
-      return
-    }
-
-    setForm({
-      name: clinicData.name ?? '',
-      cnpj: clinicData.cnpj ? formatCnpjBR(clinicData.cnpj) : '',
-      email: clinicData.email ?? '',
-      phone: clinicData.phone ? formatPhoneBR(clinicData.phone) : '',
-      mobile_phone: clinicData.mobile_phone ? formatPhoneBR(clinicData.mobile_phone) : '',
-      zip_code: clinicData.zip_code ? formatZipCodeBR(clinicData.zip_code) : '',
-      address: clinicData.address ?? '',
-      number: clinicData.number ?? '',
-      complement: clinicData.complement ?? '',
-      neighborhood: clinicData.neighborhood ?? '',
-      city: clinicData.city ?? '',
-      state: clinicData.state ?? '',
-      status_id: clinicData.status_id ? String(clinicData.status_id) : '',
-    })
-
-    setIsLoading(false)
+    loadPageData()
   }, [id, isCreateMode])
 
+  /**
+   * Atualiza um campo do formulário.
+   */
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -151,6 +132,9 @@ const ClinicForm = ({ mode = 'create' }) => {
     }))
   }
 
+  /**
+   * Valida campos obrigatórios antes de enviar ao backend.
+   */
   const validateForm = () => {
     if (!form.name.trim()) {
       setError('Informe o nome da clínica.')
@@ -201,38 +185,45 @@ const ClinicForm = ({ mode = 'create' }) => {
     }))
   }
 
-  const handleZipCodeBlur = () => {
+  const handleZipCodeBlur = async () => {
     const zipCode = onlyNumbers(form.zip_code)
 
     if (!zipCode || zipCode.length !== 8) {
       return
     }
 
-    setIsLoadingAddress(true)
-    setError('')
-    clearAddressFields()
+    try {
+      setIsLoadingAddress(true)
+      setError('')
 
-    const address = mockedAddressesByZipCode[zipCode]
+      clearAddressFields()
 
-    if (!address) {
-      setError('CEP não encontrado no mock.')
+      const address = await addressService.getAddressByZipCode(zipCode)
+
+      if (!address) {
+        setError('CEP não encontrado.')
+        return
+      }
+
+      setForm((current) => ({
+        ...current,
+        zip_code: formatZipCodeBR(address.zip_code),
+        address: address.address,
+        complement: address.complement,
+        neighborhood: address.neighborhood,
+        city: address.city,
+        state: address.state,
+      }))
+    } catch {
+      setError('Erro ao buscar endereço pelo CEP.')
+    } finally {
       setIsLoadingAddress(false)
-      return
     }
-
-    setForm((current) => ({
-      ...current,
-      zip_code: formatZipCodeBR(address.zip_code),
-      address: address.address,
-      complement: address.complement,
-      neighborhood: address.neighborhood,
-      city: address.city,
-      state: address.state,
-    }))
-
-    setIsLoadingAddress(false)
   }
 
+  /**
+   * Monta o payload no formato esperado pela API.
+   */
   const buildPayload = () => {
     const status = statuses.find((item) => String(item.id) === String(form.status_id))
 
@@ -268,21 +259,18 @@ const ClinicForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      const payload = buildPayload()
-
-      console.log('Payload mock de clínica:', payload)
-
       if (isCreateMode) {
-        setSuccess('Clínica cadastrada com sucesso no mock.')
-        navigate('/clinics')
+        const created = await clinicService.create(buildPayload())
+        navigate(`/clinics/${created.id}`)
         return
       }
 
       if (isEditMode) {
-        setSuccess('Clínica atualizada com sucesso no mock.')
+        await clinicService.update(id, buildPayload())
+        setSuccess('Clínica atualizada com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar clínica.')
+      setError(err.response?.data?.detail || 'Erro ao salvar clínica.')
     } finally {
       setIsSaving(false)
     }
@@ -299,9 +287,11 @@ const ClinicForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/clinics">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/clinics">
+            Voltar
+          </CButton>
+        </div> 
       </div>
 
       <CCard>
@@ -404,12 +394,12 @@ const ClinicForm = ({ mode = 'create' }) => {
                   />
                 </CCol>
 
-                <CCol md={7}>
+                <CCol md={8}>
                   <CFormLabel>Endereço</CFormLabel>
                   <CFormInput value={form.address} disabled />
                 </CCol>
 
-                <CCol md={2}>
+                <CCol md={1}>
                   <CFormLabel>Número</CFormLabel>
                   <CFormInput
                     value={form.number}
@@ -418,22 +408,22 @@ const ClinicForm = ({ mode = 'create' }) => {
                   />
                 </CCol>
 
-                <CCol md={4}>
+                <CCol md={6}>
                   <CFormLabel>Complemento</CFormLabel>
                   <CFormInput value={form.complement} disabled />
                 </CCol>
 
-                <CCol md={4}>
+                <CCol md={2}>
                   <CFormLabel>Bairro</CFormLabel>
                   <CFormInput value={form.neighborhood} disabled />
                 </CCol>
 
-                <CCol md={3}>
+                <CCol md={2}>
                   <CFormLabel>Cidade</CFormLabel>
                   <CFormInput value={form.city} disabled />
                 </CCol>
 
-                <CCol md={1}>
+                <CCol md={2}>
                   <CFormLabel>UF</CFormLabel>
                   <CFormInput value={form.state} disabled />
                 </CCol>

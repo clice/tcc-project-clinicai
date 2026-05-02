@@ -13,8 +13,8 @@ from app.modules.clinics.model import Clinic
 from app.modules.clinics.schema import ClinicCreate, ClinicUpdate
 from app.modules.statuses.model import Status
 from app.modules.statuses.service import (
-    get_status_by_id_and_context,
-    get_status_by_name_and_context,
+    get_status_by_id_and_applies_to,
+    get_status_by_name_and_applies_to,
 )
 
 
@@ -136,7 +136,7 @@ def create_clinic(db: Session, payload: ClinicCreate) -> dict:
     """
     Cria uma nova clínica.
     """
-    get_status_by_id_and_context(
+    get_status_by_id_and_applies_to(
         db=db,
         status_id=payload.status_id,
         applies_to="clinic",
@@ -175,7 +175,7 @@ def update_clinic(
         return build_clinic_response(clinic)
 
     if "status_id" in update_data:
-        get_status_by_id_and_context(
+        get_status_by_id_and_applies_to(
             db=db,
             status_id=update_data["status_id"],
             applies_to="clinic",
@@ -206,7 +206,7 @@ def inactivate_clinic(db: Session, clinic_id: int) -> dict:
     Não remove fisicamente o registro para preservar histórico e relações.
     """
     clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
-    inactivate_status = get_status_by_name_and_context(
+    inactivate_status = get_status_by_name_and_applies_to(
         db=db,
         name="inactive",
         applies_to="clinic",
@@ -227,7 +227,7 @@ def activate_clinic(db: Session, clinic_id: int) -> dict:
     Ativa clínica por status.
     """
     clinic = get_clinic_by_id(db, clinic_id)
-    active_status = get_status_by_name_and_context(
+    active_status = get_status_by_name_and_applies_to(
         db=db,
         name="active",
         applies_to="clinic",

@@ -1,5 +1,10 @@
 /**
- * Formulário do módulo de Permission usando mocks.
+ * Formulário do módulo de Permission.
+ *
+ * Usado para:
+ * - criar permissão;
+ * - visualizar permissão;
+ * - editar permissão.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
@@ -19,7 +24,7 @@ import {
   CRow,
 } from '@coreui/react'
 
-import { permissions as permissionsMock } from 'src/mocks/data'
+import { permissionService } from 'src/services/permissionService'
 
 const emptyPermission = {
   name: '',
@@ -32,10 +37,12 @@ const moduleOptions = [
   { value: 'users', label: 'Usuários' },
   { value: 'clinics', label: 'Clínicas' },
   { value: 'patients', label: 'Pacientes' },
+  { value: 'ai_analysis', label: 'Análises IA' },
   { value: 'exams', label: 'Exames' },
   { value: 'roles', label: 'Perfis' },
   { value: 'permissions', label: 'Permissões' },
   { value: 'statuses', label: 'Status' },
+  { value: 'audit_logs', label: 'Logs de Auditoria' },
 ]
 
 const PermissionForm = ({ mode = 'create' }) => {
@@ -64,26 +71,32 @@ const PermissionForm = ({ mode = 'create' }) => {
       return
     }
 
-    const foundPermission = permissionsMock.find(
-      (permission) => String(permission.id) === String(id),
-    )
+    const loadPermission = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
 
-    if (!foundPermission) {
-      setError('Permissão não encontrada no mock.')
-      setIsLoading(false)
-      return
+        const permissionData = await permissionService.getById(id)
+
+        setForm({
+          name: permissionData.name ?? '',
+          display_name: permissionData.display_name ?? '',
+          description: permissionData.description ?? '',
+          module: permissionData.module ?? '',
+        })
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Erro ao carregar a permissão.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    setForm({
-      name: foundPermission.name ?? '',
-      display_name: foundPermission.display_name ?? '',
-      description: foundPermission.description ?? '',
-      module: foundPermission.module ?? '',
-    })
-
-    setIsLoading(false)
+    void loadPermission()
   }, [id, isCreateMode])
 
+  /**
+   * Atualiza um campo do formulário.
+   */
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -91,6 +104,9 @@ const PermissionForm = ({ mode = 'create' }) => {
     }))
   }
 
+  /**
+   * Normaliza campos técnicos para o padrão usado no backend.
+   */
   const normalizePermissionName = (value) => {
     return value
       .trim()
@@ -101,6 +117,9 @@ const PermissionForm = ({ mode = 'create' }) => {
       .replace(/[^a-z0-9:_-]/g, '')
   }
 
+  /**
+   * Monta o payload enviado para a API.
+   */
   const buildPayload = () => ({
     name: normalizePermissionName(form.name),
     display_name: form.display_name.trim(),
@@ -112,18 +131,6 @@ const PermissionForm = ({ mode = 'create' }) => {
     if (!form.name.trim()) return 'Informe o nome técnico da permissão.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição.'
     if (!form.module.trim()) return 'Informe o módulo da permissão.'
-
-    const normalizedName = normalizePermissionName(form.name)
-
-    const duplicated = permissionsMock.some((permission) => {
-      const isSamePermission = String(permission.id) === String(id)
-
-      return !isSamePermission && permission.name === normalizedName
-    })
-
-    if (duplicated) {
-      return 'Já existe uma permissão com esse nome técnico.'
-    }
 
     return ''
   }
@@ -146,21 +153,26 @@ const PermissionForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      const payload = buildPayload()
-
-      console.log('Payload mock de permissão:', payload)
+      setIsSaving(true)
 
       if (isCreateMode) {
-        setSuccess('Permissão cadastrada com sucesso no mock.')
+        const created = await permissionService.create(buildPayload())
+
+        if (created?.id) {
+          navigate(`/permissions/${created.id}/edit`)
+          return
+        }
+
         navigate('/permissions')
         return
       }
 
       if (isEditMode) {
-        setSuccess('Permissão atualizada com sucesso no mock.')
+        await permissionService.update(id, buildPayload())
+        setSuccess('Permissão atualizada com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar a permissão.')
+      setError(err.response?.data?.detail || 'Erro ao salvar a permissão.')
     } finally {
       setIsSaving(false)
     }
@@ -177,9 +189,11 @@ const PermissionForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/permissions">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/permissions">
+            Voltar
+          </CButton>
+        </div>
       </div>
 
       <CCard>

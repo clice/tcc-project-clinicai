@@ -12,6 +12,7 @@
  */
 export const onlyNumbers = (value = '') => {
   return String(value).replace(/\D/g, '')
+  
 }
 
 /**
@@ -39,6 +40,23 @@ export const formatCnpjBR = (value = '') => {
     .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
     .replace(/(\d{4})(\d)/, '$1-$2')
+}
+
+/**
+ * Formata Data:
+ * YYYY-MM-DD HH:MM:SS -> DD/MM/YYYY às HH:MM
+ */
+export const formatDateTimeBR = (value) => {
+  if (!value) return '-'
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`
 }
 
 /**
@@ -71,9 +89,14 @@ export const formatZipCodeBR = (value = '') => {
 }
 
 /**
- * Formata UF:
- * ce -> CE
+ * Formata Sexo:
  */
-export const formatStateBR = (value = '') => {
-  return String(value).trim().toUpperCase().slice(0, 2)
+export const formatSex = (value) => {
+  const labels = {
+    female: 'Feminino',
+    male: 'Masculino',
+    other: 'Outro',
+  }
+
+  return labels[value] || '-'
 }

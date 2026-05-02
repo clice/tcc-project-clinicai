@@ -1,8 +1,11 @@
 /**
- * Listagem de usuários usando mocks.
+ * Listagem de usuários.
+ *
+ * Exibe os usuários cadastrados no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
  */
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
 
@@ -10,21 +13,11 @@ import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { formatPhoneBR } from 'src/utils/formatters'
-import { users as usersMock } from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { userService } from 'src/services/userService'
 
-const formatDateTimeBR = (value) => {
-  if (!value) return '-'
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`
-}
+import { formatCpfBR, formatDateTimeBR, formatPhoneBR } from 'src/utils/formatters'
+import { canManageUsers } from 'src/utils/permissions'
 
 const userTabs = [
   { key: 'active', label: 'Ativos' },
@@ -32,46 +25,58 @@ const userTabs = [
 ]
 
 const UsersList = () => {
+  const { user } = useAuth()
+
   const [activeTab, setActiveTab] = useState('active')
-  const [users, setUsers] = useState(usersMock)
+  const [users, setUsers] = useState([])
   const [error, setError] = useState('')
-  const [isLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleInactivate = useCallback((selectedUser) => {
-    setError('')
+  const canManage = canManageUsers(user)
 
-    setUsers((current) =>
-      current.map((item) =>
-        String(item.id) === String(selectedUser.id)
-          ? {
-              ...item,
-              status_id: '2',
-              status_name: 'inactive',
-              status_display_name: 'Inativo',
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    )
+  const loadUsers = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const data = await userService.list()
+      setUsers(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || 'Erro ao carregar os usuários.')
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
-  const handleActivate = useCallback((selectedUser) => {
-    setError('')
+  useEffect(() => {
+    void loadUsers()
+  }, [loadUsers])
 
-    setUsers((current) =>
-      current.map((item) =>
-        String(item.id) === String(selectedUser.id)
-          ? {
-              ...item,
-              status_id: '1',
-              status_name: 'active',
-              status_display_name: 'Ativo',
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    )
-  }, [])
+  const handleInactivate = useCallback(
+    async (selectedUser) => {
+      try {
+        setError('')
+        await userService.inactivate(selectedUser.id)
+        await loadUsers()
+      } catch (err) {
+        setError(err.response?.data?.detail || err.message || 'Erro ao inativar o usuário.')
+      }
+    },
+    [loadUsers],
+  )
+
+  const handleActivate = useCallback(
+    async (selectedUser) => {
+      try {
+        setError('')
+        await userService.activate(selectedUser.id)
+        await loadUsers()
+      } catch (err) {
+        setError(err.response?.data?.detail || err.message || 'Erro ao ativar o usuário.')
+      }
+    },
+    [loadUsers],
+  )
 
   const filteredUsers = useMemo(() => {
     return users.filter((item) => item.status_name === activeTab)
@@ -87,34 +92,16 @@ const UsersList = () => {
 
   const columns = useMemo(
     () => [
-      {
-        accessorKey: 'name',
-        header: 'Nome',
-      },
-      {
-        accessorKey: 'email',
-        header: 'E-mail',
-      },
-      {
-        accessorKey: 'phone',
-        header: 'Telefone',
-        cell: ({ getValue }) => formatPhoneBR(getValue()) || '-',
-      },
-      {
-        accessorKey: 'role_display_name',
-        header: 'Perfil',
-        cell: ({ getValue, row }) => getValue() || row.original.role_name || '-',
-      },
-      {
-        accessorKey: 'clinic_name',
-        header: 'Clínica',
-        cell: ({ getValue }) => getValue() || '-',
-      },
-      {
-        accessorKey: 'last_access_at',
-        header: 'Último acesso',
-        cell: ({ getValue }) => formatDateTimeBR(getValue()),
-      },
+      { accessorKey: 'name', header: 'Nome' },
+      { accessorKey: 'email', header: 'E-mail' },
+      { accessorKey: 'phone', header: 'Telefone', cell: ({ getValue }) => {
+  const value = getValue()
+  console.log('PHONE VALUE:', value)
+  return value ? formatPhoneBR(value) : '-'
+} },
+      { accessorKey: 'role_display_name', header: 'Perfil', cell: ({ getValue, row }) => getValue() || row.original.role_name || '-' },
+      { accessorKey: 'clinic_name', header: 'Clínica', cell: ({ getValue }) => getValue() || '-' },
+      { accessorKey: 'last_access_at', header: 'Último acesso', cell: ({ getValue }) => formatDateTimeBR(getValue()) },
       {
         id: 'actions',
         header: 'Ações',
@@ -129,6 +116,10 @@ const UsersList = () => {
               viewTo={`/users/${selectedUser.id}`}
               editTo={`/users/${selectedUser.id}/edit`}
               isInactive={isInactive}
+              canView={canManage}
+              canEdit={canManage}
+              canInactivate={canManage && !isInactive}
+              canActivate={canManage && isInactive}
               onInactivate={() => handleInactivate(selectedUser)}
               onActivate={() => handleActivate(selectedUser)}
             />
@@ -136,7 +127,7 @@ const UsersList = () => {
         },
       },
     ],
-    [handleActivate, handleInactivate],
+    [canManage, handleActivate, handleInactivate],
   )
 
   return (
@@ -150,9 +141,11 @@ const UsersList = () => {
           </p>
         </div>
 
-        <CButton color="primary" size="lg" as={Link} to="/users/create">
-          Cadastrar Usuário
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/users/create">
+            Cadastrar Usuário
+          </CButton>
+        </div>
       </div>
 
       <CCard>
@@ -163,18 +156,8 @@ const UsersList = () => {
             <p className="text-body-secondary mb-0">Carregando usuários...</p>
           ) : (
             <>
-              <AppTabs
-                activeTab={activeTab}
-                counts={counts}
-                onChange={setActiveTab}
-                tabs={userTabs}
-              />
-
-              <AppTable
-                data={filteredUsers}
-                columns={columns}
-                emptyMessage="Nenhum usuário encontrado."
-              />
+              <AppTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} tabs={userTabs} />
+              <AppTable data={filteredUsers} columns={columns} emptyMessage="Nenhum usuário encontrado." />
             </>
           )}
         </CCardBody>

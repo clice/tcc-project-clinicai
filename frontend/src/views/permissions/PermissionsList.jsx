@@ -1,58 +1,70 @@
 /**
- * Listagem do módulo de Permissions usando mocks.
+ * Listagem de permissões.
+ *
+ * Exibe as permissões cadastradas no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { permissions as permissionsMock } from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { permissionService } from 'src/services/permissionService'
+
+import { canManagePermissions } from 'src/utils/permissions'
 
 const moduleLabels = {
   users: 'Usuários',
   clinics: 'Clínicas',
   patients: 'Pacientes',
   exams: 'Exames',
+  ai_analysis: 'Análises IA',
   roles: 'Perfis',
   permissions: 'Permissões',
   statuses: 'Status',
+  audit_logs: 'Logs de Auditoria',
 }
 
 const PermissionsList = () => {
-  const [permissions] = useState(permissionsMock)
-  const [error] = useState('')
-  const [isLoading] = useState(false)
+  const { user } = useAuth()
+
+  const [permissions, setPermissions] = useState([])
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  const canManage = canManagePermissions(user)
+
+  const loadPermissions = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const data = await permissionService.list()
+      setPermissions(data)
+    } catch (err) {
+      setError('Erro ao carregar as permissões.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPermissions()
+  }, [loadPermissions])
 
   const columns = useMemo(
     () => [
-      {
-        accessorKey: 'name',
-        header: 'Nome técnico',
-      },
-      {
-        accessorKey: 'display_name',
-        header: 'Nome de exibição',
-      },
-      {
-        accessorKey: 'description',
-        header: 'Descrição',
-        cell: ({ row }) => row.original.description || '-',
-      },
+      { accessorKey: 'name', header: 'Nome técnico' },
+      { accessorKey: 'display_name', header: 'Nome de exibição' },
+      { accessorKey: 'description', header: 'Descrição' },
       {
         accessorKey: 'module',
         header: 'Módulo',
-        cell: ({ getValue }) => (
-          <CBadge color="info">
-            {moduleLabels[getValue()] || getValue()}
-          </CBadge>
-        ),
-      },
-      {
-        accessorKey: 'updated_at',
-        header: 'Atualizado em',
+        cell: ({ getValue }) => moduleLabels[getValue()] || getValue(),
       },
       {
         id: 'actions',
@@ -62,11 +74,13 @@ const PermissionsList = () => {
           <AppActionButtons
             viewTo={`/permissions/${row.original.id}`}
             editTo={`/permissions/${row.original.id}/edit`}
+            canView={canManage}
+            canEdit={canManage}
           />
         ),
       },
     ],
-    [],
+    [canManage],
   )
 
   return (
@@ -80,9 +94,11 @@ const PermissionsList = () => {
           </p>
         </div>
 
-        <CButton color="primary" size="lg" as={Link} to="/permissions/create">
-          Cadastrar Permissão
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/permissions/create">
+            Cadastrar Permissão
+          </CButton>
+        </div>         
       </div>
 
       <CCard>
@@ -92,11 +108,7 @@ const PermissionsList = () => {
           {isLoading ? (
             <p className="text-body-secondary mb-0">Carregando permissões...</p>
           ) : (
-            <AppTable
-              data={permissions}
-              columns={columns}
-              emptyMessage="Nenhuma permissão encontrada."
-            />
+            <AppTable data={permissions} columns={columns} emptyMessage="Nenhuma permissão encontrada." />
           )}
         </CCardBody>
       </CCard>

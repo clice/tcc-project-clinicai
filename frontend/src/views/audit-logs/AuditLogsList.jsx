@@ -1,5 +1,5 @@
 /**
- * Listagem de logs de auditoria usando mocks.
+ * Listagem de logs de auditoria.
  *
  * Exibe eventos importantes do sistema, como alterações,
  * cadastros, acessos e ações administrativas.

@@ -13,12 +13,21 @@ from app.core.config import settings
 from app.modules.routes import register_routes
 
 
+# ==================================================
+# APP
+# ==================================================
+
 app = FastAPI(
     title="ClinicAI Backend",
-    version="0.1.0",
+    version="1.0.0",
+    description="ClinicAI Backend API",
 )
 
-# Permite que o frontend React acesse a API durante o desenvolvimento.
+
+# ==================================================
+# CORS
+# ==================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -26,5 +35,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ==================================================
+# ROTAS BASE
+# ==================================================
+
+@app.get("/")
+def root():
+    return {
+        "message": "ClinicAI Backend is running",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "ClinicAI Backend",
+    }
+
 
 register_routes(app)

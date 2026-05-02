@@ -1,5 +1,5 @@
 /**
- * Formulário do módulo de Roles usando mocks.
+ * Formulário do módulo de Roles.
  *
  * Usado para:
  * - criar perfil;
@@ -26,11 +26,9 @@ import {
   CRow,
 } from '@coreui/react'
 
-import {
-  permissions as permissionsMock,
-  roles as rolesMock,
-  rolePermissions as rolePermissionsMock,
-} from 'src/mocks/data'
+import { roleService } from 'src/services/roleService'
+import { permissionService } from 'src/services/permissionService'
+import { rolePermissionService } from 'src/services/rolePermissionService'
 
 const emptyRole = {
   name: '',
@@ -43,9 +41,11 @@ const moduleLabels = {
   clinics: 'Clínicas',
   patients: 'Pacientes',
   exams: 'Exames',
+  ai_analysis: 'Análises IA',
   roles: 'Perfis',
   permissions: 'Permissões',
   statuses: 'Status',
+  audit_logs: 'Logs de Auditoria',
 }
 
 const RoleForm = ({ mode = 'create' }) => {
@@ -71,6 +71,11 @@ const RoleForm = ({ mode = 'create' }) => {
     return 'Detalhes do Perfil'
   }, [isCreateMode, isEditMode])
 
+  /**
+   * Agrupa permissões pelo módulo.
+   *
+   * Isso deixa a tela mais organizada visualmente.
+   */
   const groupedPermissions = useMemo(() => {
     return permissions.reduce((groups, permission) => {
       const moduleName = permission.module || 'other'
@@ -86,41 +91,44 @@ const RoleForm = ({ mode = 'create' }) => {
   }, [permissions])
 
   useEffect(() => {
-    setIsLoading(true)
-    setError('')
+    const loadPageData = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
 
-    setPermissions(Array.isArray(permissionsMock) ? permissionsMock : [])
+        const permissionsData = await permissionService.list()
+        setPermissions(Array.isArray(permissionsData) ? permissionsData : [])
 
-    if (isCreateMode) {
-      setIsLoading(false)
-      return
+        if (!isCreateMode) {
+          const roleData = await roleService.getById(id)
+          const linkedPermissions = await rolePermissionService.listByRole(id)
+
+          setForm({
+            name: roleData.name ?? '',
+            display_name: roleData.display_name ?? '',
+            description: roleData.description ?? '',
+          })
+
+          /**
+           * Guarda apenas os IDs das permissões já vinculadas ao perfil.
+           */
+          setSelectedPermissionIds(
+            linkedPermissions.map((item) => Number(item.permission_id)),
+          )
+        }
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Erro ao carregar dados do perfil.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const foundRole = rolesMock.find((role) => String(role.id) === String(id))
-
-    if (!foundRole) {
-      setError('Perfil não encontrado no mock.')
-      setIsLoading(false)
-      return
-    }
-
-    const linkedPermissions = rolePermissionsMock.find(
-      (item) => String(item.role_id) === String(id),
-    )
-
-    setForm({
-      name: foundRole.name ?? '',
-      display_name: foundRole.display_name ?? '',
-      description: foundRole.description ?? '',
-    })
-
-    setSelectedPermissionIds(
-      linkedPermissions?.permission_ids?.map((permissionId) => Number(permissionId)) ?? [],
-    )
-
-    setIsLoading(false)
+    loadPageData()
   }, [id, isCreateMode])
 
+  /**
+   * Atualiza um campo do formulário.
+   */
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -128,7 +136,7 @@ const RoleForm = ({ mode = 'create' }) => {
     }))
   }
 
-  const normalizeSlug = (value) => {
+  const normalizeName = (value) => {
     return value
       .trim()
       .toLowerCase()
@@ -136,6 +144,11 @@ const RoleForm = ({ mode = 'create' }) => {
       .replace(/[^a-z0-9_]/g, '')
   }
 
+  /**
+   * Marca ou desmarca uma permissão.
+   *
+   * A gravação no backend acontece apenas ao clicar em Salvar.
+   */
   const togglePermission = (permissionId) => {
     setSelectedPermissionIds((current) => {
       const numericId = Number(permissionId)
@@ -148,28 +161,18 @@ const RoleForm = ({ mode = 'create' }) => {
     })
   }
 
+  /**
+   * Monta o payload enviado para a API de roles.
+   */
   const buildPayload = () => ({
-    name: normalizeSlug(form.name),
+    name: normalizeName(form.name),
     display_name: form.display_name.trim(),
     description: form.description.trim() || null,
-    permission_ids: selectedPermissionIds,
   })
 
   const validateForm = () => {
     if (!form.name.trim()) return 'Informe o nome técnico do perfil.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição do perfil.'
-
-    const normalizedName = normalizeSlug(form.name)
-
-    const duplicated = rolesMock.some((role) => {
-      const isSameRole = String(role.id) === String(id)
-
-      return !isSameRole && role.name === normalizedName
-    })
-
-    if (duplicated) {
-      return 'Já existe um perfil com esse nome técnico.'
-    }
 
     return ''
   }
@@ -192,21 +195,36 @@ const RoleForm = ({ mode = 'create' }) => {
     }
 
     try {
-      const payload = buildPayload()
-
-      console.log('Payload mock de role:', payload)
-
       if (isCreateMode) {
-        setSuccess('Perfil cadastrado com sucesso no mock.')
-        navigate('/roles')
+        const createdRole = await roleService.create(buildPayload())
+
+        /**
+         * Após criar a role, vinculamos as permissões selecionadas.
+         */
+        await rolePermissionService.syncRolePermissions(
+          createdRole.id,
+          selectedPermissionIds,
+        )
+
+        navigate(`/roles/${createdRole.id}`)
         return
       }
 
       if (isEditMode) {
-        setSuccess('Perfil atualizado com sucesso no mock.')
+        await roleService.update(id, buildPayload())
+
+        /**
+         * Sincroniza a tabela role_permissions:
+         * - adiciona permissões marcadas novas;
+         * - remove permissões que foram desmarcadas;
+         * - mantém as que não mudaram.
+         */
+        await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
+
+        setSuccess('Perfil atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar o perfil.')
+      setError(err.response?.data?.detail || 'Erro ao salvar o perfil.')
     } finally {
       setIsSaving(false)
     }
@@ -223,9 +241,11 @@ const RoleForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/roles">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/roles">
+            Voltar
+          </CButton>
+        </div>
       </div>
 
       <CCard>

@@ -42,10 +42,6 @@ const _nav = [
     to: '/clinics',
     icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
     roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   },
   {
     component: CNavItem,
@@ -53,10 +49,6 @@ const _nav = [
     to: '/patients',
     icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_staff'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   },
   {
     component: CNavItem,
@@ -83,10 +75,6 @@ const _nav = [
     to: '/users',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   },
   {
     component: CNavItem,
@@ -114,30 +102,18 @@ const _nav = [
         name: 'Perfis',
         to: '/roles',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
       {
         component: CNavItem,
         name: 'Permissões',
         to: '/permissions',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
       {
         component: CNavItem,
         name: 'Status',
         to: '/statuses',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
     ],
   }, 

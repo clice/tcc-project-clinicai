@@ -1,52 +1,54 @@
 /**
- * Listagem de Roles usando mocks.
+ * Listagem de perfis.
  *
  * Exibe os perfis cadastrados no sistema e permite acessar
  * visualização, edição e cadastro sem depender do banco.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { roles as rolesMock } from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { roleService } from 'src/services/roleService'
+
+import { canManageRoles } from 'src/utils/permissions'
 
 const RolesList = () => {
-  const [roles] = useState(rolesMock)
-  const [error] = useState('')
-  const [isLoading] = useState(false)
+  const { user } = useAuth()
+
+  const [roles, setRoles] = useState([])
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  const canManage = canManageRoles(user)
+
+  const loadRoles = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const data = await roleService.list()
+      setRoles(data)
+    } catch (err) {
+      setError('Erro ao carregar os perfis.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadRoles()
+  }, [loadRoles])
 
   const columns = useMemo(
     () => [
-      {
-        accessorKey: 'name',
-        header: 'Nome técnico',
-      },
-      {
-        accessorKey: 'display_name',
-        header: 'Nome de exibição',
-      },
-      {
-        accessorKey: 'description',
-        header: 'Descrição',
-        cell: ({ row }) => row.original.description || '-',
-      },
-      {
-        accessorKey: 'permissionsCount',
-        header: 'Permissões',
-        cell: ({ row }) => (
-          <CBadge color="info">
-            {row.original.permissionsCount ?? 0}
-          </CBadge>
-        ),
-      },
-      {
-        accessorKey: 'updated_at',
-        header: 'Atualizado em',
-      },
+      { accessorKey: 'name', header: 'Nome técnico' },
+      { accessorKey: 'display_name', header: 'Nome de exibição' },
+      { accessorKey: 'description', header: 'Descrição' },
       {
         id: 'actions',
         header: 'Ações',
@@ -55,11 +57,13 @@ const RolesList = () => {
           <AppActionButtons
             viewTo={`/roles/${row.original.id}`}
             editTo={`/roles/${row.original.id}/edit`}
+            canView={canManage}
+            canEdit={canManage}
           />
         ),
       },
     ],
-    [],
+    [canManage],
   )
 
   return (
@@ -73,9 +77,11 @@ const RolesList = () => {
           </p>
         </div>
 
-        <CButton color="primary" size="lg" as={Link} to="/roles/create">
-          Cadastrar Perfil
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/roles/create">
+            Cadastrar Perfil
+          </CButton>
+        </div>        
       </div>
 
       <CCard>
@@ -85,11 +91,7 @@ const RolesList = () => {
           {isLoading ? (
             <p className="text-body-secondary mb-0">Carregando perfis...</p>
           ) : (
-            <AppTable
-              data={roles}
-              columns={columns}
-              emptyMessage="Nenhum perfil encontrado."
-            />
+            <AppTable data={roles} columns={columns} emptyMessage="Nenhum perfil encontrado." />
           )}
         </CCardBody>
       </CCard>

@@ -22,6 +22,10 @@ class Settings(BaseSettings):
 
     # URL de conexão com o banco PostgreSQL
     database_url: str
+    
+    # Uploads
+    upload_dir: str = "uploads"
+    max_upload_size_mb: int = 10
 
     # Configurações de autenticação JWT
     secret_key: str

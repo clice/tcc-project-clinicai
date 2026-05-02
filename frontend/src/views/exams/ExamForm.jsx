@@ -1,5 +1,5 @@
 /**
- * Formulário de exames usando mocks.
+ * Formulário do módulo de Exams.
  *
  * Permite cadastrar, visualizar e editar exames.
  * Também exibe uma área preparada para análise de IA.

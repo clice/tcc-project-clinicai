@@ -1,3 +1,12 @@
+/**
+ * Formulário do módulo de Status.
+ *
+ * Usado para:
+ * - criar status;
+ * - visualizar status;
+ * - editar status.
+ */
+
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -11,11 +20,10 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CRow,
 } from '@coreui/react'
 
-import { statuses as statusesMock } from 'src/mocks/data'
+import { statusService } from 'src/services/statusService'
 
 const emptyStatus = {
   name: '',
@@ -23,14 +31,6 @@ const emptyStatus = {
   applies_to: '',
   description: '',
 }
-
-const appliesToOptions = [
-  { value: '', label: 'Selecione uma entidade' },
-  { value: 'users', label: 'Usuários' },
-  { value: 'clinics', label: 'Clínicas' },
-  { value: 'patients', label: 'Pacientes' },
-  { value: 'exams', label: 'Exames' },
-]
 
 const StatusForm = ({ mode = 'create' }) => {
   const { id } = useParams()
@@ -47,10 +47,10 @@ const StatusForm = ({ mode = 'create' }) => {
   const isEditMode = mode === 'edit'
 
   const title = useMemo(() => {
-    if (mode === 'create') return 'Cadastrar Status'
-    if (mode === 'edit') return 'Editar Status'
+    if (isCreateMode) return 'Cadastrar Status'
+    if (isEditMode) return 'Editar Status'
     return 'Detalhes do Status'
-  }, [mode])
+  }, [isCreateMode, isEditMode])
 
   useEffect(() => {
     if (isCreateMode) {
@@ -58,24 +58,32 @@ const StatusForm = ({ mode = 'create' }) => {
       return
     }
 
-    const found = statusesMock.find((status) => String(status.id) === String(id))
+    const loadStatus = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
 
-    if (!found) {
-      setError('Status não encontrado no mock.')
-      setIsLoading(false)
-      return
+        const statusData = await statusService.getById(id)
+
+        setForm({
+          name: statusData.name ?? '',
+          display_name: statusData.display_name ?? '',
+          applies_to: statusData.applies_to ?? '',
+          description: statusData.description ?? '',
+        })
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Erro ao carregar o status.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    setForm({
-      name: found.name ?? '',
-      display_name: found.display_name ?? '',
-      applies_to: found.applies_to ?? '',
-      description: found.description ?? '',
-    })
-
-    setIsLoading(false)
+    loadStatus()
   }, [id, isCreateMode])
 
+  /**
+   * Atualiza um campo do formulário.
+   */
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -83,6 +91,9 @@ const StatusForm = ({ mode = 'create' }) => {
     }))
   }
 
+  /**
+   * Normaliza campos técnicos para o padrão usado no backend.
+   */
   const normalizeName = (value) => {
     return value
       .toLowerCase()
@@ -91,31 +102,23 @@ const StatusForm = ({ mode = 'create' }) => {
       .replace(/[^a-z0-9_]/g, '')
   }
 
+  /**
+   * Monta o payload enviado para a API.
+   */
   const buildPayload = () => ({
-    name: form.name.trim(),
+    name: normalizeName(form.name),
     display_name: form.display_name.trim(),
-    applies_to: form.applies_to.trim(),
+    applies_to: normalizeName(form.applies_to),
     description: form.description.trim() || null,
   })
 
+  /**
+   * Valida os campos do formulário antes de enviar para a API.
+   */
   const validateForm = () => {
     if (!form.name.trim()) return 'Informe o nome técnico do status.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição.'
     if (!form.applies_to.trim()) return 'Informe onde esse status será aplicado.'
-
-    const duplicated = statusesMock.some((status) => {
-      const isSameStatus = String(status.id) === String(id)
-
-      return (
-        !isSameStatus &&
-        status.name === form.name.trim() &&
-        status.applies_to === form.applies_to.trim()
-      )
-    })
-
-    if (duplicated) {
-      return 'Já existe um status com esse nome técnico para essa entidade.'
-    }
 
     return ''
   }
@@ -138,21 +141,24 @@ const StatusForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      const payload = buildPayload()
-
-      console.log('Payload mock de status:', payload)
-
       if (isCreateMode) {
-        setSuccess('Status cadastrado com sucesso no mock.')
+        const created = await statusService.create(buildPayload())
+
+        if (created?.id) {
+          navigate(`/statuses/${created.id}/edit`)
+          return
+        }
+
         navigate('/statuses')
         return
       }
 
       if (isEditMode) {
-        setSuccess('Status atualizado com sucesso no mock.')
+        await statusService.update(id, buildPayload())
+        setSuccess('Status atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar status.')
+      setError(err.response?.data?.detail || 'Erro ao salvar o status.')
     } finally {
       setIsSaving(false)
     }
@@ -169,9 +175,11 @@ const StatusForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/statuses">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/statuses">
+            Voltar
+          </CButton>
+        </div>
       </div>
 
       <CCard>
@@ -212,18 +220,13 @@ const StatusForm = ({ mode = 'create' }) => {
 
                 <CCol md={4}>
                   <CFormLabel>Aplicado em</CFormLabel>
-                  <CFormSelect
+                  <CFormInput
                     value={form.applies_to}
                     disabled={isReadOnly}
+                    placeholder="Ex: user, clinic, patient"
                     onChange={(e) => updateField('applies_to', e.target.value)}
                     required
-                  >
-                    {appliesToOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </CFormSelect>
+                  />
                 </CCol>
 
                 <CCol md={12}>

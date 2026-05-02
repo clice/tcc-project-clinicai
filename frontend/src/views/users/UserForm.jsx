@@ -1,3 +1,12 @@
+/**
+ * Formulário do módulo de Users.
+ *
+ * Usado para:
+ * - criar usuário;
+ * - visualizar usuário;
+ * - editar usuário.
+ */
+
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -15,12 +24,10 @@ import {
   CRow,
 } from '@coreui/react'
 
-import {
-  clinics as clinicsMock,
-  roles as rolesMock,
-  statuses as statusesMock,
-  users as usersMock,
-} from 'src/mocks/data'
+import { userService } from 'src/services/userService'
+import { roleService } from 'src/services/roleService'
+import { statusService } from 'src/services/statusService'
+import { clinicService } from 'src/services/clinicService'
 
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
 
@@ -63,14 +70,14 @@ const UserForm = ({ mode = 'create' }) => {
   }, [selectedRole])
 
   const userStatuses = useMemo(() => {
-    return statuses.filter((status) => status.applies_to === 'users')
+    return statuses.filter((status) => status.applies_to === 'user')
   }, [statuses])
 
   const availableClinics = useMemo(() => {
     const selectedClinicId = String(form.clinic_id)
 
     return clinics.filter((clinic) => {
-      const isActive = clinic.status === 'Active' || clinic.status_name === 'active'
+      const isActive = clinic.status_name === 'active'
       const isSelected = String(clinic.id) === selectedClinicId
 
       return isActive || isSelected
@@ -79,11 +86,9 @@ const UserForm = ({ mode = 'create' }) => {
 
   const sortedRoles = useMemo(() => {
     return [...roles].sort((a, b) =>
-      (a.display_name || a.name || '').localeCompare(
-        b.display_name || b.name || '',
-        'pt-BR',
-        { sensitivity: 'base' },
-      ),
+      (a.display_name || a.name || '').localeCompare(b.display_name || b.name || '', 'pt-BR', {
+        sensitivity: 'base',
+      }),
     )
   }, [roles])
 
@@ -94,51 +99,64 @@ const UserForm = ({ mode = 'create' }) => {
   }, [isCreateMode, isEditMode])
 
   useEffect(() => {
-    setIsLoading(true)
-    setError('')
-    setSuccess('')
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
+        setSuccess('')
 
-    setRoles(Array.isArray(rolesMock) ? rolesMock : [])
-    setStatuses(Array.isArray(statusesMock) ? statusesMock : [])
-    setClinics(Array.isArray(clinicsMock) ? clinicsMock : [])
+        const [rolesData, statusesData, clinicsData, userData] = await Promise.all([
+          roleService.list(),
+          statusService.list(),
+          clinicService.list({ includeInactive: true }),
+          isCreateMode ? Promise.resolve(null) : userService.getById(id),
+        ])
 
-    if (isCreateMode) {
-      const activeUserStatus = statusesMock.find(
-        (status) => status.name === 'active' && status.applies_to === 'users',
-      )
+        const loadedRoles = Array.isArray(rolesData) ? rolesData : []
+        const loadedStatuses = Array.isArray(statusesData) ? statusesData : []
+        const loadedClinics = Array.isArray(clinicsData) ? clinicsData : []
 
-      setForm({
-        ...emptyUser,
-        status_id: activeUserStatus ? String(activeUserStatus.id) : '',
-      })
+        setRoles(loadedRoles)
+        setStatuses(loadedStatuses)
+        setClinics(loadedClinics)
 
-      setIsLoading(false)
-      return
+        if (userData) {
+          setForm({
+            name: userData.name ?? '',
+            email: userData.email ?? '',
+            cpf: formatCpfBR(userData.cpf ?? ''),
+            phone: formatPhoneBR(userData.phone ?? ''),
+            role_id: userData.role_id ? String(userData.role_id) : '',
+            status_id: userData.status_id ? String(userData.status_id) : '',
+            clinic_id: userData.clinic_id ? String(userData.clinic_id) : '',
+            password: '',
+            confirmPassword: '',
+          })
+
+          return
+        }
+
+        const activeUserStatus = loadedStatuses.find(
+          (status) => status.name === 'active' && status.applies_to === 'user',
+        )
+
+        setForm({
+          ...emptyUser,
+          status_id: activeUserStatus ? String(activeUserStatus.id) : '',
+        })
+      } catch (err) {
+        setError(err.response?.data?.detail || err.message || 'Erro ao carregar os dados do usuário.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const userData = usersMock.find((item) => String(item.id) === String(id))
-
-    if (!userData) {
-      setError('Usuário não encontrado no mock.')
-      setIsLoading(false)
-      return
-    }
-
-    setForm({
-      name: userData.name ?? '',
-      email: userData.email ?? '',
-      cpf: formatCpfBR(userData.cpf ?? ''),
-      phone: formatPhoneBR(userData.phone ?? ''),
-      role_id: userData.role_id ? String(userData.role_id) : '',
-      status_id: userData.status_id ? String(userData.status_id) : '',
-      clinic_id: userData.clinic_id ? String(userData.clinic_id) : '',
-      password: '',
-      confirmPassword: '',
-    })
-
-    setIsLoading(false)
+    void loadData()
   }, [id, isCreateMode])
 
+  /**
+   * Atualiza um campo do formulário.
+   */
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -157,6 +175,9 @@ const UserForm = ({ mode = 'create' }) => {
     }))
   }
 
+  /**
+   * Valida os campos do formulário antes de enviar para a API.
+   */
   const validateForm = () => {
     const cpfNumbers = onlyNumbers(form.cpf)
 
@@ -203,24 +224,18 @@ const UserForm = ({ mode = 'create' }) => {
     return true
   }
 
+  /**
+   * Monta o payload enviado para a API.
+   */
   const buildUserPayload = () => {
-    const role = roles.find((item) => String(item.id) === String(form.role_id))
-    const status = statuses.find((item) => String(item.id) === String(form.status_id))
-    const clinic = clinics.find((item) => String(item.id) === String(form.clinic_id))
-
     return {
       name: form.name.trim(),
       email: form.email.trim().toLowerCase(),
       cpf: onlyNumbers(form.cpf) || null,
       phone: onlyNumbers(form.phone) || null,
       role_id: Number(form.role_id),
-      role_name: role?.name ?? null,
-      role_display_name: role?.display_name ?? null,
       status_id: Number(form.status_id),
-      status_name: status?.name ?? null,
-      status_display_name: status?.display_name ?? null,
       clinic_id: requiresClinic ? Number(form.clinic_id) : null,
-      clinic_name: requiresClinic ? clinic?.name ?? null : null,
     }
   }
 
@@ -237,26 +252,27 @@ const UserForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      const payload = isCreateMode
-        ? {
-            ...buildUserPayload(),
-            password: form.password.trim(),
-          }
-        : buildUserPayload()
-
-      console.log('Payload mock de usuário:', payload)
-
       if (isCreateMode) {
-        setSuccess('Usuário cadastrado com sucesso no mock.')
+        await userService.create({
+          ...buildUserPayload(),
+          password: form.password.trim(),
+        })
+
         navigate('/users')
         return
       }
 
       if (isEditMode) {
-        setSuccess('Usuário atualizado com sucesso no mock.')
+        await userService.update(id, buildUserPayload())
+
+        if (form.password.trim()) {
+          await userService.updatePassword(id, form.password.trim())
+        }
+
+        setSuccess('Usuário atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar o usuário.')
+      setError(err.response?.data?.detail || err.message || 'Erro ao salvar o usuário.')
     } finally {
       setIsSaving(false)
     }
@@ -273,9 +289,11 @@ const UserForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/users">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/users">
+            Voltar
+          </CButton>
+        </div>
       </div>
 
       <CCard>
@@ -378,7 +396,7 @@ const UserForm = ({ mode = 'create' }) => {
                     required={requiresClinic}
                   >
                     <option value="">
-                      {requiresClinic ? 'Selecione...' : 'Não se aplica ao admin master'}
+                      {requiresClinic ? 'Selecione...' : ''}
                     </option>
 
                     {availableClinics.map((clinic) => (

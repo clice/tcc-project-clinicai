@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.modules.auth.dependencies import require_permission
+from app.core.deps import require_permission
 from app.modules.exams.schema import (
     ExamCreate,
     ExamResponse,

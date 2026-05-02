@@ -14,8 +14,8 @@ from app.modules.exams.schema import ExamCreate, ExamUpdate
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.statuses.service import (
-    get_status_by_id_and_context,
-    get_status_by_name_and_context,
+    get_status_by_id_and_applies_to,
+    get_status_by_name_and_applies_to,
 )
 from app.modules.users.model import User
 
@@ -88,7 +88,7 @@ def validate_exam_relationships(
                 detail="Médico não pertence à clínica informada.",
             )
 
-    get_status_by_id_and_context(
+    get_status_by_id_and_applies_to(
         db=db,
         status_id=status_id,
         applies_to="exam",
@@ -237,7 +237,7 @@ def delete_exam(db: Session, exam_id: int) -> dict:
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
-    inactive_status = get_status_by_name_and_context(
+    inactive_status = get_status_by_name_and_applies_to(
         db=db,
         name="inactive",
         applies_to="exam",
