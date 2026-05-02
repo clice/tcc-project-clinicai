@@ -12,6 +12,7 @@ from app.modules.roles.router import router as roles_router
 from app.modules.permissions.router import router as permissions_router
 from app.modules.role_permissions.router import router as role_permissions_router
 from app.modules.clinics.router import router as clinics_router
+from app.modules.users.router import router as users_router
 
 
 def register_routes(app: FastAPI) -> None:
@@ -27,3 +28,4 @@ def register_routes(app: FastAPI) -> None:
     
     # Módulos de negócio
     app.include_router(clinics_router)
+    app.include_router(users_router)

@@ -12,6 +12,7 @@ from app.modules.roles.seed import seed_roles
 from app.modules.permissions.seed import seed_permissions
 from app.modules.role_permissions.seed import seed_role_permissions
 from app.modules.clinics.seed import seed_clinics
+from app.modules.users.seed import seed_users
 
 
 def run_seed() -> None:
@@ -39,6 +40,9 @@ def run_seed() -> None:
         
         seed_clinics(db, statuses)
         print("Clinics criadas/verificadas.")
+        
+        seed_users(db)
+        print("Users criados/verificados.")
 
         print("Seeds executados com sucesso.")
 
