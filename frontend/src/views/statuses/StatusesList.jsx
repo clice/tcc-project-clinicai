@@ -69,9 +69,12 @@ const StatusesList = () => {
             Gerencie os estados usados por usuários, clínicas, pacientes e exames.
           </p>
         </div>
-        <CButton color="primary" size="lg" as={Link} to="/statuses/create">
-          Cadastrar Status
-        </CButton>
+
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/statuses/create">
+            Cadastrar Status
+          </CButton>
+        </div>
       </div>
 
       <CCard>

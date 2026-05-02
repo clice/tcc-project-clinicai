@@ -114,20 +114,12 @@ const _nav = [
         name: 'Perfis',
         to: '/roles',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
       {
         component: CNavItem,
         name: 'Permissões',
         to: '/permissions',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
       {
         component: CNavItem,
