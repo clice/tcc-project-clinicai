@@ -14,6 +14,7 @@ from app.modules.role_permissions.seed import seed_role_permissions
 from app.modules.clinics.seed import seed_clinics
 from app.modules.users.seed import seed_users
 from app.modules.patients.seed import seed_patients
+from app.modules.exams.seed import seed_exams
 from app.modules.audit_logs.seed import seed_audit_logs
 
 
@@ -48,6 +49,9 @@ def run_seed() -> None:
         
         seed_patients(db)
         print("Patients criados/verificados.")
+        
+        seed_exams(db)
+        print("Exames criados/verificados.")
         
         seed_audit_logs(db)
         print("Audit logs criados/verificados.")
