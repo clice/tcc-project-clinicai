@@ -76,6 +76,28 @@ const _nav = [
     roles: ['admin_master'],
   },  
   {
+    component: CNavItem,
+    name: 'Usuários',
+    to: '/users',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+    roles: ['admin_master'],
+    badge: {
+      color: 'info',
+      text: 'EM BREVE',
+    },
+  },
+  {
+    component: CNavItem,
+    name: 'Logs',
+    to: '/audit-logs',
+    icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
+    roles: ['admin_master'],
+    badge: {
+      color: 'info',
+      text: 'EM BREVE',
+    },
+  }, 
+  {
     component: CNavGroup,
     name: 'Configurações',
     to: '/settings',
@@ -113,29 +135,7 @@ const _nav = [
         },
       },
     ],
-  },
-  {
-    component: CNavItem,
-    name: 'Usuários',
-    to: '/users',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
-  },
-  {
-    component: CNavItem,
-    name: 'Logs',
-    to: '/audit-logs',
-    icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
-    roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
-  },  
+  }, 
 ]
 
 export default _nav
