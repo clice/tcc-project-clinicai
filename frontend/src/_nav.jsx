@@ -134,10 +134,6 @@ const _nav = [
         name: 'Status',
         to: '/statuses',
         roles: ['admin_master'],
-        badge: {
-          color: 'info',
-          text: 'EM BREVE',
-        },
       },
     ],
   }, 
