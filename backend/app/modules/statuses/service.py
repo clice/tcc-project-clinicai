@@ -1,35 +1,22 @@
 """
 Service do módulo de statuses.
 
-Responsável pelas regras de negócio do módulo.
-O acesso direto ao banco fica concentrado no repository.py.
+Aqui ficam as regras de negócio e operações com o banco.
+O router deve ficar mais limpo e apenas chamar essas funções.
 """
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.modules.statuses.model import Status
-from app.modules.statuses.repository import (
-    create_status as repository_create_status,
-    exists_status,
-    get_status_by_id as repository_get_status_by_id,
-    get_status_by_name_and_applies_to as repository_get_status_by_name_and_applies_to,
-    list_statuses as repository_list_statuses,
-    save_status,
-)
 from app.modules.statuses.schema import StatusCreate, StatusUpdate
 
-
-# ========================================
-# UTILITARIAS
-# ========================================
 
 def get_status_by_id(db: Session, status_id: int) -> Status:
     """
     Busca um status pelo ID.
-    Lança erro 404 caso não exista.
     """
-    status = repository_get_status_by_id(db=db, status_id=status_id)
+    status = db.query(Status).filter(Status.id == status_id).first()
 
     if not status:
         raise HTTPException(status_code=404, detail="Status não encontrado.")
@@ -37,7 +24,7 @@ def get_status_by_id(db: Session, status_id: int) -> Status:
     return status
 
 
-def get_status_by_id_and_applies_to(
+def get_status_by_id_and_context(
     db: Session,
     status_id: int,
     applies_to: str,
@@ -46,10 +33,9 @@ def get_status_by_id_and_applies_to(
     Busca um status pelo ID e valida se pertence ao contexto esperado.
 
     Exemplo:
-    - user
-    - clinic
-    - patient
-    - exam
+    - status de user
+    - status de clinic
+    - status de patient
     """
     status = get_status_by_id(db=db, status_id=status_id)
 
@@ -62,20 +48,21 @@ def get_status_by_id_and_applies_to(
     return status
 
 
-def get_status_by_name_and_applies_to(
+def get_status_by_name_and_context(
     db: Session,
     name: str,
     applies_to: str,
 ) -> Status:
     """
     Busca um status pelo nome interno e contexto.
-
-    Útil para outros módulos recuperarem status padrão.
     """
-    status = repository_get_status_by_name_and_applies_to(
-        db=db,
-        name=name,
-        applies_to=applies_to,
+    status = (
+        db.query(Status)
+        .filter(
+            Status.name == name,
+            Status.applies_to == applies_to,
+        )
+        .first()
     )
 
     if not status:
@@ -94,40 +81,37 @@ def check_status_duplicate(
     ignore_status_id: int | None = None,
 ) -> None:
     """
-    Verifica duplicidade de status por nome e contexto.
-
-    Usado na criação e atualização.
+    Verifica se já existe outro status com o mesmo name e applies_to.
     """
-    if exists_status(
-        db=db,
-        name=name,
-        applies_to=applies_to,
-        ignore_status_id=ignore_status_id,
-    ):
+    query = db.query(Status).filter(
+        Status.name == name,
+        Status.applies_to == applies_to,
+    )
+
+    if ignore_status_id is not None:
+        query = query.filter(Status.id != ignore_status_id)
+
+    if query.first():
         raise HTTPException(
             status_code=400,
             detail="Já existe um status com esse nome para essa referência.",
         )
 
 
-# ========================================
-# MÓDULOS
-# ========================================
-
-def list_statuses(
-    db: Session,
-    applies_to: str | None = None,
-) -> list[Status]:
+def list_statuses(db: Session) -> list[Status]:
     """
-    Lista os status cadastrados.
-    Pode filtrar por contexto, como user, clinic, patient ou exam.
+    Lista todos os statuses cadastrados.
     """
-    return repository_list_statuses(db=db, applies_to=applies_to)
+    return (
+        db.query(Status)
+        .order_by(Status.applies_to.asc(), Status.display_name.asc())
+        .all()
+    )
 
 
 def create_status(db: Session, payload: StatusCreate) -> Status:
     """
-    Cria um novo status após validar duplicidade.
+    Cria um novo status.
     """
     check_status_duplicate(
         db=db,
@@ -142,7 +126,11 @@ def create_status(db: Session, payload: StatusCreate) -> Status:
         description=payload.description,
     )
 
-    return repository_create_status(db=db, status=status)
+    db.add(status)
+    db.commit()
+    db.refresh(status)
+
+    return status
 
 
 def update_status(
@@ -151,9 +139,7 @@ def update_status(
     payload: StatusUpdate,
 ) -> Status:
     """
-    Atualiza parcialmente um status existente.
-
-    Como é PATCH, somente os campos enviados são alterados.
+    Atualiza parcialmente um status.
     """
     status = get_status_by_id(db=db, status_id=status_id)
     update_data = payload.model_dump(exclude_unset=True)
@@ -174,4 +160,7 @@ def update_status(
     for field, value in update_data.items():
         setattr(status, field, value)
 
-    return save_status(db=db, status=status)
+    db.commit()
+    db.refresh(status)
+
+    return status
