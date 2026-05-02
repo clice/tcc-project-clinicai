@@ -12,19 +12,7 @@ from app.modules.statuses.model import Status
 from app.modules.statuses.schema import StatusCreate, StatusUpdate
 
 
-def get_status_by_id(db: Session, status_id: int) -> Status:
-    """
-    Busca um status pelo ID.
-    """
-    status = db.query(Status).filter(Status.id == status_id).first()
-
-    if not status:
-        raise HTTPException(status_code=404, detail="Status não encontrado.")
-
-    return status
-
-
-def get_status_by_id_and_context(
+def get_status_by_id_and_applies_to(
     db: Session,
     status_id: int,
     applies_to: str,
@@ -48,7 +36,7 @@ def get_status_by_id_and_context(
     return status
 
 
-def get_status_by_name_and_context(
+def get_status_by_name_and_applies_to(
     db: Session,
     name: str,
     applies_to: str,
@@ -96,6 +84,18 @@ def check_status_duplicate(
             status_code=400,
             detail="Já existe um status com esse nome para essa referência.",
         )
+
+
+def get_status_by_id(db: Session, status_id: int) -> Status:
+    """
+    Busca um status pelo ID.
+    """
+    status = db.query(Status).filter(Status.id == status_id).first()
+
+    if not status:
+        raise HTTPException(status_code=404, detail="Status não encontrado.")
+
+    return status
 
 
 def list_statuses(db: Session) -> list[Status]:

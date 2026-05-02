@@ -12,20 +12,6 @@ from app.modules.roles.model import Role
 from app.modules.roles.schema import RoleCreate, RoleUpdate
 
 
-def get_role_by_id(db: Session, role_id: int) -> Role:
-    """
-    Busca uma role pelo ID.
-
-    Se não existir, retorna erro 404.
-    """
-    role = db.query(Role).filter(Role.id == role_id).first()
-
-    if not role:
-        raise HTTPException(status_code=404, detail="Perfil não encontrado.")
-
-    return role
-
-
 def check_role_duplicate(
     db: Session,
     name: str,
@@ -49,6 +35,20 @@ def check_role_duplicate(
             status_code=400,
             detail="Já existe um perfil com esse nome.",
         )
+
+
+def get_role_by_id(db: Session, role_id: int) -> Role:
+    """
+    Busca uma role pelo ID.
+
+    Se não existir, retorna erro 404.
+    """
+    role = db.query(Role).filter(Role.id == role_id).first()
+
+    if not role:
+        raise HTTPException(status_code=404, detail="Perfil não encontrado.")
+
+    return role
 
 
 def list_roles(db: Session) -> list[Role]:

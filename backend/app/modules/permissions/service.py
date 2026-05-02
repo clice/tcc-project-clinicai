@@ -12,23 +12,6 @@ from app.modules.permissions.model import Permission
 from app.modules.permissions.schema import PermissionCreate, PermissionUpdate
 
 
-def get_permission_by_id(db: Session, permission_id: int) -> Permission:
-    """
-    Busca uma permission pelo ID.
-    Se não existir, retorna erro 404.
-    """
-    permission = (
-        db.query(Permission)
-        .filter(Permission.id == permission_id)
-        .first()
-    )
-
-    if not permission:
-        raise HTTPException(status_code=404, detail="Permissão não encontrada.")
-
-    return permission
-
-
 def check_permission_duplicate(
     db: Session,
     name: str,
@@ -52,6 +35,23 @@ def check_permission_duplicate(
             status_code=400,
             detail="Já existe uma permissão com esse nome.",
         )
+
+
+def get_permission_by_id(db: Session, permission_id: int) -> Permission:
+    """
+    Busca uma permission pelo ID.
+    Se não existir, retorna erro 404.
+    """
+    permission = (
+        db.query(Permission)
+        .filter(Permission.id == permission_id)
+        .first()
+    )
+
+    if not permission:
+        raise HTTPException(status_code=404, detail="Permissão não encontrada.")
+
+    return permission
 
 
 def list_permissions(db: Session) -> list[Permission]:

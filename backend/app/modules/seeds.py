@@ -11,6 +11,7 @@ from app.modules.statuses.seed import seed_statuses
 from app.modules.roles.seed import seed_roles
 from app.modules.permissions.seed import seed_permissions
 from app.modules.role_permissions.seed import seed_role_permissions
+from app.modules.clinics.seed import seed_clinics
 
 
 def run_seed() -> None:
@@ -24,7 +25,7 @@ def run_seed() -> None:
         print("Iniciando seed...")
         
         # Base inicial do sistema        
-        seed_statuses(db)
+        statuses = seed_statuses(db)
         print("Statuses criados/verificados.")
         
         roles = seed_roles(db)
@@ -35,6 +36,9 @@ def run_seed() -> None:
         
         seed_role_permissions(db, roles, permissions)
         print("Role permissions criadas/verificadas.")
+        
+        seed_clinics(db, statuses)
+        print("Clinics criadas/verificadas.")
 
         print("Seeds executados com sucesso.")
 

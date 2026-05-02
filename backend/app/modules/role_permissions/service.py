@@ -17,30 +17,6 @@ from app.modules.role_permissions.schema import (
 )
 
 
-def get_role_permission_by_id(
-    db: Session,
-    role_permission_id: int,
-) -> RolePermission:
-    """
-    Busca um vínculo pelo ID.
-
-    Se não existir, retorna erro 404.
-    """
-    role_permission = (
-        db.query(RolePermission)
-        .filter(RolePermission.id == role_permission_id)
-        .first()
-    )
-
-    if not role_permission:
-        raise HTTPException(
-            status_code=404,
-            detail="Vínculo entre perfil e permissão não encontrado.",
-        )
-
-    return role_permission
-
-
 def validate_role_exists(db: Session, role_id: int) -> Role:
     """
     Valida se a role informada existe.
@@ -99,6 +75,30 @@ def check_role_permission_duplicate(
             status_code=400,
             detail="Essa permissão já está vinculada a esse perfil.",
         )
+
+
+def get_role_permission_by_id(
+    db: Session,
+    role_permission_id: int,
+) -> RolePermission:
+    """
+    Busca um vínculo pelo ID.
+
+    Se não existir, retorna erro 404.
+    """
+    role_permission = (
+        db.query(RolePermission)
+        .filter(RolePermission.id == role_permission_id)
+        .first()
+    )
+
+    if not role_permission:
+        raise HTTPException(
+            status_code=404,
+            detail="Vínculo entre perfil e permissão não encontrado.",
+        )
+
+    return role_permission
 
 
 def list_role_permissions(db: Session) -> list[RolePermission]:
