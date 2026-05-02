@@ -28,7 +28,6 @@ def get_current_user(
 ) -> User:
     """
     Retorna o usuário autenticado com base no token JWT enviado na requisição.
-
     O token deve conter o campo 'sub', que neste projeto representa o e-mail
     do usuário autenticado.
     """
