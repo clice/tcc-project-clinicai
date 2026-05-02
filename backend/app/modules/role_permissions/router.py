@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import require_admin
 from app.modules.role_permissions.schema import (
     RolePermissionCreate,
     RolePermissionResponse,
@@ -30,6 +31,7 @@ router = APIRouter(prefix="/role-permissions", tags=["Role Permissions"])
 def create_role_permission_route(
     payload: RolePermissionCreate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Cria um vínculo entre perfil de acesso e permissão.
@@ -41,6 +43,7 @@ def create_role_permission_route(
 @router.get("/", response_model=list[RolePermissionResponse])
 def list_role_permissions_route(
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Lista todos os vínculos entre roles e permissions.
@@ -52,6 +55,7 @@ def list_role_permissions_route(
 def get_role_permission_route(
     role_permission_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Busca um vínculo específico pelo ID.
@@ -67,6 +71,7 @@ def update_role_permission_route(
     role_permission_id: int,
     payload: RolePermissionUpdate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza parcialmente um vínculo existente.
@@ -82,6 +87,7 @@ def update_role_permission_route(
 def delete_role_permission_route(
     role_permission_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Remove um vínculo entre perfil e permissão.
