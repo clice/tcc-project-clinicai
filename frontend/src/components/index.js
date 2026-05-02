@@ -1,9 +1,9 @@
-import AppBreadcrumbs from './navigation/AppBreadcrumbs'
-import AppContent from './layout/AppContent'
-import AppFooter from './layout/AppFooter'
-import AppHeader from './layout/AppHeader'
-import AppHeaderDropdown from './navigation/AppHeaderDropdown'
-import AppSidebar from './layout/AppSidebar'
+import AppBreadcrumbs from 'src/components/navigation/AppBreadcrumbs'
+import AppContent from 'src/components/layout/AppContent'
+import AppFooter from 'src/components/layout/AppFooter'
+import AppHeader from 'src/components/layout/AppHeader'
+import AppHeaderDropdown from 'src/components/navigation/AppHeaderDropdown'
+import AppSidebar from 'src/components/layout/AppSidebar'
 
 export {
   AppBreadcrumbs,
