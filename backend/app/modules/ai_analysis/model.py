@@ -1,7 +1,7 @@
 """
 Model da tabela de análises de IA.
 
-A tabela ai_analyses armazena os resultados gerados pelo modelo de IA
+A tabela ai_analysis armazena os resultados gerados pelo modelo de IA
 para exames médicos enviados ao sistema.
 """
 
@@ -17,7 +17,7 @@ class AIAnalysis(Base):
     Model ORM da tabela de análises de IA.
     """
 
-    __tablename__ = "ai_analyses"
+    __tablename__ = "ai_analysis"
 
     id = Column(Integer, primary_key=True, index=True)
 

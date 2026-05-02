@@ -1,0 +1,87 @@
+"""
+Schemas do módulo de análises de IA.
+
+Define os modelos Pydantic usados para criação, atualização parcial
+e resposta da API.
+"""
+
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
+
+class AIAnalysisBase(BaseModel):
+    """
+    Campos compartilhados entre criação e resposta.
+    """
+
+    exam_id: int
+
+    prediction_label: str = Field(..., min_length=2, max_length=80)
+    prediction_class: int | None = None
+    confidence: float = Field(..., ge=0, le=1)
+
+    model_name: str = Field(..., min_length=2, max_length=120)
+    model_version: str = Field(..., min_length=1, max_length=50)
+
+    gradcam_path: str | None = Field(default=None, max_length=255)
+    processing_time_ms: int | None = None
+
+    ai_notes: str | None = None
+    raw_response: str | None = None
+
+
+class AIAnalysisCreate(AIAnalysisBase):
+    """
+    Schema usado para criação de análise de IA.
+    """
+
+    pass
+
+
+class AIAnalysisUpdate(BaseModel):
+    """
+    Schema usado para atualização parcial de análise de IA.
+    """
+
+    prediction_label: str | None = Field(default=None, min_length=2, max_length=80)
+    prediction_class: int | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+
+    model_name: str | None = Field(default=None, min_length=2, max_length=120)
+    model_version: str | None = Field(default=None, min_length=1, max_length=50)
+
+    gradcam_path: str | None = Field(default=None, max_length=255)
+    processing_time_ms: int | None = None
+
+    ai_notes: str | None = None
+    raw_response: str | None = None
+
+
+class AIAnalysisResponse(BaseModel):
+    """
+    Schema usado nas respostas da API.
+    """
+
+    id: int
+    exam_id: int
+
+    prediction_label: str
+    prediction_class: int | None = None
+    confidence: float
+
+    model_name: str
+    model_version: str
+
+    gradcam_path: str | None = None
+    processing_time_ms: int | None = None
+
+    ai_notes: str | None = None
+    raw_response: str | None = None
+
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
