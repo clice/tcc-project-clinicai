@@ -1,5 +1,5 @@
 /**
- * Listagem de Roles usando mocks.
+ * Listagem de perfis.
  *
  * Exibe os perfis cadastrados no sistema e permite acessar
  * visualização, edição e cadastro sem depender do banco.
@@ -14,6 +14,7 @@ import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { roleService } from 'src/services/roleService'
+
 import { canManageRoles } from 'src/utils/permissions'
 
 const RolesList = () => {

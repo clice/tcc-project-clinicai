@@ -1,9 +1,8 @@
 /**
  * Listagem de clínicas.
  *
- * Exibe clínicas separadas por abas:
- * - ativas;
- * - inativas.
+ * Exibe as clínicas cadastradas no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -16,6 +15,7 @@ import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { clinicService } from 'src/services/clinicService'
+
 import { formatCnpjBR } from 'src/utils/formatters'
 import { canManageClinics } from 'src/utils/permissions'
 

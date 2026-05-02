@@ -1,5 +1,5 @@
 /**
- * Formulário do módulo de Roles usando mocks.
+ * Formulário do módulo de Roles.
  *
  * Usado para:
  * - criar perfil;

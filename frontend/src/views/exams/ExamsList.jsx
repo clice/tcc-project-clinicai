@@ -1,5 +1,5 @@
 /**
- * Listagem de exames usando mocks.
+ * Listagem de exames.
  *
  * Exibe exames vinculados a pacientes, clínicas, médicos
  * e resultados simulados de análise por IA.

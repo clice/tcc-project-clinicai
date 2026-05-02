@@ -1,3 +1,12 @@
+/**
+ * Formulário do módulo de Petients.
+ *
+ * Usado para:
+ * - criar paciente;
+ * - visualizar paciente;
+ * - editar paciente.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -18,17 +27,19 @@ import {
   CSpinner,
 } from '@coreui/react'
 
-import {
-  clinics as clinicsMock,
-  patients as patientsMock,
-  users as usersMock,
-} from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { addressService } from 'src/services/addressService'
+import { patientService } from 'src/services/patientService'
+import { clinicService } from 'src/services/clinicService'
+import { userService } from 'src/services/userService'
+
 import {
   formatCpfBR,
   formatPhoneBR,
   formatZipCodeBR,
   onlyNumbers,
 } from 'src/utils/formatters'
+import { getUserRole, ROLES } from 'src/utils/permissions'
 
 const emptyPatient = {
   clinic_id: '',
@@ -50,31 +61,16 @@ const emptyPatient = {
   state: '',
 }
 
-const mockedAddressesByZipCode = {
-  63010010: {
-    zip_code: '63010010',
-    address: 'Rua das Flores',
-    complement: 'Casa',
-    neighborhood: 'Centro',
-    city: 'Barbalha',
-    state: 'CE',
-  },
-  63020020: {
-    zip_code: '63020020',
-    address: 'Avenida Brasil',
-    complement: 'Apartamento 302',
-    neighborhood: 'Jardim América',
-    city: 'Juazeiro do Norte',
-    state: 'CE',
-  },
-  63100030: {
-    zip_code: '63100030',
-    address: 'Praça da Liberdade',
-    complement: '',
-    neighborhood: 'Centro',
-    city: 'Crato',
-    state: 'CE',
-  },
+const getErrorMessage = (error, fallback) => {
+  const detail = error?.response?.data?.detail
+
+  if (typeof detail === 'string') return detail
+
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item.msg).join(' ')
+  }
+
+  return error?.message || fallback
 }
 
 const PatientForm = ({ mode = 'create' }) => {
@@ -128,83 +124,88 @@ const PatientForm = ({ mode = 'create' }) => {
     }))
   }
 
-  const loadDoctorsByClinic = useCallback((clinicId) => {
+  const loadDoctorsByClinic = useCallback(async (clinicId) => {
     if (!clinicId) {
       setDoctors([])
       return
     }
 
-    setIsLoadingDoctors(true)
+    try {
+      setIsLoadingDoctors(true)
 
-    const clinicDoctors = usersMock.filter(
-      (item) =>
-        String(item.clinic_id) === String(clinicId) &&
-        item.role_name === 'doctor' &&
-        item.status_name === 'active',
-    )
-
-    setDoctors(clinicDoctors)
-    setIsLoadingDoctors(false)
+      const data = await userService.listDoctorsByClinic(clinicId)
+      setDoctors(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setDoctors([])
+      setError(getErrorMessage(err, 'Erro ao carregar médicos da clínica.'))
+    } finally {
+      setIsLoadingDoctors(false)
+    }
   }, [])
 
   useEffect(() => {
-    setIsLoading(true)
-    setError('')
-    setSuccess('')
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
+        setSuccess('')
 
-    setClinics(Array.isArray(clinicsMock) ? clinicsMock : [])
+        const [clinicsData, patientData] = await Promise.all([
+          isAdminMaster ? clinicService.list({ includeInactive: true }) : Promise.resolve([]),
+          isCreateMode ? Promise.resolve(null) : patientService.getById(id),
+        ])
 
-    if (!isCreateMode) {
-      const patientData = patientsMock.find((item) => String(item.id) === String(id))
+        const loadedClinics = Array.isArray(clinicsData) ? clinicsData : []
+        setClinics(loadedClinics)
 
-      if (!patientData) {
-        setError('Paciente não encontrado no mock.')
+        if (patientData) {
+          setPatient(patientData)
+
+          setForm({
+            clinic_id: patientData.clinic_id ? String(patientData.clinic_id) : '',
+            clinic_name: patientData.clinic_name ?? '',
+            doctor_id: patientData.doctor_id ? String(patientData.doctor_id) : '',
+            doctor_name: patientData.doctor_name ?? '',
+            name: patientData.name ?? '',
+            cpf: formatCpfBR(patientData.cpf ?? ''),
+            birth_date: patientData.birth_date ?? '',
+            sex: patientData.sex ?? '',
+            phone: formatPhoneBR(patientData.phone ?? ''),
+            email: patientData.email ?? '',
+            zip_code: formatZipCodeBR(patientData.zip_code ?? ''),
+            address: patientData.address ?? '',
+            number: patientData.number ?? '',
+            complement: patientData.complement ?? '',
+            neighborhood: patientData.neighborhood ?? '',
+            city: patientData.city ?? '',
+            state: patientData.state ?? '',
+          })
+
+          await loadDoctorsByClinic(patientData.clinic_id)
+          return
+        }
+
+        const clinicId = isAdminMaster ? '' : user?.clinic_id ? String(user.clinic_id) : ''
+
+        setForm({
+          ...emptyPatient,
+          clinic_id: clinicId,
+          clinic_name: user?.clinic_name ?? '',
+          doctor_id: isDoctor && user?.id ? String(user.id) : '',
+          doctor_name: isDoctor ? user?.name ?? '' : '',
+        })
+
+        if (clinicId) {
+          await loadDoctorsByClinic(clinicId)
+        }
+      } catch (err) {
+        setError(getErrorMessage(err, 'Erro ao carregar os dados do paciente.'))
+      } finally {
         setIsLoading(false)
-        return
       }
-
-      setPatient(patientData)
-
-      setForm({
-        clinic_id: patientData.clinic_id ? String(patientData.clinic_id) : '',
-        clinic_name: patientData.clinic_name ?? '',
-        doctor_id: patientData.doctor_id ? String(patientData.doctor_id) : '',
-        doctor_name: patientData.doctor_name ?? '',
-        name: patientData.name ?? '',
-        cpf: formatCpfBR(patientData.cpf ?? ''),
-        birth_date: patientData.birth_date ?? '',
-        sex: patientData.sex ?? '',
-        phone: formatPhoneBR(patientData.phone ?? ''),
-        email: patientData.email ?? '',
-        zip_code: formatZipCodeBR(patientData.zip_code ?? ''),
-        address: patientData.address ?? '',
-        number: patientData.number ?? '',
-        complement: patientData.complement ?? '',
-        neighborhood: patientData.neighborhood ?? '',
-        city: patientData.city ?? '',
-        state: patientData.state ?? '',
-      })
-
-      loadDoctorsByClinic(patientData.clinic_id)
-      setIsLoading(false)
-      return
     }
 
-    const clinicId = isAdminMaster ? '' : user?.clinic_id ? String(user.clinic_id) : ''
-
-    setForm({
-      ...emptyPatient,
-      clinic_id: clinicId,
-      clinic_name: user?.clinic_name ?? '',
-      doctor_id: isDoctor && user?.id ? String(user.id) : '',
-      doctor_name: isDoctor ? user?.name ?? '' : '',
-    })
-
-    if (clinicId) {
-      loadDoctorsByClinic(clinicId)
-    }
-
-    setIsLoading(false)
+    void loadData()
   }, [
     id,
     isCreateMode,
@@ -255,30 +256,23 @@ const PatientForm = ({ mode = 'create' }) => {
     return true
   }
 
-  const buildPayload = () => {
-    const clinic = clinics.find((item) => String(item.id) === String(form.clinic_id))
-    const doctor = doctors.find((item) => String(item.id) === String(form.doctor_id))
-
-    return {
-      clinic_id: Number(form.clinic_id || user?.clinic_id),
-      clinic_name: clinic?.name ?? form.clinic_name ?? null,
-      doctor_id: isDoctor ? Number(user.id) : form.doctor_id ? Number(form.doctor_id) : null,
-      doctor_name: isDoctor ? user?.name : doctor?.name ?? form.doctor_name ?? null,
-      name: form.name.trim(),
-      cpf: onlyNumbers(form.cpf),
-      birth_date: form.birth_date || null,
-      sex: form.sex || null,
-      phone: onlyNumbers(form.phone) || null,
-      email: form.email.trim() || null,
-      zip_code: onlyNumbers(form.zip_code) || null,
-      address: form.address.trim() || null,
-      number: form.number.trim() || null,
-      complement: form.complement.trim() || null,
-      neighborhood: form.neighborhood.trim() || null,
-      city: form.city.trim() || null,
-      state: form.state.trim().toUpperCase() || null,
-    }
-  }
+  const buildPayload = () => ({
+    clinic_id: Number(form.clinic_id || user?.clinic_id),
+    doctor_id: isDoctor ? Number(user.id) : form.doctor_id ? Number(form.doctor_id) : null,
+    name: form.name.trim(),
+    cpf: onlyNumbers(form.cpf),
+    birth_date: form.birth_date || null,
+    sex: form.sex || null,
+    phone: onlyNumbers(form.phone) || null,
+    email: form.email.trim() || null,
+    zip_code: onlyNumbers(form.zip_code) || null,
+    address: form.address.trim() || null,
+    number: form.number.trim() || null,
+    complement: form.complement.trim() || null,
+    neighborhood: form.neighborhood.trim() || null,
+    city: form.city.trim() || null,
+    state: form.state.trim().toUpperCase() || null,
+  })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -293,47 +287,43 @@ const PatientForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      const payload = buildPayload()
-
-      console.log('Payload mock de paciente:', payload)
-
       if (isCreateMode) {
-        setSuccess('Paciente cadastrado com sucesso no mock.')
+        await patientService.create(buildPayload())
         navigate('/patients')
         return
       }
 
       if (isEditMode) {
-        setSuccess('Paciente atualizado com sucesso no mock.')
+        await patientService.update(id, buildPayload())
+        setSuccess('Paciente atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.message || 'Erro ao salvar paciente.')
+      setError(getErrorMessage(err, 'Erro ao salvar paciente.'))
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleInactivate = () => {
+  const handleInactivate = async () => {
     try {
       setIsSaving(true)
       setError('')
       setSuccess('')
 
-      console.log('Inativar paciente mock:', id)
-
+      await patientService.inactivate(id)
       navigate('/patients')
     } catch (err) {
-      setError(err.message || 'Erro ao inativar paciente.')
+      setError(getErrorMessage(err, 'Erro ao inativar paciente.'))
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleClinicChange = (clinicId) => {
+  const handleClinicChange = async (clinicId) => {
     updateField('clinic_id', clinicId)
     updateField('doctor_id', '')
 
-    loadDoctorsByClinic(clinicId)
+    await loadDoctorsByClinic(clinicId)
   }
 
   const clearAddressFields = () => {
@@ -347,36 +337,40 @@ const PatientForm = ({ mode = 'create' }) => {
     }))
   }
 
-  const handleZipCodeBlur = () => {
+  const handleZipCodeBlur = async () => {
     const zipCode = onlyNumbers(form.zip_code)
 
     if (!zipCode || zipCode.length !== 8) {
       return
     }
 
-    setIsLoadingAddress(true)
-    setError('')
-    clearAddressFields()
+    try {
+      setIsLoadingAddress(true)
+      setError('')
 
-    const address = mockedAddressesByZipCode[zipCode]
+      clearAddressFields()
 
-    if (!address) {
-      setError('CEP não encontrado no mock.')
+      const address = await addressService.getAddressByZipCode(zipCode)
+
+      if (!address) {
+        setError('CEP não encontrado.')
+        return
+      }
+
+      setForm((current) => ({
+        ...current,
+        zip_code: formatZipCodeBR(address.zip_code),
+        address: address.address,
+        complement: address.complement,
+        neighborhood: address.neighborhood,
+        city: address.city,
+        state: address.state,
+      }))
+    } catch {
+      setError('Erro ao buscar endereço pelo CEP.')
+    } finally {
       setIsLoadingAddress(false)
-      return
     }
-
-    setForm((current) => ({
-      ...current,
-      zip_code: formatZipCodeBR(address.zip_code),
-      address: address.address,
-      complement: address.complement,
-      neighborhood: address.neighborhood,
-      city: address.city,
-      state: address.state,
-    }))
-
-    setIsLoadingAddress(false)
   }
 
   return (
@@ -390,23 +384,19 @@ const PatientForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButtonGroup>
-          {patient && (
-            <CButton
-              color="info"
-              size="lg"
-              variant="outline"
-              as={Link}
-              to={`/exams/upload?patient=${id}`}
-            >
-              Upload exame
+        <div className="d-flex justify-content-center mt-4">
+          <CButtonGroup>
+            {patient && (
+              <CButton color="info" size="lg" as={Link} to={`/exams/upload?patient=${id}`}>
+                Upload exame
+              </CButton>
+            )}
+          
+            <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
+              Voltar
             </CButton>
-          )}
-
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
-            Voltar
-          </CButton>
         </CButtonGroup>
+        </div> 
       </div>
 
       <CRow className="g-4">

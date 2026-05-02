@@ -89,9 +89,14 @@ export const formatZipCodeBR = (value = '') => {
 }
 
 /**
- * Formata UF:
- * ce -> CE
+ * Formata Sexo:
  */
-export const formatStateBR = (value = '') => {
-  return String(value).trim().toUpperCase().slice(0, 2)
+export const formatSex = (value) => {
+  const labels = {
+    female: 'Feminino',
+    male: 'Masculino',
+    other: 'Outro',
+  }
+
+  return labels[value] || '-'
 }

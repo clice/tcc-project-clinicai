@@ -28,6 +28,7 @@ import {
 import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
 import { statusService } from 'src/services/statusService'
+
 import {
   formatCnpjBR,
   formatPhoneBR,

@@ -1,3 +1,10 @@
+/**
+ * Listagem de statuses.
+ *
+ * Exibe os statuses cadastrados no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
@@ -7,6 +14,7 @@ import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { statusService } from 'src/services/statusService'
+
 import { canManageStatuses } from 'src/utils/permissions'
 
 const StatusesList = () => {

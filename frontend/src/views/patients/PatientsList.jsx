@@ -1,8 +1,11 @@
 /**
- * Listagem de pacientes usando mocks.
+ * Listagem de pacientes.
+ *
+ * Exibe os pacientes cadastrados no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
  */
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
@@ -10,88 +13,89 @@ import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { formatCpfBR, formatPhoneBR } from 'src/utils/formatters'
-import { patients as patientsMock } from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { patientService } from 'src/services/patientService'
+
+import { calculateAge } from 'src/utils/calculators'
+import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
+import { canManagePatients } from 'src/utils/permissions'
 
 const patientTabs = [
   { key: 'active', label: 'Ativos' },
   { key: 'inactive', label: 'Inativos' },
 ]
 
-const calculateAge = (birthDate) => {
-  if (!birthDate) return '-'
+const getErrorMessage = (error, fallback) => {
+  const detail = error.response?.data?.detail
 
-  const date = new Date(birthDate)
+  if (typeof detail === 'string') return detail
 
-  if (Number.isNaN(date.getTime())) return '-'
-
-  const today = new Date()
-  let age = today.getFullYear() - date.getFullYear()
-  const monthDifference = today.getMonth() - date.getMonth()
-
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 && today.getDate() < date.getDate())
-  ) {
-    age -= 1
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item.msg).join(' ')
   }
 
-  return age
-}
-
-const formatSex = (value) => {
-  const labels = {
-    female: 'Feminino',
-    male: 'Masculino',
-    other: 'Outro',
-  }
-
-  return labels[value] || '-'
+  return error.message || fallback
 }
 
 const PatientsList = () => {
+  const { user } = useAuth()
+
   const [activeTab, setActiveTab] = useState('active')
-  const [patients, setPatients] = useState(patientsMock)
+  const [patients, setPatients] = useState([])
   const [error, setError] = useState('')
-  const [isLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleInactivate = useCallback((patient) => {
-    setError('')
+  const canManage = canManagePatients(user)
 
-    setPatients((current) =>
-      current.map((item) =>
-        String(item.id) === String(patient.id)
-          ? {
-              ...item,
-              status_id: '6',
-              status_name: 'inactive',
-              status_display_name: 'Inativo',
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    )
+  const loadPatients = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const data = await patientService.list({ includeInactive: true })
+      setPatients(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao carregar os pacientes.'))
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
-  const handleActivate = useCallback((patient) => {
-    setError('')
+  useEffect(() => {
+    void loadPatients()
+  }, [loadPatients])
 
-    setPatients((current) =>
-      current.map((item) =>
-        String(item.id) === String(patient.id)
-          ? {
-              ...item,
-              status_id: '5',
-              status_name: 'active',
-              status_display_name: 'Ativo',
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    )
-  }, [])
+  const handleInactivate = useCallback(
+    async (patient) => {
+      try {
+        setError('')
+        await patientService.inactivate(patient.id)
+        await loadPatients()
+      } catch (err) {
+        setError(getErrorMessage(err, 'Erro ao inativar o paciente.'))
+      }
+    },
+    [loadPatients],
+  )
+
+  const handleActivate = useCallback(
+    async (patient) => {
+      try {
+        setError('')
+        await patientService.activate(patient.id)
+        await loadPatients()
+      } catch (err) {
+        setError(getErrorMessage(err, 'Erro ao ativar o paciente.'))
+      }
+    },
+    [loadPatients],
+  )
 
   const filteredPatients = useMemo(() => {
+    if (activeTab === 'all') {
+      return patients
+    }
+
     return patients.filter((patient) => patient.status_name === activeTab)
   }, [patients, activeTab])
 
@@ -99,46 +103,20 @@ const PatientsList = () => {
     () => ({
       active: patients.filter((patient) => patient.status_name === 'active').length,
       inactive: patients.filter((patient) => patient.status_name === 'inactive').length,
+      all: patients.length,
     }),
     [patients],
   )
 
   const columns = useMemo(
     () => [
-      {
-        accessorKey: 'name',
-        header: 'Paciente',
-      },
-      {
-        accessorKey: 'cpf',
-        header: 'CPF',
-        cell: ({ getValue }) => formatCpfBR(getValue()) || '-',
-      },
-      {
-        accessorKey: 'birth_date',
-        header: 'Idade',
-        cell: ({ getValue }) => calculateAge(getValue()),
-      },
-      {
-        accessorKey: 'sex',
-        header: 'Sexo',
-        cell: ({ getValue }) => formatSex(getValue()),
-      },
-      {
-        accessorKey: 'phone',
-        header: 'Telefone',
-        cell: ({ getValue }) => formatPhoneBR(getValue()) || '-',
-      },
-      {
-        accessorKey: 'doctor_name',
-        header: 'Médico',
-        cell: ({ getValue }) => getValue() || '-',
-      },
-      {
-        accessorKey: 'clinic_name',
-        header: 'Clínica',
-        cell: ({ getValue }) => getValue() || '-',
-      },
+      { accessorKey: 'name', header: 'Paciente' },
+      { accessorKey: 'cpf', header: 'CPF', cell: ({ getValue }) => formatCpfBR(getValue()) || '-' },
+      { accessorKey: 'birth_date', header: 'Idade', cell: ({ getValue }) => calculateAge(getValue()) },
+      { accessorKey: 'sex', header: 'Sexo', cell: ({ getValue }) => formatSex(getValue()) },
+      { accessorKey: 'phone', header: 'Telefone', cell: ({ getValue }) => formatPhoneBR(getValue()) || '-' },
+      { accessorKey: 'doctor_name', header: 'Médico', cell: ({ getValue }) => getValue() || '-' },
+      { accessorKey: 'clinic_name', header: 'Clínica', cell: ({ getValue }) => getValue() || '-' },
       {
         id: 'actions',
         header: 'Ações',
@@ -153,6 +131,10 @@ const PatientsList = () => {
               viewTo={`/patients/${patient.id}`}
               editTo={`/patients/${patient.id}/edit`}
               isInactive={isInactive}
+              canView={canManage}
+              canEdit={canManage}
+              canInactivate={canManage && !isInactive}
+              canActivate={canManage && isInactive}
               onInactivate={() => handleInactivate(patient)}
               onActivate={() => handleActivate(patient)}
             />
@@ -160,7 +142,7 @@ const PatientsList = () => {
         },
       },
     ],
-    [handleActivate, handleInactivate],
+    [canManage, handleActivate, handleInactivate],
   )
 
   return (
@@ -174,9 +156,11 @@ const PatientsList = () => {
           </p>
         </div>
 
-        <CButton color="primary" size="lg" as={Link} to="/patients/create">
-          Cadastrar Paciente
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/patients/create">
+            Cadastrar Paciente
+          </CButton>
+        </div>  
       </div>
 
       <CCard>
@@ -189,18 +173,8 @@ const PatientsList = () => {
             </div>
           ) : (
             <>
-              <AppTabs
-                activeTab={activeTab}
-                counts={counts}
-                onChange={setActiveTab}
-                tabs={patientTabs}
-              />
-
-              <AppTable
-                data={filteredPatients}
-                columns={columns}
-                emptyMessage="Nenhum paciente encontrado."
-              />
+              <AppTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} tabs={patientTabs} />
+              <AppTable data={filteredPatients} columns={columns} emptyMessage="Nenhum paciente encontrado." />
             </>
           )}
         </CCardBody>

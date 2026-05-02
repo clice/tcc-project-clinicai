@@ -1,8 +1,8 @@
 /**
- * Listagem do módulo de Permissions.
+ * Listagem de permissões.
  *
  * Exibe as permissões cadastradas no sistema e permite acessar
- * visualização, edição e cadastro.
+ * visualização, edição e cadastro sem depender do banco.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -14,6 +14,7 @@ import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { permissionService } from 'src/services/permissionService'
+
 import { canManagePermissions } from 'src/utils/permissions'
 
 const moduleLabels = {

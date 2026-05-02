@@ -28,6 +28,7 @@ import { userService } from 'src/services/userService'
 import { roleService } from 'src/services/roleService'
 import { statusService } from 'src/services/statusService'
 import { clinicService } from 'src/services/clinicService'
+
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
 
 const emptyUser = {

@@ -1,9 +1,8 @@
 /**
  * Listagem de usuários.
  *
- * Exibe usuários separados por abas:
- * - ativos;
- * - inativos.
+ * Exibe os usuários cadastrados no sistema e permite acessar
+ * visualização, edição e cadastro sem depender do banco.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -15,9 +14,10 @@ import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
-import { canManageUsers } from 'src/utils/permissions'
 import { userService } from 'src/services/userService'
+
 import { formatCpfBR, formatDateTimeBR, formatPhoneBR } from 'src/utils/formatters'
+import { canManageUsers } from 'src/utils/permissions'
 
 const userTabs = [
   { key: 'active', label: 'Ativos' },
