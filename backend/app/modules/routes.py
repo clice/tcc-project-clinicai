@@ -1,0 +1,45 @@
+"""
+Arquivo central de registro das rotas dos módulos.
+
+Este arquivo concentra a inclusão dos routers da aplicação,
+mantendo o main.py mais limpo e organizado.
+"""
+
+from fastapi import FastAPI
+
+from app.modules.auth.router import router as auth_router
+from app.modules.statuses.router import router as statuses_router
+from app.modules.roles.router import router as roles_router
+from app.modules.permissions.router import router as permissions_router
+from app.modules.role_permissions.router import router as role_permissions_router
+from app.modules.clinics.router import router as clinics_router
+from app.modules.users.router import router as users_router
+from app.modules.patients.router import router as patients_router
+from app.modules.exams.router import router as exams_router
+from app.modules.ai_analysis.router import router as ai_analysis_router
+from app.modules.audit_logs.router import router as audit_logs_router
+
+
+def register_routes(app: FastAPI) -> None:
+    """
+    Registra todas as rotas dos módulos da aplicação.
+    """
+    
+    # Autenticação
+    app.include_router(auth_router)
+
+    # Tabelas estruturais / administrativas
+    app.include_router(statuses_router)
+    app.include_router(roles_router)
+    app.include_router(permissions_router)
+    app.include_router(role_permissions_router)
+    app.include_router(audit_logs_router)
+    
+    # Módulos de negócio
+    app.include_router(clinics_router)
+    app.include_router(users_router)
+    app.include_router(patients_router)
+    
+    # Módulo AI
+    app.include_router(exams_router)
+    app.include_router(ai_analysis_router)

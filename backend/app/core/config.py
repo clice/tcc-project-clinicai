@@ -28,6 +28,16 @@ class Settings(BaseSettings):
     algorithm: str
     access_token_expire_minutes: int = 60
     refresh_token_expire_minutes: int = 10080
+    
+    backend_cors_origins: str = ""
+    
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.backend_cors_origins.split(",")
+            if origin.strip()
+        ]
 
     # Configuração do Pydantic para leitura do arquivo .env
     model_config = SettingsConfigDict(
