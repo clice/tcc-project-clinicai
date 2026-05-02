@@ -9,6 +9,7 @@ from app.core.database import SessionLocal
 
 from app.modules.statuses.seed import seed_statuses
 from app.modules.roles.seed import seed_roles
+from app.modules.permissions.seed import seed_permissions
 
 
 def run_seed() -> None:
@@ -27,6 +28,9 @@ def run_seed() -> None:
         
         seed_roles(db)
         print("Roles criados/verificados.")
+        
+        seed_permissions(db)
+        print("Permissions criadas/verificadas.")
 
         print("Seeds executados com sucesso.")
 
