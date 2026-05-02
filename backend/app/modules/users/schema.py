@@ -7,7 +7,15 @@ padronizar respostas e proteger dados sensíveis como password_hash.
 
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.common.validators import (
+    normalize_cpf,
+    normalize_email,
+    normalize_optional_email,
+    normalize_phone,
+    normalize_required_text,
+)
 
 
 class UserBase(BaseModel):
@@ -22,6 +30,38 @@ class UserBase(BaseModel):
     role_id: int
     status_id: int
     clinic_id: int | None = None
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        """
+        Remove espaços extras do nome completo.
+        """
+        return normalize_required_text(value, "Nome completo é obrigatório.")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str) -> str:
+        """
+        Normaliza o e-mail para evitar duplicidade por caixa alta/baixa.
+        """
+        return normalize_email(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def normalize_cpf(cls, value: str | None) -> str | None:
+        """
+        Salva CPF apenas com números.
+        """
+        return normalize_cpf(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        """
+        Salva telefone apenas com números.
+        """
+        return normalize_phone(value)
 
 
 class UserCreate(UserBase):
@@ -47,6 +87,41 @@ class UserUpdate(BaseModel):
     role_id: int | None = None
     status_id: int | None = None
     clinic_id: int | None = None
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        """
+        Remove espaços extras do nome completo.
+        """
+        if value is None:
+            return None
+
+        return normalize_required_text(value, "Nome completo é obrigatório.")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        """
+        Normaliza o e-mail para evitar duplicidade por caixa alta/baixa.
+        """
+        return normalize_optional_email(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def normalize_cpf(cls, value: str | None) -> str | None:
+        """
+        Salva CPF apenas com números.
+        """
+        return normalize_cpf(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        """
+        Salva telefone apenas com números.
+        """
+        return normalize_phone(value)
 
 
 class UserPasswordUpdate(BaseModel):
