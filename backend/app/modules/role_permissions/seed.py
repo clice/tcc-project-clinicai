@@ -80,8 +80,10 @@ def seed_role_permissions(
     Cria os vínculos iniciais entre roles e permissions.
     """
 
+    # Admin
     admin_master_permissions = list(permissions.keys())
 
+    # Doctor
     doctor_permissions = [
         "users:read",
         "users:update",
@@ -107,6 +109,7 @@ def seed_role_permissions(
         "ai_analysis:download",
     ]
 
+    # Clinic_staff
     clinic_staff_permissions = [
         "users:read",
         "users:update",

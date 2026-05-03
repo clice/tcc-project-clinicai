@@ -25,7 +25,7 @@ class User(Base):
     # Campos da tabela
     name = Column(String(150), nullable=False)
     email = Column(String(150), unique=True, nullable=False, index=True)
-    cpf = Column(String(11), unique=True, nullable=True, index=True)
+    cpf = Column(String(11), unique=True, nullable=False, index=True)
     phone = Column(String(20), nullable=True)
 
     # Segurança

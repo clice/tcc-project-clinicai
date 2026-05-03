@@ -49,6 +49,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
     """
 
     return {
+        # Users
         "user_active": get_or_create_status(
             db,
             name=StatusName.ACTIVE,
@@ -64,6 +65,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Usuário inativo no sistema.",
         ),
 
+        # Clinics
         "clinic_active": get_or_create_status(
             db,
             name=StatusName.ACTIVE,
@@ -79,6 +81,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Clínica inativa no sistema.",
         ),
 
+        # Patients
         "patient_active": get_or_create_status(
             db,
             name=StatusName.ACTIVE,
@@ -94,6 +97,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Paciente inativo no sistema.",
         ),
 
+        # Exams
         "exam_pending": get_or_create_status(
             db,
             name=StatusName.PENDING,
@@ -130,6 +134,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Exame com erro no processamento.",
         ),
 
+        # AI Analysis
         "ai_analysis_pending": get_or_create_status(
             db,
             name=StatusName.PENDING,

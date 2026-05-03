@@ -1,14 +1,12 @@
 """
 Service do módulo de usuários.
-
-Aqui ficam as regras de negócio e operações com o banco.
-O router deve apenas receber a requisição e chamar essas funções.
 """
 
 from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.constants import RoleName, StatusName, StatusScope
 from app.core.security import get_password_hash
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
@@ -22,7 +20,7 @@ from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
 
 
 def is_admin_master(user: User) -> bool:
-    return bool(user.role and user.role.name == "admin_master")
+    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
 
 
 def get_user_role_name(user: User) -> str | None:
@@ -59,7 +57,7 @@ def validate_current_user_can_manage_user_data(
     if is_admin_master(current_user):
         return
 
-    if role.name == "admin_master":
+    if role.name == RoleName.ADMIN_MASTER.value:
         raise HTTPException(
             status_code=403,
             detail="Você não tem permissão para criar ou alterar administrador master.",
@@ -79,11 +77,6 @@ def validate_current_user_can_manage_user_data(
 
 
 def get_user_by_id(db: Session, user_id: int) -> User:
-    """
-    Busca usuário pelo ID.
-
-    Se não existir, retorna erro 404.
-    """
     user = (
         db.query(User)
         .options(
@@ -102,9 +95,6 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 
 def get_role_by_id(db: Session, role_id: int) -> Role:
-    """
-    Busca role existente.
-    """
     role = db.query(Role).filter(Role.id == role_id).first()
 
     if not role:
@@ -114,9 +104,6 @@ def get_role_by_id(db: Session, role_id: int) -> Role:
 
 
 def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | None:
-    """
-    Busca clínica ativa, quando clinic_id for informado.
-    """
     if clinic_id is None:
         return None
 
@@ -125,8 +112,8 @@ def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | No
         .join(Status, Clinic.status_id == Status.id)
         .filter(
             Clinic.id == clinic_id,
-            Status.name == "active",
-            Status.applies_to == "clinic",
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.CLINIC.value,
         )
         .first()
     )
@@ -145,9 +132,6 @@ def check_email_duplicate(
     email: str,
     ignore_user_id: int | None = None,
 ) -> None:
-    """
-    Verifica duplicidade de e-mail.
-    """
     query = db.query(User).filter(User.email == email)
 
     if ignore_user_id is not None:
@@ -159,15 +143,9 @@ def check_email_duplicate(
 
 def check_cpf_duplicate(
     db: Session,
-    cpf: str | None,
+    cpf: str,
     ignore_user_id: int | None = None,
 ) -> None:
-    """
-    Verifica duplicidade de CPF, quando CPF for informado.
-    """
-    if cpf is None:
-        return
-
     query = db.query(User).filter(User.cpf == cpf)
 
     if ignore_user_id is not None:
@@ -183,25 +161,17 @@ def validate_user_business_rules(
     status_id: int,
     clinic_id: int | None,
 ) -> Role:
-    """
-    Valida regras de negócio do usuário.
-
-    - role deve existir
-    - status deve ser de user
-    - admin_master pode ficar sem clínica
-    - médico e funcionário precisam de clínica ativa
-    """
     role = get_role_by_id(db, role_id)
 
     get_status_by_id_and_applies_to(
         db=db,
         status_id=status_id,
-        applies_to="user",
+        applies_to=StatusScope.USER.value,
     )
 
     role_name = role.name.strip().lower()
 
-    if role_name == "admin_master":
+    if role_name == RoleName.ADMIN_MASTER.value:
         if clinic_id is not None:
             raise HTTPException(
                 status_code=400,
@@ -221,11 +191,6 @@ def validate_user_business_rules(
 
 
 def build_user_list_item(user: User) -> dict:
-    """
-    Monta resposta enriquecida para listagem e detalhe.
-
-    Evita depender do frontend para resolver nomes de role, status e clínica.
-    """
     return {
         "id": user.id,
         "name": user.name,
@@ -250,10 +215,9 @@ def create_user(
     payload: UserCreate,
     current_user: User,
 ) -> dict:
-    """
-    Cria um novo usuário.
-    """
-    check_email_duplicate(db, payload.email)
+    email = str(payload.email)
+
+    check_email_duplicate(db, email)
     check_cpf_duplicate(db, payload.cpf)
 
     role = validate_user_business_rules(
@@ -271,7 +235,7 @@ def create_user(
 
     user = User(
         name=payload.name,
-        email=str(payload.email),
+        email=email,
         cpf=payload.cpf,
         phone=payload.phone,
         role_id=payload.role_id,
@@ -297,18 +261,6 @@ def list_users(
     role: str | None = None,
     status: str | None = None,
 ) -> list[dict]:
-    """
-    Lista usuários com filtros opcionais.
-
-    Filtros disponíveis:
-    - search: busca por nome, e-mail ou CPF;
-    - clinic_id: filtra usuários por clínica;
-    - role: filtra pelo nome do perfil, ex: doctor;
-    - status: filtra pelo nome do status, ex: active.
-
-    Esse filtro é usado pelo módulo Patients para listar apenas
-    médicos ativos da clínica selecionada.
-    """
     query = (
         db.query(User)
         .options(
@@ -354,7 +306,7 @@ def list_users(
     if status:
         query = query.filter(
             Status.name == status.strip().lower(),
-            Status.applies_to == "user",
+            Status.applies_to == StatusScope.USER.value,
         )
 
     users = query.order_by(User.name.asc()).all()
@@ -367,9 +319,6 @@ def get_user_response(
     user_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Busca usuário por ID e devolve resposta enriquecida.
-    """
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -386,9 +335,6 @@ def update_user(
     payload: UserUpdate,
     current_user: User,
 ) -> dict:
-    """
-    Atualiza parcialmente um usuário.
-    """
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -409,6 +355,12 @@ def update_user(
 
     if new_email is not None:
         check_email_duplicate(db, str(new_email), ignore_user_id=user_id)
+
+    if new_cpf is None:
+        raise HTTPException(
+            status_code=400,
+            detail="CPF é obrigatório.",
+        )
 
     check_cpf_duplicate(db, new_cpf, ignore_user_id=user_id)
 
@@ -445,9 +397,6 @@ def update_user_password(
     payload: UserPasswordUpdate,
     current_user: User,
 ) -> dict:
-    """
-    Atualiza somente a senha do usuário.
-    """
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -476,11 +425,6 @@ def inactivate_user(
     user_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Inativa usuário por status.
-
-    Não faz delete físico.
-    """
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -494,7 +438,7 @@ def inactivate_user(
             detail="Você não pode inativar o próprio usuário.",
         )
 
-    if user.role and user.role.name == "admin_master" and not is_admin_master(current_user):
+    if user.role and user.role.name == RoleName.ADMIN_MASTER.value and not is_admin_master(current_user):
         raise HTTPException(
             status_code=403,
             detail="Você não tem permissão para inativar administrador master.",
@@ -502,8 +446,8 @@ def inactivate_user(
 
     inactive_status = get_status_by_name_and_applies_to(
         db=db,
-        name="inactive",
-        applies_to="user",
+        name=StatusName.INACTIVE.value,
+        applies_to=StatusScope.USER.value,
     )
 
     user.status_id = inactive_status.id
@@ -521,9 +465,6 @@ def activate_user(
     user_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Ativa usuário por status.
-    """
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -531,7 +472,7 @@ def activate_user(
         target_user=user,
     )
 
-    if user.role and user.role.name == "admin_master" and not is_admin_master(current_user):
+    if user.role and user.role.name == RoleName.ADMIN_MASTER.value and not is_admin_master(current_user):
         raise HTTPException(
             status_code=403,
             detail="Você não tem permissão para ativar administrador master.",
@@ -539,8 +480,8 @@ def activate_user(
 
     active_status = get_status_by_name_and_applies_to(
         db=db,
-        name="active",
-        applies_to="user",
+        name=StatusName.ACTIVE.value,
+        applies_to=StatusScope.USER.value,
     )
 
     user.status_id = active_status.id
