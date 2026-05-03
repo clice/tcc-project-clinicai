@@ -1,26 +1,31 @@
 """
 Seed do módulo de permissions.
 
-Este arquivo cadastra as permissões iniciais usadas pelo sistema.
+Este arquivo cadastra apenas as permissões oficiais definidas em constants.py.
 """
 
 from sqlalchemy.orm import Session
 
+from app.common.constants import PermissionAction, SystemModule
 from app.modules.permissions.model import Permission
+
+
+def build_permission_name(
+    module: SystemModule,
+    action: PermissionAction,
+) -> str:
+    return f"{module.value}:{action.value}"
 
 
 def get_or_create_permission(
     db: Session,
-    name: str,
+    module: SystemModule,
+    action: PermissionAction,
     display_name: str,
-    description: str | None,
-    module: str,
+    description: str | None = None,
 ) -> Permission:
-    """
-    Busca uma permission existente ou cria uma nova.
+    name = build_permission_name(module, action)
 
-    Evita duplicação nos seeds.
-    """
     permission = db.query(Permission).filter(Permission.name == name).first()
 
     if permission:
@@ -30,7 +35,7 @@ def get_or_create_permission(
         name=name,
         display_name=display_name,
         description=description,
-        module=module,
+        module=module.value,
     )
 
     db.add(permission)
@@ -41,162 +46,77 @@ def get_or_create_permission(
 
 
 def seed_permissions(db: Session) -> dict[str, Permission]:
-    """
-    Cria as permissões iniciais do sistema.
+    permissions_config = [
+        # Users
+        (SystemModule.USERS, PermissionAction.CREATE, "Criar Usuários", "Permite cadastrar novos usuários no sistema."),
+        (SystemModule.USERS, PermissionAction.READ, "Visualizar Usuários", "Permite visualizar usuários cadastrados."),
+        (SystemModule.USERS, PermissionAction.UPDATE, "Atualizar Usuários", "Permite editar dados de usuários."),
+        (SystemModule.USERS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Usuários", "Permite ativar, inativar ou bloquear usuários."),
 
-    Retorna um dicionário para que outros seeds possam reutilizar
-    esses registros, por exemplo no futuro seed de role_permissions.
-    """
+        # Clinics
+        (SystemModule.CLINICS, PermissionAction.CREATE, "Criar Clínicas", "Permite cadastrar novas clínicas."),
+        (SystemModule.CLINICS, PermissionAction.READ, "Visualizar Clínicas", "Permite visualizar clínicas cadastradas."),
+        (SystemModule.CLINICS, PermissionAction.UPDATE, "Atualizar Clínicas", "Permite editar dados de clínicas."),
+        (SystemModule.CLINICS, PermissionAction.CHANGE_STATUS, "Alterar Status das Clínicas", "Permite ativar, inativar ou bloquear clínicas."),
 
-    permissions = {
-        "users": {
-            "users:create": {
-                "display_name": "Criar Usuários",
-                "description": "Permite cadastrar novos usuários no sistema.",
-            },
-            "users:read": {
-                "display_name": "Visualizar Usuários",
-                "description": "Permite visualizar usuários cadastrados.",
-            },
-            "users:update": {
-                "display_name": "Atualizar Usuários",
-                "description": "Permite editar dados de usuários.",
-            },
-            "users:change_status": {
-                "display_name": "Alterar Status dos Usuários",
-                "description": "Permite ativar, inativar ou alterar o status dos usuários.",
-            },
-        },
-        "clinics": {
-            "clinics:create": {
-                "display_name": "Criar Clínicas",
-                "description": "Permite cadastrar novas clínicas.",
-            },
-            "clinics:read": {
-                "display_name": "Visualizar Clínicas",
-                "description": "Permite visualizar clínicas cadastradas.",
-            },
-            "clinics:update": {
-                "display_name": "Atualizar Clínicas",
-                "description": "Permite editar dados de clínicas.",
-            },
-            "clinics:change_status": {
-                "display_name": "Alterar Status das Clínicas",
-                "description": "Permite ativar, inativar ou alterar o status das clínicas.",
-            },
-        },
-        "roles": {
-            "roles:create": {
-                "display_name": "Criar Perfis de Acesso",
-                "description": "Permite cadastrar novos perfis de acesso.",
-            },
-            "roles:read": {
-                "display_name": "Visualizar Perfis de Acesso",
-                "description": "Permite visualizar perfis de acesso.",
-            },
-            "roles:update": {
-                "display_name": "Atualizar Perfis de Acesso",
-                "description": "Permite editar perfis de acesso.",
-            },
-            "roles:delete": {
-                "display_name": "Excluir Perfis de Acesso",
-                "description": "Permite excluir ou arquivar perfis de acesso.",
-            },
-        },
-        "permissions": {
-            "permissions:create": {
-                "display_name": "Criar Permissões",
-                "description": "Permite cadastrar novas permissões do sistema.",
-            },
-            "permissions:read": {
-                "display_name": "Visualizar Permissões",
-                "description": "Permite visualizar permissões do sistema.",
-            },
-            "permissions:update": {
-                "display_name": "Atualizar Permissões",
-                "description": "Permite editar permissões do sistema.",
-            },
-        },
-        "patients": {
-            "patients:create": {
-                "display_name": "Criar Pacientes",
-                "description": "Permite cadastrar novos pacientes.",
-            },
-            "patients:read": {
-                "display_name": "Visualizar Pacientes",
-                "description": "Permite visualizar pacientes cadastrados.",
-            },
-            "patients:update": {
-                "display_name": "Atualizar Pacientes",
-                "description": "Permite editar dados de pacientes.",
-            },
-            "patients:change_status": {
-                "display_name": "Alterar Status dos Pacientes",
-                "description": "Permite ativar ou inativar pacientes.",
-            },
-        },
-        "exams": {
-            "exams:create": {
-                "display_name": "Criar Exames",
-                "description": "Permite cadastrar exames.",
-            },
-            "exams:read": {
-                "display_name": "Visualizar Exames",
-                "description": "Permite visualizar exames cadastrados.",
-            },
-            "exams:update": {
-                "display_name": "Atualizar Exames",
-                "description": "Permite editar dados de exames.",
-            },
-            "exams:delete": {
-                "display_name": "Excluir Exames",
-                "description": "Permite excluir ou arquivar exames.",
-            },
-            "exams:upload_file": {
-                "display_name": "Enviar Arquivos de Exames",
-                "description": "Permite anexar arquivos aos exames.",
-            },
-            "exams:download_file": {
-                "display_name": "Baixar Arquivos de Exames",
-                "description": "Permite baixar arquivos anexados aos exames.",
-            },
-        },
-        "ai_analysis": {
-            "ai_analysis:create": {
-                "display_name": "Criar Análise por IA",
-                "description": "Permite solicitar análise automatizada de exames por IA.",
-            },
-            "ai_analysis:read": {
-                "display_name": "Visualizar Análise por IA",
-                "description": "Permite visualizar resultados de análises por IA.",
-            },
-            "ai_analysis:update": {
-                "display_name": "Atualizar Análise por IA",
-                "description": "Permite atualizar metadados ou revisão da análise por IA.",
-            },
-            "ai_analysis:review": {
-                "display_name": "Revisar Análise por IA",
-                "description": "Permite registrar revisão médica sobre uma análise gerada por IA.",
-            },
-        },
-        "audit_logs": {
-            "audit_logs:read": {
-                "display_name": "Visualizar Logs de Auditoria",
-                "description": "Permite visualizar registros de auditoria do sistema.",
-            },
-        },
-    }
+        # Roles
+        (SystemModule.ROLES, PermissionAction.CREATE, "Criar Perfis de Acesso", "Permite cadastrar novos perfis de acesso."),
+        (SystemModule.ROLES, PermissionAction.READ, "Visualizar Perfis de Acesso", "Permite visualizar perfis de acesso."),
+        (SystemModule.ROLES, PermissionAction.UPDATE, "Atualizar Perfis de Acesso", "Permite editar perfis de acesso."),
+        (SystemModule.ROLES, PermissionAction.DELETE, "Excluir Perfis de Acesso", "Permite excluir perfis de acesso."),
+
+        # Permissions
+        (SystemModule.PERMISSIONS, PermissionAction.CREATE, "Criar Permissões", "Permite cadastrar novas permissões do sistema."),
+        (SystemModule.PERMISSIONS, PermissionAction.READ, "Visualizar Permissões", "Permite visualizar permissões do sistema."),
+        (SystemModule.PERMISSIONS, PermissionAction.UPDATE, "Atualizar Permissões", "Permite editar permissões do sistema."),
+
+        # Role Permissions
+        (SystemModule.ROLE_PERMISSIONS, PermissionAction.CREATE, "Vincular Permissões", "Permite vincular permissões a perfis."),
+        (SystemModule.ROLE_PERMISSIONS, PermissionAction.READ, "Visualizar Permissões por Perfil", "Permite visualizar vínculos entre perfis e permissões."),
+        (SystemModule.ROLE_PERMISSIONS, PermissionAction.UPDATE, "Atualizar Permissões por Perfil", "Permite atualizar vínculos entre perfis e permissões."),
+        (SystemModule.ROLE_PERMISSIONS, PermissionAction.DELETE, "Remover Permissões por Perfil", "Permite remover permissões de perfis."),
+
+        # Statuses
+        (SystemModule.STATUSES, PermissionAction.CREATE, "Criar Status", "Permite cadastrar status do sistema."),
+        (SystemModule.STATUSES, PermissionAction.READ, "Visualizar Status", "Permite visualizar status do sistema."),
+        (SystemModule.STATUSES, PermissionAction.UPDATE, "Atualizar Status", "Permite editar status do sistema."),
+
+        # Patients
+        (SystemModule.PATIENTS, PermissionAction.CREATE, "Criar Pacientes", "Permite cadastrar novos pacientes."),
+        (SystemModule.PATIENTS, PermissionAction.READ, "Visualizar Pacientes", "Permite visualizar pacientes cadastrados."),
+        (SystemModule.PATIENTS, PermissionAction.UPDATE, "Atualizar Pacientes", "Permite editar dados de pacientes."),
+        (SystemModule.PATIENTS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Pacientes", "Permite ativar ou inativar pacientes."),
+
+        # Exams
+        (SystemModule.EXAMS, PermissionAction.CREATE, "Criar Exames", "Permite cadastrar exames."),
+        (SystemModule.EXAMS, PermissionAction.READ, "Visualizar Exames", "Permite visualizar exames cadastrados."),
+        (SystemModule.EXAMS, PermissionAction.UPDATE, "Atualizar Exames", "Permite editar dados de exames."),
+        (SystemModule.EXAMS, PermissionAction.DELETE, "Excluir Exames", "Permite excluir exames."),
+        (SystemModule.EXAMS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Exames", "Permite cancelar, concluir ou alterar status de exames."),
+        (SystemModule.EXAMS, PermissionAction.UPLOAD, "Uplaod Exames", "Permite fazer o upload dos exames."),
+        (SystemModule.EXAMS, PermissionAction.DOWNLOAD, "Baixar Exames", "Permite baixar os exames."),
+
+        # AI Analysis
+        (SystemModule.AI_ANALYSIS, PermissionAction.CREATE, "Criar Análise por IA", "Permite solicitar análise automatizada de exames por IA."),
+        (SystemModule.AI_ANALYSIS, PermissionAction.READ, "Visualizar Análise por IA", "Permite visualizar resultados de análises por IA."),
+        (SystemModule.AI_ANALYSIS, PermissionAction.UPDATE, "Atualizar Análise por IA", "Permite atualizar ou revisar análise por IA."),
+        (SystemModule.AI_ANALYSIS, PermissionAction.DOWNLOAD, "Baixar Análise por IA", "Permite baixar a análise por IA."),
+
+        # Audit Logs
+        (SystemModule.AUDIT_LOGS, PermissionAction.READ, "Visualizar Logs de Auditoria", "Permite visualizar registros de auditoria do sistema."),
+    ]
 
     created_permissions: dict[str, Permission] = {}
 
-    for module, module_permissions in permissions.items():
-        for name, data in module_permissions.items():
-            created_permissions[name] = get_or_create_permission(
-                db=db,
-                name=name,
-                display_name=data["display_name"],
-                description=data["description"],
-                module=module,
-            )
+    for module, action, display_name, description in permissions_config:
+        permission = get_or_create_permission(
+            db=db,
+            module=module,
+            action=action,
+            display_name=display_name,
+            description=description,
+        )
+
+        created_permissions[permission.name] = permission
 
     return created_permissions

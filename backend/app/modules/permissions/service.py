@@ -69,13 +69,15 @@ def create_permission(db: Session, payload: PermissionCreate) -> Permission:
     """
     Cria uma nova permissão.
     """
+    module = payload.module.value
+
     check_permission_duplicate(db=db, name=payload.name)
 
     permission = Permission(
         name=payload.name,
         display_name=payload.display_name,
         description=payload.description,
-        module=payload.module,
+        module=module,
     )
 
     db.add(permission)
@@ -92,15 +94,16 @@ def update_permission(
 ) -> Permission:
     """
     Atualiza parcialmente uma permissão.
-    Usa exclude_unset=True para alterar apenas os campos enviados.
     """
     permission = get_permission_by_id(db, permission_id)
 
     update_data = payload.model_dump(exclude_unset=True)
 
-    # Se nenhum campo foi enviado, apenas retorna a permission atual.
     if not update_data:
         return permission
+
+    if "module" in update_data and update_data["module"] is not None:
+        update_data["module"] = update_data["module"].value
 
     new_name = update_data.get("name", permission.name)
 
@@ -110,7 +113,6 @@ def update_permission(
         ignore_permission_id=permission_id,
     )
 
-    # Atualiza apenas os campos enviados.
     for field, value in update_data.items():
         setattr(permission, field, value)
 
