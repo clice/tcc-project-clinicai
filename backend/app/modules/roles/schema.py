@@ -9,9 +9,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.common.constants import RoleName
 from app.common.validators import (
-    normalize_lower_text,
-    normalize_optional_lower_text,
     normalize_optional_text,
     normalize_required_text,
 )
@@ -22,19 +21,14 @@ class RoleBase(BaseModel):
     Schema base com os campos compartilhados entre criação e resposta.
     """
 
-    name: str = Field(..., min_length=2, max_length=50)
+    name: RoleName
     display_name: str = Field(..., min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=255)
-    
-    @field_validator("name")
-    @classmethod
-    def normalize_slug_fields(cls, value: str) -> str:
-        return normalize_lower_text(value, "Campo obrigatório.")
 
     @field_validator("display_name")
     @classmethod
     def normalize_display_name(cls, value: str) -> str:
-        return normalize_required_text(value, "Campo obrigatório.")
+        return normalize_required_text(value, "Nome de exibição é obrigatório.")
 
     @field_validator("description")
     @classmethod
@@ -57,14 +51,9 @@ class RoleUpdate(BaseModel):
     Todos os campos são opcionais para permitir update parcial.
     """
 
-    name: str | None = Field(default=None, min_length=2, max_length=50)
+    name: RoleName | None = None
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=255)
-    
-    @field_validator("name")
-    @classmethod
-    def normalize_slug_fields(cls, value: str | None) -> str | None:
-        return normalize_optional_lower_text(value, "Campo obrigatório.")
 
     @field_validator("display_name")
     @classmethod
@@ -72,7 +61,7 @@ class RoleUpdate(BaseModel):
         if value is None:
             return None
 
-        return normalize_required_text(value, "Campo obrigatório.")
+        return normalize_required_text(value, "Nome de exibição é obrigatório.")
 
     @field_validator("description")
     @classmethod
@@ -95,3 +84,4 @@ class RoleResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+    
