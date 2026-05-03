@@ -7,16 +7,17 @@ Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.constants import RoleName
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.exams.model import Exam
+from app.modules.users.model import User
 
 
 def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
     """
     Monta a resposta da análise de IA.
     """
-
     return {
         "id": ai_analysis.id,
         "exam_id": ai_analysis.exam_id,
@@ -34,15 +35,58 @@ def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
     }
 
 
-def validate_exam_exists(db: Session, exam_id: int) -> Exam:
+def validate_user_can_access_exam(
+    *,
+    current_user: User,
+    exam: Exam,
+) -> None:
     """
-    Valida se o exame existe.
+    Garante que o usuário autenticado pode acessar o exame/análise.
     """
+    role_name = current_user.role.name if current_user.role else None
 
-    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if role_name == RoleName.ADMIN_MASTER.value:
+        return
+
+    if role_name == RoleName.CLINIC_STAFF.value and exam.clinic_id == current_user.clinic_id:
+        return
+
+    if role_name == RoleName.DOCTOR.value and exam.doctor_id == current_user.id:
+        return
+
+    raise HTTPException(
+        status_code=403,
+        detail="Você não tem permissão para acessar esta análise de IA.",
+    )
+
+
+def validate_exam_exists(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> Exam:
+    """
+    Valida se o exame existe e se o usuário pode acessá-lo.
+    """
+    exam = (
+        db.query(Exam)
+        .options(
+            joinedload(Exam.clinic),
+            joinedload(Exam.patient),
+            joinedload(Exam.doctor),
+            joinedload(Exam.status),
+        )
+        .filter(Exam.id == exam_id)
+        .first()
+    )
 
     if not exam:
         raise HTTPException(status_code=404, detail="Exame não encontrado.")
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
 
     return exam
 
@@ -54,10 +98,14 @@ def get_ai_analysis_model_by_id(
     """
     Busca o model de análise de IA pelo ID.
     """
-
     ai_analysis = (
         db.query(AIAnalysis)
-        .options(joinedload(AIAnalysis.exam))
+        .options(
+            joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
+            joinedload(AIAnalysis.exam).joinedload(Exam.patient),
+            joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
+            joinedload(AIAnalysis.exam).joinedload(Exam.status),
+        )
         .filter(AIAnalysis.id == ai_analysis_id)
         .first()
     )
@@ -74,14 +122,19 @@ def get_ai_analysis_model_by_id(
 def get_ai_analysis_by_id(
     db: Session,
     ai_analysis_id: int,
+    current_user: User,
 ) -> dict:
     """
     Busca uma análise de IA pelo ID.
     """
-
     ai_analysis = get_ai_analysis_model_by_id(
         db=db,
         ai_analysis_id=ai_analysis_id,
+    )
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=ai_analysis.exam,
     )
 
     return build_ai_analysis_response(ai_analysis)
@@ -90,16 +143,25 @@ def get_ai_analysis_by_id(
 def get_ai_analysis_by_exam_id(
     db: Session,
     exam_id: int,
+    current_user: User,
 ) -> dict:
     """
     Busca uma análise de IA pelo ID do exame.
     """
-
-    validate_exam_exists(db=db, exam_id=exam_id)
+    validate_exam_exists(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
 
     ai_analysis = (
         db.query(AIAnalysis)
-        .options(joinedload(AIAnalysis.exam))
+        .options(
+            joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
+            joinedload(AIAnalysis.exam).joinedload(Exam.patient),
+            joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
+            joinedload(AIAnalysis.exam).joinedload(Exam.status),
+        )
         .filter(AIAnalysis.exam_id == exam_id)
         .first()
     )
@@ -115,16 +177,48 @@ def get_ai_analysis_by_exam_id(
 
 def list_ai_analysis(
     db: Session,
+    current_user: User,
     exam_id: int | None = None,
     model_name: str | None = None,
     model_version: str | None = None,
     prediction_label: str | None = None,
 ) -> list[dict]:
     """
-    Lista análises de IA com filtros opcionais.
+    Lista análises de IA com filtros opcionais e escopo por usuário.
     """
+    query = (
+        db.query(AIAnalysis)
+        .join(Exam, AIAnalysis.exam_id == Exam.id)
+        .options(
+            joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
+            joinedload(AIAnalysis.exam).joinedload(Exam.patient),
+            joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
+            joinedload(AIAnalysis.exam).joinedload(Exam.status),
+        )
+    )
 
-    query = db.query(AIAnalysis).options(joinedload(AIAnalysis.exam))
+    role_name = current_user.role.name if current_user.role else None
+
+    if role_name == RoleName.ADMIN_MASTER.value:
+        pass
+
+    elif role_name == RoleName.CLINIC_STAFF.value:
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não está vinculado a uma clínica.",
+            )
+
+        query = query.filter(Exam.clinic_id == current_user.clinic_id)
+
+    elif role_name == RoleName.DOCTOR.value:
+        query = query.filter(Exam.doctor_id == current_user.id)
+
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Usuário sem permissão para listar análises de IA.",
+        )
 
     if exam_id:
         query = query.filter(AIAnalysis.exam_id == exam_id)
@@ -140,24 +234,25 @@ def list_ai_analysis(
             AIAnalysis.prediction_label.ilike(f"%{prediction_label.strip()}%")
         )
 
-    ai_analysis = query.order_by(AIAnalysis.created_at.desc()).all()
+    analyses = query.order_by(AIAnalysis.created_at.desc()).all()
 
-    return [
-        build_ai_analysis_response(ai_analysis)
-        for ai_analysis in ai_analysis
-    ]
+    return [build_ai_analysis_response(analysis) for analysis in analyses]
 
 
 def create_ai_analysis(
     db: Session,
     payload: AIAnalysisCreate,
+    current_user: User,
 ) -> dict:
     """
     Cria uma análise de IA para um exame.
     Cada exame pode ter apenas uma análise.
     """
-
-    validate_exam_exists(db=db, exam_id=payload.exam_id)
+    validate_exam_exists(
+        db=db,
+        exam_id=payload.exam_id,
+        current_user=current_user,
+    )
 
     existing_analysis = (
         db.query(AIAnalysis)
@@ -189,14 +284,19 @@ def update_ai_analysis(
     db: Session,
     ai_analysis_id: int,
     payload: AIAnalysisUpdate,
+    current_user: User,
 ) -> dict:
     """
     Atualiza parcialmente uma análise de IA.
     """
-
     ai_analysis = get_ai_analysis_model_by_id(
         db=db,
         ai_analysis_id=ai_analysis_id,
+    )
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=ai_analysis.exam,
     )
 
     update_data = payload.model_dump(exclude_unset=True)
@@ -206,56 +306,6 @@ def update_ai_analysis(
 
     for field, value in update_data.items():
         setattr(ai_analysis, field, value)
-
-    db.commit()
-    db.refresh(ai_analysis)
-
-    ai_analysis = get_ai_analysis_model_by_id(
-        db=db,
-        ai_analysis_id=ai_analysis.id,
-    )
-
-    return build_ai_analysis_response(ai_analysis)
-
-
-def review_ai_analysis(
-    db: Session,
-    ai_analysis_id: int,
-    payload: AIAnalysisUpdate,
-) -> dict:
-    """
-    Registra ou atualiza a revisão médica de uma análise de IA.
-
-    Por enquanto, usa os campos já existentes:
-    - ai_notes
-    - raw_response
-    - gradcam_path, se necessário
-
-    No futuro, pode ser separado em campos próprios:
-    - reviewed_by_id
-    - reviewed_at
-    - medical_review
-    - review_status
-    """
-    ai_analysis = get_ai_analysis_model_by_id(
-        db=db,
-        ai_analysis_id=ai_analysis_id,
-    )
-
-    update_data = payload.model_dump(exclude_unset=True)
-
-    if not update_data:
-        return build_ai_analysis_response(ai_analysis)
-
-    allowed_review_fields = {
-        "ai_notes",
-        "raw_response",
-        "gradcam_path",
-    }
-
-    for field, value in update_data.items():
-        if field in allowed_review_fields:
-            setattr(ai_analysis, field, value)
 
     db.commit()
     db.refresh(ai_analysis)
