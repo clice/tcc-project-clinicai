@@ -1,30 +1,27 @@
 """
 Seed do módulo de statuses.
 
-Este arquivo cadastra os status iniciais usados pelo sistema.
+Este arquivo cadastra apenas os status oficiais definidos em constants.py.
 """
 
 from sqlalchemy.orm import Session
 
+from app.common.constants import StatusName, StatusScope
 from app.modules.statuses.model import Status
 
 
 def get_or_create_status(
     db: Session,
-    name: str,
+    name: StatusName,
     display_name: str,
-    applies_to: str,
+    applies_to: StatusScope,
     description: str | None = None,
 ) -> Status:
-    """
-    Busca um status existente ou cria um novo.
-    Evita duplicação nos seeds.
-    """
     status = (
         db.query(Status)
         .filter(
-            Status.name == name,
-            Status.applies_to == applies_to,
+            Status.name == name.value,
+            Status.applies_to == applies_to.value,
         )
         .first()
     )
@@ -33,9 +30,9 @@ def get_or_create_status(
         return status
 
     status = Status(
-        name=name,
+        name=name.value,
         display_name=display_name,
-        applies_to=applies_to,
+        applies_to=applies_to.value,
         description=description,
     )
 
@@ -48,102 +45,117 @@ def get_or_create_status(
 
 def seed_statuses(db: Session) -> dict[str, Status]:
     """
-    Cria os status iniciais do sistema.
-
-    Retorna um dicionário para que outros seeds possam reutilizar
-    esses registros, por exemplo no seed de usuários e clínicas.
+    Cria os status iniciais oficiais do sistema.
     """
 
     return {
         "user_active": get_or_create_status(
             db,
-            name="active",
+            name=StatusName.ACTIVE,
             display_name="Ativo",
-            applies_to="user",
-            description="Usuário ativo no sistema",
+            applies_to=StatusScope.USER,
+            description="Usuário ativo no sistema.",
         ),
         "user_inactive": get_or_create_status(
             db,
-            name="inactive",
+            name=StatusName.INACTIVE,
             display_name="Inativo",
-            applies_to="user",
-            description="Usuário inativo/arquivado no sistema",
+            applies_to=StatusScope.USER,
+            description="Usuário inativo no sistema.",
         ),
+
         "clinic_active": get_or_create_status(
             db,
-            name="active",
+            name=StatusName.ACTIVE,
             display_name="Ativa",
-            applies_to="clinic",
-            description="Clínica ativa no sistema",
+            applies_to=StatusScope.CLINIC,
+            description="Clínica ativa no sistema.",
         ),
         "clinic_inactive": get_or_create_status(
             db,
-            name="inactive",
+            name=StatusName.INACTIVE,
             display_name="Inativa",
-            applies_to="clinic",
-            description="Clínica inativa no sistema",
+            applies_to=StatusScope.CLINIC,
+            description="Clínica inativa no sistema.",
         ),
+
         "patient_active": get_or_create_status(
             db,
-            name="active",
+            name=StatusName.ACTIVE,
             display_name="Ativo",
-            applies_to="patient",
-            description="Paciente ativo no sistema",
+            applies_to=StatusScope.PATIENT,
+            description="Paciente ativo no sistema.",
         ),
         "patient_inactive": get_or_create_status(
             db,
-            name="inactive",
+            name=StatusName.INACTIVE,
             display_name="Inativo",
-            applies_to="patient",
-            description="Paciente inativo/arquivado no sistema",
+            applies_to=StatusScope.PATIENT,
+            description="Paciente inativo no sistema.",
         ),
+
         "exam_pending": get_or_create_status(
             db,
-            name="pending",
+            name=StatusName.PENDING,
             display_name="Pendente",
-            applies_to="exam",
-            description="Exame cadastrado aguardando envio, análise ou revisão.",
+            applies_to=StatusScope.EXAM,
+            description="Exame cadastrado e aguardando processamento.",
         ),
-        "exam_uploaded": get_or_create_status(
+        "exam_processing": get_or_create_status(
             db,
-            name="uploaded",
-            display_name="Arquivo enviado",
-            applies_to="exam",
-            description="Exame com arquivo enviado ao sistema.",
+            name=StatusName.PROCESSING,
+            display_name="Em processamento",
+            applies_to=StatusScope.EXAM,
+            description="Exame em processamento ou análise.",
         ),
-        "exam_in_analysis": get_or_create_status(
+        "exam_completed": get_or_create_status(
             db,
-            name="in_analysis",
-            display_name="Em análise",
-            applies_to="exam",
-            description="Exame em análise ou aguardando análise da IA.",
-        ),
-        "exam_analyzed": get_or_create_status(
-            db,
-            name="analyzed",
-            display_name="Analisado",
-            applies_to="exam",
-            description="Exame analisado pela IA ou pela equipe médica.",
-        ),
-        "exam_reviewed": get_or_create_status(
-            db,
-            name="reviewed",
-            display_name="Revisado",
-            applies_to="exam",
-            description="Exame revisado e validado por um médico.",
+            name=StatusName.COMPLETED,
+            display_name="Concluído",
+            applies_to=StatusScope.EXAM,
+            description="Exame concluído.",
         ),
         "exam_canceled": get_or_create_status(
             db,
-            name="canceled",
+            name=StatusName.CANCELED,
             display_name="Cancelado",
-            applies_to="exam",
-            description="Exame cancelado no sistema.",
+            applies_to=StatusScope.EXAM,
+            description="Exame cancelado.",
         ),
-        "exam_archived": get_or_create_status(
+        "exam_failed": get_or_create_status(
             db,
-            name="archived",
-            display_name="Arquivado",
-            applies_to="exam",
-            description="Exame arquivado, mantido apenas para histórico.",
+            name=StatusName.FAILED,
+            display_name="Falhou",
+            applies_to=StatusScope.EXAM,
+            description="Exame com erro no processamento.",
+        ),
+
+        "ai_analysis_pending": get_or_create_status(
+            db,
+            name=StatusName.PENDING,
+            display_name="Pendente",
+            applies_to=StatusScope.AI_ANALYSIS,
+            description="Análise de IA aguardando processamento.",
+        ),
+        "ai_analysis_processing": get_or_create_status(
+            db,
+            name=StatusName.PROCESSING,
+            display_name="Processando",
+            applies_to=StatusScope.AI_ANALYSIS,
+            description="Análise de IA em processamento.",
+        ),
+        "ai_analysis_completed": get_or_create_status(
+            db,
+            name=StatusName.COMPLETED,
+            display_name="Concluída",
+            applies_to=StatusScope.AI_ANALYSIS,
+            description="Análise de IA concluída.",
+        ),
+        "ai_analysis_failed": get_or_create_status(
+            db,
+            name=StatusName.FAILED,
+            display_name="Falhou",
+            applies_to=StatusScope.AI_ANALYSIS,
+            description="Análise de IA com falha.",
         ),
     }

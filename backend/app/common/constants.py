@@ -25,7 +25,6 @@ class StatusScope(StrEnum):
 class StatusName(StrEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
-    BLOCKED = "blocked"
     PENDING = "pending"
     CANCELED = "canceled"
     COMPLETED = "completed"

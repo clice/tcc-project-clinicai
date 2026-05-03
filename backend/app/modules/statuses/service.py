@@ -115,14 +115,14 @@ def create_status(db: Session, payload: StatusCreate) -> Status:
     """
     check_status_duplicate(
         db=db,
-        name=payload.name,
-        applies_to=payload.applies_to,
+        name=payload.name.value,
+        applies_to=payload.applies_to.value,
     )
 
     status = Status(
-        name=payload.name,
+        name=payload.name.value,
         display_name=payload.display_name,
-        applies_to=payload.applies_to,
+        applies_to=payload.applies_to.value,
         description=payload.description,
     )
 
@@ -146,6 +146,12 @@ def update_status(
 
     if not update_data:
         return status
+
+    if "name" in update_data and update_data["name"] is not None:
+        update_data["name"] = update_data["name"].value
+
+    if "applies_to" in update_data and update_data["applies_to"] is not None:
+        update_data["applies_to"] = update_data["applies_to"].value
 
     new_name = update_data.get("name", status.name)
     new_applies_to = update_data.get("applies_to", status.applies_to)
