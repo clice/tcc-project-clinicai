@@ -23,6 +23,7 @@ class RolePermissionCreate(RolePermissionBase):
     """
     Schema usado para criar vínculo entre role e permission.
     """
+
     pass
 
 
@@ -45,6 +46,13 @@ class RolePermissionResponse(BaseModel):
     id: int
     role_id: int
     permission_id: int
+
+    role_name: str | None = None
+    role_display_name: str | None = None
+    permission_name: str | None = None
+    permission_display_name: str | None = None
+    permission_module: str | None = None
+
     created_at: datetime
     updated_at: datetime
 
