@@ -1,14 +1,11 @@
 """
 Schemas do módulo de pacientes.
-
-Este arquivo define os modelos Pydantic usados para validação de entrada,
-atualização parcial e resposta da API.
 """
 
 from datetime import date, datetime
-
-from pydantic import BaseModel, EmailStr, Field, Field, field_validator
 from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.common.validators import (
     normalize_optional_email,
@@ -21,18 +18,21 @@ from app.common.validators import (
 )
 
 
+PatientSex = Literal["male", "female", "other", "not_informed"]
+
+
 class PatientBase(BaseModel):
     """
     Campos compartilhados entre criação e resposta.
     """
 
     clinic_id: int
-    doctor_id: int | None = None
+    doctor_id: int
 
     name: str = Field(..., min_length=3, max_length=180)
     cpf: str = Field(..., min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: Literal["male", "female", "other", "not_informed"] | None = None
+    sex: PatientSex | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 
@@ -50,7 +50,6 @@ class PatientBase(BaseModel):
         return normalize_required_text(value, "Nome do paciente é obrigatório.")
 
     @field_validator(
-        "sex",
         "address",
         "number",
         "complement",
@@ -69,7 +68,7 @@ class PatientBase(BaseModel):
     @field_validator("cpf")
     @classmethod
     def validate_cpf_field(cls, value: str) -> str:
-        cleaned = validate_cpf(value)
+        cleaned = validate_cpf(value, required=True)
         assert cleaned is not None
         return cleaned
 
@@ -101,15 +100,16 @@ class PatientCreate(PatientBase):
 class PatientUpdate(BaseModel):
     """
     Schema usado para atualização parcial de paciente.
+    Todos os campos são opcionais porque o endpoint usa PATCH.
     """
 
     clinic_id: int | None = None
-    doctor_id: int
+    doctor_id: int | None = None
 
     name: str | None = Field(default=None, min_length=3, max_length=180)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: Literal["male", "female", "other", "not_informed"] | None = None
+    sex: PatientSex | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 
@@ -130,7 +130,6 @@ class PatientUpdate(BaseModel):
         return normalize_required_text(value, "Nome do paciente é obrigatório.")
 
     @field_validator(
-        "sex",
         "address",
         "number",
         "complement",
@@ -149,7 +148,10 @@ class PatientUpdate(BaseModel):
     @field_validator("cpf")
     @classmethod
     def validate_cpf_field(cls, value: str | None) -> str | None:
-        return validate_cpf(value, required=False)
+        if value is None:
+            return None
+
+        return validate_cpf(value, required=True)
 
     @field_validator("zip_code")
     @classmethod
@@ -177,7 +179,7 @@ class PatientResponse(BaseModel):
     clinic_id: int
     clinic_name: str | None = None
 
-    doctor_id: int | None = None
+    doctor_id: int
     doctor_name: str | None = None
 
     status_id: int

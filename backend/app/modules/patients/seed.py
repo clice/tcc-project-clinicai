@@ -8,9 +8,12 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
+from app.common.constants import RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
+from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
+from app.modules.users.model import User
 
 
 def get_active_patient_status(db: Session) -> Status | None:
@@ -20,8 +23,8 @@ def get_active_patient_status(db: Session) -> Status | None:
     return (
         db.query(Status)
         .filter(
-            Status.name == "active",
-            Status.applies_to == "patient",
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.PATIENT.value,
         )
         .first()
     )
@@ -35,10 +38,32 @@ def get_first_active_clinic(db: Session) -> Clinic | None:
         db.query(Clinic)
         .join(Status, Clinic.status_id == Status.id)
         .filter(
-            Status.name == "active",
-            Status.applies_to == "clinic",
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.CLINIC.value,
         )
         .order_by(Clinic.id.asc())
+        .first()
+    )
+
+
+def get_first_active_doctor_from_clinic(
+    db: Session,
+    clinic_id: int,
+) -> User | None:
+    """
+    Busca um médico ativo da clínica para vincular pacientes.
+    """
+    return (
+        db.query(User)
+        .join(Role, User.role_id == Role.id)
+        .join(Status, User.status_id == Status.id)
+        .filter(
+            User.clinic_id == clinic_id,
+            Role.name == RoleName.DOCTOR.value,
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.USER.value,
+        )
+        .order_by(User.id.asc())
         .first()
     )
 
@@ -47,6 +72,7 @@ def get_or_create_patient(
     db: Session,
     *,
     clinic_id: int,
+    doctor_id: int,
     status_id: int,
     name: str,
     cpf: str,
@@ -64,8 +90,6 @@ def get_or_create_patient(
 ) -> Patient:
     """
     Busca um paciente existente ou cria um novo.
-
-    Evita duplicação usando a combinação clinic_id + cpf.
     """
     patient = (
         db.query(Patient)
@@ -81,6 +105,7 @@ def get_or_create_patient(
 
     patient = Patient(
         clinic_id=clinic_id,
+        doctor_id=doctor_id,
         status_id=status_id,
         name=name,
         cpf=cpf,
@@ -108,19 +133,24 @@ def seed_patients(db: Session) -> dict[str, Patient]:
     """
     Cria pacientes iniciais para desenvolvimento.
 
-    Depende de clinics e statuses já terem sido criados.
+    Depende de clinics, roles, users e statuses já terem sido criados.
     """
-
     active_status = get_active_patient_status(db)
     clinic = get_first_active_clinic(db)
 
     if not active_status or not clinic:
         return {}
 
+    doctor = get_first_active_doctor_from_clinic(db=db, clinic_id=clinic.id)
+
+    if not doctor:
+        return {}
+
     return {
         "patient_example_1": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Maria Oliveira",
             cpf="52998224725",
@@ -138,6 +168,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_example_2": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="João Santos",
             cpf="11144477735",
@@ -154,6 +185,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_elderly": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="José Ferreira",
             cpf="39053344705",
@@ -166,6 +198,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_young": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Ana Clara Souza",
             cpf="22233344450",
@@ -178,6 +211,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_no_cpf": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Paciente Sem CPF",
             cpf="00000000000",
@@ -187,6 +221,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_minimal": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Paciente Minimalista",
             cpf="12312312387",
@@ -194,6 +229,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_complete": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Carlos Eduardo Lima",
             cpf="98765432100",
@@ -212,6 +248,7 @@ def seed_patients(db: Session) -> dict[str, Patient]:
         "patient_female_elderly": get_or_create_patient(
             db,
             clinic_id=clinic.id,
+            doctor_id=doctor.id,
             status_id=active_status.id,
             name="Dona Francisca Alves",
             cpf="32165498700",
