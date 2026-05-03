@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_admin, require_permission
+from app.core.deps import require_permission
 from app.modules.clinics.schema import (
     ClinicCreate,
     ClinicResponse,
@@ -17,10 +17,10 @@ from app.modules.clinics.schema import (
 )
 from app.modules.clinics.service import (
     activate_clinic,
+    build_clinic_response,
     create_clinic,
     ensure_user_can_access_clinic,
     get_clinic_by_id,
-    build_clinic_response,
     inactivate_clinic,
     list_clinics,
     update_clinic,
@@ -34,11 +34,10 @@ router = APIRouter(prefix="/clinics", tags=["Clinics"])
 def create_clinic_route(
     payload: ClinicCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("clinics:create")),
 ):
     """
     Cria uma nova clínica.
-    Por segurança, apenas admin_master deve cadastrar clínicas.
     """
     return create_clinic(db=db, payload=payload)
 
@@ -52,7 +51,6 @@ def list_clinics_route(
 ):
     """
     Lista clínicas cadastradas.
-    Permite busca por nome, CNPJ ou cidade.
     """
     return list_clinics(
         db=db,
@@ -86,12 +84,18 @@ def update_clinic_route(
     clinic_id: int,
     payload: ClinicUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("clinics:update")),
 ):
     """
     Atualiza parcialmente uma clínica.
-    Como usa PATCH, o frontend pode enviar apenas os campos alterados.
     """
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return update_clinic(
         db=db,
         clinic_id=clinic_id,
@@ -103,12 +107,18 @@ def update_clinic_route(
 def inactivate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("clinics:change_status")),
 ):
     """
     Inativa uma clínica.
-    Esta rota substitui o DELETE físico para evitar perda de histórico.
     """
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return inactivate_clinic(db=db, clinic_id=clinic_id)
 
 
@@ -116,9 +126,16 @@ def inactivate_clinic_route(
 def activate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("clinics:change_status")),
 ):
     """
-    Ativa uma clínica inativa.
+    Ativa uma clínica.
     """
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return activate_clinic(db=db, clinic_id=clinic_id)

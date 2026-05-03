@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.constants import RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.schema import ClinicCreate, ClinicUpdate
 from app.modules.statuses.model import Status
@@ -82,7 +83,7 @@ def build_clinic_response(clinic: Clinic) -> dict:
         "created_at": clinic.created_at,
         "updated_at": clinic.updated_at,
     }
-    
+
 
 def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
     """
@@ -92,8 +93,16 @@ def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
     - admin_master pode acessar qualquer clínica;
     - usuários comuns só podem acessar a própria clínica.
     """
-    if current_user.role and current_user.role.name == "admin_master":
+    role_name = current_user.role.name if current_user.role else None
+
+    if role_name == RoleName.ADMIN_MASTER.value:
         return
+
+    if current_user.clinic_id is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Usuário não está vinculado a uma clínica.",
+        )
 
     if current_user.clinic_id != clinic_id:
         raise HTTPException(
@@ -136,7 +145,9 @@ def list_clinics(
     """
     query = db.query(Clinic).options(joinedload(Clinic.status))
 
-    if not current_user.role or current_user.role.name != "admin_master":
+    role_name = current_user.role.name if current_user.role else None
+
+    if role_name != RoleName.ADMIN_MASTER.value:
         if current_user.clinic_id is None:
             raise HTTPException(
                 status_code=403,
@@ -156,7 +167,10 @@ def list_clinics(
         )
 
     if not include_inactive:
-        query = query.join(Status).filter(Status.name == "active")
+        query = query.join(Status).filter(
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.CLINIC.value,
+        )
 
     clinics = query.order_by(Clinic.name.asc()).all()
 
@@ -170,7 +184,7 @@ def create_clinic(db: Session, payload: ClinicCreate) -> dict:
     get_status_by_id_and_applies_to(
         db=db,
         status_id=payload.status_id,
-        applies_to="clinic",
+        applies_to=StatusScope.CLINIC.value,
     )
 
     check_clinic_duplicate(
@@ -179,7 +193,10 @@ def create_clinic(db: Session, payload: ClinicCreate) -> dict:
         email=str(payload.email) if payload.email else None,
     )
 
-    clinic = Clinic(**payload.model_dump())
+    data = payload.model_dump()
+    data["email"] = str(payload.email) if payload.email else None
+
+    clinic = Clinic(**data)
 
     db.add(clinic)
     db.commit()
@@ -205,17 +222,20 @@ def update_clinic(
     if not update_data:
         return build_clinic_response(clinic)
 
-    if "status_id" in update_data:
+    if "status_id" in update_data and update_data["status_id"] is not None:
         get_status_by_id_and_applies_to(
             db=db,
             status_id=update_data["status_id"],
-            applies_to="clinic",
+            applies_to=StatusScope.CLINIC.value,
         )
+
+    if "email" in update_data:
+        update_data["email"] = str(update_data["email"]) if update_data["email"] else None
 
     check_clinic_duplicate(
         db=db,
         cnpj=update_data.get("cnpj"),
-        email=str(update_data.get("email")) if update_data.get("email") else None,
+        email=update_data.get("email"),
         ignore_clinic_id=clinic_id,
     )
 
@@ -237,13 +257,14 @@ def inactivate_clinic(db: Session, clinic_id: int) -> dict:
     Não remove fisicamente o registro para preservar histórico e relações.
     """
     clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
-    inactivate_status = get_status_by_name_and_applies_to(
+
+    inactive_status = get_status_by_name_and_applies_to(
         db=db,
-        name="inactive",
-        applies_to="clinic",
+        name=StatusName.INACTIVE.value,
+        applies_to=StatusScope.CLINIC.value,
     )
 
-    clinic.status_id = inactivate_status.id
+    clinic.status_id = inactive_status.id
 
     db.commit()
     db.refresh(clinic)
@@ -255,13 +276,14 @@ def inactivate_clinic(db: Session, clinic_id: int) -> dict:
 
 def activate_clinic(db: Session, clinic_id: int) -> dict:
     """
-    Ativa clínica por status.
+    Ativa uma clínica.
     """
-    clinic = get_clinic_by_id(db, clinic_id)
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
     active_status = get_status_by_name_and_applies_to(
         db=db,
-        name="active",
-        applies_to="clinic",
+        name=StatusName.ACTIVE.value,
+        applies_to=StatusScope.CLINIC.value,
     )
 
     clinic.status_id = active_status.id
