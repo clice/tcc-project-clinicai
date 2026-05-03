@@ -5,10 +5,10 @@ Este arquivo define os modelos Pydantic usados para validação de entrada,
 atualização parcial e resposta da API.
 """
 
-from typing import Literal
 from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, Field, field_validator
+from typing import Literal
 
 from app.common.validators import (
     normalize_optional_email,

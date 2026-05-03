@@ -392,7 +392,7 @@ const PatientForm = ({ mode = 'create' }) => {
         <div className="d-flex justify-content-center mt-4">
           <CButtonGroup>
             {patient && (
-              <CButton color="info" size="lg" as={Link} to={`/exams/upload?patient=${id}`}>
+              <CButton color="info" size="lg" as={Link} to={`/exams/upload?patient=${id}`} className="text-white">
                 Upload exame
               </CButton>
             )}
