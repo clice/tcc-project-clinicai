@@ -1,13 +1,12 @@
 """
 Schemas do módulo de exames.
-
-Define os modelos Pydantic usados para criação, atualização parcial
-e resposta da API.
 """
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.common.validators import normalize_optional_text, normalize_required_text
 
 
 class ExamBase(BaseModel):
@@ -17,7 +16,7 @@ class ExamBase(BaseModel):
 
     clinic_id: int
     patient_id: int
-    doctor_id: int | None = None
+    doctor_id: int
     status_id: int
 
     exam_type: str = Field(..., min_length=2, max_length=80)
@@ -35,6 +34,26 @@ class ExamBase(BaseModel):
     file_path: str | None = Field(default=None, max_length=255)
     file_name: str | None = Field(default=None, max_length=180)
     file_mime_type: str | None = Field(default=None, max_length=100)
+
+    @field_validator("exam_type", "title")
+    @classmethod
+    def normalize_required_fields(cls, value: str) -> str:
+        return normalize_required_text(value, "Campo obrigatório.")
+
+    @field_validator(
+        "description",
+        "clinical_indication",
+        "findings",
+        "conclusion",
+        "ai_analysis_status",
+        "ai_summary",
+        "file_path",
+        "file_name",
+        "file_mime_type",
+    )
+    @classmethod
+    def normalize_optional_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
 
 
 class ExamCreate(ExamBase):
@@ -71,6 +90,29 @@ class ExamUpdate(BaseModel):
     file_name: str | None = Field(default=None, max_length=180)
     file_mime_type: str | None = Field(default=None, max_length=100)
 
+    @field_validator("exam_type", "title")
+    @classmethod
+    def normalize_required_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        return normalize_required_text(value, "Campo obrigatório.")
+
+    @field_validator(
+        "description",
+        "clinical_indication",
+        "findings",
+        "conclusion",
+        "ai_analysis_status",
+        "ai_summary",
+        "file_path",
+        "file_name",
+        "file_mime_type",
+    )
+    @classmethod
+    def normalize_optional_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
+
 
 class ExamResponse(BaseModel):
     """
@@ -80,9 +122,17 @@ class ExamResponse(BaseModel):
     id: int
 
     clinic_id: int
+    clinic_name: str | None = None
+
     patient_id: int
-    doctor_id: int | None = None
+    patient_name: str | None = None
+
+    doctor_id: int
+    doctor_name: str | None = None
+
     status_id: int
+    status_name: str | None = None
+    status_display_name: str | None = None
 
     exam_type: str
     exam_date: date | None = None
@@ -99,9 +149,6 @@ class ExamResponse(BaseModel):
     file_path: str | None = None
     file_name: str | None = None
     file_mime_type: str | None = None
-
-    status_name: str | None = None
-    status_display_name: str | None = None
 
     created_at: datetime
     updated_at: datetime

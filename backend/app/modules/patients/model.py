@@ -27,7 +27,7 @@ class Patient(Base):
     # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
-    # Dados principais do paciente
+    # Campos da tabela
     name = Column(String(150), nullable=False, index=True)
     cpf = Column(String(11), nullable=False, index=True)
     birth_date = Column(Date, nullable=True)
