@@ -130,11 +130,13 @@ const ClinicsList = () => {
           </p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/clinics/create">
-            Cadastrar Clínica
-          </CButton>
-        </div>        
+        {canManage && (
+          <div className="d-flex justify-content-center mt-4">
+            <CButton color="primary" size="lg" as={Link} to="/clinics/create">
+              Cadastrar Clínica
+            </CButton>
+          </div>
+        )}       
       </div>
 
       <CCard>

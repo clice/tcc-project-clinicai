@@ -18,6 +18,7 @@ from app.modules.clinics.schema import (
 from app.modules.clinics.service import (
     activate_clinic,
     create_clinic,
+    ensure_user_can_access_clinic,
     get_clinic_by_id,
     build_clinic_response,
     inactivate_clinic,
@@ -55,6 +56,7 @@ def list_clinics_route(
     """
     return list_clinics(
         db=db,
+        current_user=current_user,
         search=search,
         include_inactive=include_inactive,
     )
@@ -70,6 +72,12 @@ def get_clinic_route(
     Busca uma clínica específica pelo ID.
     """
     clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return build_clinic_response(clinic)
 
 

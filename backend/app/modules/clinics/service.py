@@ -16,6 +16,7 @@ from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
+from app.modules.users.model import User
 
 
 def check_clinic_duplicate(
@@ -81,6 +82,24 @@ def build_clinic_response(clinic: Clinic) -> dict:
         "created_at": clinic.created_at,
         "updated_at": clinic.updated_at,
     }
+    
+
+def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
+    """
+    Garante que o usuário autenticado pode acessar a clínica solicitada.
+
+    Regra:
+    - admin_master pode acessar qualquer clínica;
+    - usuários comuns só podem acessar a própria clínica.
+    """
+    if current_user.role and current_user.role.name == "admin_master":
+        return
+
+    if current_user.clinic_id != clinic_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Você não tem permissão para acessar esta clínica.",
+        )
 
 
 def get_clinic_by_id(db: Session, clinic_id: int) -> Clinic:
@@ -104,15 +123,27 @@ def get_clinic_by_id(db: Session, clinic_id: int) -> Clinic:
 
 def list_clinics(
     db: Session,
+    current_user: User,
     search: str | None = None,
     include_inactive: bool = True,
 ) -> list[dict]:
     """
     Lista clínicas cadastradas.
 
-    Permite busca por razão social, nome fantasia, CNPJ ou cidade.
+    Regra:
+    - admin_master visualiza todas;
+    - usuários comuns visualizam apenas a própria clínica.
     """
     query = db.query(Clinic).options(joinedload(Clinic.status))
+
+    if not current_user.role or current_user.role.name != "admin_master":
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não está vinculado a uma clínica.",
+            )
+
+        query = query.filter(Clinic.id == current_user.clinic_id)
 
     if search:
         term = f"%{search.strip()}%"
