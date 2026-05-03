@@ -5,6 +5,7 @@ Este arquivo define os modelos Pydantic usados para validação de entrada,
 atualização parcial e resposta da API.
 """
 
+from typing import Literal
 from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, Field, field_validator
@@ -31,7 +32,7 @@ class PatientBase(BaseModel):
     name: str = Field(..., min_length=3, max_length=180)
     cpf: str = Field(..., min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: str | None = Field(default=None, max_length=20)
+    sex: Literal["male", "female", "other", "not_informed"] | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 
@@ -108,7 +109,7 @@ class PatientUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=3, max_length=180)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: str | None = Field(default=None, max_length=20)
+    sex: Literal["male", "female", "other", "not_informed"] | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 

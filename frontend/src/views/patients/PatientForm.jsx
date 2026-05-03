@@ -457,14 +457,15 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CCol md={4}>
                       <CFormLabel>Sexo</CFormLabel>
                       <CFormSelect
-                        value={form.sex}
-                        disabled={isReadOnly}
-                        onChange={(event) => updateField('sex', event.target.value)}
+                        name="sex"
+                        value={formData.sex}
+                        onChange={handleChange}
                       >
-                        <option value="">Selecione...</option>
+                        <option value="">Selecione</option>
                         <option value="female">Feminino</option>
                         <option value="male">Masculino</option>
                         <option value="other">Outro</option>
+                        <option value="not_informed">Não informado</option>
                       </CFormSelect>
                     </CCol>
 

@@ -91,12 +91,13 @@ export const formatZipCodeBR = (value = '') => {
 /**
  * Formata Sexo:
  */
-export const formatSex = (value) => {
+export const formatSex = (sex) => {
   const labels = {
     female: 'Feminino',
     male: 'Masculino',
     other: 'Outro',
+    not_informed: 'Não informado',
   }
 
-  return labels[value] || '-'
+  return labels[sex] || '-'
 }
