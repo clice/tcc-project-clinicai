@@ -104,7 +104,7 @@ class PatientUpdate(BaseModel):
     """
 
     clinic_id: int | None = None
-    doctor_id: int | None = None
+    doctor_id: int
 
     name: str | None = Field(default=None, min_length=3, max_length=180)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)

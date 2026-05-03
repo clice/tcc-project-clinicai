@@ -135,7 +135,10 @@ def validate_doctor_can_be_assigned(
     - precisa pertencer à mesma clínica do paciente.
     """
     if doctor_id is None:
-        return
+        raise HTTPException(
+            status_code=400,
+            detail="O paciente deve estar vinculado a um médico.",
+        )
 
     doctor = (
         db.query(User)
@@ -381,21 +384,29 @@ def update_patient(
 
     new_clinic_id = update_data.get("clinic_id", patient.clinic_id)
     new_doctor_id = update_data.get("doctor_id", patient.doctor_id)
-
-    validate_doctor_can_be_assigned(
-        db=db,
-        doctor_id=new_doctor_id,
-        clinic_id=new_clinic_id,
-    )
-    
     new_cpf = update_data.get("cpf", patient.cpf)
+
+    if new_doctor_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="O paciente deve permanecer vinculado a um médico.",
+        )
 
     validate_user_can_access_clinic(
         current_user=current_user,
         clinic_id=new_clinic_id,
     )
 
-    validate_clinic_is_active(db=db, clinic_id=new_clinic_id)
+    validate_clinic_is_active(
+        db=db,
+        clinic_id=new_clinic_id,
+    )
+
+    validate_doctor_can_be_assigned(
+        db=db,
+        doctor_id=new_doctor_id,
+        clinic_id=new_clinic_id,
+    )
 
     check_patient_duplicate(
         db=db,

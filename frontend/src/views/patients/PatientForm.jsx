@@ -228,6 +228,11 @@ const PatientForm = ({ mode = 'create' }) => {
       return false
     }
 
+    if (!isDoctor && !form.doctor_id) {
+      setError('Selecione um médico responsável pelo paciente.')
+      return false
+    }
+
     if (!form.name.trim()) {
       setError('Informe o nome do paciente.')
       return false
@@ -258,7 +263,7 @@ const PatientForm = ({ mode = 'create' }) => {
 
   const buildPayload = () => ({
     clinic_id: Number(form.clinic_id || user?.clinic_id),
-    doctor_id: isDoctor ? Number(user.id) : form.doctor_id ? Number(form.doctor_id) : null,
+    doctor_id: isDoctor ? Number(user.id) : Number(form.doctor_id),
     name: form.name.trim(),
     cpf: onlyNumbers(form.cpf),
     birth_date: form.birth_date || null,
@@ -457,9 +462,9 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CCol md={4}>
                       <CFormLabel>Sexo</CFormLabel>
                       <CFormSelect
-                        name="sex"
-                        value={formData.sex}
-                        onChange={handleChange}
+                        value={form.sex}
+                        disabled={isReadOnly}
+                        onChange={(event) => updateField('sex', event.target.value)}
                       >
                         <option value="">Selecione</option>
                         <option value="female">Feminino</option>
@@ -530,6 +535,7 @@ const PatientForm = ({ mode = 'create' }) => {
                           value={form.doctor_id}
                           disabled={isReadOnly || !form.clinic_id || isLoadingDoctors}
                           onChange={(event) => updateField('doctor_id', event.target.value)}
+                          required
                         >
                           <option value="">
                             {isLoadingDoctors
