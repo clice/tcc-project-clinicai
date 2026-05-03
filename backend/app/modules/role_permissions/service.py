@@ -6,7 +6,7 @@ entre perfis de acesso e permissões.
 """
 
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.modules.permissions.model import Permission
 from app.modules.roles.model import Role
@@ -88,6 +88,10 @@ def get_role_permission_by_id(
     """
     role_permission = (
         db.query(RolePermission)
+        .options(
+            joinedload(RolePermission.role),
+            joinedload(RolePermission.permission),
+        )
         .filter(RolePermission.id == role_permission_id)
         .first()
     )
@@ -107,6 +111,10 @@ def list_role_permissions(db: Session) -> list[RolePermission]:
     """
     return (
         db.query(RolePermission)
+        .options(
+            joinedload(RolePermission.role),
+            joinedload(RolePermission.permission),
+        )
         .order_by(RolePermission.role_id.asc(), RolePermission.permission_id.asc())
         .all()
     )

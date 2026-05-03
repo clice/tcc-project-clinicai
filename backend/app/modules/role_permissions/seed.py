@@ -98,13 +98,13 @@ def seed_role_permissions(
         "exams:read",
         "exams:update",
         "exams:delete",
-        "exams:upload_file",
-        "exams:download_file",
+        "exams:upload",
+        "exams:download",
 
         "ai_analysis:create",
         "ai_analysis:read",
         "ai_analysis:update",
-        "ai_analysis:review",
+        "ai_analysis:download",
     ]
 
     clinic_staff_permissions = [
@@ -120,9 +120,10 @@ def seed_role_permissions(
         "patients:change_status",
         
         "exams:read",
-        "exams:download_file",
+        "exams:download",
         
         "ai_analysis:read",
+        "ai_analysis:download",
     ]
 
     role_permission_map = {
