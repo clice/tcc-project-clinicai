@@ -18,7 +18,10 @@ class AuditLogResponse(BaseModel):
     id: int
 
     user_id: int | None = None
+    user_name: str | None = None
+
     clinic_id: int | None = None
+    clinic_name: str | None = None
 
     action: str
     entity: str
