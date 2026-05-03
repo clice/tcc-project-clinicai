@@ -10,11 +10,11 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.common.validators import (
-    normalize_cpf,
     normalize_email,
     normalize_optional_email,
     normalize_phone,
     normalize_required_text,
+    validate_cpf,
 )
 
 
@@ -25,7 +25,7 @@ class UserBase(BaseModel):
     
     name: str = Field(..., min_length=2, max_length=150)
     email: EmailStr = Field(...)
-    cpf: str | None = Field(default=None, max_length=14)
+    cpf: str = Field(..., max_length=14)
     phone: str | None = Field(default=None, max_length=20)
     role_id: int
     status_id: int
@@ -53,7 +53,7 @@ class UserBase(BaseModel):
         """
         Salva CPF apenas com números.
         """
-        return normalize_cpf(value)
+        return validate_cpf(value, required=True)
 
     @field_validator("phone")
     @classmethod
@@ -82,7 +82,7 @@ class UserUpdate(BaseModel):
     
     name: str | None = Field(default=None, min_length=2, max_length=150)
     email: EmailStr | None = None
-    cpf: str | None = Field(default=None, max_length=14)
+    cpf: str = Field(..., max_length=14)
     phone: str | None = Field(default=None, max_length=20)
     role_id: int | None = None
     status_id: int | None = None
@@ -113,7 +113,7 @@ class UserUpdate(BaseModel):
         """
         Salva CPF apenas com números.
         """
-        return normalize_cpf(value)
+        return validate_cpf(value, required=True)
 
     @field_validator("phone")
     @classmethod
