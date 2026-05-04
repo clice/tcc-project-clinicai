@@ -7,11 +7,12 @@ Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import RoleName
+from app.common.constants import AuditAction, AuditEntity, RoleName
 from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.exams.model import Exam
 from app.modules.users.model import User
+from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
+from app.modules.audit_logs.service import create_audit_log
 
 
 def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
@@ -266,9 +267,39 @@ def create_ai_analysis(
             detail="Este exame já possui uma análise de IA.",
         )
 
+    exam = validate_exam_exists(
+        db=db,
+        exam_id=payload.exam_id,
+        current_user=current_user,
+    )
+
     ai_analysis = AIAnalysis(**payload.model_dump())
 
     db.add(ai_analysis)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.RUN_AI_ANALYSIS,
+        entity=AuditEntity.AI_ANALYSIS,
+        entity_id=ai_analysis.id,
+        description="Análise de IA criada para exame.",
+        new_data={
+            "id": ai_analysis.id,
+            "exam_id": ai_analysis.exam_id,
+            "prediction_label": ai_analysis.prediction_label,
+            "prediction_class": ai_analysis.prediction_class,
+            "confidence": ai_analysis.confidence,
+            "model_name": ai_analysis.model_name,
+            "model_version": ai_analysis.model_version,
+            "gradcam_path": ai_analysis.gradcam_path,
+            "processing_time_ms": ai_analysis.processing_time_ms,
+        },
+    )
+
     db.commit()
     db.refresh(ai_analysis)
 
@@ -304,9 +335,34 @@ def update_ai_analysis(
     if not update_data:
         return build_ai_analysis_response(ai_analysis)
 
+    old_data = {
+        "prediction_label": ai_analysis.prediction_label,
+        "prediction_class": ai_analysis.prediction_class,
+        "confidence": ai_analysis.confidence,
+        "model_name": ai_analysis.model_name,
+        "model_version": ai_analysis.model_version,
+        "gradcam_path": ai_analysis.gradcam_path,
+        "processing_time_ms": ai_analysis.processing_time_ms,
+        "ai_notes": ai_analysis.ai_notes,
+        "raw_response": ai_analysis.raw_response,
+    }
+    
     for field, value in update_data.items():
         setattr(ai_analysis, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=ai_analysis.exam.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.AI_ANALYSIS,
+        entity_id=ai_analysis.id,
+        description="Análise de IA atualizada.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+    
     db.commit()
     db.refresh(ai_analysis)
 
