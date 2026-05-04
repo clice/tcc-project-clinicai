@@ -140,7 +140,7 @@ def seed_exams(
             clinic_id=primary_clinic.id,
             patient_id=patients["patient_example_2"].id,
             doctor_id=users.get("doctor_primary").id if users.get("doctor_primary") else None,
-            status_id=statuses["exam_analyzed"].id,
+            status_id=statuses["exam_completed"].id,
             exam_type="colonoscopy",
             exam_date=date(2026, 5, 2),
             title="Colonoscopia completa",
@@ -154,12 +154,12 @@ def seed_exams(
             file_name="colonoscopy_completed.jpg",
             file_mime_type="image/jpeg",
         ),
-        "exam_endoscopy_in_analysis": get_or_create_exam(
+        "exam_endoscopy_processing": get_or_create_exam(
             db=db,
             clinic_id=primary_clinic.id,
             patient_id=patients["patient_elderly"].id,
             doctor_id=users.get("doctor_secondary").id if users.get("doctor_secondary") else None,
-            status_id=statuses["exam_in_analysis"].id,
+            status_id=statuses["exam_processing"].id,
             exam_type="endoscopy",
             exam_date=date(2026, 5, 3),
             title="Endoscopia com análise por IA",
