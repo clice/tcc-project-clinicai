@@ -7,13 +7,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { clinicService } from 'src/services/clinicService'
 
 import { getErrorMessage } from 'src/utils/errors'
@@ -27,10 +29,10 @@ const clinicTabs = [
 
 const ClinicsList = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useFeedback()
 
   const [clinics, setClinics] = useState([])
   const [activeTab, setActiveTab] = useState('active')
-  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   const canManage = canManageClinics(user)
@@ -38,12 +40,12 @@ const ClinicsList = () => {
   const loadClinics = useCallback(async () => {
     try {
       setIsLoading(true)
-      setError('')
+      showError('')
 
       const data = await clinicService.list({ includeInactive: true })
       setClinics(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar clínicas.'))
+      showError(getErrorMessage(err, 'Erro ao carregar clínicas.'))
     } finally {
       setIsLoading(false)
     }
@@ -72,17 +74,19 @@ const ClinicsList = () => {
 
   const handleChangeStatus = async (clinic) => {
     try {
-      setError('')
+      showError('')
 
       if (clinic.status_name === 'active') {
         await clinicService.inactivate(clinic.id)
+        showSuccess('Clínica inativada com sucesso.')
       } else {
         await clinicService.activate(clinic.id)
+        showSuccess('Clínica ativada com sucesso.')
       }
 
       await loadClinics()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao alterar status da clínica.')
+      showError(err.response?.data?.detail || 'Erro ao alterar status da clínica.')
     }
   }
 
@@ -140,14 +144,15 @@ const ClinicsList = () => {
 
       <CCard>
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-
-          <AppTabs tabs={clinicTabs} activeTab={activeTab} counts={tabCounts} onChange={setActiveTab} />
-
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando clínicas...</p>
+            <div className="d-flex justify-content-center py-5">
+              <CSpinner />              
+            </div>
           ) : (
-            <AppTable data={filteredClinics} columns={columns} emptyMessage="Nenhuma clínica encontrada." />
+            <>
+              <AppTabs tabs={clinicTabs} counts={tabCounts} activeTab={activeTab}  onChange={setActiveTab} />
+              <AppTable data={filteredClinics} columns={columns} emptyMessage="Nenhuma clínica encontrada." />
+            </>
           )}
         </CCardBody>
       </CCard>

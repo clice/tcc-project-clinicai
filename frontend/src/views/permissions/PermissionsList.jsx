@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -96,7 +96,9 @@ const PermissionsList = () => {
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando permissões...</p>
+            <div className="d-flex justify-content-center py-5">
+              <CSpinner />              
+            </div>
           ) : (
             <AppTable
               data={permissions}

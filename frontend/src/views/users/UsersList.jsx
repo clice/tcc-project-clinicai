@@ -7,13 +7,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { userService } from 'src/services/userService'
 
 import { formatCpfBR, formatDateTimeBR, formatPhoneBR } from 'src/utils/formatters'
@@ -27,10 +29,10 @@ const userTabs = [
 
 const UsersList = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useFeedback()
 
   const [activeTab, setActiveTab] = useState('active')
   const [users, setUsers] = useState([])
-  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   const canManage = canManageUsers(user)
@@ -38,12 +40,12 @@ const UsersList = () => {
   const loadUsers = useCallback(async () => {
     try {
       setIsLoading(true)
-      setError('')
+      showError('')
 
       const data = await userService.list()
       setUsers(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar os usuários.'))
+      showError(getErrorMessage(err, 'Erro ao carregar os usuários.'))
     } finally {
       setIsLoading(false)
     }
@@ -53,43 +55,44 @@ const UsersList = () => {
     void loadUsers()
   }, [loadUsers])
 
-  const handleInactivate = useCallback(
-    async (selectedUser) => {
-      try {
-        setError('')
-        await userService.inactivate(selectedUser.id)
-        await loadUsers()
-      } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao inativar o usuário.'))
-      }
-    },
-    [loadUsers],
-  )
-
-  const handleActivate = useCallback(
-    async (selectedUser) => {
-      try {
-        setError('')
-        await userService.activate(selectedUser.id)
-        await loadUsers()
-      } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao ativar o usuário.'))
-      }
-    },
-    [loadUsers],
-  )
-
+  /**
+   * Separa usuários por status para alimentar as abas.
+   */
   const filteredUsers = useMemo(() => {
     return users.filter((item) => item.status_name === activeTab)
   }, [users, activeTab])
 
-  const counts = useMemo(
+  /**
+   * Conta registros por aba.
+   */
+  const tabCounts = useMemo(
     () => ({
       active: users.filter((item) => item.status_name === 'active').length,
       inactive: users.filter((item) => item.status_name === 'inactive').length,
     }),
     [users],
   )
+
+  /**
+   * Mudança de status do usuário.
+   */
+  const handleChangeStatus = async (user) => {
+    try {
+      showError('')
+
+      if (user.status_name === 'active') {
+        await userService.inactivate(user.id)
+        showSuccess('Usuário inativado com sucesso.')
+      } else {
+        await userService.activate(user.id)
+        showSuccess('Usuário ativado com sucesso.')
+      }
+
+      await loadUsers()
+    } catch (err) {
+      showError(err.response?.data?.detail || 'Erro ao alterar status do usuário.')
+    }
+  }
 
   const columns = useMemo(
     () => [
@@ -144,14 +147,14 @@ const UsersList = () => {
               canEdit={canManage}
               canInactivate={canManage && !isInactive}
               canActivate={canManage && isInactive}
-              onInactivate={() => handleInactivate(selectedUser)}
-              onActivate={() => handleActivate(selectedUser)}
+              onInactivate={() => handleChangeStatus(selectedUser)}
+              onActivate={() => handleChangeStatus(selectedUser)}
             />
           )
         },
       },
     ],
-    [canManage, handleActivate, handleInactivate],
+    [canManage, loadUsers],
   )
 
   return (
@@ -174,13 +177,13 @@ const UsersList = () => {
 
       <CCard>
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando usuários...</p>
+            <div className="d-flex justify-content-center py-5">
+              <CSpinner />              
+            </div>
           ) : (
             <>
-              <AppTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} tabs={userTabs} />
+              <AppTabs tabs={userTabs} counts={tabCounts} activeTab={activeTab}  onChange={setActiveTab} />
               <AppTable data={filteredUsers} columns={columns} emptyMessage="Nenhum usuário encontrado." />
             </>
           )}
