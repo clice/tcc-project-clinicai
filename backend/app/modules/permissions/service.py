@@ -8,8 +8,11 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.common.constants import AuditAction, AuditEntity
 from app.modules.permissions.model import Permission
+from app.modules.users.model import User
 from app.modules.permissions.schema import PermissionCreate, PermissionUpdate
+from app.modules.audit_logs.service import create_audit_log
 
 
 def check_permission_duplicate(
@@ -65,20 +68,45 @@ def list_permissions(db: Session) -> list[Permission]:
     )
 
 
-def create_permission(db: Session, payload: PermissionCreate) -> Permission:
+def create_permission(
+    db: Session,
+    payload: PermissionCreate,
+    current_user: User,
+) -> Permission:
     """
     Cria uma nova permissão.
     """
+    module = payload.module.value
+
     check_permission_duplicate(db=db, name=payload.name)
 
     permission = Permission(
         name=payload.name,
         display_name=payload.display_name,
         description=payload.description,
-        module=payload.module,
+        module=module,
     )
 
     db.add(permission)
+    db.flush()
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.PERMISSION,
+        entity_id=permission.id,
+        description="Permissão cadastrada.",
+        new_data={
+            "id": permission.id,
+            "name": permission.name,
+            "display_name": permission.display_name,
+            "description": permission.description,
+            "module": permission.module,
+        },
+    )
+
     db.commit()
     db.refresh(permission)
 
@@ -89,18 +117,27 @@ def update_permission(
     db: Session,
     permission_id: int,
     payload: PermissionUpdate,
+    current_user: User,
 ) -> Permission:
     """
     Atualiza parcialmente uma permissão.
-    Usa exclude_unset=True para alterar apenas os campos enviados.
     """
     permission = get_permission_by_id(db, permission_id)
 
     update_data = payload.model_dump(exclude_unset=True)
 
-    # Se nenhum campo foi enviado, apenas retorna a permission atual.
     if not update_data:
         return permission
+
+    old_data = {
+        "name": permission.name,
+        "display_name": permission.display_name,
+        "description": permission.description,
+        "module": permission.module,
+    }
+
+    if "module" in update_data and update_data["module"] is not None:
+        update_data["module"] = update_data["module"].value
 
     new_name = update_data.get("name", permission.name)
 
@@ -110,9 +147,20 @@ def update_permission(
         ignore_permission_id=permission_id,
     )
 
-    # Atualiza apenas os campos enviados.
     for field, value in update_data.items():
         setattr(permission, field, value)
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.PERMISSION,
+        entity_id=permission.id,
+        description="Permissão atualizada.",
+        old_data=old_data,
+        new_data=update_data,
+    )
 
     db.commit()
     db.refresh(permission)

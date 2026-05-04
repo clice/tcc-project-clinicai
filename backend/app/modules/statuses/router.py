@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import require_admin
 from app.modules.statuses.schema import (
     StatusCreate,
     StatusResponse,
@@ -28,17 +29,19 @@ router = APIRouter(prefix="/statuses", tags=["Statuses"])
 def create_status_route(
     payload: StatusCreate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Cria um novo status.
     Apenas administradores devem poder criar status do sistema.
     """
-    return create_status(db=db, payload=payload)
+    return create_status(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[StatusResponse])
 def list_statuses_route(
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Lista todos os status cadastrados.
@@ -50,6 +53,7 @@ def list_statuses_route(
 def get_status_route(
     status_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Busca um status específico pelo ID.
@@ -62,9 +66,10 @@ def update_status_route(
     status_id: int,
     payload: StatusUpdate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza parcialmente um status existente.
     Como usa PATCH, o frontend pode enviar somente os campos alterados.
     """
-    return update_status(db=db, status_id=status_id, payload=payload)
+    return update_status(db=db, status_id=status_id, payload=payload, current_user=current_user)

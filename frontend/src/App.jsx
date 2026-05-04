@@ -12,7 +12,8 @@ import 'src/scss/style.scss'
 import 'src/scss/examples.scss'
 
 // Provider
-import { AuthProvider } from 'src/context/AuthContext'
+import { AuthProvider } from 'src/contexts/AuthContext'
+import { FeedbackProvider } from 'src/contexts/FeedbackContext'
 
 // Routes
 import PrivateRoute from 'src/components/auth/PrivateRoute'
@@ -47,57 +48,59 @@ const App = () => {
 
   return (
     <AuthProvider>
-      <HashRouter>
-        <Suspense
-          fallback={
-            <div className="pt-3 text-center">
-              <CSpinner color="primary" variant="grow" />
-            </div>
-          }
-        >
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+      <FeedbackProvider>
+        <HashRouter>
+          <Suspense
+            fallback={
+              <div className="pt-3 text-center">
+                <CSpinner color="primary" variant="grow" />
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Login */}
-            <Route 
-              exact path="/login" 
-              name="Login" 
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>              
-              } 
-            />
+              {/* Login */}
+              <Route 
+                exact path="/login" 
+                name="Login" 
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>              
+                } 
+              />
 
-            {/* Errors */}
-            <Route 
-              exact path="/404" 
-              name="Erro 404" 
-              element={
-                <Error404 />
-              } 
-            />
-            <Route 
-              exact path="/500" 
-              name="Erro 500" 
-              element={
-                <Error500 />
-              } 
-            />
+              {/* Errors */}
+              <Route 
+                exact path="/404" 
+                name="Erro 404" 
+                element={
+                  <Error404 />
+                } 
+              />
+              <Route 
+                exact path="/500" 
+                name="Erro 500" 
+                element={
+                  <Error500 />
+                } 
+              />
 
-            {/* Layout */}
-            <Route 
-              path="/*" 
-              name="Home" 
-              element={
-                <PrivateRoute>
-                  <DefaultLayout />
-                </PrivateRoute>
-              } 
-            />
-          </Routes>
-        </Suspense>
-      </HashRouter>
+              {/* Layout */}
+              <Route 
+                path="/*" 
+                name="Home" 
+                element={
+                  <PrivateRoute>
+                    <DefaultLayout />
+                  </PrivateRoute>
+                } 
+              />
+            </Routes>
+          </Suspense>
+        </HashRouter>
+      </FeedbackProvider>
     </AuthProvider>
   )
 }

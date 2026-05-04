@@ -1,8 +1,8 @@
-"""create role_permissions table
+"""create role permissions table
 
-Revision ID: 5f77a7cefc5e
-Revises: 8f86157646db
-Create Date: 2026-05-01 20:42:05.999254
+Revision ID: b16754d19540
+Revises: a35f987ab166
+Create Date: 2026-05-04 16:19:01.277754
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5f77a7cefc5e'
-down_revision: Union[str, None] = '8f86157646db'
+revision: str = 'b16754d19540'
+down_revision: Union[str, None] = 'a35f987ab166'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

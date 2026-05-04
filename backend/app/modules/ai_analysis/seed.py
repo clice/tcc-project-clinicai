@@ -6,6 +6,7 @@ Cria análises iniciais para testes e desenvolvimento.
 
 from sqlalchemy.orm import Session
 
+from app.common.constants import StatusName
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.exams.model import Exam
 
@@ -26,9 +27,7 @@ def get_or_create_ai_analysis(
 ) -> AIAnalysis:
     """
     Busca uma análise pelo exame ou cria uma nova.
-    Evita duplicidade porque exam_id é único.
     """
-
     ai_analysis = (
         db.query(AIAnalysis)
         .filter(AIAnalysis.exam_id == exam_id)
@@ -65,11 +64,16 @@ def seed_ai_analysis(
     """
     Cria análises de IA iniciais do sistema.
     """
+    completed_exam = exams.get("exam_colonoscopy_completed")
+    processing_exam = exams.get("exam_endoscopy_processing")
+
+    if not completed_exam or not processing_exam:
+        return {}
 
     return {
         "ai_analysis_colonoscopy_completed": get_or_create_ai_analysis(
             db=db,
-            exam_id=exams["exam_colonoscopy_completed"].id,
+            exam_id=completed_exam.id,
             prediction_label="normal",
             prediction_class=0,
             confidence=0.94,
@@ -82,7 +86,7 @@ def seed_ai_analysis(
         ),
         "ai_analysis_endoscopy_processing": get_or_create_ai_analysis(
             db=db,
-            exam_id=exams["exam_endoscopy_in_analysis"].id,
+            exam_id=processing_exam.id,
             prediction_label="suspected_gastritis",
             prediction_class=1,
             confidence=0.87,
@@ -91,6 +95,6 @@ def seed_ai_analysis(
             gradcam_path="uploads/gradcam/endoscopy_ai_processing_gradcam.jpg",
             processing_time_ms=1580,
             ai_notes="Resultado preliminar gerado por modelo simulado.",
-            raw_response='{"prediction_label": "suspected_gastritis", "confidence": 0.87}',
+            raw_response=f'{{"prediction_label": "suspected_gastritis", "status": "{StatusName.PROCESSING.value}", "confidence": 0.87}}',
         ),
     }

@@ -82,10 +82,6 @@ const _nav = [
     to: '/audit-logs',
     icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
     roles: ['admin_master'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   }, 
 
   ////////// CONFIGURATIONS

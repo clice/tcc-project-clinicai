@@ -1,13 +1,24 @@
 """
 Schemas do módulo de pacientes.
-
-Este arquivo define os modelos Pydantic usados para validação de entrada,
-atualização parcial e resposta da API.
 """
 
 from datetime import date, datetime
+from typing import Literal
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from app.common.validators import (
+    normalize_optional_email,
+    normalize_optional_text,
+    normalize_phone,
+    normalize_required_text,
+    normalize_state,
+    normalize_zip_code,
+    validate_cpf,
+)
+
+
+PatientSex = Literal["male", "female", "other", "not_informed"]
 
 
 class PatientBase(BaseModel):
@@ -16,12 +27,12 @@ class PatientBase(BaseModel):
     """
 
     clinic_id: int
-    doctor_id: int | None = None
+    doctor_id: int
 
     name: str = Field(..., min_length=3, max_length=180)
     cpf: str = Field(..., min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: str | None = Field(default=None, max_length=20)
+    sex: PatientSex | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 
@@ -32,6 +43,49 @@ class PatientBase(BaseModel):
     neighborhood: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return normalize_required_text(value, "Nome do paciente é obrigatório.")
+
+    @field_validator(
+        "address",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+    )
+    @classmethod
+    def normalize_text_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
+
+    @field_validator("state")
+    @classmethod
+    def normalize_state_field(cls, value: str | None) -> str | None:
+        return normalize_state(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf_field(cls, value: str) -> str:
+        cleaned = validate_cpf(value, required=True)
+        assert cleaned is not None
+        return cleaned
+
+    @field_validator("zip_code")
+    @classmethod
+    def normalize_zip_code_field(cls, value: str | None) -> str | None:
+        return normalize_zip_code(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        return normalize_phone(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(value)
 
 
 class PatientCreate(PatientBase):
@@ -46,6 +100,7 @@ class PatientCreate(PatientBase):
 class PatientUpdate(BaseModel):
     """
     Schema usado para atualização parcial de paciente.
+    Todos os campos são opcionais porque o endpoint usa PATCH.
     """
 
     clinic_id: int | None = None
@@ -54,7 +109,7 @@ class PatientUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=3, max_length=180)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     birth_date: date | None = None
-    sex: str | None = Field(default=None, max_length=20)
+    sex: PatientSex | None = None
     phone: str | None = Field(default=None, max_length=20)
     email: EmailStr | None = None
 
@@ -65,6 +120,53 @@ class PatientUpdate(BaseModel):
     neighborhood: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        return normalize_required_text(value, "Nome do paciente é obrigatório.")
+
+    @field_validator(
+        "address",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+    )
+    @classmethod
+    def normalize_text_fields(cls, value: str | None) -> str | None:
+        return normalize_optional_text(value)
+
+    @field_validator("state")
+    @classmethod
+    def normalize_state_field(cls, value: str | None) -> str | None:
+        return normalize_state(value)
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf_field(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        return validate_cpf(value, required=True)
+
+    @field_validator("zip_code")
+    @classmethod
+    def normalize_zip_code_field(cls, value: str | None) -> str | None:
+        return normalize_zip_code(value)
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_field(cls, value: str | None) -> str | None:
+        return normalize_phone(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(value)
 
 
 class PatientResponse(BaseModel):
@@ -77,7 +179,7 @@ class PatientResponse(BaseModel):
     clinic_id: int
     clinic_name: str | None = None
 
-    doctor_id: int | None = None
+    doctor_id: int
     doctor_name: str | None = None
 
     status_id: int

@@ -7,6 +7,8 @@ de cada módulo na ordem correta de dependência.
 
 from app.core.database import SessionLocal
 
+from app.modules import models
+
 from app.modules.statuses.seed import seed_statuses
 from app.modules.roles.seed import seed_roles
 from app.modules.permissions.seed import seed_permissions
@@ -16,7 +18,6 @@ from app.modules.users.seed import seed_users
 from app.modules.patients.seed import seed_patients
 from app.modules.exams.seed import seed_exams
 from app.modules.ai_analysis.seed import seed_ai_analysis
-from app.modules.audit_logs.seed import seed_audit_logs
 
 
 def run_seed() -> None:
@@ -56,9 +57,6 @@ def run_seed() -> None:
         
         seed_ai_analysis(db, exams)
         print("AI analysis criados/verificados.")
-        
-        seed_audit_logs(db)
-        print("Audit logs criados/verificados.")
 
         print("Seeds executados com sucesso.")
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import require_permission
 from app.modules.clinics.schema import (
     ClinicCreate,
     ClinicResponse,
@@ -16,9 +17,10 @@ from app.modules.clinics.schema import (
 )
 from app.modules.clinics.service import (
     activate_clinic,
-    create_clinic,
-    get_clinic_by_id,
     build_clinic_response,
+    create_clinic,
+    ensure_user_can_access_clinic,
+    get_clinic_by_id,
     inactivate_clinic,
     list_clinics,
     update_clinic,
@@ -32,12 +34,16 @@ router = APIRouter(prefix="/clinics", tags=["Clinics"])
 def create_clinic_route(
     payload: ClinicCreate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:create")),
 ):
     """
     Cria uma nova clínica.
-    Por segurança, apenas admin_master deve cadastrar clínicas.
     """
-    return create_clinic(db=db, payload=payload)
+    return create_clinic(
+        db=db,
+        payload=payload,
+        current_user=current_user,
+    )
 
 
 @router.get("/", response_model=list[ClinicResponse])
@@ -45,13 +51,14 @@ def list_clinics_route(
     search: str | None = Query(default=None),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:read")),
 ):
     """
     Lista clínicas cadastradas.
-    Permite busca por nome, CNPJ ou cidade.
     """
     return list_clinics(
         db=db,
+        current_user=current_user,
         search=search,
         include_inactive=include_inactive,
     )
@@ -61,11 +68,18 @@ def list_clinics_route(
 def get_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:read")),
 ):
     """
     Busca uma clínica específica pelo ID.
     """
     clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return build_clinic_response(clinic)
 
 
@@ -74,15 +88,23 @@ def update_clinic_route(
     clinic_id: int,
     payload: ClinicUpdate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:update")),
 ):
     """
     Atualiza parcialmente uma clínica.
-    Como usa PATCH, o frontend pode enviar apenas os campos alterados.
     """
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
     return update_clinic(
         db=db,
         clinic_id=clinic_id,
         payload=payload,
+        current_user=current_user,
     )
 
 
@@ -90,20 +112,43 @@ def update_clinic_route(
 def inactivate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:change_status")),
 ):
     """
     Inativa uma clínica.
-    Esta rota substitui o DELETE físico para evitar perda de histórico.
     """
-    return inactivate_clinic(db=db, clinic_id=clinic_id)
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
+    return inactivate_clinic(
+        db=db,
+        clinic_id=clinic_id,
+        current_user=current_user,
+    )
 
 
 @router.patch("/{clinic_id}/activate", response_model=ClinicResponse)
 def activate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:change_status")),
 ):
     """
-    Ativa uma clínica inativa.
+    Ativa uma clínica.
     """
-    return activate_clinic(db=db, clinic_id=clinic_id)
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+
+    ensure_user_can_access_clinic(
+        current_user=current_user,
+        clinic_id=clinic.id,
+    )
+
+    return activate_clinic(
+        db=db,
+        clinic_id=clinic_id,
+        current_user=current_user,
+    )

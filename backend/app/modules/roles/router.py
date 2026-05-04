@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import require_admin
 from app.modules.roles.schema import (
     RoleCreate,
     RoleResponse,
@@ -28,17 +29,19 @@ router = APIRouter(prefix="/roles", tags=["Roles"])
 def create_role_route(
     payload: RoleCreate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Cria um novo perfil de acesso.
     Apenas administradores devem poder criar perfis do sistema.
     """
-    return create_role(db=db, payload=payload)
+    return create_role(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[RoleResponse])
 def list_roles_route(
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Lista todos os perfis cadastrados.
@@ -50,6 +53,7 @@ def list_roles_route(
 def get_role_route(
     role_id: int,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Busca um perfil específico pelo ID.
@@ -62,9 +66,10 @@ def update_role_route(
     role_id: int,
     payload: RoleUpdate,
     db: Session = Depends(get_db),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza parcialmente um perfil existente.
     Como usa PATCH, o frontend pode enviar somente os campos alterados.
     """
-    return update_role(db=db, role_id=role_id, payload=payload)
+    return update_role(db=db, role_id=role_id, payload=payload, current_user=current_user)

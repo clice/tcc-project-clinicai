@@ -89,7 +89,9 @@ export const removeStoredUser = () => {
  * Configura o token do usuário salvo.
  */
 export const setAuthTokens = ({ accessToken, refreshToken }) => {
-  setToken(accessToken)
+  if (accessToken) {
+    setToken(accessToken)
+  }
 
   if (refreshToken) {
     setRefreshToken(refreshToken)

@@ -1,8 +1,8 @@
 """create ai analysis table
 
-Revision ID: 35704794a7c4
-Revises: 66c0d1bb6144
-Create Date: 2026-05-02 06:55:21.504878
+Revision ID: ef093888aa27
+Revises: 412b8c653233
+Create Date: 2026-05-04 16:20:08.129832
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '35704794a7c4'
-down_revision: Union[str, None] = '66c0d1bb6144'
+revision: str = 'ef093888aa27'
+down_revision: Union[str, None] = '412b8c653233'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

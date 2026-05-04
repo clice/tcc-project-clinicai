@@ -25,11 +25,12 @@ class User(Base):
     # Campos da tabela
     name = Column(String(150), nullable=False)
     email = Column(String(150), unique=True, nullable=False, index=True)
-    cpf = Column(String(11), unique=True, nullable=True, index=True)
+    cpf = Column(String(11), unique=True, nullable=False, index=True)
     phone = Column(String(20), nullable=True)
 
     # Segurança
     password_hash = Column(String(255), nullable=False)
+    token_version = Column(Integer, nullable=False, default=0, server_default="0")
 
     # Relacionamentos principais
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)

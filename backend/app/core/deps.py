@@ -39,9 +39,10 @@ def get_current_user(
             detail="Token inválido ou expirado.",
         )
 
-    email = payload.get("sub")
+    user_id = payload.get("sub")
+    token_version = payload.get("token_version")
 
-    if not email:
+    if not user_id or token_version is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido.",
@@ -56,7 +57,7 @@ def get_current_user(
             joinedload(User.status),
             joinedload(User.clinic),
         )
-        .filter(User.email == email)
+        .filter(User.id == int(user_id))
         .first()
     )
 
@@ -64,6 +65,12 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário não encontrado.",
+        )
+
+    if user.token_version != token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão expirada. Faça login novamente.",
         )
 
     if not user.status or user.status.name != "active":

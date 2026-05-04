@@ -1,8 +1,8 @@
 """create patients table
 
-Revision ID: 2b83d5159d1d
-Revises: 156d50f0986f
-Create Date: 2026-05-01 20:51:37.856151
+Revision ID: b3051137a86d
+Revises: cd3a60f6bc77
+Create Date: 2026-05-04 16:19:48.553826
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2b83d5159d1d'
-down_revision: Union[str, None] = '156d50f0986f'
+revision: str = 'b3051137a86d'
+down_revision: Union[str, None] = 'cd3a60f6bc77'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -37,7 +37,7 @@ def upgrade() -> None:
     sa.Column('city', sa.String(length=100), nullable=True),
     sa.Column('state', sa.String(length=2), nullable=True),
     sa.Column('clinic_id', sa.Integer(), nullable=False),
-    sa.Column('doctor_id', sa.Integer(), nullable=True),
+    sa.Column('doctor_id', sa.Integer(), nullable=False),
     sa.Column('status_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

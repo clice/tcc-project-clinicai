@@ -14,9 +14,12 @@ import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { patientService } from 'src/services/patientService'
 
 import { calculateAge } from 'src/utils/calculators'
+import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
 import { canManagePatients } from 'src/utils/permissions'
 
@@ -25,24 +28,12 @@ const patientTabs = [
   { key: 'inactive', label: 'Inativos' },
 ]
 
-const getErrorMessage = (error, fallback) => {
-  const detail = error.response?.data?.detail
-
-  if (typeof detail === 'string') return detail
-
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item.msg).join(' ')
-  }
-
-  return error.message || fallback
-}
-
 const PatientsList = () => {
   const { user } = useAuth()
+  const { showSuccess, showError } = useFeedback()
 
   const [activeTab, setActiveTab] = useState('active')
   const [patients, setPatients] = useState([])
-  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   const canManage = canManagePatients(user)
@@ -50,12 +41,12 @@ const PatientsList = () => {
   const loadPatients = useCallback(async () => {
     try {
       setIsLoading(true)
-      setError('')
+      showError('')
 
       const data = await patientService.list({ includeInactive: true })
       setPatients(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar os pacientes.'))
+      showError(getErrorMessage(err, 'Erro ao carregar pacientes.'))
     } finally {
       setIsLoading(false)
     }
@@ -65,48 +56,44 @@ const PatientsList = () => {
     void loadPatients()
   }, [loadPatients])
 
-  const handleInactivate = useCallback(
-    async (patient) => {
-      try {
-        setError('')
-        await patientService.inactivate(patient.id)
-        await loadPatients()
-      } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao inativar o paciente.'))
-      }
-    },
-    [loadPatients],
-  )
-
-  const handleActivate = useCallback(
-    async (patient) => {
-      try {
-        setError('')
-        await patientService.activate(patient.id)
-        await loadPatients()
-      } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao ativar o paciente.'))
-      }
-    },
-    [loadPatients],
-  )
-
+  /**
+   * Separa pacientes por status para alimentar as abas.
+   */
   const filteredPatients = useMemo(() => {
-    if (activeTab === 'all') {
-      return patients
-    }
-
     return patients.filter((patient) => patient.status_name === activeTab)
   }, [patients, activeTab])
 
-  const counts = useMemo(
+  /**
+   * Conta registros por aba.
+   */
+  const tabCounts = useMemo(
     () => ({
       active: patients.filter((patient) => patient.status_name === 'active').length,
       inactive: patients.filter((patient) => patient.status_name === 'inactive').length,
-      all: patients.length,
     }),
     [patients],
   )
+  
+  /**
+   * Mudança de status do paciente.
+   */
+  const handleChangeStatus = async (patient) => {
+    try {
+      showError('')
+
+      if (patient.status_name === 'active') {
+        await patientService.inactivate(patient.id)
+        showSuccess('Paciente inativado com sucesso.')
+      } else {
+        await patientService.activate(patient.id)
+        showSuccess('Paciente ativado com sucesso.')
+      }
+
+      await loadPatients()
+    } catch (err) {
+      showError(err.response?.data?.detail || 'Erro ao alterar status do paciente.')
+    }
+  }
 
   const columns = useMemo(
     () => [
@@ -135,14 +122,14 @@ const PatientsList = () => {
               canEdit={canManage}
               canInactivate={canManage && !isInactive}
               canActivate={canManage && isInactive}
-              onInactivate={() => handleInactivate(patient)}
-              onActivate={() => handleActivate(patient)}
+              onInactivate={() => handleChangeStatus(patient)}
+              onActivate={() => handleChangeStatus(patient)}
             />
           )
         },
       },
     ],
-    [canManage, handleActivate, handleInactivate],
+    [canManage, loadPatients],
   )
 
   return (
@@ -165,15 +152,13 @@ const PatientsList = () => {
 
       <CCard>
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
               <CSpinner />
             </div>
           ) : (
             <>
-              <AppTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} tabs={patientTabs} />
+              <AppTabs tabs={patientTabs} counts={tabCounts} activeTab={activeTab} onChange={setActiveTab} />
               <AppTable data={filteredPatients} columns={columns} emptyMessage="Nenhum paciente encontrado." />
             </>
           )}

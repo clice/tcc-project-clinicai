@@ -5,7 +5,7 @@ A tabela patients armazena os dados dos pacientes vinculados às clínicas.
 Pacientes não devem ser excluídos fisicamente, apenas inativados por status.
 """
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -27,13 +27,13 @@ class Patient(Base):
     # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
-    # Dados principais do paciente
+    # Campos da tabela
     name = Column(String(150), nullable=False, index=True)
     cpf = Column(String(11), nullable=False, index=True)
     birth_date = Column(Date, nullable=True)
     sex = Column(String(20), nullable=True)
     phone = Column(String(20), nullable=True)
-    email = Column(String(150), nullable=True)    
+    email = Column(String(150), nullable=True)
 
     zip_code = Column(String(8), nullable=True)
     address = Column(String(255), nullable=True)
@@ -45,7 +45,7 @@ class Patient(Base):
 
     # Relacionamentos principais
     clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=False, index=True)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False, index=True)
 
     # Datas de auditoria

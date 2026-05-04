@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -16,6 +16,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { roleService } from 'src/services/roleService'
 
 import { canManageRoles } from 'src/utils/permissions'
+import { getErrorMessage } from 'src/utils/errors'
 
 const RolesList = () => {
   const { user } = useAuth()
@@ -32,16 +33,16 @@ const RolesList = () => {
       setError('')
 
       const data = await roleService.list()
-      setRoles(data)
+      setRoles(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError('Erro ao carregar os perfis.')
+      setError(getErrorMessage(err, 'Erro ao carregar os perfis.'))
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadRoles()
+    void loadRoles()
   }, [loadRoles])
 
   const columns = useMemo(
@@ -89,7 +90,9 @@ const RolesList = () => {
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando perfis...</p>
+            <div className="d-flex justify-content-center py-5">
+              <CSpinner />              
+            </div>
           ) : (
             <AppTable data={roles} columns={columns} emptyMessage="Nenhum perfil encontrado." />
           )}

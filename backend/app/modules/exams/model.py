@@ -19,13 +19,10 @@ class Exam(Base):
 
     __tablename__ = "exams"
 
+    # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
-    clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=False, index=True)
-    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
-    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False, index=True)
-
+    # Campos da tabela
     exam_type = Column(String(80), nullable=False, index=True)
     exam_date = Column(Date, nullable=True)
 
@@ -40,8 +37,15 @@ class Exam(Base):
 
     file_path = Column(String(255), nullable=True)
     file_name = Column(String(180), nullable=True)
-    file_mime_type = Column(String(100), nullable=True)
+    file_mime_type = Column(String(100), nullable=True) 
 
+    # Relacionamentos principais
+    clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=False, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False, index=True)
+
+    # Datas de auditoria
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -69,6 +73,9 @@ class Exam(Base):
     
 
     def __repr__(self):
+        """
+        Representação textual útil para debug.
+        """
         return (
             f"<Exam(id={self.id}, title='{self.title}', "
             f"exam_type='{self.exam_type}', patient_id={self.patient_id})>"

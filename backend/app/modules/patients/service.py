@@ -8,18 +8,44 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from datetime import date, datetime
+
+from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
-from app.modules.patients.schema import PatientCreate, PatientUpdate
 from app.modules.statuses.model import Status
-from app.modules.statuses.service import get_status_by_name_and_applies_to
 from app.modules.users.model import User
+from app.modules.patients.schema import PatientCreate, PatientUpdate
+from app.modules.audit_logs.service import create_audit_log
+from app.modules.statuses.service import get_status_by_name_and_applies_to
+
+
+def is_admin_master(user: User) -> bool:
+    """
+    Verifica se o usuário autenticado é admin_master.
+    """
+    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
+
+
+def serialize_for_json(data: dict) -> dict:
+    """
+    Converte valores Python não serializáveis em JSON para formatos seguros.
+    Usado principalmente nos audit logs.
+    """
+    serialized = {}
+
+    for key, value in data.items():
+        if isinstance(value, (date, datetime)):
+            serialized[key] = value.isoformat()
+        else:
+            serialized[key] = value
+
+    return serialized
 
 
 def get_patient_by_id(db: Session, patient_id: int) -> Patient:
     """
     Busca um paciente pelo ID.
-    Se não existir, retorna erro 404.
     """
     patient = (
         db.query(Patient)
@@ -38,13 +64,6 @@ def get_patient_by_id(db: Session, patient_id: int) -> Patient:
     return patient
 
 
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == "admin_master")
-
-
 def validate_user_can_access_clinic(
     *,
     current_user: User,
@@ -52,7 +71,6 @@ def validate_user_can_access_clinic(
 ) -> None:
     """
     Garante que usuários de clínica acessem apenas dados da própria clínica.
-    Admin master pode acessar qualquer clínica.
     """
     if is_admin_master(current_user):
         return
@@ -68,8 +86,8 @@ def validate_user_can_access_clinic(
             status_code=403,
             detail="Você não tem permissão para acessar dados desta clínica.",
         )
-        
-        
+
+
 def validate_user_can_access_patient(
     *,
     patient: Patient,
@@ -77,20 +95,16 @@ def validate_user_can_access_patient(
 ) -> None:
     """
     Garante que o usuário autenticado pode acessar o paciente.
-
-    - admin_master acessa todos;
-    - clinic_staff acessa pacientes da própria clínica;
-    - doctor acessa apenas pacientes atribuídos a ele.
     """
     role_name = current_user.role.name if current_user.role else None
 
-    if role_name == "admin_master":
+    if role_name == RoleName.ADMIN_MASTER.value:
         return
 
-    if role_name == "clinic_staff" and patient.clinic_id == current_user.clinic_id:
+    if role_name == RoleName.CLINIC_STAFF.value and patient.clinic_id == current_user.clinic_id:
         return
 
-    if role_name == "doctor" and patient.doctor_id == current_user.id:
+    if role_name == RoleName.DOCTOR.value and patient.doctor_id == current_user.id:
         return
 
     raise HTTPException(
@@ -102,17 +116,22 @@ def validate_user_can_access_patient(
 def validate_clinic_is_active(db: Session, clinic_id: int) -> Clinic:
     """
     Valida se a clínica existe e está ativa.
-    Pacientes não devem ser vinculados a clínicas inativas ou bloqueadas.
     """
-    clinic = db.query(Clinic).filter(Clinic.id == clinic_id).first()
+    clinic = (
+        db.query(Clinic)
+        .join(Status, Clinic.status_id == Status.id)
+        .filter(
+            Clinic.id == clinic_id,
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.CLINIC.value,
+        )
+        .first()
+    )
 
     if not clinic:
-        raise HTTPException(status_code=404, detail="Clínica não encontrada.")
-
-    if not clinic.status or clinic.status.name != "active":
         raise HTTPException(
             status_code=400,
-            detail="Não é possível vincular paciente a clínica inativa ou bloqueada.",
+            detail="Clínica não encontrada ou não está ativa.",
         )
 
     return clinic
@@ -126,20 +145,19 @@ def validate_doctor_can_be_assigned(
 ) -> None:
     """
     Valida se o médico informado pode ser vinculado ao paciente.
-
-    Regras:
-    - doctor_id pode ser None;
-    - se informado, precisa existir;
-    - precisa ter role doctor;
-    - precisa estar ativo;
-    - precisa pertencer à mesma clínica do paciente.
     """
     if doctor_id is None:
-        return
+        raise HTTPException(
+            status_code=400,
+            detail="O paciente deve estar vinculado a um médico.",
+        )
 
     doctor = (
         db.query(User)
-        .join(Status, User.status_id == Status.id)
+        .options(
+            joinedload(User.role),
+            joinedload(User.status),
+        )
         .filter(User.id == doctor_id)
         .first()
     )
@@ -147,7 +165,7 @@ def validate_doctor_can_be_assigned(
     if not doctor:
         raise HTTPException(status_code=404, detail="Médico não encontrado.")
 
-    if not doctor.role or doctor.role.name != "doctor":
+    if not doctor.role or doctor.role.name != RoleName.DOCTOR.value:
         raise HTTPException(
             status_code=400,
             detail="O usuário selecionado não possui perfil de médico.",
@@ -159,7 +177,7 @@ def validate_doctor_can_be_assigned(
             detail="O médico selecionado não pertence à clínica do paciente.",
         )
 
-    if not doctor.status or doctor.status.name != "active":
+    if not doctor.status or doctor.status.name != StatusName.ACTIVE.value:
         raise HTTPException(
             status_code=400,
             detail="O médico selecionado não está ativo.",
@@ -184,9 +202,7 @@ def check_patient_duplicate(
     if ignore_patient_id is not None:
         query = query.filter(Patient.id != ignore_patient_id)
 
-    duplicated = query.first()
-
-    if duplicated:
+    if query.first():
         raise HTTPException(
             status_code=400,
             detail="Já existe um paciente com esse CPF nesta clínica.",
@@ -195,7 +211,7 @@ def check_patient_duplicate(
 
 def build_patient_response(patient: Patient) -> dict:
     """
-    Monta a resposta do paciente com dados relacionados de clínica e status.
+    Monta a resposta do paciente com dados relacionados.
     """
     return {
         "id": patient.id,
@@ -231,9 +247,7 @@ def list_patients(
     current_user: User,
 ) -> list[dict]:
     """
-    Lista os pacientes cadastrados.
-    Admin master visualiza todos.
-    Usuários vinculados a uma clínica visualizam apenas pacientes da própria clínica.
+    Lista pacientes conforme perfil do usuário.
     """
     query = (
         db.query(Patient)
@@ -245,21 +259,21 @@ def list_patients(
         .join(Status, Patient.status_id == Status.id)
     )
 
-    role_name = current_user.role.name
+    role_name = current_user.role.name if current_user.role else None
 
     if not include_inactive:
         query = query.filter(
-            Status.name == "active",
-            Status.applies_to == "patient",
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.PATIENT.value,
         )
 
-    if role_name == "admin_master":
+    if role_name == RoleName.ADMIN_MASTER.value:
         pass
 
-    elif role_name == "clinic_staff":
+    elif role_name == RoleName.CLINIC_STAFF.value:
         query = query.filter(Patient.clinic_id == current_user.clinic_id)
 
-    elif role_name == "doctor":
+    elif role_name == RoleName.DOCTOR.value:
         query = query.filter(Patient.doctor_id == current_user.id)
 
     else:
@@ -280,7 +294,6 @@ def create_patient(
 ) -> dict:
     """
     Cria um novo paciente.
-    Todo paciente novo é criado inicialmente com status active.
     """
     validate_user_can_access_clinic(
         current_user=current_user,
@@ -291,8 +304,8 @@ def create_patient(
 
     active_status = get_status_by_name_and_applies_to(
         db=db,
-        name="active",
-        applies_to="patient",
+        name=StatusName.ACTIVE.value,
+        applies_to=StatusScope.PATIENT.value,
     )
 
     check_patient_duplicate(
@@ -303,7 +316,7 @@ def create_patient(
 
     doctor_id = payload.doctor_id
 
-    if current_user.role and current_user.role.name == "doctor":
+    if current_user.role and current_user.role.name == RoleName.DOCTOR.value:
         doctor_id = current_user.id
 
     validate_doctor_can_be_assigned(
@@ -332,6 +345,31 @@ def create_patient(
     )
 
     db.add(patient)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente cadastrado.",
+        new_data={
+            "id": patient.id,
+            "clinic_id": patient.clinic_id,
+            "doctor_id": patient.doctor_id,
+            "status_id": patient.status_id,
+            "name": patient.name,
+            "cpf": patient.cpf,
+            "birth_date": str(patient.birth_date) if patient.birth_date else None,
+            "sex": patient.sex,
+            "email": patient.email,
+            "phone": patient.phone,
+        },
+    )
+
     db.commit()
     db.refresh(patient)
 
@@ -347,9 +385,9 @@ def get_patient(
 ) -> dict:
     """
     Busca um paciente específico pelo ID.
-    """    
+    """
     patient = get_patient_by_id(db=db, patient_id=patient_id)
-    
+
     validate_user_can_access_patient(
         patient=patient,
         current_user=current_user,
@@ -375,27 +413,36 @@ def update_patient(
     )
 
     update_data = payload.model_dump(exclude_unset=True)
+    audit_new_data = serialize_for_json(update_data)
 
     if not update_data:
         return build_patient_response(patient)
 
     new_clinic_id = update_data.get("clinic_id", patient.clinic_id)
     new_doctor_id = update_data.get("doctor_id", patient.doctor_id)
-
-    validate_doctor_can_be_assigned(
-        db=db,
-        doctor_id=new_doctor_id,
-        clinic_id=new_clinic_id,
-    )
-    
     new_cpf = update_data.get("cpf", patient.cpf)
+
+    if new_doctor_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="O paciente deve permanecer vinculado a um médico.",
+        )
 
     validate_user_can_access_clinic(
         current_user=current_user,
         clinic_id=new_clinic_id,
     )
 
-    validate_clinic_is_active(db=db, clinic_id=new_clinic_id)
+    validate_clinic_is_active(
+        db=db,
+        clinic_id=new_clinic_id,
+    )
+
+    validate_doctor_can_be_assigned(
+        db=db,
+        doctor_id=new_doctor_id,
+        clinic_id=new_clinic_id,
+    )
 
     check_patient_duplicate(
         db=db,
@@ -407,11 +454,45 @@ def update_patient(
     if "email" in update_data and update_data["email"] is not None:
         update_data["email"] = str(update_data["email"])
 
+    old_data = {
+        "clinic_id": patient.clinic_id,
+        "doctor_id": patient.doctor_id,
+        "status_id": patient.status_id,
+        "name": patient.name,
+        "cpf": patient.cpf,
+        "birth_date": str(patient.birth_date) if patient.birth_date else None,
+        "sex": patient.sex,
+        "email": patient.email,
+        "phone": patient.phone,
+        "zip_code": patient.zip_code,
+        "address": patient.address,
+        "number": patient.number,
+        "complement": patient.complement,
+        "neighborhood": patient.neighborhood,
+        "city": patient.city,
+        "state": patient.state,
+    }
+    
     for field, value in update_data.items():
         setattr(patient, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente atualizado.",
+        old_data=old_data,
+        new_data=audit_new_data,
+    )
+    
     db.commit()
     db.refresh(patient)
+
+    patient = get_patient_by_id(db=db, patient_id=patient.id)
 
     return build_patient_response(patient)
 
@@ -422,7 +503,7 @@ def activate_patient(
     current_user: User,
 ) -> dict:
     """
-    Ativa um paciente, alterando seu status para active.
+    Ativa um paciente.
     """
     patient = get_patient_by_id(db=db, patient_id=patient_id)
 
@@ -433,14 +514,36 @@ def activate_patient(
 
     active_status = get_status_by_name_and_applies_to(
         db=db,
-        name="active",
-        applies_to="patient",
+        name=StatusName.ACTIVE.value,
+        applies_to=StatusScope.PATIENT.value,
     )
+
+    old_data = {
+        "status_id": patient.status_id,
+        "status_name": patient.status.name if patient.status else None,
+    }
 
     patient.status_id = active_status.id
 
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CHANGE_STATUS_ACTIVATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente ativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": active_status.id,
+            "status_name": StatusName.ACTIVE.value,
+        },
+    )
+
     db.commit()
     db.refresh(patient)
+
+    patient = get_patient_by_id(db=db, patient_id=patient.id)
 
     return build_patient_response(patient)
 
@@ -451,7 +554,7 @@ def inactivate_patient(
     current_user: User,
 ) -> dict:
     """
-    Inativa um paciente, alterando seu status para inactive.
+    Inativa um paciente.
     """
     patient = get_patient_by_id(db=db, patient_id=patient_id)
 
@@ -462,13 +565,36 @@ def inactivate_patient(
 
     inactive_status = get_status_by_name_and_applies_to(
         db=db,
-        name="inactive",
-        applies_to="patient",
+        name=StatusName.INACTIVE.value,
+        applies_to=StatusScope.PATIENT.value,
     )
+
+    old_data = {
+        "status_id": patient.status_id,
+        "status_name": patient.status.name if patient.status else None,
+    }
 
     patient.status_id = inactive_status.id
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CHANGE_STATUS_INACTIVATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente inativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": inactive_status.id,
+            "status_name": StatusName.INACTIVE.value,
+        },
+    )
+
     db.commit()
     db.refresh(patient)
+
+    patient = get_patient_by_id(db=db, patient_id=patient.id)
 
     return build_patient_response(patient)

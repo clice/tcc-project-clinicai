@@ -10,12 +10,14 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.common.constants import AuditAction, AuditEntity, StatusName, StatusScope
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_refresh_token,
     verify_password,
 )
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.users.model import User
 
 
@@ -24,23 +26,52 @@ def authenticate_user(
     *,
     email: str,
     password: str,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
 ) -> User:
     """
     Autentica um usuário a partir de e-mail e senha.
-    Retorna o usuário autenticado ou lança erro caso os dados sejam inválidos.
+    Também registra logs automáticos de sucesso e falha.
     """
-
     normalized_email = email.strip().lower()
 
     user = db.query(User).filter(User.email == normalized_email).first()
 
     if not user:
+        create_audit_log(
+            db=db,
+            user_id=None,
+            clinic_id=None,
+            action=AuditAction.LOGIN_FAILED,
+            entity=AuditEntity.AUTH,
+            entity_id=None,
+            description="Tentativa de login com e-mail inexistente.",
+            new_data={"email": normalized_email},
+            ip_address=ip_address,
+            user_agent=user_agent,
+            commit=True,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha inválidos.",
         )
 
     if not verify_password(password, user.password_hash):
+        create_audit_log(
+            db=db,
+            user_id=user.id,
+            clinic_id=user.clinic_id,
+            action=AuditAction.LOGIN_FAILED,
+            entity=AuditEntity.AUTH,
+            entity_id=user.id,
+            description="Tentativa de login com senha inválida.",
+            new_data={"email": normalized_email},
+            ip_address=ip_address,
+            user_agent=user_agent,
+            commit=True,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha inválidos.",
@@ -49,6 +80,22 @@ def authenticate_user(
     validate_active_user(user)
 
     user.last_access_at = datetime.now(timezone.utc)
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.LOGIN_SUCCESS,
+        entity=AuditEntity.AUTH,
+        entity_id=user.id,
+        description="Login realizado com sucesso.",
+        new_data={
+            "email": user.email,
+            "last_access_at": user.last_access_at.isoformat(),
+        },
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
 
     db.commit()
     db.refresh(user)
@@ -60,11 +107,10 @@ def validate_active_user(user: User) -> None:
     """
     Valida se o usuário está ativo no sistema.
     """
-
     if (
         not user.status
-        or user.status.applies_to != "user"
-        or user.status.name != "active"
+        or user.status.applies_to != StatusScope.USER.value
+        or user.status.name != StatusName.ACTIVE.value
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -76,8 +122,10 @@ def create_user_tokens(user: User) -> dict:
     """
     Cria access token e refresh token para o usuário autenticado.
     """
-
-    token_data = {"sub": user.email}
+    token_data = {
+        "sub": str(user.id),
+        "token_version": user.token_version,
+    }
 
     return {
         "access_token": create_access_token(data=token_data),
@@ -90,7 +138,6 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
     """
     Valida o refresh token e gera novos tokens.
     """
-
     payload = decode_refresh_token(refresh_token)
 
     if payload is None:
@@ -99,15 +146,16 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
             detail="Refresh token inválido ou expirado.",
         )
 
-    email = payload.get("sub")
+    user_id = payload.get("sub")
+    token_version = payload.get("token_version")
 
-    if not email:
+    if not user_id or token_version is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido.",
         )
 
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.id == int(user_id)).first()
 
     if not user:
         raise HTTPException(
@@ -115,16 +163,54 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
             detail="Usuário não encontrado.",
         )
 
+    if user.token_version != token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão expirada. Faça login novamente.",
+        )
+
     validate_active_user(user)
 
     return create_user_tokens(user)
+    
+    
+def logout_user(
+    db: Session,
+    *,
+    user: User,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> dict:
+    """
+    Invalida os tokens atuais do usuário.
+
+    Como o JWT é stateless, incrementamos token_version.
+    Assim, access tokens e refresh tokens antigos deixam de ser aceitos.
+    """
+    user.token_version += 1
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.LOGOUT,
+        entity=AuditEntity.AUTH,
+        entity_id=user.id,
+        description="Logout realizado com sucesso.",
+        new_data={"token_version": user.token_version},
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+
+    db.commit()
+
+    return {"message": "Logout realizado com sucesso."}
 
 
 def build_current_user_response(user: User) -> dict:
     """
     Monta a resposta da rota /auth/me com dados do usuário autenticado.
     """
-
     permissions = []
 
     if user.role and user.role.role_permissions:
