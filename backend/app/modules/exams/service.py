@@ -4,22 +4,45 @@ Service do módulo de exames.
 Concentra as regras de negócio relacionadas aos exames.
 """
 
-from fastapi import HTTPException
+import shutil
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamCreate, ExamUpdate
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
-from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
 from app.modules.users.model import User
+
+
+UPLOAD_DIR = Path("uploads/exams")
+
+ALLOWED_EXAM_MIME_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+}
+
+ALLOWED_EXAM_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".pdf",
+}
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 def is_admin_master(user: User) -> bool:
@@ -51,8 +74,6 @@ def build_exam_response(exam: Exam) -> dict:
         "clinical_indication": exam.clinical_indication,
         "findings": exam.findings,
         "conclusion": exam.conclusion,
-        "ai_analysis_status": exam.ai_analysis_status,
-        "ai_summary": exam.ai_summary,
         "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
@@ -258,6 +279,114 @@ def validate_exam_relationships(
     )
 
 
+def list_exam_form_options(
+    db: Session,
+    current_user: User,
+) -> dict:
+    """
+    Retorna os dados necessários para montar o formulário de exames.
+    """
+    role_name = current_user.role.name if current_user.role else None
+
+    clinics_query = db.query(Clinic).options(joinedload(Clinic.status))
+    patients_query = db.query(Patient).options(
+        joinedload(Patient.status),
+        joinedload(Patient.doctor),
+    )
+    doctors_query = db.query(User).options(
+        joinedload(User.role),
+        joinedload(User.status),
+    )
+
+    if role_name == RoleName.ADMIN_MASTER.value:
+        pass
+
+    elif role_name == RoleName.CLINIC_STAFF.value:
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não está vinculado a uma clínica.",
+            )
+
+        clinics_query = clinics_query.filter(Clinic.id == current_user.clinic_id)
+        patients_query = patients_query.filter(Patient.clinic_id == current_user.clinic_id)
+        doctors_query = doctors_query.filter(User.clinic_id == current_user.clinic_id)
+
+    elif role_name == RoleName.DOCTOR.value:
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não está vinculado a uma clínica.",
+            )
+
+        clinics_query = clinics_query.filter(Clinic.id == current_user.clinic_id)
+        patients_query = patients_query.filter(Patient.doctor_id == current_user.id)
+        doctors_query = doctors_query.filter(User.id == current_user.id)
+
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Usuário sem permissão para acessar formulário de exames.",
+        )
+
+    clinics = clinics_query.all()
+    patients = patients_query.all()
+
+    doctors = (
+        doctors_query
+        .join(User.role)
+        .filter(User.role.has(name=RoleName.DOCTOR.value))
+        .all()
+    )
+
+    statuses = (
+        db.query(Status)
+        .filter(Status.applies_to == StatusScope.EXAM.value)
+        .order_by(Status.id.asc())
+        .all()
+    )
+
+    return {
+        "clinics": [
+            {
+                "id": clinic.id,
+                "name": clinic.name,
+                "status_name": clinic.status.name if clinic.status else None,
+            }
+            for clinic in clinics
+        ],
+        "patients": [
+            {
+                "id": patient.id,
+                "name": patient.name,
+                "clinic_id": patient.clinic_id,
+                "doctor_id": patient.doctor_id,
+                "status_name": patient.status.name if patient.status else None,
+            }
+            for patient in patients
+        ],
+        "doctors": [
+            {
+                "id": doctor.id,
+                "name": doctor.name,
+                "clinic_id": doctor.clinic_id,
+                "role_name": doctor.role.name if doctor.role else None,
+                "status_name": doctor.status.name if doctor.status else None,
+            }
+            for doctor in doctors
+        ],
+        "statuses": [
+            {
+                "id": status.id,
+                "name": status.name,
+                "display_name": status.display_name,
+                "applies_to": status.applies_to,
+            }
+            for status in statuses
+        ],
+    }
+
+
 def get_exam_model_by_id(db: Session, exam_id: int) -> Exam:
     """
     Busca o model de exame pelo ID.
@@ -397,7 +526,7 @@ def create_exam(
     current_user: User,
 ) -> dict:
     """
-    Cria um novo exame.
+    Cria um novo exame com status inicial pendente.
     """
     doctor_id = payload.doctor_id
 
@@ -409,19 +538,25 @@ def create_exam(
         clinic_id=payload.clinic_id,
     )
 
+    pending_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.PENDING.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+
     validate_exam_relationships(
         db=db,
         clinic_id=payload.clinic_id,
         patient_id=payload.patient_id,
         doctor_id=doctor_id,
-        status_id=payload.status_id,
+        status_id=pending_status.id,
     )
 
     exam = Exam(
         clinic_id=payload.clinic_id,
         patient_id=payload.patient_id,
         doctor_id=doctor_id,
-        status_id=payload.status_id,
+        status_id=pending_status.id,
         exam_type=payload.exam_type,
         exam_date=payload.exam_date,
         title=payload.title,
@@ -429,17 +564,11 @@ def create_exam(
         clinical_indication=payload.clinical_indication,
         findings=payload.findings,
         conclusion=payload.conclusion,
-        ai_analysis_status=payload.ai_analysis_status,
-        ai_summary=payload.ai_summary,
-        file_path=payload.file_path,
-        file_name=payload.file_name,
-        file_mime_type=payload.file_mime_type,
     )
 
     db.add(exam)
     db.flush()
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -484,6 +613,12 @@ def update_exam(
         exam=exam,
     )
 
+    if exam.status and exam.status.name == StatusName.CANCELED.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível editar um exame cancelado.",
+        )
+
     update_data = payload.model_dump(exclude_unset=True)
 
     if not update_data:
@@ -492,7 +627,6 @@ def update_exam(
     clinic_id = update_data.get("clinic_id", exam.clinic_id)
     patient_id = update_data.get("patient_id", exam.patient_id)
     doctor_id = update_data.get("doctor_id", exam.doctor_id)
-    status_id = update_data.get("status_id", exam.status_id)
 
     if current_user.role and current_user.role.name == RoleName.DOCTOR.value:
         doctor_id = current_user.id
@@ -508,14 +642,13 @@ def update_exam(
         clinic_id=clinic_id,
         patient_id=patient_id,
         doctor_id=doctor_id,
-        status_id=status_id,
+        status_id=exam.status_id,
     )
 
     old_data = {
         "clinic_id": exam.clinic_id,
         "patient_id": exam.patient_id,
         "doctor_id": exam.doctor_id,
-        "status_id": exam.status_id,
         "exam_type": exam.exam_type,
         "exam_date": str(exam.exam_date) if exam.exam_date else None,
         "title": exam.title,
@@ -523,14 +656,11 @@ def update_exam(
         "clinical_indication": exam.clinical_indication,
         "findings": exam.findings,
         "conclusion": exam.conclusion,
-        "ai_analysis_status": exam.ai_analysis_status,
-        "ai_summary": exam.ai_summary,
     }
-    
+
     for field, value in update_data.items():
         setattr(exam, field, value)
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -542,7 +672,7 @@ def update_exam(
         old_data=old_data,
         new_data=update_data,
     )
-    
+
     db.commit()
     db.refresh(exam)
 
@@ -579,7 +709,6 @@ def cancel_exam(
 
     exam.status_id = canceled_status.id
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -606,13 +735,11 @@ def cancel_exam(
 def upload_exam_file(
     db: Session,
     exam_id: int,
-    file_path: str,
-    file_name: str,
-    file_mime_type: str,
+    file: UploadFile,
     current_user: User,
 ) -> dict:
     """
-    Vincula dados de arquivo a um exame.
+    Faz upload físico do arquivo do exame e atualiza metadados.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -620,18 +747,70 @@ def upload_exam_file(
         current_user=current_user,
         exam=exam,
     )
-    
-    exam.file_path = file_path
-    exam.file_name = file_name
-    exam.file_mime_type = file_mime_type
-    
+
+    if exam.status and exam.status.name == StatusName.CANCELED.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível enviar arquivo para um exame cancelado.",
+        )
+
+    if file.content_type not in ALLOWED_EXAM_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Tipo de arquivo não permitido. Use PDF, JPG ou PNG.",
+        )
+
+    file_extension = Path(file.filename or "").suffix.lower()
+
+    if file_extension not in {".jpg", ".jpeg", ".png", ".pdf"}:
+        raise HTTPException(
+            status_code=400,
+            detail="Extensão de arquivo não permitida.",
+        )
+
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Arquivo muito grande. Tamanho máximo permitido: 10 MB.",
+        )
+
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    stored_file_name = f"{uuid4()}{file_extension}"
+    stored_file_path = UPLOAD_DIR / stored_file_name
+
     old_data = {
         "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
     }
-    
-    # Adiciona log
+
+    try:
+        with stored_file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao salvar arquivo do exame.",
+        ) from exc
+
+    processing_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.PROCESSING.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+
+    exam.file_path = str(stored_file_path)
+    exam.file_name = file.filename
+    exam.file_mime_type = file.content_type
+    exam.status_id = processing_status.id
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -639,12 +818,14 @@ def upload_exam_file(
         action=AuditAction.UPLOAD,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Arquivo de exame vinculado.",
+        description="Arquivo de exame enviado.",
         old_data=old_data,
         new_data={
             "file_path": exam.file_path,
             "file_name": exam.file_name,
             "file_mime_type": exam.file_mime_type,
+            "status_id": exam.status_id,
+            "status_name": StatusName.PROCESSING.value,
         },
     )
 
@@ -660,9 +841,9 @@ def download_exam_file(
     db: Session,
     exam_id: int,
     current_user: User,
-) -> dict:
+):
     """
-    Retorna os dados do arquivo vinculado ao exame.
+    Retorna o arquivo físico vinculado ao exame.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -676,14 +857,15 @@ def download_exam_file(
             status_code=404,
             detail="Este exame não possui arquivo vinculado.",
         )
-        
-    old_data = {
-        "file_path": exam.file_path,
-        "file_name": exam.file_name,
-        "file_mime_type": exam.file_mime_type,
-    }
-    
-    # Adiciona log
+
+    file_path = Path(exam.file_path)
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Arquivo físico não encontrado no servidor.",
+        )
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -691,8 +873,7 @@ def download_exam_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Arquivo de exame vinculado.",
-        old_data=old_data,
+        description="Arquivo de exame baixado.",
         new_data={
             "file_path": exam.file_path,
             "file_name": exam.file_name,
@@ -700,9 +881,10 @@ def download_exam_file(
         },
     )
 
-    return {
-        "exam_id": exam.id,
-        "file_path": exam.file_path,
-        "file_name": exam.file_name,
-        "file_mime_type": exam.file_mime_type,
-    }
+    db.commit()
+
+    return FileResponse(
+        path=file_path,
+        filename=exam.file_name,
+        media_type=exam.file_mime_type,
+    )

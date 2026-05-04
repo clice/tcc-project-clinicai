@@ -32,12 +32,9 @@ class Exam(Base):
     findings = Column(Text, nullable=True)
     conclusion = Column(Text, nullable=True)
 
-    ai_analysis_status = Column(String(50), nullable=True)
-    ai_summary = Column(Text, nullable=True)
-
     file_path = Column(String(255), nullable=True)
     file_name = Column(String(180), nullable=True)
-    file_mime_type = Column(String(100), nullable=True) 
+    file_mime_type = Column(String(100), nullable=True)
 
     # Relacionamentos principais
     clinic_id = Column(Integer, ForeignKey("clinics.id"), nullable=False, index=True)
@@ -70,7 +67,6 @@ class Exam(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
-    
 
     def __repr__(self):
         """

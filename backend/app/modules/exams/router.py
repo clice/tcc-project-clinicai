@@ -2,21 +2,18 @@
 Rotas do módulo de exames.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_permission
-from app.modules.exams.schema import (
-    ExamCreate,
-    ExamResponse,
-    ExamUpdate,
-)
+from app.modules.exams.schema import ExamCreate, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
     cancel_exam,
     create_exam,
     download_exam_file,
     get_exam_by_id,
+    list_exam_form_options,
     list_exams,
     update_exam,
     upload_exam_file,
@@ -25,6 +22,18 @@ from app.modules.users.model import User
 
 
 router = APIRouter(prefix="/exams", tags=["Exams"])
+
+
+@router.get("/form-options")
+def get_exam_form_options_route(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:read")),
+):
+    """
+    Retorna dados auxiliares para o formulário de exames.
+    Essa rota evita que o frontend dependa de várias rotas administrativas.
+    """
+    return list_exam_form_options(db=db, current_user=current_user)
 
 
 @router.post("/", response_model=ExamResponse, status_code=201)
@@ -122,9 +131,7 @@ def cancel_exam_route(
 @router.post("/{exam_id}/upload-file", response_model=ExamResponse)
 def upload_exam_file_route(
     exam_id: int,
-    file_path: str,
-    file_name: str,
-    file_mime_type: str,
+    file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("exams:update")),
 ):
@@ -136,9 +143,7 @@ def upload_exam_file_route(
     return upload_exam_file(
         db=db,
         exam_id=exam_id,
-        file_path=file_path,
-        file_name=file_name,
-        file_mime_type=file_mime_type,
+        file=file,
         current_user=current_user,
     )
 
