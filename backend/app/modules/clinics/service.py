@@ -9,10 +9,11 @@ from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import RoleName, StatusName, StatusScope
+from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.schema import ClinicCreate, ClinicUpdate
 from app.modules.statuses.model import Status
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
@@ -177,7 +178,11 @@ def list_clinics(
     return [build_clinic_response(clinic) for clinic in clinics]
 
 
-def create_clinic(db: Session, payload: ClinicCreate) -> dict:
+def create_clinic(
+    db: Session, 
+    payload: ClinicCreate, 
+    current_user: User
+) -> dict:
     """
     Cria uma nova clínica.
     """
@@ -199,6 +204,30 @@ def create_clinic(db: Session, payload: ClinicCreate) -> dict:
     clinic = Clinic(**data)
 
     db.add(clinic)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=clinic.id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.CLINIC,
+        entity_id=clinic.id,
+        description="Clínica cadastrada.",
+        new_data={
+            "id": clinic.id,
+            "name": clinic.name,
+            "cnpj": clinic.cnpj,
+            "email": clinic.email,
+            "phone": clinic.phone,
+            "mobile_phone": clinic.mobile_phone,
+            "city": clinic.city,
+            "state": clinic.state,
+            "status_id": clinic.status_id,
+        },
+    )
+
     db.commit()
     db.refresh(clinic)
 
@@ -211,6 +240,7 @@ def update_clinic(
     db: Session,
     clinic_id: int,
     payload: ClinicUpdate,
+    current_user: User,
 ) -> dict:
     """
     Atualiza parcialmente uma clínica existente.
@@ -239,9 +269,38 @@ def update_clinic(
         ignore_clinic_id=clinic_id,
     )
 
+    old_data = {
+        "name": clinic.name,
+        "cnpj": clinic.cnpj,
+        "email": clinic.email,
+        "phone": clinic.phone,
+        "mobile_phone": clinic.mobile_phone,
+        "zip_code": clinic.zip_code,
+        "address": clinic.address,
+        "number": clinic.number,
+        "complement": clinic.complement,
+        "neighborhood": clinic.neighborhood,
+        "city": clinic.city,
+        "state": clinic.state,
+        "status_id": clinic.status_id,
+    }
+    
     for field, value in update_data.items():
         setattr(clinic, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=clinic.id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.CLINIC,
+        entity_id=clinic.id,
+        description="Clínica atualizada.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+    
     db.commit()
     db.refresh(clinic)
 
@@ -250,7 +309,7 @@ def update_clinic(
     return build_clinic_response(clinic)
 
 
-def inactivate_clinic(db: Session, clinic_id: int) -> dict:
+def inactivate_clinic(db: Session, clinic_id: int, current_user: User) -> dict:
     """
     Inativa uma clínica.
 
@@ -264,7 +323,28 @@ def inactivate_clinic(db: Session, clinic_id: int) -> dict:
         applies_to=StatusScope.CLINIC.value,
     )
 
+    old_data = {
+        "status_id": clinic.status_id,
+        "status_name": clinic.status.name if clinic.status else None,
+    }
+
     clinic.status_id = inactive_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=clinic.id,
+        action=AuditAction.CHANGE_STATUS_INACTIVATE,
+        entity=AuditEntity.CLINIC,
+        entity_id=clinic.id,
+        description="Clínica inativada.",
+        old_data=old_data,
+        new_data={
+            "status_id": inactive_status.id,
+            "status_name": StatusName.INACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(clinic)
@@ -274,7 +354,7 @@ def inactivate_clinic(db: Session, clinic_id: int) -> dict:
     return build_clinic_response(clinic)
 
 
-def activate_clinic(db: Session, clinic_id: int) -> dict:
+def activate_clinic(db: Session, clinic_id: int, current_user: User) -> dict:
     """
     Ativa uma clínica.
     """
@@ -286,7 +366,28 @@ def activate_clinic(db: Session, clinic_id: int) -> dict:
         applies_to=StatusScope.CLINIC.value,
     )
 
+    old_data = {
+        "status_id": clinic.status_id,
+        "status_name": clinic.status.name if clinic.status else None,
+    }
+
     clinic.status_id = active_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=clinic.id,
+        action=AuditAction.CHANGE_STATUS_ACTIVATE,
+        entity=AuditEntity.CLINIC,
+        entity_id=clinic.id,
+        description="Clínica ativada.",
+        old_data=old_data,
+        new_data={
+            "status_id": active_status.id,
+            "status_name": StatusName.ACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(clinic)

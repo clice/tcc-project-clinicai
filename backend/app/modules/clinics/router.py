@@ -39,7 +39,11 @@ def create_clinic_route(
     """
     Cria uma nova clínica.
     """
-    return create_clinic(db=db, payload=payload)
+    return create_clinic(
+        db=db,
+        payload=payload,
+        current_user=current_user,
+    )
 
 
 @router.get("/", response_model=list[ClinicResponse])
@@ -100,6 +104,7 @@ def update_clinic_route(
         db=db,
         clinic_id=clinic_id,
         payload=payload,
+        current_user=current_user,
     )
 
 
@@ -119,7 +124,11 @@ def inactivate_clinic_route(
         clinic_id=clinic.id,
     )
 
-    return inactivate_clinic(db=db, clinic_id=clinic_id)
+    return inactivate_clinic(
+        db=db,
+        clinic_id=clinic_id,
+        current_user=current_user,
+    )
 
 
 @router.patch("/{clinic_id}/activate", response_model=ClinicResponse)
@@ -138,4 +147,8 @@ def activate_clinic_route(
         clinic_id=clinic.id,
     )
 
-    return activate_clinic(db=db, clinic_id=clinic_id)
+    return activate_clinic(
+        db=db,
+        clinic_id=clinic_id,
+        current_user=current_user,
+    )
