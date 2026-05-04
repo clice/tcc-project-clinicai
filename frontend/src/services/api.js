@@ -8,6 +8,7 @@
  */
 
 import axios from 'axios'
+
 import {
   clearAuthStorage,
   getRefreshToken,
@@ -23,6 +24,22 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const api = axios.create({
   baseURL: API_URL,
 })
+
+let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error)
+      return
+    }
+
+    promise.resolve(token)
+  })
+
+  failedQueue = []
+}
 
 /**
  * Interceptor executado antes de cada request.
@@ -49,50 +66,70 @@ api.interceptors.request.use((config) => {
  */
 api.interceptors.response.use(
   (response) => response,
-
   async (error) => {
     const originalRequest = error.config
-    const status = error.response?.status
 
-    const isUnauthorized = status === 401
-    const alreadyRetried = originalRequest?._retry
-    const isRefreshRoute = originalRequest?.url?.includes('/auth/refresh')
-
-    if (!isUnauthorized || alreadyRetried || isRefreshRoute) {
+    if (!error.response) {
       return Promise.reject(error)
     }
 
+    const status = error.response.status
+
+    if (status !== 401 || originalRequest?._retry) {
+      return Promise.reject(error)
+    }
+
+    const refreshToken = getRefreshToken()
+
+    if (!refreshToken) {
+      clearAuthStorage()
+      window.dispatchEvent(new Event('clinicai:unauthorized'))
+      return Promise.reject(error)
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject })
+      })
+        .then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        })
+        .catch((err) => Promise.reject(err))
+    }
+
     originalRequest._retry = true
+    isRefreshing = true
 
     try {
-      const refreshToken = getRefreshToken()
-
-      if (!refreshToken) {
-        throw new Error('Refresh token não encontrado.')
-      }
-
       const response = await axios.post(`${API_URL}/auth/refresh`, {
         refresh_token: refreshToken,
       })
 
-      setAuthTokens({
-        accessToken: response.data.access_token,
-        refreshToken: response.data.refresh_token,
-      })
+      const accessToken = response.data?.access_token
+      const newRefreshToken = response.data?.refresh_token || refreshToken
 
-      originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`
+      if (!accessToken) {
+        throw new Error('Token de acesso não retornado.')
+      }
+
+      setAuthTokens(accessToken, newRefreshToken)
+      processQueue(null, accessToken)
+
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`
 
       return api(originalRequest)
     } catch (refreshError) {
+      processQueue(refreshError, null)
       clearAuthStorage()
-
-      if (!window.location.hash.includes('/login')) {
-        window.location.hash = '#/login'
-      }
+      window.dispatchEvent(new Event('clinicai:unauthorized'))
 
       return Promise.reject(refreshError)
+    } finally {
+      isRefreshing = false
     }
   },
 )
 
 export default api
+

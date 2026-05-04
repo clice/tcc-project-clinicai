@@ -24,6 +24,8 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { userService } from 'src/services/userService'
 import { roleService } from 'src/services/roleService'
 import { statusService } from 'src/services/statusService'
@@ -47,14 +49,12 @@ const emptyUser = {
 const UserForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyUser)
   const [roles, setRoles] = useState([])
   const [statuses, setStatuses] = useState([])
   const [clinics, setClinics] = useState([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
@@ -102,9 +102,9 @@ const UserForm = ({ mode = 'create' }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true)
-        setError('')
-        setSuccess('')
+        startLoading()
+        showError('')
+        showSuccess('')
 
         const [rolesData, statusesData, clinicsData, userData] = await Promise.all([
           roleService.list(),
@@ -146,9 +146,9 @@ const UserForm = ({ mode = 'create' }) => {
           status_id: activeUserStatus ? String(activeUserStatus.id) : '',
         })
       } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao carregar os dados do usuário.'))
+        showError(getErrorMessage(err, 'Erro ao carregar os dados do usuário.'))
       } finally {
-        setIsLoading(false)
+        stopLoading()
       }
     }
 
@@ -183,42 +183,42 @@ const UserForm = ({ mode = 'create' }) => {
     const cpfNumbers = onlyNumbers(form.cpf)
 
     if (!form.name.trim()) {
-      setError('Informe o nome do usuário.')
+      showError('Informe o nome do usuário.')
       return false
     }
 
     if (!form.email.trim()) {
-      setError('Informe o e-mail do usuário.')
+      showError('Informe o e-mail do usuário.')
       return false
     }
 
     if (cpfNumbers && cpfNumbers.length !== 11) {
-      setError('CPF deve conter 11 números.')
+      showError('CPF deve conter 11 números.')
       return false
     }
 
     if (!form.role_id || !form.status_id) {
-      setError('Preencha o perfil de acesso e o status.')
+      showError('Preencha o perfil de acesso e o status.')
       return false
     }
 
     if (requiresClinic && !form.clinic_id) {
-      setError('Usuários que não são admin master devem estar vinculados a uma clínica.')
+      showError('Usuários que não são admin master devem estar vinculados a uma clínica.')
       return false
     }
 
     if (isCreateMode && !form.password.trim()) {
-      setError('Informe a senha do usuário.')
+      showError('Informe a senha do usuário.')
       return false
     }
 
     if ((isCreateMode || form.password || form.confirmPassword) && form.password.trim().length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.')
+      showError('A senha deve ter no mínimo 6 caracteres.')
       return false
     }
 
     if ((isCreateMode || form.password || form.confirmPassword) && form.password !== form.confirmPassword) {
-      setError('Senha e confirmação de senha não coincidem.')
+      showError('Senha e confirmação de senha não coincidem.')
       return false
     }
 
@@ -245,8 +245,8 @@ const UserForm = ({ mode = 'create' }) => {
 
     if (isReadOnly) return
 
-    setError('')
-    setSuccess('')
+    showError('')
+    showSuccess('')
 
     if (!validateForm()) return
 
@@ -259,6 +259,7 @@ const UserForm = ({ mode = 'create' }) => {
           password: form.password.trim(),
         })
 
+        showSuccess('Usuário cadastrado com sucesso.')
         navigate('/users')
         return
       }
@@ -270,10 +271,10 @@ const UserForm = ({ mode = 'create' }) => {
           await userService.updatePassword(id, form.password.trim())
         }
 
-        setSuccess('Usuário atualizado com sucesso.')
+        showSuccess('Usuário atualizado com sucesso.')
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao salvar o usuário.'))
+      showError(getErrorMessage(err, 'Erro ao salvar o usuário.'))
     } finally {
       setIsSaving(false)
     }
@@ -303,162 +304,155 @@ const UserForm = ({ mode = 'create' }) => {
         </CCardHeader>
 
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-          {success && <CAlert color="success">{success}</CAlert>}
+          <CForm onSubmit={handleSubmit}>
+            <CRow className="g-3">
+              <CCol md={8}>
+                <CFormLabel>Nome</CFormLabel>
+                <CFormInput
+                  value={form.name}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('name', event.target.value)}
+                  required
+                />
+              </CCol>
 
-          {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando usuário...</p>
-          ) : (
-            <CForm onSubmit={handleSubmit}>
-              <CRow className="g-3">
-                <CCol md={8}>
-                  <CFormLabel>Nome</CFormLabel>
-                  <CFormInput
-                    value={form.name}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('name', event.target.value)}
-                    required
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>E-mail</CFormLabel>
+                <CFormInput
+                  type="email"
+                  value={form.email}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  required
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>E-mail</CFormLabel>
-                  <CFormInput
-                    type="email"
-                    value={form.email}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('email', event.target.value)}
-                    required
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>CPF</CFormLabel>
+                <CFormInput
+                  value={form.cpf}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
+                  placeholder="000.000.000-00"
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>CPF</CFormLabel>
-                  <CFormInput
-                    value={form.cpf}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
-                    placeholder="000.000.000-00"
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Telefone</CFormLabel>
+                <CFormInput
+                  value={form.phone}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
+                  placeholder="(88) 99999-9999"
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>Telefone</CFormLabel>
-                  <CFormInput
-                    value={form.phone}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
-                    placeholder="(88) 99999-9999"
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Status</CFormLabel>
+                <CFormSelect
+                  value={form.status_id}
+                  disabled={isReadOnly || isCreateMode}
+                  onChange={(event) => updateField('status_id', event.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
 
-                <CCol md={4}>
-                  <CFormLabel>Status</CFormLabel>
-                  <CFormSelect
-                    value={form.status_id}
-                    disabled={isReadOnly || isCreateMode}
-                    onChange={(event) => updateField('status_id', event.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
+                  {userStatuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.display_name || status.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-                    {userStatuses.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.display_name || status.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={6}>
+                <CFormLabel>Perfil de acesso</CFormLabel>
+                <CFormSelect
+                  value={form.role_id}
+                  disabled={isReadOnly}
+                  onChange={(event) => handleRoleChange(event.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
 
-                <CCol md={6}>
-                  <CFormLabel>Perfil de acesso</CFormLabel>
-                  <CFormSelect
-                    value={form.role_id}
-                    disabled={isReadOnly}
-                    onChange={(event) => handleRoleChange(event.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
+                  {sortedRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.display_name || role.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-                    {sortedRoles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.display_name || role.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={6}>
+                <CFormLabel>Clínica</CFormLabel>
+                <CFormSelect
+                  value={form.clinic_id}
+                  disabled={isReadOnly || !requiresClinic}
+                  onChange={(event) => updateField('clinic_id', event.target.value)}
+                  required={requiresClinic}
+                >
+                  <option value="">{requiresClinic ? 'Selecione...' : ''}</option>
 
-                <CCol md={6}>
-                  <CFormLabel>Clínica</CFormLabel>
-                  <CFormSelect
-                    value={form.clinic_id}
-                    disabled={isReadOnly || !requiresClinic}
-                    onChange={(event) => updateField('clinic_id', event.target.value)}
-                    required={requiresClinic}
-                  >
-                    <option value="">{requiresClinic ? 'Selecione...' : ''}</option>
-
-                    {availableClinics.map((clinic) => (
-                      <option key={clinic.id} value={clinic.id}>
-                        {clinic.name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
-
-                {!isReadOnly && (
-                  <>
-                    <CCol md={6}>
-                      <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
-                      <CFormInput
-                        type="password"
-                        value={form.password}
-                        autoComplete="new-password"
-                        onChange={(event) => updateField('password', event.target.value)}
-                        required={isCreateMode}
-                        placeholder={isEditMode ? 'Preencha apenas se quiser alterar' : ''}
-                      />
-                    </CCol>
-
-                    <CCol md={6}>
-                      <CFormLabel>
-                        {isCreateMode ? 'Confirmar senha' : 'Confirmar nova senha'}
-                      </CFormLabel>
-                      <CFormInput
-                        type="password"
-                        value={form.confirmPassword}
-                        autoComplete="new-password"
-                        onChange={(event) => updateField('confirmPassword', event.target.value)}
-                        required={isCreateMode}
-                        placeholder={isEditMode ? 'Preencha apenas se quiser alterar' : ''}
-                      />
-                    </CCol>
-                  </>
-                )}
-
-                <CCol xs={12}>
-                  <div className="border rounded p-3 bg-body-tertiary">
-                    <div className="fw-semibold mb-1">Permissões do usuário</div>
-                    <div className="text-body-secondary small">
-                      As permissões são definidas automaticamente pelo perfil de acesso selecionado.
-                    </div>
-                  </div>
-                </CCol>
-              </CRow>
+                  {availableClinics.map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
               {!isReadOnly && (
-                <CButtonGroup className="mt-4">
-                  <CButton color="primary" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Salvando...' : 'Salvar'}
-                  </CButton>
+                <>
+                  <CCol md={6}>
+                    <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
+                    <CFormInput
+                      type="password"
+                      value={form.password}
+                      autoComplete="new-password"
+                      onChange={(event) => updateField('password', event.target.value)}
+                      required={isCreateMode}
+                      placeholder={isEditMode ? 'Preencha apenas se quiser alterar' : ''}
+                    />
+                  </CCol>
 
-                  <CButton color="secondary" variant="outline" as={Link} to="/users">
-                    Cancelar
-                  </CButton>
-                </CButtonGroup>
+                  <CCol md={6}>
+                    <CFormLabel>
+                      {isCreateMode ? 'Confirmar senha' : 'Confirmar nova senha'}
+                    </CFormLabel>
+                    <CFormInput
+                      type="password"
+                      value={form.confirmPassword}
+                      autoComplete="new-password"
+                      onChange={(event) => updateField('confirmPassword', event.target.value)}
+                      required={isCreateMode}
+                      placeholder={isEditMode ? 'Preencha apenas se quiser alterar' : ''}
+                    />
+                  </CCol>
+                </>
               )}
-            </CForm>
-          )}
+
+              <CCol xs={12}>
+                <div className="border rounded p-3 bg-body-tertiary">
+                  <div className="fw-semibold mb-1">Permissões do usuário</div>
+                  <div className="text-body-secondary small">
+                    As permissões são definidas automaticamente pelo perfil de acesso selecionado.
+                  </div>
+                </div>
+              </CCol>
+            </CRow>
+
+            {!isReadOnly && (
+              <CButtonGroup className="mt-4">
+                <CButton color="primary" type="submit" disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </CButton>
+
+                <CButton color="secondary" variant="outline" as={Link} to="/users">
+                  Cancelar
+                </CButton>
+              </CButtonGroup>
+            )}
+          </CForm>
         </CCardBody>
       </CCard>
     </>

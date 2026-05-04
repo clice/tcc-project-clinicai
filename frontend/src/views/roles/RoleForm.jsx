@@ -11,7 +11,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  CAlert,
   CButton,
   CButtonGroup,
   CCard,
@@ -26,6 +25,8 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
+
+import { useFeedback } from 'src/hooks/useFeedback'
 
 import { roleService } from 'src/services/roleService'
 import { permissionService } from 'src/services/permissionService'
@@ -43,14 +44,11 @@ const emptyRole = {
 const RoleForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyRole)
   const [permissions, setPermissions] = useState([])
   const [selectedPermissionIds, setSelectedPermissionIds] = useState([])
-
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
@@ -85,8 +83,8 @@ const RoleForm = ({ mode = 'create' }) => {
   useEffect(() => {
     const loadPageData = async () => {
       try {
-        setIsLoading(true)
-        setError('')
+        startLoading()
+        showError('')
 
         const permissionsData = await permissionService.list()
         setPermissions(Array.isArray(permissionsData) ? permissionsData : [])
@@ -104,9 +102,9 @@ const RoleForm = ({ mode = 'create' }) => {
           setSelectedPermissionIds(linkedPermissions.map((item) => Number(item.permission_id)))
         }
       } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao carregar dados do perfil.'))
+        showError(getErrorMessage(err, 'Erro ao carregar dados do perfil.'))
       } finally {
-        setIsLoading(false)
+        stopLoading()
       }
     }
 
@@ -162,13 +160,13 @@ const RoleForm = ({ mode = 'create' }) => {
     if (isReadOnly) return
 
     setIsSaving(true)
-    setError('')
-    setSuccess('')
+    showError('')
+    showSuccess('')
 
     const validationError = validateForm()
 
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       setIsSaving(false)
       return
     }
@@ -187,10 +185,10 @@ const RoleForm = ({ mode = 'create' }) => {
         await roleService.update(id, buildPayload())
         await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
 
-        setSuccess('Perfil atualizado com sucesso.')
+        showSuccess('Perfil atualizado com sucesso.')
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao salvar o perfil.'))
+      showError(getErrorMessage(err, 'Erro ao salvar o perfil.'))
     } finally {
       setIsSaving(false)
     }
@@ -220,105 +218,98 @@ const RoleForm = ({ mode = 'create' }) => {
         </CCardHeader>
 
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-          {success && <CAlert color="success">{success}</CAlert>}
+          <CForm onSubmit={handleSubmit}>
+            <CRow className="g-3">
+              <CCol md={6}>
+                <CFormLabel>Perfil</CFormLabel>
+                <CFormSelect
+                  value={form.name}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('name', event.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  {roleOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-          {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando perfil...</p>
-          ) : (
-            <CForm onSubmit={handleSubmit}>
-              <CRow className="g-3">
-                <CCol md={6}>
-                  <CFormLabel>Perfil</CFormLabel>
-                  <CFormSelect
-                    value={form.name}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('name', event.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {roleOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={6}>
+                <CFormLabel>Nome de exibição</CFormLabel>
+                <CFormInput
+                  value={form.display_name}
+                  disabled={isReadOnly}
+                  placeholder="Ex: Administrador Master"
+                  onChange={(event) => updateField('display_name', event.target.value)}
+                  required
+                />
+              </CCol>
 
-                <CCol md={6}>
-                  <CFormLabel>Nome de exibição</CFormLabel>
-                  <CFormInput
-                    value={form.display_name}
-                    disabled={isReadOnly}
-                    placeholder="Ex: Administrador Master"
-                    onChange={(event) => updateField('display_name', event.target.value)}
-                    required
-                  />
-                </CCol>
+              <CCol md={12}>
+                <CFormLabel>Descrição</CFormLabel>
+                <CFormTextarea
+                  value={form.description}
+                  disabled={isReadOnly}
+                  rows={3}
+                  placeholder="Descrição opcional do perfil"
+                  onChange={(event) => updateField('description', event.target.value)}
+                />
+              </CCol>
 
-                <CCol md={12}>
-                  <CFormLabel>Descrição</CFormLabel>
-                  <CFormTextarea
-                    value={form.description}
-                    disabled={isReadOnly}
-                    rows={3}
-                    placeholder="Descrição opcional do perfil"
-                    onChange={(event) => updateField('description', event.target.value)}
-                  />
-                </CCol>
+              <hr className="my-4" />
 
-                <hr className="my-4" />
+              <CCol xs={12}>
+                <h2 className="h5 mb-3">Permissões do Perfil</h2>
 
-                <CCol xs={12}>
-                  <h2 className="h5 mb-3">Permissões do Perfil</h2>
+                <CRow className="g-3">
+                  {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => (
+                    <CCol md={6} key={moduleName}>
+                      <CCard className="h-100 border">
+                        <CCardHeader className="fw-semibold">
+                          {moduleLabels[moduleName] || moduleName}
+                        </CCardHeader>
 
-                  <CRow className="g-3">
-                    {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => (
-                      <CCol md={6} key={moduleName}>
-                        <CCard className="h-100 border">
-                          <CCardHeader className="fw-semibold">
-                            {moduleLabels[moduleName] || moduleName}
-                          </CCardHeader>
+                        <CCardBody className="d-grid gap-2">
+                          {modulePermissions.map((permission) => (
+                            <div key={permission.id}>
+                              <CFormCheck
+                                id={`permission-${permission.id}`}
+                                label={permission.display_name || permission.name}
+                                checked={selectedPermissionIds.includes(Number(permission.id))}
+                                disabled={isReadOnly}
+                                onChange={() => togglePermission(permission.id)}
+                              />
 
-                          <CCardBody className="d-grid gap-2">
-                            {modulePermissions.map((permission) => (
-                              <div key={permission.id}>
-                                <CFormCheck
-                                  id={`permission-${permission.id}`}
-                                  label={permission.display_name || permission.name}
-                                  checked={selectedPermissionIds.includes(Number(permission.id))}
-                                  disabled={isReadOnly}
-                                  onChange={() => togglePermission(permission.id)}
-                                />
+                              {permission.description && (
+                                <small className="text-body-secondary d-block ms-4">
+                                  {permission.description}
+                                </small>
+                              )}
+                            </div>
+                          ))}
+                        </CCardBody>
+                      </CCard>
+                    </CCol>
+                  ))}
+                </CRow>
+              </CCol>
+            </CRow>
 
-                                {permission.description && (
-                                  <small className="text-body-secondary d-block ms-4">
-                                    {permission.description}
-                                  </small>
-                                )}
-                              </div>
-                            ))}
-                          </CCardBody>
-                        </CCard>
-                      </CCol>
-                    ))}
-                  </CRow>
-                </CCol>
-              </CRow>
+            {!isReadOnly && (
+              <CButtonGroup className="mt-4">
+                <CButton color="primary" type="submit" disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </CButton>
 
-              {!isReadOnly && (
-                <CButtonGroup className="mt-4">
-                  <CButton color="primary" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Salvando...' : 'Salvar'}
-                  </CButton>
-
-                  <CButton color="secondary" variant="outline" as={Link} to="/roles">
-                    Cancelar
-                  </CButton>
-                </CButtonGroup>
-              )}
-            </CForm>
-          )}
+                <CButton color="secondary" variant="outline" as={Link} to="/roles">
+                  Cancelar
+                </CButton>
+              </CButtonGroup>
+            )}
+          </CForm>
         </CCardBody>
       </CCard>
     </>

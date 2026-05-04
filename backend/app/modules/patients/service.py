@@ -8,6 +8,8 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from datetime import date, datetime
+
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
@@ -23,6 +25,23 @@ def is_admin_master(user: User) -> bool:
     Verifica se o usuário autenticado é admin_master.
     """
     return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
+
+
+def serialize_for_json(data: dict) -> dict:
+    """
+    Converte valores Python não serializáveis em JSON para formatos seguros.
+    Usado principalmente nos audit logs.
+    """
+    serialized = {}
+
+    for key, value in data.items():
+        if isinstance(value, (date, datetime)):
+            serialized[key] = value.isoformat()
+        else:
+            serialized[key] = value
+
+    return serialized
+
 
 def get_patient_by_id(db: Session, patient_id: int) -> Patient:
     """
@@ -394,6 +413,7 @@ def update_patient(
     )
 
     update_data = payload.model_dump(exclude_unset=True)
+    audit_new_data = serialize_for_json(update_data)
 
     if not update_data:
         return build_patient_response(patient)
@@ -466,7 +486,7 @@ def update_patient(
         entity_id=patient.id,
         description="Paciente atualizado.",
         old_data=old_data,
-        new_data=update_data,
+        new_data=audit_new_data,
     )
     
     db.commit()

@@ -10,7 +10,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  CAlert,
   CButton,
   CButtonGroup,
   CCard,
@@ -24,26 +23,12 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { statusService } from 'src/services/statusService'
+
+import { statusNameOptions, statusScopeOptions } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
-
-const statusNameOptions = [
-  { value: 'active', label: 'Ativo' },
-  { value: 'inactive', label: 'Inativo' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'canceled', label: 'Cancelado' },
-  { value: 'completed', label: 'Concluído' },
-  { value: 'processing', label: 'Processando' },
-  { value: 'failed', label: 'Falhou' },
-]
-
-const statusScopeOptions = [
-  { value: 'user', label: 'Usuário' },
-  { value: 'clinic', label: 'Clínica' },
-  { value: 'patient', label: 'Paciente' },
-  { value: 'exam', label: 'Exame' },
-  { value: 'ai_analysis', label: 'Análise de IA' },
-]
 
 const emptyStatus = {
   name: '',
@@ -55,11 +40,9 @@ const emptyStatus = {
 const StatusForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyStatus)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isLoading, setIsLoading] = useState(mode !== 'create')
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
@@ -74,14 +57,14 @@ const StatusForm = ({ mode = 'create' }) => {
 
   useEffect(() => {
     if (isCreateMode) {
-      setIsLoading(false)
+      stopLoading()
       return
     }
 
     const loadStatus = async () => {
       try {
-        setIsLoading(true)
-        setError('')
+        startLoading()
+        showError('')
 
         const statusData = await statusService.getById(id)
 
@@ -92,9 +75,9 @@ const StatusForm = ({ mode = 'create' }) => {
           description: statusData.description ?? '',
         })
       } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao carregar o status.'))
+        showError(getErrorMessage(err, 'Erro ao carregar o status.'))
       } finally {
-        setIsLoading(false)
+        stopLoading()
       }
     }
 
@@ -137,13 +120,13 @@ const StatusForm = ({ mode = 'create' }) => {
 
     if (isReadOnly) return
 
-    setError('')
-    setSuccess('')
+    showError('')
+    showSuccess('')
 
     const validationError = validateForm()
 
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
 
@@ -155,6 +138,7 @@ const StatusForm = ({ mode = 'create' }) => {
 
         if (created?.id) {
           navigate(`/statuses/${created.id}/edit`)
+          showSuccess('Status cadastrado com sucesso.')
           return
         }
 
@@ -164,10 +148,10 @@ const StatusForm = ({ mode = 'create' }) => {
 
       if (isEditMode) {
         await statusService.update(id, buildPayload())
-        setSuccess('Status atualizado com sucesso.')
+        showSuccess('Status atualizado com sucesso.')
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao salvar o status.'))
+      showError(getErrorMessage(err, 'Erro ao salvar usuário.'))
     } finally {
       setIsSaving(false)
     }
@@ -197,83 +181,76 @@ const StatusForm = ({ mode = 'create' }) => {
         </CCardHeader>
 
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-          {success && <CAlert color="success">{success}</CAlert>}
+          <CForm onSubmit={handleSubmit}>
+            <CRow className="g-3">
+              <CCol md={4}>
+                <CFormLabel>Nome Técnico</CFormLabel>
+                <CFormSelect
+                  value={form.name}
+                  disabled={isReadOnly}
+                  onChange={(e) => updateField('name', e.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  {statusNameOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-          {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando status...</p>
-          ) : (
-            <CForm onSubmit={handleSubmit}>
-              <CRow className="g-3">
-                <CCol md={4}>
-                  <CFormLabel>Nome Técnico</CFormLabel>
-                  <CFormSelect
-                    value={form.name}
-                    disabled={isReadOnly}
-                    onChange={(e) => updateField('name', e.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {statusNameOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Nome de Exibição</CFormLabel>
+                <CFormInput
+                  value={form.display_name}
+                  disabled={isReadOnly}
+                  placeholder="Ex: Ativo, Inativo, Em processamento"
+                  onChange={(e) => updateField('display_name', e.target.value)}
+                  required
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>Nome de Exibição</CFormLabel>
-                  <CFormInput
-                    value={form.display_name}
-                    disabled={isReadOnly}
-                    placeholder="Ex: Ativo, Inativo, Em processamento"
-                    onChange={(e) => updateField('display_name', e.target.value)}
-                    required
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Aplicado em</CFormLabel>
+                <CFormSelect
+                  value={form.applies_to}
+                  disabled={isReadOnly}
+                  onChange={(e) => updateField('applies_to', e.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  {statusScopeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>Aplicado em</CFormLabel>
-                  <CFormSelect
-                    value={form.applies_to}
-                    disabled={isReadOnly}
-                    onChange={(e) => updateField('applies_to', e.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {statusScopeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={12}>
+                <CFormLabel>Descrição</CFormLabel>
+                <CFormInput
+                  value={form.description}
+                  disabled={isReadOnly}
+                  placeholder="Descreva quando esse status deve ser usado"
+                  onChange={(e) => updateField('description', e.target.value)}
+                />
+              </CCol>
+            </CRow>
 
-                <CCol md={12}>
-                  <CFormLabel>Descrição</CFormLabel>
-                  <CFormInput
-                    value={form.description}
-                    disabled={isReadOnly}
-                    placeholder="Descreva quando esse status deve ser usado"
-                    onChange={(e) => updateField('description', e.target.value)}
-                  />
-                </CCol>
-              </CRow>
+            {!isReadOnly && (
+              <CButtonGroup className="mt-4">
+                <CButton color="primary" type="submit" disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </CButton>
 
-              {!isReadOnly && (
-                <CButtonGroup className="mt-4">
-                  <CButton color="primary" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Salvando...' : 'Salvar'}
-                  </CButton>
-
-                  <CButton color="secondary" variant="outline" as={Link} to="/statuses">
-                    Cancelar
-                  </CButton>
-                </CButtonGroup>
-              )}
-            </CForm>
-          )}
+                <CButton color="secondary" variant="outline" as={Link} to="/statuses">
+                  Cancelar
+                </CButton>
+              </CButtonGroup>
+            )}
+          </CForm>
         </CCardBody>
       </CCard>
     </>

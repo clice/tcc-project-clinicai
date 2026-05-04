@@ -10,7 +10,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  CAlert,
   CButton,
   CButtonGroup,
   CCard,
@@ -25,12 +24,13 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useFeedback } from 'src/hooks/useFeedback'
+
 import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
 import { statusService } from 'src/services/statusService'
 
 import { getErrorMessage } from 'src/utils/errors'
-
 import {
   formatCnpjBR,
   formatPhoneBR,
@@ -57,12 +57,10 @@ const emptyClinic = {
 const ClinicForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyClinic)
   const [statuses, setStatuses] = useState([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingAddress, setIsLoadingAddress] = useState(false)
 
@@ -79,8 +77,8 @@ const ClinicForm = ({ mode = 'create' }) => {
   useEffect(() => {
     const loadPageData = async () => {
       try {
-        setIsLoading(true)
-        setError('')
+        startLoading()
+        showError('')
 
         const statusData = await statusService.list()
 
@@ -115,9 +113,9 @@ const ClinicForm = ({ mode = 'create' }) => {
           })
         }
       } catch (err) {
-        setError(getErrorMessage(err, 'Erro ao carregar dados da clínica.'))
+        showError(getErrorMessage(err, 'Erro ao carregar dados da clínica.'))
       } finally {
-        setIsLoading(false)
+        stopLoading()
       }
     }
 
@@ -139,37 +137,37 @@ const ClinicForm = ({ mode = 'create' }) => {
    */
   const validateForm = () => {
     if (!form.name.trim()) {
-      setError('Informe o nome da clínica.')
+      showError('Informe o nome da clínica.')
       return false
     }
 
     if (onlyNumbers(form.cnpj).length !== 14) {
-      setError('Informe um CNPJ válido.')
+      showError('Informe um CNPJ válido.')
       return false
     }
 
     if (!form.status_id) {
-      setError('Selecione o status da clínica.')
+      showError('Selecione o status da clínica.')
       return false
     }
 
     if (form.zip_code && onlyNumbers(form.zip_code).length !== 8) {
-      setError('CEP inválido.')
+      showError('CEP inválido.')
       return false
     }
 
     if (form.phone && onlyNumbers(form.phone).length < 10) {
-      setError('Telefone inválido.')
+      showError('Telefone inválido.')
       return false
     }
 
     if (form.mobile_phone && onlyNumbers(form.mobile_phone).length < 10) {
-      setError('Celular inválido.')
+      showError('Celular inválido.')
       return false
     }
 
     if (form.state && form.state.trim().length !== 2) {
-      setError('UF deve conter 2 caracteres.')
+      showError('UF deve conter 2 caracteres.')
       return false
     }
 
@@ -196,14 +194,14 @@ const ClinicForm = ({ mode = 'create' }) => {
 
     try {
       setIsLoadingAddress(true)
-      setError('')
+      showError('')
 
       clearAddressFields()
 
       const address = await addressService.getAddressByZipCode(zipCode)
 
       if (!address) {
-        setError('CEP não encontrado.')
+        showError('CEP não encontrado.')
         return
       }
 
@@ -217,7 +215,7 @@ const ClinicForm = ({ mode = 'create' }) => {
         state: address.state,
       }))
     } catch {
-      setError('Erro ao buscar endereço pelo CEP.')
+      showError('Erro ao buscar endereço pelo CEP.')
     } finally {
       setIsLoadingAddress(false)
     }
@@ -253,8 +251,8 @@ const ClinicForm = ({ mode = 'create' }) => {
 
     if (isReadOnly) return
 
-    setError('')
-    setSuccess('')
+    showError('')
+    showSuccess('')
 
     if (!validateForm()) return
 
@@ -269,10 +267,10 @@ const ClinicForm = ({ mode = 'create' }) => {
 
       if (isEditMode) {
         await clinicService.update(id, buildPayload())
-        setSuccess('Clínica atualizada com sucesso.')
+        showSuccess('Clínica atualizada com sucesso.')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao salvar clínica.')
+      showError(err.response?.data?.detail || 'Erro ao salvar clínica.')
     } finally {
       setIsSaving(false)
     }
@@ -302,157 +300,150 @@ const ClinicForm = ({ mode = 'create' }) => {
         </CCardHeader>
 
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-          {success && <CAlert color="success">{success}</CAlert>}
+          <CForm onSubmit={handleSubmit}>
+            <CRow className="g-3">
+              <CCol md={8}>
+                <CFormLabel>Nome</CFormLabel>
+                <CFormInput
+                  value={form.name}
+                  disabled={isReadOnly}
+                  placeholder="Ex: Clínica Vida"
+                  onChange={(event) => updateField('name', event.target.value)}
+                  required
+                />
+              </CCol>
 
-          {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando clínica...</p>
-          ) : (
-            <CForm onSubmit={handleSubmit}>
-              <CRow className="g-3">
-                <CCol md={8}>
-                  <CFormLabel>Nome</CFormLabel>
-                  <CFormInput
-                    value={form.name}
-                    disabled={isReadOnly}
-                    placeholder="Ex: Clínica Vida"
-                    onChange={(event) => updateField('name', event.target.value)}
-                    required
-                  />
-                </CCol>
+              <CCol md={2}>
+                <CFormLabel>CNPJ</CFormLabel>
+                <CFormInput
+                  value={form.cnpj}
+                  disabled={isReadOnly}
+                  placeholder="00.000.000/0000-00"
+                  onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
+                  required
+                />
+              </CCol>
 
-                <CCol md={2}>
-                  <CFormLabel>CNPJ</CFormLabel>
-                  <CFormInput
-                    value={form.cnpj}
-                    disabled={isReadOnly}
-                    placeholder="00.000.000/0000-00"
-                    onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
-                    required
-                  />
-                </CCol>
+              <CCol md={2}>
+                <CFormLabel>Status</CFormLabel>
+                <CFormSelect
+                  value={form.status_id}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('status_id', event.target.value)}
+                  required
+                >
+                  <option value="">Selecione...</option>
 
-                <CCol md={2}>
-                  <CFormLabel>Status</CFormLabel>
-                  <CFormSelect
-                    value={form.status_id}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('status_id', event.target.value)}
-                    required
-                  >
-                    <option value="">Selecione...</option>
+                  {statuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.display_name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
 
-                    {statuses.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.display_name}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>E-mail</CFormLabel>
+                <CFormInput
+                  type="email"
+                  value={form.email}
+                  disabled={isReadOnly}
+                  placeholder="contato@clinica.com"
+                  onChange={(event) => updateField('email', event.target.value)}
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>E-mail</CFormLabel>
-                  <CFormInput
-                    type="email"
-                    value={form.email}
-                    disabled={isReadOnly}
-                    placeholder="contato@clinica.com"
-                    onChange={(event) => updateField('email', event.target.value)}
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Telefone</CFormLabel>
+                <CFormInput
+                  value={form.phone}
+                  disabled={isReadOnly}
+                  placeholder="(00) 0000-0000"
+                  onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>Telefone</CFormLabel>
-                  <CFormInput
-                    value={form.phone}
-                    disabled={isReadOnly}
-                    placeholder="(00) 0000-0000"
-                    onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
-                  />
-                </CCol>
+              <CCol md={4}>
+                <CFormLabel>Celular</CFormLabel>
+                <CFormInput
+                  value={form.mobile_phone}
+                  disabled={isReadOnly}
+                  placeholder="(00) 00000-0000"
+                  onChange={(event) =>
+                    updateField('mobile_phone', formatPhoneBR(event.target.value))
+                  }
+                />
+              </CCol>
 
-                <CCol md={4}>
-                  <CFormLabel>Celular</CFormLabel>
-                  <CFormInput
-                    value={form.mobile_phone}
-                    disabled={isReadOnly}
-                    placeholder="(00) 00000-0000"
-                    onChange={(event) =>
-                      updateField('mobile_phone', formatPhoneBR(event.target.value))
-                    }
-                  />
-                </CCol>
+              <CCol md={3}>
+                <CFormLabel>CEP</CFormLabel>
+                <CFormInput
+                  value={form.zip_code}
+                  disabled={isReadOnly || isLoadingAddress}
+                  onChange={(event) =>
+                    updateField('zip_code', formatZipCodeBR(event.target.value))
+                  }
+                  onBlur={handleZipCodeBlur}
+                  placeholder="00000-000"
+                />
+              </CCol>
 
-                <CCol md={3}>
-                  <CFormLabel>CEP</CFormLabel>
-                  <CFormInput
-                    value={form.zip_code}
-                    disabled={isReadOnly || isLoadingAddress}
-                    onChange={(event) =>
-                      updateField('zip_code', formatZipCodeBR(event.target.value))
-                    }
-                    onBlur={handleZipCodeBlur}
-                    placeholder="00000-000"
-                  />
-                </CCol>
+              <CCol md={8}>
+                <CFormLabel>Endereço</CFormLabel>
+                <CFormInput value={form.address} disabled />
+              </CCol>
 
-                <CCol md={8}>
-                  <CFormLabel>Endereço</CFormLabel>
-                  <CFormInput value={form.address} disabled />
-                </CCol>
+              <CCol md={1}>
+                <CFormLabel>Número</CFormLabel>
+                <CFormInput
+                  value={form.number}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('number', event.target.value)}
+                />
+              </CCol>
 
-                <CCol md={1}>
-                  <CFormLabel>Número</CFormLabel>
-                  <CFormInput
-                    value={form.number}
-                    disabled={isReadOnly}
-                    onChange={(event) => updateField('number', event.target.value)}
-                  />
-                </CCol>
+              <CCol md={6}>
+                <CFormLabel>Complemento</CFormLabel>
+                <CFormInput value={form.complement} disabled />
+              </CCol>
 
-                <CCol md={6}>
-                  <CFormLabel>Complemento</CFormLabel>
-                  <CFormInput value={form.complement} disabled />
-                </CCol>
+              <CCol md={2}>
+                <CFormLabel>Bairro</CFormLabel>
+                <CFormInput value={form.neighborhood} disabled />
+              </CCol>
 
-                <CCol md={2}>
-                  <CFormLabel>Bairro</CFormLabel>
-                  <CFormInput value={form.neighborhood} disabled />
-                </CCol>
+              <CCol md={2}>
+                <CFormLabel>Cidade</CFormLabel>
+                <CFormInput value={form.city} disabled />
+              </CCol>
 
-                <CCol md={2}>
-                  <CFormLabel>Cidade</CFormLabel>
-                  <CFormInput value={form.city} disabled />
-                </CCol>
+              <CCol md={2}>
+                <CFormLabel>UF</CFormLabel>
+                <CFormInput value={form.state} disabled />
+              </CCol>
 
-                <CCol md={2}>
-                  <CFormLabel>UF</CFormLabel>
-                  <CFormInput value={form.state} disabled />
-                </CCol>
+              <CCol md={12}>
+                <CFormLabel>Observações</CFormLabel>
+                <CFormTextarea
+                  rows={2}
+                  disabled
+                  value="O cadastro da clínica será usado depois para vincular usuários, pacientes e exames."
+                />
+              </CCol>
+            </CRow>
 
-                <CCol md={12}>
-                  <CFormLabel>Observações</CFormLabel>
-                  <CFormTextarea
-                    rows={2}
-                    disabled
-                    value="O cadastro da clínica será usado depois para vincular usuários, pacientes e exames."
-                  />
-                </CCol>
-              </CRow>
+            {!isReadOnly && (
+              <CButtonGroup className="mt-4">
+                <CButton color="primary" type="submit" disabled={isSaving}>
+                  {isSaving ? 'Salvando...' : 'Salvar'}
+                </CButton>
 
-              {!isReadOnly && (
-                <CButtonGroup className="mt-4">
-                  <CButton color="primary" type="submit" disabled={isSaving}>
-                    {isSaving ? 'Salvando...' : 'Salvar'}
-                  </CButton>
-
-                  <CButton color="secondary" variant="outline" as={Link} to="/clinics">
-                    Cancelar
-                  </CButton>
-                </CButtonGroup>
-              )}
-            </CForm>
-          )}
+                <CButton color="secondary" variant="outline" as={Link} to="/clinics">
+                  Cancelar
+                </CButton>
+              </CButtonGroup>
+            )}
+          </CForm>
         </CCardBody>
       </CCard>
     </>
