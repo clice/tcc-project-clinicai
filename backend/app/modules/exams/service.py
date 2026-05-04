@@ -8,13 +8,13 @@ from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import RoleName, StatusName, StatusScope
+from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamCreate, ExamUpdate
 from app.modules.patients.model import Patient
-from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
@@ -437,6 +437,29 @@ def create_exam(
     )
 
     db.add(exam)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Exame cadastrado.",
+        new_data={
+            "id": exam.id,
+            "clinic_id": exam.clinic_id,
+            "patient_id": exam.patient_id,
+            "doctor_id": exam.doctor_id,
+            "status_id": exam.status_id,
+            "exam_type": exam.exam_type,
+            "exam_date": str(exam.exam_date) if exam.exam_date else None,
+            "title": exam.title,
+        },
+    )
+
     db.commit()
     db.refresh(exam)
 
@@ -488,9 +511,38 @@ def update_exam(
         status_id=status_id,
     )
 
+    old_data = {
+        "clinic_id": exam.clinic_id,
+        "patient_id": exam.patient_id,
+        "doctor_id": exam.doctor_id,
+        "status_id": exam.status_id,
+        "exam_type": exam.exam_type,
+        "exam_date": str(exam.exam_date) if exam.exam_date else None,
+        "title": exam.title,
+        "description": exam.description,
+        "clinical_indication": exam.clinical_indication,
+        "findings": exam.findings,
+        "conclusion": exam.conclusion,
+        "ai_analysis_status": exam.ai_analysis_status,
+        "ai_summary": exam.ai_summary,
+    }
+    
     for field, value in update_data.items():
         setattr(exam, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Exame atualizado.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+    
     db.commit()
     db.refresh(exam)
 
@@ -520,7 +572,28 @@ def cancel_exam(
         applies_to=StatusScope.EXAM.value,
     )
 
+    old_data = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
     exam.status_id = canceled_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.CANCEL_EXAM,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Exame cancelado.",
+        old_data=old_data,
+        new_data={
+            "status_id": canceled_status.id,
+            "status_name": StatusName.CANCELED.value,
+        },
+    )
 
     db.commit()
     db.refresh(exam)
@@ -547,10 +620,33 @@ def upload_exam_file(
         current_user=current_user,
         exam=exam,
     )
-
+    
     exam.file_path = file_path
     exam.file_name = file_name
     exam.file_mime_type = file_mime_type
+    
+    old_data = {
+        "file_path": exam.file_path,
+        "file_name": exam.file_name,
+        "file_mime_type": exam.file_mime_type,
+    }
+    
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.UPLOAD,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Arquivo de exame vinculado.",
+        old_data=old_data,
+        new_data={
+            "file_path": exam.file_path,
+            "file_name": exam.file_name,
+            "file_mime_type": exam.file_mime_type,
+        },
+    )
 
     db.commit()
     db.refresh(exam)
@@ -580,6 +676,29 @@ def download_exam_file(
             status_code=404,
             detail="Este exame não possui arquivo vinculado.",
         )
+        
+    old_data = {
+        "file_path": exam.file_path,
+        "file_name": exam.file_name,
+        "file_mime_type": exam.file_mime_type,
+    }
+    
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.DOWNLOAD,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Arquivo de exame vinculado.",
+        old_data=old_data,
+        new_data={
+            "file_path": exam.file_path,
+            "file_name": exam.file_name,
+            "file_mime_type": exam.file_mime_type,
+        },
+    )
 
     return {
         "exam_id": exam.id,

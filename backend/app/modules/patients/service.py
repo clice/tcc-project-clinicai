@@ -14,8 +14,8 @@ from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
 from app.modules.patients.schema import PatientCreate, PatientUpdate
-from app.modules.statuses.service import get_status_by_name_and_applies_to
 from app.modules.audit_logs.service import create_audit_log
+from app.modules.statuses.service import get_status_by_name_and_applies_to
 
 
 def is_admin_master(user: User) -> bool:

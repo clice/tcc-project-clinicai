@@ -18,6 +18,7 @@ class AuditAction(StrEnum):
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILED = "login_failed"
     LOGOUT = "logout"
+    CANCEL_EXAM = "cancel_exam"
     UPLOAD = "upload"
     DOWNLOAD = "download"
     RUN_AI_ANALYSIS = "run_ai_analysis"
