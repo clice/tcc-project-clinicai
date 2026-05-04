@@ -8,23 +8,29 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.core.security import get_password_hash
-from app.modules.audit_logs.service import create_audit_log
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
+from app.modules.users.model import User
+from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
-from app.modules.users.model import User
-from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
 
 
 def is_admin_master(user: User) -> bool:
+    """
+    Verifica se o usuário autenticado é admin_master.
+    """
     return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
 
 
 def get_user_role_name(user: User) -> str | None:
+    """
+    Retorna o perfil do usuário.
+    """
     return user.role.name if user.role else None
 
 

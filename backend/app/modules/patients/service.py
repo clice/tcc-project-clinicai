@@ -8,14 +8,21 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import RoleName, StatusName, StatusScope
+from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
-from app.modules.patients.schema import PatientCreate, PatientUpdate
 from app.modules.statuses.model import Status
-from app.modules.statuses.service import get_status_by_name_and_applies_to
 from app.modules.users.model import User
+from app.modules.patients.schema import PatientCreate, PatientUpdate
+from app.modules.statuses.service import get_status_by_name_and_applies_to
+from app.modules.audit_logs.service import create_audit_log
 
+
+def is_admin_master(user: User) -> bool:
+    """
+    Verifica se o usuário autenticado é admin_master.
+    """
+    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
 
 def get_patient_by_id(db: Session, patient_id: int) -> Patient:
     """
@@ -36,13 +43,6 @@ def get_patient_by_id(db: Session, patient_id: int) -> Patient:
         raise HTTPException(status_code=404, detail="Paciente não encontrado.")
 
     return patient
-
-
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
 
 
 def validate_user_can_access_clinic(
@@ -326,6 +326,31 @@ def create_patient(
     )
 
     db.add(patient)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente cadastrado.",
+        new_data={
+            "id": patient.id,
+            "clinic_id": patient.clinic_id,
+            "doctor_id": patient.doctor_id,
+            "status_id": patient.status_id,
+            "name": patient.name,
+            "cpf": patient.cpf,
+            "birth_date": str(patient.birth_date) if patient.birth_date else None,
+            "sex": patient.sex,
+            "email": patient.email,
+            "phone": patient.phone,
+        },
+    )
+
     db.commit()
     db.refresh(patient)
 
@@ -409,9 +434,41 @@ def update_patient(
     if "email" in update_data and update_data["email"] is not None:
         update_data["email"] = str(update_data["email"])
 
+    old_data = {
+        "clinic_id": patient.clinic_id,
+        "doctor_id": patient.doctor_id,
+        "status_id": patient.status_id,
+        "name": patient.name,
+        "cpf": patient.cpf,
+        "birth_date": str(patient.birth_date) if patient.birth_date else None,
+        "sex": patient.sex,
+        "email": patient.email,
+        "phone": patient.phone,
+        "zip_code": patient.zip_code,
+        "address": patient.address,
+        "number": patient.number,
+        "complement": patient.complement,
+        "neighborhood": patient.neighborhood,
+        "city": patient.city,
+        "state": patient.state,
+    }
+    
     for field, value in update_data.items():
         setattr(patient, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente atualizado.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+    
     db.commit()
     db.refresh(patient)
 
@@ -441,7 +498,27 @@ def activate_patient(
         applies_to=StatusScope.PATIENT.value,
     )
 
+    old_data = {
+        "status_id": patient.status_id,
+        "status_name": patient.status.name if patient.status else None,
+    }
+
     patient.status_id = active_status.id
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CHANGE_STATUS_ACTIVATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente ativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": active_status.id,
+            "status_name": StatusName.ACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(patient)
@@ -472,7 +549,28 @@ def inactivate_patient(
         applies_to=StatusScope.PATIENT.value,
     )
 
+    old_data = {
+        "status_id": patient.status_id,
+        "status_name": patient.status.name if patient.status else None,
+    }
+
     patient.status_id = inactive_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=patient.clinic_id,
+        action=AuditAction.CHANGE_STATUS_INACTIVATE,
+        entity=AuditEntity.PATIENT,
+        entity_id=patient.id,
+        description="Paciente inativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": inactive_status.id,
+            "status_name": StatusName.INACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(patient)
