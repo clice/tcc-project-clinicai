@@ -46,9 +46,7 @@ def authenticate_user(
             entity=AuditEntity.AUTH,
             entity_id=None,
             description="Tentativa de login com e-mail inexistente.",
-            new_data={
-                "email": normalized_email,
-            },
+            new_data={"email": normalized_email},
             ip_address=ip_address,
             user_agent=user_agent,
             commit=True,
@@ -68,9 +66,7 @@ def authenticate_user(
             entity=AuditEntity.AUTH,
             entity_id=user.id,
             description="Tentativa de login com senha inválida.",
-            new_data={
-                "email": normalized_email,
-            },
+            new_data={"email": normalized_email},
             ip_address=ip_address,
             user_agent=user_agent,
             commit=True,
@@ -126,7 +122,10 @@ def create_user_tokens(user: User) -> dict:
     """
     Cria access token e refresh token para o usuário autenticado.
     """
-    token_data = {"sub": user.email}
+    token_data = {
+        "sub": str(user.id),
+        "token_version": user.token_version,
+    }
 
     return {
         "access_token": create_access_token(data=token_data),
@@ -147,15 +146,16 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
             detail="Refresh token inválido ou expirado.",
         )
 
-    email = payload.get("sub")
+    user_id = payload.get("sub")
+    token_version = payload.get("token_version")
 
-    if not email:
+    if not user_id or token_version is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido.",
         )
 
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.id == int(user_id)).first()
 
     if not user:
         raise HTTPException(
@@ -163,9 +163,48 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
             detail="Usuário não encontrado.",
         )
 
+    if user.token_version != token_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão expirada. Faça login novamente.",
+        )
+
     validate_active_user(user)
 
     return create_user_tokens(user)
+    
+    
+def logout_user(
+    db: Session,
+    *,
+    user: User,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> dict:
+    """
+    Invalida os tokens atuais do usuário.
+
+    Como o JWT é stateless, incrementamos token_version.
+    Assim, access tokens e refresh tokens antigos deixam de ser aceitos.
+    """
+    user.token_version += 1
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.LOGOUT,
+        entity=AuditEntity.AUTH,
+        entity_id=user.id,
+        description="Logout realizado com sucesso.",
+        new_data={"token_version": user.token_version},
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+
+    db.commit()
+
+    return {"message": "Logout realizado com sucesso."}
 
 
 def build_current_user_response(user: User) -> dict:

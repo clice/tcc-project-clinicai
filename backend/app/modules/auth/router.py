@@ -20,6 +20,7 @@ from app.modules.auth.service import (
     authenticate_user,
     build_current_user_response,
     create_user_tokens,
+    logout_user,
     refresh_user_tokens,
 )
 from app.modules.users.model import User
@@ -62,6 +63,23 @@ def refresh_token_route(
         refresh_token=data.refresh_token,
     )
 
+
+@router.post("/logout")
+def logout_route(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Realiza logout do usuário.
+    """
+    return logout_user(
+        db=db,
+        user=current_user,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
+    
 
 @router.get("/me", response_model=CurrentUserResponse)
 def get_me_route(

@@ -30,6 +30,7 @@ class User(Base):
 
     # Segurança
     password_hash = Column(String(255), nullable=False)
+    token_version = Column(Integer, nullable=False, default=0, server_default="0")
 
     # Relacionamentos principais
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False, index=True)

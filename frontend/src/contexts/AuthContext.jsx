@@ -35,10 +35,18 @@ export const AuthProvider = ({ children }) => {
   /**
    * Logout
    */
-  const logout = () => {
-    clearAuthStorage()
-    setToken(null)
-    setUser(null)
+  const logout = async ({ callApi = true } = {}) => {
+    try {
+      if (callApi && getToken()) {
+        await authService.logout()
+      }
+    } catch {
+      // Mesmo se a API falhar, a sessão local precisa ser limpa.
+    } finally {
+      clearAuthStorage()
+      setToken(null)
+      setUser(null)
+    }
   }
 
   /**
@@ -88,6 +96,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     loadCurrentUser()
   }, [token])
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout({ callApi: false })
+    }
+
+    window.addEventListener('clinicai:unauthorized', handleUnauthorized)
+
+    return () => {
+      window.removeEventListener('clinicai:unauthorized', handleUnauthorized)
+    }
+  }, [])
 
   const value = useMemo(
     () => ({

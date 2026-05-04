@@ -39,9 +39,9 @@ const AppHeaderDropdown = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -72,7 +72,7 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button" onClick={logout}>
+        <CDropdownItem as="button" type="button" onClick={handleLogout}>
           <CIcon icon={cilAccountLogout} className="me-2" />
           Sair
         </CDropdownItem>

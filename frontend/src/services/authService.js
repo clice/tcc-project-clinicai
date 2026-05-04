@@ -38,7 +38,15 @@ export const authService = {
   },
 
   /**
-   * usuário atual
+   * Logout
+   */
+  async logout() {
+    const response = await api.post('/auth/logout')
+    return response.data
+  },
+
+  /**
+   * Retorna usuário atual
    */
   async getCurrentUser() {
     const response = await api.get('/auth/me')

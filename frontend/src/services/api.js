@@ -75,6 +75,15 @@ api.interceptors.response.use(
 
     const status = error.response.status
 
+    const isAuthRoute =
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/refresh') ||
+      originalRequest?.url?.includes('/auth/logout')
+
+    if (isAuthRoute) {
+      return Promise.reject(error)
+    }
+
     if (status !== 401 || originalRequest?._retry) {
       return Promise.reject(error)
     }
@@ -113,7 +122,11 @@ api.interceptors.response.use(
         throw new Error('Token de acesso não retornado.')
       }
 
-      setAuthTokens(accessToken, newRefreshToken)
+      setAuthTokens({
+        accessToken,
+        refreshToken: newRefreshToken,
+      })
+
       processQueue(null, accessToken)
 
       originalRequest.headers.Authorization = `Bearer ${accessToken}`
