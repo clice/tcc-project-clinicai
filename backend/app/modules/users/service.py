@@ -6,8 +6,9 @@ from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import RoleName, StatusName, StatusScope
+from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.core.security import get_password_hash
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -245,6 +246,29 @@ def create_user(
     )
 
     db.add(user)
+    db.flush()
+    
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Usuário cadastrado.",
+        new_data={
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "cpf": user.cpf,
+            "phone": user.phone,
+            "role_id": user.role_id,
+            "status_id": user.status_id,
+            "clinic_id": user.clinic_id,
+        },
+    )
+    
     db.commit()
     db.refresh(user)
 
@@ -380,9 +404,32 @@ def update_user(
     if "email" in update_data and update_data["email"] is not None:
         update_data["email"] = str(update_data["email"])
 
+    old_data = {
+        "name": user.name,
+        "email": user.email,
+        "cpf": user.cpf,
+        "phone": user.phone,
+        "role_id": user.role_id,
+        "status_id": user.status_id,
+        "clinic_id": user.clinic_id,
+    }
+    
     for field, value in update_data.items():
         setattr(user, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Usuário atualizado.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+    
     db.commit()
     db.refresh(user)
 
@@ -412,6 +459,21 @@ def update_user_password(
 
     user.password_hash = get_password_hash(payload.password)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.UPDATE_PASSWORD,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Senha do usuário atualizada.",
+        old_data=None,
+        new_data={
+            "password_updated": True,
+        },
+    )
+    
     db.commit()
     db.refresh(user)
 
@@ -450,7 +512,28 @@ def inactivate_user(
         applies_to=StatusScope.USER.value,
     )
 
+    old_data = {
+        "status_id": user.status_id,
+        "status_name": user.status.name if user.status else None,
+    }
+
     user.status_id = inactive_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.CHANGE_STATUS_INACTIVATE,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Usuário inativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": inactive_status.id,
+            "status_name": StatusName.INACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(user)
@@ -484,7 +567,28 @@ def activate_user(
         applies_to=StatusScope.USER.value,
     )
 
+    old_data = {
+        "status_id": user.status_id,
+        "status_name": user.status.name if user.status else None,
+    }
+
     user.status_id = active_status.id
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.CHANGE_STATUS_ACTIVATE,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Usuário ativado.",
+        old_data=old_data,
+        new_data={
+            "status_id": active_status.id,
+            "status_name": StatusName.ACTIVE.value,
+        },
+    )
 
     db.commit()
     db.refresh(user)

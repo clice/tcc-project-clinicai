@@ -11,11 +11,15 @@ from enum import StrEnum
 class AuditAction(StrEnum):
     CREATE = "create"
     UPDATE = "update"
-    CHANGE_STATUS = "change_status"
+    UPDATE_PASSWORD = "update_password"
+    CHANGE_STATUS_ACTIVATE = "change_status_activate"
+    CHANGE_STATUS_INACTIVATE = "change_status_inactivate"
     DELETE = "delete"
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILED = "login_failed"
-    UPLOAD_FILE = "upload_file"
+    LOGOUT = "logout"
+    UPLOAD = "upload"
+    DOWNLOAD = "download"
     RUN_AI_ANALYSIS = "run_ai_analysis"
 
 
