@@ -35,7 +35,7 @@ def create_permission_route(
     Cria uma nova permissão do sistema.
     Apenas administradores devem poder criar permissões.
     """
-    return create_permission(db=db, payload=payload)
+    return create_permission(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[PermissionResponse])
@@ -76,4 +76,5 @@ def update_permission_route(
         db=db,
         permission_id=permission_id,
         payload=payload,
+        current_user=current_user,
     )

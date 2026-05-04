@@ -8,13 +8,16 @@ entre perfis de acesso e permissões.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.constants import AuditAction, AuditEntity
 from app.modules.permissions.model import Permission
 from app.modules.roles.model import Role
 from app.modules.role_permissions.model import RolePermission
+from app.modules.users.model import User
 from app.modules.role_permissions.schema import (
     RolePermissionCreate,
     RolePermissionUpdate,
 )
+from app.modules.audit_logs.service import create_audit_log
 
 
 def validate_role_exists(db: Session, role_id: int) -> Role:
@@ -123,12 +126,13 @@ def list_role_permissions(db: Session) -> list[RolePermission]:
 def create_role_permission(
     db: Session,
     payload: RolePermissionCreate,
+    current_user: User,
 ) -> RolePermission:
     """
     Cria um novo vínculo entre role e permission.
     """
-    validate_role_exists(db=db, role_id=payload.role_id)
-    validate_permission_exists(db=db, permission_id=payload.permission_id)
+    role = validate_role_exists(db=db, role_id=payload.role_id)
+    permission = validate_permission_exists(db=db, permission_id=payload.permission_id)
 
     check_role_permission_duplicate(
         db=db,
@@ -142,6 +146,26 @@ def create_role_permission(
     )
 
     db.add(role_permission)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.ROLE_PERMISSION,
+        entity_id=role_permission.id,
+        description="Permissão vinculada ao perfil de acesso.",
+        new_data={
+            "id": role_permission.id,
+            "role_id": role_permission.role_id,
+            "role_name": role.name,
+            "permission_id": role_permission.permission_id,
+            "permission_name": permission.name,
+        },
+    )
+
     db.commit()
     db.refresh(role_permission)
 
@@ -152,6 +176,7 @@ def update_role_permission(
     db: Session,
     role_permission_id: int,
     payload: RolePermissionUpdate,
+    current_user: User,
 ) -> RolePermission:
     """
     Atualiza parcialmente um vínculo existente.
@@ -166,14 +191,21 @@ def update_role_permission(
     if not update_data:
         return role_permission
 
+    old_data = {
+        "role_id": role_permission.role_id,
+        "role_name": role_permission.role.name if role_permission.role else None,
+        "permission_id": role_permission.permission_id,
+        "permission_name": role_permission.permission.name if role_permission.permission else None,
+    }
+
     new_role_id = update_data.get("role_id", role_permission.role_id)
     new_permission_id = update_data.get(
         "permission_id",
         role_permission.permission_id,
     )
 
-    validate_role_exists(db=db, role_id=new_role_id)
-    validate_permission_exists(db=db, permission_id=new_permission_id)
+    role = validate_role_exists(db=db, role_id=new_role_id)
+    permission = validate_permission_exists(db=db, permission_id=new_permission_id)
 
     check_role_permission_duplicate(
         db=db,
@@ -185,6 +217,24 @@ def update_role_permission(
     for field, value in update_data.items():
         setattr(role_permission, field, value)
 
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.ROLE_PERMISSION,
+        entity_id=role_permission.id,
+        description="Vínculo entre perfil e permissão atualizado.",
+        old_data=old_data,
+        new_data={
+            "role_id": new_role_id,
+            "role_name": role.name,
+            "permission_id": new_permission_id,
+            "permission_name": permission.name,
+        },
+    )
+
     db.commit()
     db.refresh(role_permission)
 
@@ -194,6 +244,7 @@ def update_role_permission(
 def delete_role_permission(
     db: Session,
     role_permission_id: int,
+    current_user: User,
 ) -> dict[str, str]:
     """
     Remove um vínculo entre role e permission.
@@ -201,6 +252,26 @@ def delete_role_permission(
     role_permission = get_role_permission_by_id(
         db=db,
         role_permission_id=role_permission_id,
+    )
+
+    old_data = {
+        "id": role_permission.id,
+        "role_id": role_permission.role_id,
+        "role_name": role_permission.role.name if role_permission.role else None,
+        "permission_id": role_permission.permission_id,
+        "permission_name": role_permission.permission.name if role_permission.permission else None,
+    }
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.DELETE,
+        entity=AuditEntity.ROLE_PERMISSION,
+        entity_id=role_permission.id,
+        description="Vínculo entre perfil e permissão removido.",
+        old_data=old_data,
     )
 
     db.delete(role_permission)

@@ -20,10 +20,30 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
+  CFormSelect,
   CRow,
 } from '@coreui/react'
 
 import { statusService } from 'src/services/statusService'
+import { getErrorMessage } from 'src/utils/errors'
+
+const statusNameOptions = [
+  { value: 'active', label: 'Ativo' },
+  { value: 'inactive', label: 'Inativo' },
+  { value: 'pending', label: 'Pendente' },
+  { value: 'canceled', label: 'Cancelado' },
+  { value: 'completed', label: 'Concluído' },
+  { value: 'processing', label: 'Processando' },
+  { value: 'failed', label: 'Falhou' },
+]
+
+const statusScopeOptions = [
+  { value: 'user', label: 'Usuário' },
+  { value: 'clinic', label: 'Clínica' },
+  { value: 'patient', label: 'Paciente' },
+  { value: 'exam', label: 'Exame' },
+  { value: 'ai_analysis', label: 'Análise de IA' },
+]
 
 const emptyStatus = {
   name: '',
@@ -72,7 +92,7 @@ const StatusForm = ({ mode = 'create' }) => {
           description: statusData.description ?? '',
         })
       } catch (err) {
-        setError(err.response?.data?.detail || 'Erro ao carregar o status.')
+        setError(getErrorMessage(err, 'Erro ao carregar o status.'))
       } finally {
         setIsLoading(false)
       }
@@ -92,23 +112,12 @@ const StatusForm = ({ mode = 'create' }) => {
   }
 
   /**
-   * Normaliza campos técnicos para o padrão usado no backend.
-   */
-  const normalizeName = (value) => {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-  }
-
-  /**
    * Monta o payload enviado para a API.
    */
   const buildPayload = () => ({
-    name: normalizeName(form.name),
+    name: form.name,
     display_name: form.display_name.trim(),
-    applies_to: normalizeName(form.applies_to),
+    applies_to: form.applies_to,
     description: form.description.trim() || null,
   })
 
@@ -116,9 +125,9 @@ const StatusForm = ({ mode = 'create' }) => {
    * Valida os campos do formulário antes de enviar para a API.
    */
   const validateForm = () => {
-    if (!form.name.trim()) return 'Informe o nome técnico do status.'
+    if (!form.name) return 'Selecione o nome técnico do status.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição.'
-    if (!form.applies_to.trim()) return 'Informe onde esse status será aplicado.'
+    if (!form.applies_to) return 'Selecione onde esse status será aplicado.'
 
     return ''
   }
@@ -158,7 +167,7 @@ const StatusForm = ({ mode = 'create' }) => {
         setSuccess('Status atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao salvar o status.')
+      setError(getErrorMessage(err, 'Erro ao salvar o status.'))
     } finally {
       setIsSaving(false)
     }
@@ -198,13 +207,19 @@ const StatusForm = ({ mode = 'create' }) => {
               <CRow className="g-3">
                 <CCol md={4}>
                   <CFormLabel>Nome Técnico</CFormLabel>
-                  <CFormInput
+                  <CFormSelect
                     value={form.name}
                     disabled={isReadOnly}
-                    placeholder="Ex: active, inactive, processing"
-                    onChange={(e) => updateField('name', normalizeName(e.target.value))}
+                    onChange={(e) => updateField('name', e.target.value)}
                     required
-                  />
+                  >
+                    <option value="">Selecione...</option>
+                    {statusNameOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
                 </CCol>
 
                 <CCol md={4}>
@@ -220,13 +235,19 @@ const StatusForm = ({ mode = 'create' }) => {
 
                 <CCol md={4}>
                   <CFormLabel>Aplicado em</CFormLabel>
-                  <CFormInput
+                  <CFormSelect
                     value={form.applies_to}
                     disabled={isReadOnly}
-                    placeholder="Ex: user, clinic, patient"
                     onChange={(e) => updateField('applies_to', e.target.value)}
                     required
-                  />
+                  >
+                    <option value="">Selecione...</option>
+                    {statusScopeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
                 </CCol>
 
                 <CCol md={12}>

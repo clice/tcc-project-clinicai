@@ -16,6 +16,7 @@ import AppActionButtons from 'src/components/shared/AppActionButtons'
 import { useAuth } from 'src/hooks/useAuth'
 import { clinicService } from 'src/services/clinicService'
 
+import { getErrorMessage } from 'src/utils/errors'
 import { formatCnpjBR } from 'src/utils/formatters'
 import { canManageClinics } from 'src/utils/permissions'
 
@@ -42,7 +43,7 @@ const ClinicsList = () => {
       const data = await clinicService.list({ includeInactive: true })
       setClinics(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao carregar clínicas.')
+      setError(getErrorMessage(err, 'Erro ao carregar clínicas.'))
     } finally {
       setIsLoading(false)
     }
@@ -130,13 +131,11 @@ const ClinicsList = () => {
           </p>
         </div>
 
-        {canManage && (
-          <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/clinics/create">
-              Cadastrar Clínica
-            </CButton>
-          </div>
-        )}       
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/clinics/create">
+            Cadastrar Clínica
+          </CButton>
+        </div>    
       </div>
 
       <CCard>

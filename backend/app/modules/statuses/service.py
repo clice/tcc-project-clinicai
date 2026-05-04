@@ -8,8 +8,11 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.common.constants import AuditAction, AuditEntity
 from app.modules.statuses.model import Status
+from app.modules.users.model import User
 from app.modules.statuses.schema import StatusCreate, StatusUpdate
+from app.modules.audit_logs.service import create_audit_log
 
 
 def get_status_by_id_and_applies_to(
@@ -109,9 +112,13 @@ def list_statuses(db: Session) -> list[Status]:
     )
 
 
-def create_status(db: Session, payload: StatusCreate) -> Status:
+def create_status(
+    db: Session,
+    payload: StatusCreate,
+    current_user: User,
+) -> Status:
     """
-    Cria um novo status.
+    Cria um novo status e registra log de auditoria.
     """
     check_status_duplicate(
         db=db,
@@ -127,6 +134,26 @@ def create_status(db: Session, payload: StatusCreate) -> Status:
     )
 
     db.add(status)
+    db.flush()
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.CREATE,
+        entity=AuditEntity.STATUS,
+        entity_id=status.id,
+        description="Status cadastrado.",
+        new_data={
+            "id": status.id,
+            "name": status.name,
+            "display_name": status.display_name,
+            "applies_to": status.applies_to,
+            "description": status.description,
+        },
+    )
+
     db.commit()
     db.refresh(status)
 
@@ -137,15 +164,23 @@ def update_status(
     db: Session,
     status_id: int,
     payload: StatusUpdate,
+    current_user: User,
 ) -> Status:
     """
-    Atualiza parcialmente um status.
+    Atualiza parcialmente um status e registra log de auditoria.
     """
     status = get_status_by_id(db=db, status_id=status_id)
     update_data = payload.model_dump(exclude_unset=True)
 
     if not update_data:
         return status
+
+    old_data = {
+        "name": status.name,
+        "display_name": status.display_name,
+        "applies_to": status.applies_to,
+        "description": status.description,
+    }
 
     if "name" in update_data and update_data["name"] is not None:
         update_data["name"] = update_data["name"].value
@@ -165,6 +200,19 @@ def update_status(
 
     for field, value in update_data.items():
         setattr(status, field, value)
+
+    # Adiciona log
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=current_user.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.STATUS,
+        entity_id=status.id,
+        description="Status atualizado.",
+        old_data=old_data,
+        new_data=update_data,
+    )
 
     db.commit()
     db.refresh(status)

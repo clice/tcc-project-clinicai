@@ -17,6 +17,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { patientService } from 'src/services/patientService'
 
 import { calculateAge } from 'src/utils/calculators'
+import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
 import { canManagePatients } from 'src/utils/permissions'
 
@@ -24,18 +25,6 @@ const patientTabs = [
   { key: 'active', label: 'Ativos' },
   { key: 'inactive', label: 'Inativos' },
 ]
-
-const getErrorMessage = (error, fallback) => {
-  const detail = error.response?.data?.detail
-
-  if (typeof detail === 'string') return detail
-
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item.msg).join(' ')
-  }
-
-  return error.message || fallback
-}
 
 const PatientsList = () => {
   const { user } = useAuth()
@@ -55,7 +44,7 @@ const PatientsList = () => {
       const data = await patientService.list({ includeInactive: true })
       setPatients(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao carregar os pacientes.'))
+      setError(getErrorMessage(err, 'Erro ao carregar pacientes.'))
     } finally {
       setIsLoading(false)
     }

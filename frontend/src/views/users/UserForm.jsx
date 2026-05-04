@@ -29,6 +29,7 @@ import { roleService } from 'src/services/roleService'
 import { statusService } from 'src/services/statusService'
 import { clinicService } from 'src/services/clinicService'
 
+import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
 
 const emptyUser = {
@@ -145,7 +146,7 @@ const UserForm = ({ mode = 'create' }) => {
           status_id: activeUserStatus ? String(activeUserStatus.id) : '',
         })
       } catch (err) {
-        setError(err.response?.data?.detail || err.message || 'Erro ao carregar os dados do usuário.')
+        setError(getErrorMessage(err, 'Erro ao carregar os dados do usuário.'))
       } finally {
         setIsLoading(false)
       }
@@ -272,7 +273,7 @@ const UserForm = ({ mode = 'create' }) => {
         setSuccess('Usuário atualizado com sucesso.')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Erro ao salvar o usuário.')
+      setError(getErrorMessage(err, 'Erro ao salvar o usuário.'))
     } finally {
       setIsSaving(false)
     }
@@ -310,7 +311,7 @@ const UserForm = ({ mode = 'create' }) => {
           ) : (
             <CForm onSubmit={handleSubmit}>
               <CRow className="g-3">
-                <CCol md={6}>
+                <CCol md={8}>
                   <CFormLabel>Nome</CFormLabel>
                   <CFormInput
                     value={form.name}
@@ -320,7 +321,7 @@ const UserForm = ({ mode = 'create' }) => {
                   />
                 </CCol>
 
-                <CCol md={6}>
+                <CCol md={4}>
                   <CFormLabel>E-mail</CFormLabel>
                   <CFormInput
                     type="email"
@@ -395,9 +396,7 @@ const UserForm = ({ mode = 'create' }) => {
                     onChange={(event) => updateField('clinic_id', event.target.value)}
                     required={requiresClinic}
                   >
-                    <option value="">
-                      {requiresClinic ? 'Selecione...' : ''}
-                    </option>
+                    <option value="">{requiresClinic ? 'Selecione...' : ''}</option>
 
                     {availableClinics.map((clinic) => (
                       <option key={clinic.id} value={clinic.id}>

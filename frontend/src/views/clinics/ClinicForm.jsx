@@ -29,6 +29,8 @@ import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
 import { statusService } from 'src/services/statusService'
 
+import { getErrorMessage } from 'src/utils/errors'
+
 import {
   formatCnpjBR,
   formatPhoneBR,
@@ -113,7 +115,7 @@ const ClinicForm = ({ mode = 'create' }) => {
           })
         }
       } catch (err) {
-        setError(err.response?.data?.detail || 'Erro ao carregar dados da clínica.')
+        setError(getErrorMessage(err, 'Erro ao carregar dados da clínica.'))
       } finally {
         setIsLoading(false)
       }
@@ -308,7 +310,7 @@ const ClinicForm = ({ mode = 'create' }) => {
           ) : (
             <CForm onSubmit={handleSubmit}>
               <CRow className="g-3">
-                <CCol md={6}>
+                <CCol md={8}>
                   <CFormLabel>Nome</CFormLabel>
                   <CFormInput
                     value={form.name}
@@ -319,7 +321,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                   />
                 </CCol>
 
-                <CCol md={3}>
+                <CCol md={2}>
                   <CFormLabel>CNPJ</CFormLabel>
                   <CFormInput
                     value={form.cnpj}
@@ -330,7 +332,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                   />
                 </CCol>
 
-                <CCol md={3}>
+                <CCol md={2}>
                   <CFormLabel>Status</CFormLabel>
                   <CFormSelect
                     value={form.status_id}

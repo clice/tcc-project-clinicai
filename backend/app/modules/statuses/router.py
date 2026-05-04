@@ -35,7 +35,7 @@ def create_status_route(
     Cria um novo status.
     Apenas administradores devem poder criar status do sistema.
     """
-    return create_status(db=db, payload=payload)
+    return create_status(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[StatusResponse])
@@ -72,4 +72,4 @@ def update_status_route(
     Atualiza parcialmente um status existente.
     Como usa PATCH, o frontend pode enviar somente os campos alterados.
     """
-    return update_status(db=db, status_id=status_id, payload=payload)
+    return update_status(db=db, status_id=status_id, payload=payload, current_user=current_user)

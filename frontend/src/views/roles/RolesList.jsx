@@ -16,6 +16,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { roleService } from 'src/services/roleService'
 
 import { canManageRoles } from 'src/utils/permissions'
+import { getErrorMessage } from 'src/utils/errors'
 
 const RolesList = () => {
   const { user } = useAuth()
@@ -32,16 +33,16 @@ const RolesList = () => {
       setError('')
 
       const data = await roleService.list()
-      setRoles(data)
+      setRoles(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError('Erro ao carregar os perfis.')
+      setError(getErrorMessage(err, 'Erro ao carregar os perfis.'))
     } finally {
       setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    loadRoles()
+    void loadRoles()
   }, [loadRoles])
 
   const columns = useMemo(

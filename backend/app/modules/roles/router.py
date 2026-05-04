@@ -35,7 +35,7 @@ def create_role_route(
     Cria um novo perfil de acesso.
     Apenas administradores devem poder criar perfis do sistema.
     """
-    return create_role(db=db, payload=payload)
+    return create_role(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[RoleResponse])
@@ -72,4 +72,4 @@ def update_role_route(
     Atualiza parcialmente um perfil existente.
     Como usa PATCH, o frontend pode enviar somente os campos alterados.
     """
-    return update_role(db=db, role_id=role_id, payload=payload)
+    return update_role(db=db, role_id=role_id, payload=payload, current_user=current_user)

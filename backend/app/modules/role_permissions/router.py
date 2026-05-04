@@ -37,7 +37,7 @@ def create_role_permission_route(
     Cria um vínculo entre perfil de acesso e permissão.
     Apenas administradores devem poder alterar permissões do sistema.
     """
-    return create_role_permission(db=db, payload=payload)
+    return create_role_permission(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[RolePermissionResponse])
@@ -80,6 +80,7 @@ def update_role_permission_route(
         db=db,
         role_permission_id=role_permission_id,
         payload=payload,
+        current_user=current_user,
     )
 
 
@@ -95,4 +96,5 @@ def delete_role_permission_route(
     return delete_role_permission(
         db=db,
         role_permission_id=role_permission_id,
+        current_user=current_user,
     )

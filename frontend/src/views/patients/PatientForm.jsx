@@ -33,6 +33,7 @@ import { patientService } from 'src/services/patientService'
 import { clinicService } from 'src/services/clinicService'
 import { userService } from 'src/services/userService'
 
+import { getErrorMessage } from 'src/utils/errors'
 import {
   formatCpfBR,
   formatPhoneBR,
@@ -59,18 +60,6 @@ const emptyPatient = {
   neighborhood: '',
   city: '',
   state: '',
-}
-
-const getErrorMessage = (error, fallback) => {
-  const detail = error?.response?.data?.detail
-
-  if (typeof detail === 'string') return detail
-
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item.msg).join(' ')
-  }
-
-  return error?.message || fallback
 }
 
 const PatientForm = ({ mode = 'create' }) => {
@@ -137,7 +126,7 @@ const PatientForm = ({ mode = 'create' }) => {
       setDoctors(Array.isArray(data) ? data : [])
     } catch (err) {
       setDoctors([])
-      setError(getErrorMessage(err, 'Erro ao carregar médicos da clínica.'))
+      setError(getErrorMessage(err, 'Erro ao carregar dados do paciente.'))
     } finally {
       setIsLoadingDoctors(false)
     }

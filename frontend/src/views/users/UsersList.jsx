@@ -2,7 +2,7 @@
  * Listagem de usuários.
  *
  * Exibe os usuários cadastrados no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * visualização, edição e cadastro.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -17,6 +17,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { userService } from 'src/services/userService'
 
 import { formatCpfBR, formatDateTimeBR, formatPhoneBR } from 'src/utils/formatters'
+import { getErrorMessage } from 'src/utils/errors'
 import { canManageUsers } from 'src/utils/permissions'
 
 const userTabs = [
@@ -42,7 +43,7 @@ const UsersList = () => {
       const data = await userService.list()
       setUsers(Array.isArray(data) ? data : [])
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Erro ao carregar os usuários.')
+      setError(getErrorMessage(err, 'Erro ao carregar os usuários.'))
     } finally {
       setIsLoading(false)
     }
@@ -59,7 +60,7 @@ const UsersList = () => {
         await userService.inactivate(selectedUser.id)
         await loadUsers()
       } catch (err) {
-        setError(err.response?.data?.detail || err.message || 'Erro ao inativar o usuário.')
+        setError(getErrorMessage(err, 'Erro ao inativar o usuário.'))
       }
     },
     [loadUsers],
@@ -72,7 +73,7 @@ const UsersList = () => {
         await userService.activate(selectedUser.id)
         await loadUsers()
       } catch (err) {
-        setError(err.response?.data?.detail || err.message || 'Erro ao ativar o usuário.')
+        setError(getErrorMessage(err, 'Erro ao ativar o usuário.'))
       }
     },
     [loadUsers],
@@ -94,14 +95,37 @@ const UsersList = () => {
     () => [
       { accessorKey: 'name', header: 'Nome' },
       { accessorKey: 'email', header: 'E-mail' },
-      { accessorKey: 'phone', header: 'Telefone', cell: ({ getValue }) => {
-  const value = getValue()
-  console.log('PHONE VALUE:', value)
-  return value ? formatPhoneBR(value) : '-'
-} },
-      { accessorKey: 'role_display_name', header: 'Perfil', cell: ({ getValue, row }) => getValue() || row.original.role_name || '-' },
-      { accessorKey: 'clinic_name', header: 'Clínica', cell: ({ getValue }) => getValue() || '-' },
-      { accessorKey: 'last_access_at', header: 'Último acesso', cell: ({ getValue }) => formatDateTimeBR(getValue()) },
+      {
+        accessorKey: 'cpf',
+        header: 'CPF',
+        cell: ({ getValue }) => {
+          const value = getValue()
+          return value ? formatCpfBR(value) : '-'
+        },
+      },
+      {
+        accessorKey: 'phone',
+        header: 'Telefone',
+        cell: ({ getValue }) => {
+          const value = getValue()
+          return value ? formatPhoneBR(value) : '-'
+        },
+      },
+      {
+        accessorKey: 'role_display_name',
+        header: 'Perfil',
+        cell: ({ getValue, row }) => getValue() || row.original.role_name || '-',
+      },
+      {
+        accessorKey: 'clinic_name',
+        header: 'Clínica',
+        cell: ({ getValue }) => getValue() || '-',
+      },
+      {
+        accessorKey: 'last_access_at',
+        header: 'Último acesso',
+        cell: ({ getValue }) => formatDateTimeBR(getValue()),
+      },
       {
         id: 'actions',
         header: 'Ações',
@@ -140,7 +164,7 @@ const UsersList = () => {
             Gerencie usuários, perfis de acesso, status e vínculo com clínicas.
           </p>
         </div>
-
+        
         <div className="d-flex justify-content-center mt-4">
           <CButton color="primary" size="lg" as={Link} to="/users/create">
             Cadastrar Usuário

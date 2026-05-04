@@ -32,7 +32,17 @@ import CIcon from '@coreui/icons-react'
 
 import avatar8 from 'src/assets/images/avatars/8.jpg'
 
+import { useAuth } from 'src/hooks/useAuth'
+import { getStoredUser } from 'src/utils/token'
+
 const AppHeaderDropdown = () => {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <CDropdown variant="nav-item">
@@ -45,6 +55,14 @@ const AppHeaderDropdown = () => {
           Usuário
         </CDropdownHeader>
 
+        <CDropdownItem as="div" className="d-flex flex-column align-items-start">
+          <strong>{user?.name || 'Usuário'}</strong>
+          <small className="text-body-secondary">{user?.email}</small>
+          <small className="text-body-secondary">
+            {user?.role_display_name || user?.role_name}
+          </small>
+        </CDropdownItem>
+
         <CDropdownDivider />
 
         <CDropdownItem href="#">
@@ -54,7 +72,7 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button">
+        <CDropdownItem as="button" type="button" onClick={logout}>
           <CIcon icon={cilAccountLogout} className="me-2" />
           Sair
         </CDropdownItem>

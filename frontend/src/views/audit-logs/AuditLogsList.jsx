@@ -5,91 +5,84 @@
  * cadastros, acessos e ações administrativas.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CAlert, CBadge, CCard, CCardBody } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
-import { auditLogs as auditLogsMock } from 'src/mocks/data'
+
+import { auditLogService } from 'src/services/auditLogService'
+import { getErrorMessage } from 'src/utils/errors'
+import { formatDateTimeBR } from 'src/utils/formatters'
 
 const entityLabels = {
-  users: 'Usuários',
-  clinics: 'Clínicas',
-  patients: 'Pacientes',
-  exams: 'Exames',
-  roles: 'Perfis',
-  permissions: 'Permissões',
-  statuses: 'Status',
+  user: 'Usuário',
+  clinic: 'Clínica',
+  patient: 'Paciente',
+  exam: 'Exame',
+  ai_analysis: 'Análise de IA',
+  role: 'Perfil',
+  permission: 'Permissão',
+  role_permission: 'Permissão do perfil',
+  status: 'Status',
   auth: 'Autenticação',
 }
 
 const actionLabels = {
-  'users:create': 'Cadastro de usuário',
-  'users:update': 'Edição de usuário',
-  'users:inactive': 'Inativação de usuário',
-  'users:active': 'Ativação de usuário',
-
-  'clinics:create': 'Cadastro de clínica',
-  'clinics:update': 'Edição de clínica',
-  'clinics:inactive': 'Inativação de clínica',
-  'clinics:active': 'Ativação de clínica',
-
-  'patients:create': 'Cadastro de paciente',
-  'patients:update': 'Edição de paciente',
-  'patients:inactive': 'Inativação de paciente',
-  'patients:active': 'Ativação de paciente',
-
-  'exams:create': 'Cadastro de exame',
-  'exams:update': 'Edição de exame',
-  'exams:cancel': 'Cancelamento de exame',
-
-  'roles:create': 'Cadastro de perfil',
-  'roles:update': 'Edição de perfil',
-
-  'permissions:create': 'Cadastro de permissão',
-  'permissions:update': 'Edição de permissão',
-
-  'statuses:create': 'Cadastro de status',
-  'statuses:update': 'Edição de status',
-
-  'auth:login': 'Login',
-  'auth:logout': 'Logout',
-  'auth:failed_login': 'Falha de login',
+  create: 'Criação',
+  update: 'Atualização',
+  update_password: 'Alteração de senha',
+  change_status_activate: 'Ativação',
+  change_status_inactivate: 'Inativação',
+  delete: 'Exclusão',
+  login_success: 'Login realizado',
+  login_failed: 'Falha de login',
+  logout: 'Logout',
+  cancel_exam: 'Cancelamento de exame',
+  upload: 'Upload',
+  download: 'Download',
+  run_ai_analysis: 'Execução de IA',
 }
 
 const actionColors = {
   create: 'success',
   update: 'info',
-  inactive: 'warning',
-  active: 'success',
-  cancel: 'danger',
-  login: 'success',
+  update_password: 'warning',
+  change_status_activate: 'success',
+  change_status_inactivate: 'warning',
+  delete: 'danger',
+  login_success: 'success',
+  login_failed: 'danger',
   logout: 'secondary',
-  failed_login: 'danger',
+  cancel_exam: 'danger',
+  upload: 'info',
+  download: 'secondary',
+  run_ai_analysis: 'primary',
 }
 
-const formatDateTimeBR = (value) => {
-  if (!value) return '-'
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`
-}
-
-const getActionColor = (action) => {
-  const actionType = action?.split(':')[1]
-
-  return actionColors[actionType] || 'secondary'
-}
+const getActionColor = (action) => actionColors[action] || 'secondary'
 
 const AuditLogsList = () => {
-  const [auditLogs] = useState(auditLogsMock)
-  const [error] = useState('')
-  const [isLoading] = useState(false)
+  const [auditLogs, setAuditLogs] = useState([])
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+
+  const loadAuditLogs = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const data = await auditLogService.list()
+      setAuditLogs(data)
+    } catch (err) {
+      setError(getErrorMessage(err, 'Erro ao carregar logs de auditoria.'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadAuditLogs()
+  }, [loadAuditLogs])
 
   const sortedLogs = useMemo(() => {
     return [...auditLogs].sort(
@@ -127,11 +120,6 @@ const AuditLogsList = () => {
         accessorKey: 'user_name',
         header: 'Usuário',
         cell: ({ getValue }) => getValue() || 'Sistema',
-      },
-      {
-        accessorKey: 'clinic_name',
-        header: 'Clínica',
-        cell: ({ getValue }) => getValue() || '-',
       },
       {
         accessorKey: 'description',
