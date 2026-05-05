@@ -1,8 +1,8 @@
 """
 Model da tabela de exames.
 
-A tabela exams armazena exames vinculados a pacientes, clínicas e médicos.
-Também guarda informações clínicas, arquivo enviado e status da análise por IA.
+A tabela exams armazena exames vinculados a pacientes, clínicas e médicos,
+além dos metadados do arquivo enviado.
 """
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text

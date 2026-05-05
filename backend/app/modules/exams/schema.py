@@ -56,14 +56,14 @@ class ExamUpdate(BaseModel):
     Schema usado para atualização parcial de exame.
     """
 
-    clinic_id: int
-    patient_id: int
+    clinic_id: int | None = None
+    patient_id: int | None = None
     doctor_id: int | None = None
 
-    exam_type: str = Field(..., min_length=2, max_length=80)
+    exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None
 
-    title: str = Field(..., min_length=3, max_length=180)
+    title: str | None = Field(default=None, min_length=3, max_length=180)
     description: str | None = None
     clinical_indication: str | None = None
     findings: str | None = None
@@ -71,7 +71,10 @@ class ExamUpdate(BaseModel):
 
     @field_validator("exam_type", "title")
     @classmethod
-    def normalize_required_fields(cls, value: str) -> str:
+    def normalize_required_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
         return normalize_required_text(value, "Campo obrigatório.")
 
     @field_validator(

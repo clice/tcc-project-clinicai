@@ -67,7 +67,7 @@ export const examService = {
   },
 
   uploadFileMetadata: async (id, payload) => {
-    const response = await api.post(`/exams/${id}/upload-file`, null, {
+    const response = await api.post(`/exams/${id}/upload`, null, {
       params: {
         file_path: payload.file_path,
         file_name: payload.file_name,
@@ -79,7 +79,7 @@ export const examService = {
   },
 
   downloadFileMetadata: async (id) => {
-    const response = await api.get(`/exams/${id}/download-file`)
+    const response = await api.get(`/exams/${id}/download`)
     return response.data
   },
 }

@@ -128,17 +128,15 @@ def cancel_exam_route(
     )
 
 
-@router.post("/{exam_id}/upload-file", response_model=ExamResponse)
+@router.post("/{exam_id}/upload", response_model=ExamResponse)
 def upload_exam_file_route(
     exam_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:update")),
+    current_user: User = Depends(require_permission("exams:upload")),
 ):
     """
     Vincula informações de arquivo ao exame.
-
-    Upload físico será implementado depois com UploadFile.
     """
     return upload_exam_file(
         db=db,
@@ -148,11 +146,11 @@ def upload_exam_file_route(
     )
 
 
-@router.get("/{exam_id}/download-file")
+@router.get("/{exam_id}/download")
 def download_exam_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_permission("exams:download")),
 ):
     """
     Retorna informações do arquivo vinculado ao exame.
