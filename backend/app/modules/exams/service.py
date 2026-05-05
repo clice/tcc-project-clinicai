@@ -834,6 +834,8 @@ def upload_exam_file(
 
     stored_file_path = patient_dir / stored_file_name
 
+    old_file_path = exam.file_path
+
     old_data = {
         "file_path": exam.file_path,
         "file_name": exam.file_name,
@@ -880,8 +882,23 @@ def upload_exam_file(
         },
     )
 
-    db.commit()
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+
+        if stored_file_path.exists() and stored_file_path.is_file():
+            stored_file_path.unlink()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao atualizar dados do exame.",
+        ) from exc
+
     db.refresh(exam)
+
+    if old_file_path and old_file_path != str(stored_file_path):
+        delete_exam_file_safely(old_file_path)
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
@@ -939,3 +956,22 @@ def download_exam_file(
         filename=exam.file_name,
         media_type=exam.file_mime_type,
     )
+    
+    
+def delete_exam_file_safely(file_path: str | None) -> None:
+    """
+    Remove com segurança um arquivo antigo de exame.
+
+    A função só remove arquivos dentro da pasta segura de uploads.
+    Se o arquivo não existir, simplesmente ignora.
+    """
+    if not file_path:
+        return
+
+    try:
+        resolved_path = resolve_safe_exam_file_path(file_path)
+    except HTTPException:
+        return
+
+    if resolved_path.exists() and resolved_path.is_file():
+        resolved_path.unlink()
