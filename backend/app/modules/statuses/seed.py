@@ -108,9 +108,9 @@ def seed_statuses(db: Session) -> dict[str, Status]:
         "exam_processing": get_or_create_status(
             db,
             name=StatusName.PROCESSING,
-            display_name="Em processamento",
+            display_name="Processando",
             applies_to=StatusScope.EXAM,
-            description="Exame em processamento ou análise.",
+            description="Exame em processamento.",
         ),
         "exam_completed": get_or_create_status(
             db,

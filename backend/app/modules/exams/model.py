@@ -56,6 +56,7 @@ class Exam(Base):
         nullable=False,
     )
 
+    # Relacionamentos com outras tabelas do sistema
     clinic = relationship("Clinic", back_populates="exams")
     patient = relationship("Patient", back_populates="exams")
     doctor = relationship("User", foreign_keys=[doctor_id])

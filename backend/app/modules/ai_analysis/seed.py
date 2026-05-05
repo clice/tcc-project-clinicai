@@ -6,15 +6,34 @@ Cria análises iniciais para testes e desenvolvimento.
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import StatusName
+from app.common.constants import StatusName, StatusScope
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.exams.model import Exam
+from app.modules.statuses.model import Status
+
+
+def get_ai_analysis_status(
+    db: Session,
+    name: StatusName,
+) -> Status | None:
+    """
+    Busca uma análise pelo status.
+    """
+    return (
+        db.query(Status)
+        .filter(
+            Status.name == name.value,
+            Status.applies_to == StatusScope.AI_ANALYSIS.value,
+        )
+        .first()
+    )
 
 
 def get_or_create_ai_analysis(
     db: Session,
     *,
     exam_id: int,
+    status_id: int,
     prediction_label: str,
     prediction_class: int | None,
     confidence: float,
@@ -39,6 +58,7 @@ def get_or_create_ai_analysis(
 
     ai_analysis = AIAnalysis(
         exam_id=exam_id,
+        status_id=status_id,
         prediction_label=prediction_label,
         prediction_class=prediction_class,
         confidence=confidence,
@@ -60,6 +80,7 @@ def get_or_create_ai_analysis(
 def seed_ai_analysis(
     db: Session,
     exams: dict[str, Exam],
+    statuses: dict[str, Status] | None = None,
 ) -> dict[str, AIAnalysis]:
     """
     Cria análises de IA iniciais do sistema.
@@ -67,13 +88,24 @@ def seed_ai_analysis(
     completed_exam = exams.get("exam_colonoscopy_completed")
     processing_exam = exams.get("exam_endoscopy_processing")
 
-    if not completed_exam or not processing_exam:
+    completed_status = None
+    processing_status = None
+
+    if statuses:
+        completed_status = statuses.get("ai_analysis_completed")
+        processing_status = statuses.get("ai_analysis_processing")
+
+    completed_status = completed_status or get_ai_analysis_status(db, StatusName.COMPLETED)
+    processing_status = processing_status or get_ai_analysis_status(db, StatusName.PROCESSING)
+
+    if not completed_exam or not processing_exam or not completed_status or not processing_status:
         return {}
 
     return {
         "ai_analysis_colonoscopy_completed": get_or_create_ai_analysis(
             db=db,
             exam_id=completed_exam.id,
+            status_id=completed_status.id,
             prediction_label="normal",
             prediction_class=0,
             confidence=0.94,
@@ -87,6 +119,7 @@ def seed_ai_analysis(
         "ai_analysis_endoscopy_processing": get_or_create_ai_analysis(
             db=db,
             exam_id=processing_exam.id,
+            status_id=processing_status.id,
             prediction_label="suspected_gastritis",
             prediction_class=1,
             confidence=0.87,
@@ -95,6 +128,6 @@ def seed_ai_analysis(
             gradcam_path="uploads/gradcam/endoscopy_ai_processing_gradcam.jpg",
             processing_time_ms=1580,
             ai_notes="Resultado preliminar gerado por modelo simulado.",
-            raw_response=f'{{"prediction_label": "suspected_gastritis", "status": "{StatusName.PROCESSING.value}", "confidence": 0.87}}',
+            raw_response='{"prediction_label": "suspected_gastritis", "status": "processing", "confidence": 0.87}',
         ),
     }

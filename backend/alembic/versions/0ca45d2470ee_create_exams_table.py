@@ -1,8 +1,8 @@
 """create exams table
 
-Revision ID: 412b8c653233
-Revises: b3051137a86d
-Create Date: 2026-05-04 16:19:59.025850
+Revision ID: 0ca45d2470ee
+Revises: 3bf69f6ce357
+Create Date: 2026-05-05 00:29:04.026412
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '412b8c653233'
-down_revision: Union[str, None] = 'b3051137a86d'
+revision: str = '0ca45d2470ee'
+down_revision: Union[str, None] = '3bf69f6ce357'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -30,8 +30,6 @@ def upgrade() -> None:
     sa.Column('clinical_indication', sa.Text(), nullable=True),
     sa.Column('findings', sa.Text(), nullable=True),
     sa.Column('conclusion', sa.Text(), nullable=True),
-    sa.Column('ai_analysis_status', sa.String(length=50), nullable=True),
-    sa.Column('ai_summary', sa.Text(), nullable=True),
     sa.Column('file_path', sa.String(length=255), nullable=True),
     sa.Column('file_name', sa.String(length=180), nullable=True),
     sa.Column('file_mime_type', sa.String(length=100), nullable=True),
