@@ -8,9 +8,17 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from datetime import date, datetime
-
+from app.common.access_control import (
+    ensure_user_can_access_clinic_data,
+    ensure_user_can_access_patient,
+    filter_query_by_user_scope,
+)
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+    serialize_for_json,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
@@ -18,50 +26,6 @@ from app.modules.users.model import User
 from app.modules.patients.schema import PatientCreate, PatientUpdate
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import get_status_by_name_and_applies_to
-
-
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
-
-
-def serialize_for_json(data: dict) -> dict:
-    """
-    Converte valores Python não serializáveis em JSON para formatos seguros.
-    Usado principalmente nos audit logs.
-    """
-    serialized = {}
-
-    for key, value in data.items():
-        if isinstance(value, (date, datetime)):
-            serialized[key] = value.isoformat()
-        else:
-            serialized[key] = value
-
-    return serialized
-
-
-def get_patient_by_id(db: Session, patient_id: int) -> Patient:
-    """
-    Busca um paciente pelo ID.
-    """
-    patient = (
-        db.query(Patient)
-        .options(
-            joinedload(Patient.clinic),
-            joinedload(Patient.status),
-            joinedload(Patient.doctor),
-        )
-        .filter(Patient.id == patient_id)
-        .first()
-    )
-
-    if not patient:
-        raise HTTPException(status_code=404, detail="Paciente não encontrado.")
-
-    return patient
 
 
 def validate_user_can_access_clinic(
@@ -72,20 +36,10 @@ def validate_user_can_access_clinic(
     """
     Garante que usuários de clínica acessem apenas dados da própria clínica.
     """
-    if is_admin_master(current_user):
-        return
-
-    if current_user.clinic_id is None:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário não está vinculado a uma clínica.",
-        )
-
-    if current_user.clinic_id != clinic_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Você não tem permissão para acessar dados desta clínica.",
-        )
+    ensure_user_can_access_clinic_data(
+        current_user=current_user,
+        clinic_id=clinic_id,
+    )
 
 
 def validate_user_can_access_patient(
@@ -96,20 +50,9 @@ def validate_user_can_access_patient(
     """
     Garante que o usuário autenticado pode acessar o paciente.
     """
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if role_name == RoleName.CLINIC_STAFF.value and patient.clinic_id == current_user.clinic_id:
-        return
-
-    if role_name == RoleName.DOCTOR.value and patient.doctor_id == current_user.id:
-        return
-
-    raise HTTPException(
-        status_code=403,
-        detail="Você não tem permissão para acessar este paciente.",
+    ensure_user_can_access_patient(
+        current_user=current_user,
+        patient=patient,
     )
 
 
@@ -240,6 +183,32 @@ def build_patient_response(patient: Patient) -> dict:
     }
 
 
+# ========================================
+# MAIN METHODS
+# ========================================
+
+
+def get_patient_by_id(db: Session, patient_id: int) -> Patient:
+    """
+    Busca um paciente pelo ID.
+    """
+    patient = (
+        db.query(Patient)
+        .options(
+            joinedload(Patient.clinic),
+            joinedload(Patient.status),
+            joinedload(Patient.doctor),
+        )
+        .filter(Patient.id == patient_id)
+        .first()
+    )
+
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado.")
+
+    return patient
+
+
 def list_patients(
     db: Session,
     *,
@@ -259,28 +228,17 @@ def list_patients(
         .join(Status, Patient.status_id == Status.id)
     )
 
-    role_name = current_user.role.name if current_user.role else None
-
     if not include_inactive:
         query = query.filter(
             Status.name == StatusName.ACTIVE.value,
             Status.applies_to == StatusScope.PATIENT.value,
         )
 
-    if role_name == RoleName.ADMIN_MASTER.value:
-        pass
-
-    elif role_name == RoleName.CLINIC_STAFF.value:
-        query = query.filter(Patient.clinic_id == current_user.clinic_id)
-
-    elif role_name == RoleName.DOCTOR.value:
-        query = query.filter(Patient.doctor_id == current_user.id)
-
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário sem permissão para listar pacientes.",
-        )
+    query = filter_query_by_user_scope(
+        query=query,
+        model=Patient,
+        current_user=current_user,
+    )
 
     patients = query.order_by(Patient.name.asc()).all()
 
@@ -412,7 +370,7 @@ def update_patient(
         current_user=current_user,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
     audit_new_data = serialize_for_json(update_data)
 
     if not update_data:
@@ -473,8 +431,7 @@ def update_patient(
         "state": patient.state,
     }
     
-    for field, value in update_data.items():
-        setattr(patient, field, value)
+    apply_update_data(patient, update_data)
 
     # Adiciona log
     create_audit_log(

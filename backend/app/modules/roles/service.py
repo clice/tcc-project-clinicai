@@ -9,6 +9,11 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.constants import AuditAction, AuditEntity
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+    normalize_update_data,
+)
 from app.modules.roles.model import Role
 from app.modules.users.model import User
 from app.modules.roles.schema import RoleCreate, RoleUpdate
@@ -33,6 +38,11 @@ def check_role_duplicate(
             status_code=400,
             detail="Já existe um perfil com esse nome.",
         )
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_role_by_id(db: Session, role_id: int) -> Role:
@@ -109,7 +119,8 @@ def update_role(
     """
     role = get_role_by_id(db, role_id)
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
+    update_data = normalize_update_data(update_data)
 
     if not update_data:
         return role
@@ -120,9 +131,6 @@ def update_role(
         "description": role.description,
     }
 
-    if "name" in update_data and update_data["name"] is not None:
-        update_data["name"] = update_data["name"].value
-
     new_name = update_data.get("name", role.name)
 
     check_role_duplicate(
@@ -131,8 +139,7 @@ def update_role(
         ignore_role_id=role_id,
     )
 
-    for field, value in update_data.items():
-        setattr(role, field, value)
+    apply_update_data(role, update_data)
 
     # Adiciona log
     create_audit_log(

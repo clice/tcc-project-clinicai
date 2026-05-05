@@ -14,7 +14,15 @@ from fastapi.responses import FileResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.access_control import (
+    ensure_user_can_access_clinic_data,
+    ensure_user_can_access_exam,
+)
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+)
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -45,13 +53,6 @@ ALLOWED_EXAM_EXTENSIONS = {
     ".png",
     ".pdf",
 }
-
-
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
 
 
 def build_exam_response(exam: Exam) -> dict:
@@ -136,20 +137,9 @@ def validate_user_can_access_exam(
     """
     Garante que o usuário autenticado pode acessar o exame.
     """
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if role_name == RoleName.CLINIC_STAFF.value and exam.clinic_id == current_user.clinic_id:
-        return
-
-    if role_name == RoleName.DOCTOR.value and exam.doctor_id == current_user.id:
-        return
-
-    raise HTTPException(
-        status_code=403,
-        detail="Você não tem permissão para acessar este exame.",
+    ensure_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
     )
 
 
@@ -161,20 +151,10 @@ def validate_user_can_access_clinic(
     """
     Garante que usuários comuns acessem apenas dados da própria clínica.
     """
-    if is_admin_master(current_user):
-        return
-
-    if current_user.clinic_id is None:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário não está vinculado a uma clínica.",
-        )
-
-    if current_user.clinic_id != clinic_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Você não tem permissão para acessar dados desta clínica.",
-        )
+    ensure_user_can_access_clinic_data(
+        current_user=current_user,
+        clinic_id=clinic_id,
+    )
 
 
 def validate_clinic_is_active(db: Session, clinic_id: int) -> Clinic:
@@ -455,6 +435,11 @@ def get_exam_model_by_id(db: Session, exam_id: int) -> Exam:
     return exam
 
 
+# ========================================
+# MAIN METHODS
+# ========================================
+
+
 def get_exam_by_id(
     db: Session,
     exam_id: int,
@@ -665,7 +650,7 @@ def update_exam(
             detail="Não é possível editar um exame cancelado.",
         )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
 
     if not update_data:
         return build_exam_response(exam)
@@ -704,8 +689,7 @@ def update_exam(
         "conclusion": exam.conclusion,
     }
 
-    for field, value in update_data.items():
-        setattr(exam, field, value)
+    apply_update_data(exam, update_data)
 
     create_audit_log(
         db=db,

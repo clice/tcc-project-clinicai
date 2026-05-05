@@ -7,7 +7,12 @@ Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.access_control import (
+    ensure_user_can_access_exam,
+    filter_query_by_user_scope,
+)
+from app.common.constants import AuditAction, AuditEntity, StatusName, StatusScope
+from app.common.services import apply_update_data, model_dump_update
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.audit_logs.service import create_audit_log
@@ -48,19 +53,9 @@ def validate_user_can_access_exam(
     """
     Garante que o usuário autenticado pode acessar o exame/análise.
     """
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if role_name == RoleName.CLINIC_STAFF.value and exam.clinic_id == current_user.clinic_id:
-        return
-
-    if role_name == RoleName.DOCTOR.value and exam.doctor_id == current_user.id:
-        return
-
-    raise HTTPException(
-        status_code=403,
+    ensure_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
         detail="Você não tem permissão para acessar esta análise de IA.",
     )
 
@@ -140,6 +135,11 @@ def get_ai_analysis_model_by_id(
         )
 
     return ai_analysis
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_ai_analysis_by_id(
@@ -223,28 +223,11 @@ def list_ai_analysis(
         )
     )
 
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        pass
-
-    elif role_name == RoleName.CLINIC_STAFF.value:
-        if current_user.clinic_id is None:
-            raise HTTPException(
-                status_code=403,
-                detail="Usuário não está vinculado a uma clínica.",
-            )
-
-        query = query.filter(Exam.clinic_id == current_user.clinic_id)
-
-    elif role_name == RoleName.DOCTOR.value:
-        query = query.filter(Exam.doctor_id == current_user.id)
-
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário sem permissão para listar análises de IA.",
-        )
+    query = filter_query_by_user_scope(
+        query=query,
+        model=Exam,
+        current_user=current_user,
+    )
 
     if exam_id:
         query = query.filter(AIAnalysis.exam_id == exam_id)
@@ -381,7 +364,7 @@ def update_ai_analysis(
         exam=ai_analysis.exam,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
 
     if not update_data:
         return build_ai_analysis_response(ai_analysis)
@@ -398,8 +381,7 @@ def update_ai_analysis(
         "raw_response": ai_analysis.raw_response,
     }
 
-    for field, value in update_data.items():
-        setattr(ai_analysis, field, value)
+    apply_update_data(ai_analysis, update_data)
 
     create_audit_log(
         db=db,

@@ -7,6 +7,12 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.services import (
+    apply_update_data,
+    is_admin_master, 
+    model_dump_update,
+    normalize_update_data,
+)
 from app.core.security import get_password_hash
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
@@ -18,20 +24,6 @@ from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
-
-
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
-
-
-def get_user_role_name(user: User) -> str | None:
-    """
-    Retorna o perfil do usuário.
-    """
-    return user.role.name if user.role else None
 
 
 def validate_current_user_can_access_user(
@@ -81,24 +73,6 @@ def validate_current_user_can_manage_user_data(
             status_code=403,
             detail="Você só pode gerenciar usuários da sua própria clínica.",
         )
-
-
-def get_user_by_id(db: Session, user_id: int) -> User:
-    user = (
-        db.query(User)
-        .options(
-            joinedload(User.role),
-            joinedload(User.status),
-            joinedload(User.clinic),
-        )
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-
-    return user
 
 
 def get_role_by_id(db: Session, role_id: int) -> Role:
@@ -217,12 +191,35 @@ def build_user_list_item(user: User) -> dict:
     }
 
 
+# ========================================
+# MAIN METHODS
+# ========================================
+
+
+def get_user_by_id(db: Session, user_id: int) -> User:
+    user = (
+        db.query(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.status),
+            joinedload(User.clinic),
+        )
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    return user
+
+
 def create_user(
     db: Session,
     payload: UserCreate,
     current_user: User,
 ) -> dict:
-    email = str(payload.email)
+    email = payload.email if isinstance(payload.email, str) else str(payload.email)
 
     check_email_duplicate(db, email)
     check_cpf_duplicate(db, payload.cpf)
@@ -372,7 +369,8 @@ def update_user(
         target_user=user,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
+    update_data = normalize_update_data(update_data)
 
     if not update_data:
         return build_user_list_item(user)
@@ -420,8 +418,7 @@ def update_user(
         "clinic_id": user.clinic_id,
     }
     
-    for field, value in update_data.items():
-        setattr(user, field, value)
+    apply_update_data(user, update_data)
 
     # Adiciona log
     create_audit_log(
