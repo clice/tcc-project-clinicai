@@ -65,6 +65,17 @@ def check_clinic_duplicate(
         raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
 
 
+def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
+    """
+    Garante que usuários comuns acessem apenas a própria clínica.
+    """
+    ensure_user_can_access_clinic_data(
+        current_user=current_user,
+        clinic_id=clinic_id,
+        detail="Você não tem permissão para acessar esta clínica.",
+    )
+
+
 def build_clinic_response(clinic: Clinic) -> dict:
     """
     Monta a resposta incluindo dados do status relacionado.
@@ -89,17 +100,6 @@ def build_clinic_response(clinic: Clinic) -> dict:
         "created_at": clinic.created_at,
         "updated_at": clinic.updated_at,
     }
-
-
-def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
-    """
-    Garante que usuários comuns acessem apenas a própria clínica.
-    """
-    ensure_user_can_access_clinic_data(
-        current_user=current_user,
-        clinic_id=clinic_id,
-        detail="Você não tem permissão para acessar esta clínica.",
-    )
 
 
 # ========================================

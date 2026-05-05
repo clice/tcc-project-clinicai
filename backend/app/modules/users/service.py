@@ -20,10 +20,39 @@ from app.modules.statuses.model import Status
 from app.modules.users.model import User
 from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
 from app.modules.audit_logs.service import create_audit_log
+from app.modules.roles.service import get_role_by_id
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
+
+
+def check_email_duplicate(
+    db: Session,
+    email: str,
+    ignore_user_id: int | None = None,
+) -> None:
+    query = db.query(User).filter(User.email == email)
+
+    if ignore_user_id is not None:
+        query = query.filter(User.id != ignore_user_id)
+
+    if query.first():
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
+
+
+def check_cpf_duplicate(
+    db: Session,
+    cpf: str,
+    ignore_user_id: int | None = None,
+) -> None:
+    query = db.query(User).filter(User.cpf == cpf)
+
+    if ignore_user_id is not None:
+        query = query.filter(User.id != ignore_user_id)
+
+    if query.first():
+        raise HTTPException(status_code=400, detail="CPF já cadastrado.")
 
 
 def validate_current_user_can_access_user(
@@ -75,15 +104,6 @@ def validate_current_user_can_manage_user_data(
         )
 
 
-def get_role_by_id(db: Session, role_id: int) -> Role:
-    role = db.query(Role).filter(Role.id == role_id).first()
-
-    if not role:
-        raise HTTPException(status_code=400, detail="Perfil de acesso não encontrado.")
-
-    return role
-
-
 def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | None:
     if clinic_id is None:
         return None
@@ -106,34 +126,6 @@ def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | No
         )
 
     return clinic
-
-
-def check_email_duplicate(
-    db: Session,
-    email: str,
-    ignore_user_id: int | None = None,
-) -> None:
-    query = db.query(User).filter(User.email == email)
-
-    if ignore_user_id is not None:
-        query = query.filter(User.id != ignore_user_id)
-
-    if query.first():
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
-
-
-def check_cpf_duplicate(
-    db: Session,
-    cpf: str,
-    ignore_user_id: int | None = None,
-) -> None:
-    query = db.query(User).filter(User.cpf == cpf)
-
-    if ignore_user_id is not None:
-        query = query.filter(User.id != ignore_user_id)
-
-    if query.first():
-        raise HTTPException(status_code=400, detail="CPF já cadastrado.")
 
 
 def validate_user_business_rules(
@@ -171,7 +163,7 @@ def validate_user_business_rules(
     return role
 
 
-def build_user_list_item(user: User) -> dict:
+def build_user_response(user: User) -> dict:
     return {
         "id": user.id,
         "name": user.name,
@@ -189,6 +181,21 @@ def build_user_list_item(user: User) -> dict:
         "status_display_name": user.status.display_name if user.status else None,
         "clinic_name": user.clinic.name if user.clinic else None,
     }
+
+
+def get_user_response(
+    db: Session,
+    user_id: int,
+    current_user: User,
+) -> dict:
+    user = get_user_by_id(db, user_id)
+
+    validate_current_user_can_access_user(
+        current_user=current_user,
+        target_user=user,
+    )
+
+    return build_user_response(user)
 
 
 # ========================================
@@ -277,7 +284,7 @@ def create_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def list_users(
@@ -338,22 +345,7 @@ def list_users(
 
     users = query.order_by(User.name.asc()).all()
 
-    return [build_user_list_item(user) for user in users]
-
-
-def get_user_response(
-    db: Session,
-    user_id: int,
-    current_user: User,
-) -> dict:
-    user = get_user_by_id(db, user_id)
-
-    validate_current_user_can_access_user(
-        current_user=current_user,
-        target_user=user,
-    )
-
-    return build_user_list_item(user)
+    return [build_user_response(user) for user in users]
 
 
 def update_user(
@@ -373,7 +365,7 @@ def update_user(
     update_data = normalize_update_data(update_data)
 
     if not update_data:
-        return build_user_list_item(user)
+        return build_user_response(user)
 
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
@@ -438,7 +430,7 @@ def update_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def update_user_password(
@@ -482,7 +474,7 @@ def update_user_password(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def inactivate_user(
@@ -543,7 +535,7 @@ def inactivate_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def activate_user(
@@ -598,4 +590,4 @@ def activate_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)

@@ -52,7 +52,7 @@ def get_role_by_id(db: Session, role_id: int) -> Role:
     role = db.query(Role).filter(Role.id == role_id).first()
 
     if not role:
-        raise HTTPException(status_code=404, detail="Perfil não encontrado.")
+        raise HTTPException(status_code=404, detail="Perfil de acesso não encontrado.")
 
     return role
 
