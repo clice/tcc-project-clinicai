@@ -2,7 +2,9 @@
 Rotas do módulo de exames.
 """
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from datetime import date
+
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -39,16 +41,36 @@ def get_exam_form_options_route(
 
 @router.post("/", response_model=ExamResponse, status_code=201)
 def create_exam_route(
-    payload: ExamCreate,
+    clinic_id: int = Form(...),
+    patient_id: int = Form(...),
+    doctor_id: int | None = Form(default=None),
+    exam_type: str = Form(...),
+    exam_date: date | None = Form(default=None),
+    title: str = Form(...),
+    description: str | None = Form(default=None),
+    clinical_indication: str | None = Form(default=None),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("exams:create")),
 ):
     """
     Cria um novo exame.
     """
+    payload = ExamCreate(
+        clinic_id=clinic_id,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        exam_type=exam_type,
+        exam_date=exam_date,
+        title=title,
+        description=description,
+        clinical_indication=clinical_indication,
+    )
+
     return create_exam(
         db=db,
         payload=payload,
+        file=file,
         current_user=current_user,
     )
 
@@ -148,22 +170,22 @@ def restore_exam_route(
     )
 
 
-@router.post("/{exam_id}/upload", response_model=ExamResponse)
-def upload_exam_file_route(
-    exam_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:upload")),
-):
-    """
-    Vincula informações de arquivo ao exame.
-    """
-    return upload_exam_file(
-        db=db,
-        exam_id=exam_id,
-        file=file,
-        current_user=current_user,
-    )
+# @router.post("/{exam_id}/upload", response_model=ExamResponse)
+# def upload_exam_file_route(
+#     exam_id: int,
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(require_permission("exams:upload")),
+# ):
+#     """
+#     Vincula informações de arquivo ao exame.
+#     """
+#     return upload_exam_file(
+#         db=db,
+#         exam_id=exam_id,
+#         file=file,
+#         current_user=current_user,
+#     )
 
 
 @router.get("/{exam_id}/download")

@@ -44,14 +44,12 @@ MAX_FILE_SIZE = settings.max_upload_size_mb * 1024 * 1024
 ALLOWED_EXAM_MIME_TYPES = {
     "image/jpeg",
     "image/png",
-    "application/pdf",
 }
 
 ALLOWED_EXAM_EXTENSIONS = {
     ".jpg",
     ".jpeg",
     ".png",
-    ".pdf",
 }
 
 
@@ -435,6 +433,60 @@ def get_exam_model_by_id(db: Session, exam_id: int) -> Exam:
     return exam
 
 
+def validate_exam_file(file: UploadFile) -> None:
+    """
+    Valida o tipo de arquivo enviado no upload para o exame.
+    """
+    if file.content_type not in ALLOWED_EXAM_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Tipo de arquivo não permitido. Use JPG ou PNG.",
+        )
+
+    file_extension = Path(file.filename or "").suffix.lower()
+
+    if file_extension not in ALLOWED_EXAM_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail="Extensão de arquivo não permitida.",
+        )
+
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if file_size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Arquivo vazio não é permitido.",
+        )
+
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Arquivo muito grande. Tamanho máximo permitido: {settings.max_upload_size_mb} MB.",
+        )
+        
+
+def delete_exam_file_safely(file_path: str | None) -> None:
+    """
+    Remove com segurança um arquivo antigo de exame.
+
+    A função só remove arquivos dentro da pasta segura de uploads.
+    Se o arquivo não existir, simplesmente ignora.
+    """
+    if not file_path:
+        return
+
+    try:
+        resolved_path = resolve_safe_exam_file_path(file_path)
+    except HTTPException:
+        return
+
+    if resolved_path.exists() and resolved_path.is_file():
+        resolved_path.unlink()
+        
+        
 # ========================================
 # MAIN METHODS
 # ========================================
@@ -554,10 +606,12 @@ def list_exams(
 def create_exam(
     db: Session,
     payload: ExamCreate,
+    file: UploadFile,
     current_user: User,
 ) -> dict:
     """
-    Cria um novo exame com status inicial pendente.
+    Cria um novo exame com upload obrigatório.
+    Status inicial: PROCESSING.
     """
     doctor_id = payload.doctor_id
 
@@ -569,9 +623,9 @@ def create_exam(
         clinic_id=payload.clinic_id,
     )
 
-    pending_status = get_status_by_name_and_applies_to(
+    processing_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.PENDING.value,
+        name=StatusName.PROCESSING.value,
         applies_to=StatusScope.EXAM.value,
     )
 
@@ -580,47 +634,74 @@ def create_exam(
         clinic_id=payload.clinic_id,
         patient_id=payload.patient_id,
         doctor_id=doctor_id,
-        status_id=pending_status.id,
+        status_id=processing_status.id,
     )
+
+    validate_exam_file(file)
 
     exam = Exam(
         clinic_id=payload.clinic_id,
         patient_id=payload.patient_id,
         doctor_id=doctor_id,
-        status_id=pending_status.id,
+        status_id=processing_status.id,
         exam_type=payload.exam_type,
         exam_date=payload.exam_date,
         title=payload.title,
         description=payload.description,
         clinical_indication=payload.clinical_indication,
-        findings=payload.findings,
-        conclusion=payload.conclusion,
     )
 
     db.add(exam)
     db.flush()
 
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
-        clinic_id=exam.clinic_id,
-        action=AuditAction.CREATE,
-        entity=AuditEntity.EXAM,
-        entity_id=exam.id,
-        description="Exame cadastrado.",
-        new_data={
-            "id": exam.id,
-            "clinic_id": exam.clinic_id,
-            "patient_id": exam.patient_id,
-            "doctor_id": exam.doctor_id,
-            "status_id": exam.status_id,
-            "exam_type": exam.exam_type,
-            "exam_date": str(exam.exam_date) if exam.exam_date else None,
-            "title": exam.title,
-        },
+    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
+
+    file_extension = Path(file.filename or "").suffix.lower()
+
+    stored_file_name = build_exam_file_name(
+        exam_id=exam.id,
+        patient_id=exam.patient_id,
+        file_extension=file_extension,
     )
 
-    db.commit()
+    stored_file_path = patient_dir / stored_file_name
+
+    try:
+        with stored_file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        exam.file_path = str(stored_file_path)
+        exam.file_name = stored_file_name
+        exam.file_mime_type = file.content_type
+
+        create_audit_log(
+            db=db,
+            user_id=current_user.id,
+            clinic_id=exam.clinic_id,
+            action=AuditAction.CREATE,
+            entity=AuditEntity.EXAM,
+            entity_id=exam.id,
+            description="Exame cadastrado com imagem obrigatória.",
+            new_data={
+                "id": exam.id,
+                "clinic_id": exam.clinic_id,
+                "patient_id": exam.patient_id,
+                "doctor_id": exam.doctor_id,
+                "status_name": StatusName.PROCESSING.value,
+                "file_name": exam.file_name,
+            },
+        )
+
+        db.commit()
+
+    except Exception as exc:
+        db.rollback()
+        delete_exam_file_safely(str(stored_file_path))
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao criar exame.",
+        ) from exc
+
     db.refresh(exam)
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
@@ -1007,22 +1088,35 @@ def download_exam_file(
         filename=exam.file_name,
         media_type=exam.file_mime_type,
     )
-    
-    
-def delete_exam_file_safely(file_path: str | None) -> None:
+
+
+def mark_exam_ai_failed(
+    db: Session,
+    exam_id: int,
+    error_message: str | None = None,
+) -> dict:
     """
-    Remove com segurança um arquivo antigo de exame.
-
-    A função só remove arquivos dentro da pasta segura de uploads.
-    Se o arquivo não existir, simplesmente ignora.
+    Marca exame como FAILED quando a análise da IA falhar.
     """
-    if not file_path:
-        return
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
-    try:
-        resolved_path = resolve_safe_exam_file_path(file_path)
-    except HTTPException:
-        return
+    if not exam.status or exam.status.name != StatusName.PROCESSING.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames em processamento podem ser marcados como falha de IA.",
+        )
 
-    if resolved_path.exists() and resolved_path.is_file():
-        resolved_path.unlink()
+    failed_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.FAILED.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+
+    exam.status_id = failed_status.id
+
+    db.commit()
+    db.refresh(exam)
+
+    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
+
+    return build_exam_response(exam)

@@ -24,8 +24,6 @@ class ExamBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=180)
     description: str | None = None
     clinical_indication: str | None = None
-    findings: str | None = None
-    conclusion: str | None = None
 
     @field_validator("exam_type", "title")
     @classmethod
@@ -87,6 +85,19 @@ class ExamUpdate(BaseModel):
     def normalize_optional_fields(cls, value: str | None) -> str | None:
         return normalize_optional_text(value)
 
+
+class ExamMedicalReview(BaseModel):
+    """
+    Schema usado para o exame quando realizado revisão pelo médico.
+    """
+    findings: str = Field(..., min_length=3)
+    conclusion: str = Field(..., min_length=3)
+
+    @field_validator("findings", "conclusion")
+    @classmethod
+    def normalize_required_fields(cls, value: str) -> str:
+        return normalize_required_text(value, "Campo obrigatório.")
+    
 
 class ExamResponse(BaseModel):
     """
