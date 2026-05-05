@@ -16,7 +16,7 @@ class ExamBase(BaseModel):
 
     clinic_id: int
     patient_id: int
-    doctor_id: int | None = None
+    doctor_id: int
 
     exam_type: str = Field(..., min_length=2, max_length=80)
     exam_date: date | None = None
@@ -33,8 +33,6 @@ class ExamBase(BaseModel):
     @field_validator(
         "description",
         "clinical_indication",
-        "findings",
-        "conclusion",
     )
     @classmethod
     def normalize_optional_fields(cls, value: str | None) -> str | None:
@@ -53,10 +51,6 @@ class ExamUpdate(BaseModel):
     """
     Schema usado para atualização parcial de exame.
     """
-
-    clinic_id: int | None = None
-    patient_id: int | None = None
-    doctor_id: int | None = None
 
     exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None

@@ -1,8 +1,8 @@
 """create audit logs table
 
-Revision ID: 8959375597a2
-Revises: 96e965f5bb96
-Create Date: 2026-05-05 00:29:28.613421
+Revision ID: 61a3d1ba6d26
+Revises: e4c81054f7ef
+Create Date: 2026-05-05 22:53:10.597728
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8959375597a2'
-down_revision: Union[str, None] = '96e965f5bb96'
+revision: str = '61a3d1ba6d26'
+down_revision: Union[str, None] = 'e4c81054f7ef'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

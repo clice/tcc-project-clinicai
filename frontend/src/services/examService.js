@@ -6,6 +6,37 @@
 
 import api from 'src/services/api'
 
+const buildExamFormData = (payload) => {
+  const formData = new FormData()
+
+  formData.append('clinic_id', payload.clinic_id)
+  formData.append('patient_id', payload.patient_id)
+
+  if (payload.doctor_id) {
+    formData.append('doctor_id', payload.doctor_id)
+  }
+
+  formData.append('exam_type', payload.exam_type)
+
+  if (payload.exam_date) {
+    formData.append('exam_date', payload.exam_date)
+  }
+
+  formData.append('title', payload.title)
+
+  if (payload.description) {
+    formData.append('description', payload.description)
+  }
+
+  if (payload.clinical_indication) {
+    formData.append('clinical_indication', payload.clinical_indication)
+  }
+
+  formData.append('file', payload.file)
+
+  return formData
+}
+
 export const examService = {
   /**
   * Lista todos os exames cadastrados.
@@ -37,15 +68,22 @@ export const examService = {
    * Cria um novo exame.
    */
   create: async (payload) => {
-    const response = await api.post('/exams/', payload)
+    const formData = buildExamFormData(payload)
+
+    const response = await api.post('/exams/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
     return response.data
   },
 
   /**
    * Atualiza parcialmente um exame existente.
    */
-  update: async (id, payload) => {
-    const response = await api.patch(`/exams/${id}`, payload)
+  cancel: async (id) => {
+    const response = await api.patch(`/exams/${id}/cancel`)
     return response.data
   },
 
@@ -68,24 +106,8 @@ export const examService = {
   /**
    * 
    */
-  getFormOptions: async () => {
+  etFormOptions: async () => {
     const response = await api.get('/exams/form-options')
-    return response.data
-  },
-
-  /**
-   * Permite o upload do arquivo de exame.
-   */
-  uploadFile: async (id, file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await api.post(`/exams/${id}/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-
     return response.data
   },
 
