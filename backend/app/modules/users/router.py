@@ -76,7 +76,7 @@ def list_users_route(
 def list_doctors_route(
     clinic_id: int = Query(...),
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("patients:create")),
+    current_user=Depends(require_permission("patients:read")),
 ):
     """
     Lista médicos ativos de uma clínica.

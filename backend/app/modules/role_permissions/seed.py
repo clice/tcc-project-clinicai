@@ -102,6 +102,7 @@ def seed_role_permissions(
         "exams:delete",
         "exams:upload",
         "exams:download",
+        "exams:change_status",
 
         "ai_analysis:create",
         "ai_analysis:read",

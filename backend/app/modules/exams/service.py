@@ -27,7 +27,10 @@ from app.modules.statuses.service import (
 from app.modules.users.model import User
 
 
-UPLOAD_DIR = Path("uploads/exams")
+from app.core.config import settings
+
+UPLOAD_DIR = Path(settings.upload_dir) / "exams"
+MAX_FILE_SIZE = settings.max_upload_size_mb * 1024 * 1024
 
 ALLOWED_EXAM_MIME_TYPES = {
     "image/jpeg",
@@ -41,8 +44,6 @@ ALLOWED_EXAM_EXTENSIONS = {
     ".png",
     ".pdf",
 }
-
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 def is_admin_master(user: User) -> bool:
