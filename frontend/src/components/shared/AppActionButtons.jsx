@@ -12,11 +12,13 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
+  cilCloudDownload,
   cilCloudUpload,
   cilFolderOpen,
   cilUser,
   cilPencil,
   cilReload,
+  cilXCircle,
 } from '@coreui/icons'
 
 /**
@@ -35,20 +37,34 @@ const AppActionButtons = ({
   uploadTo,
   viewTo,
   isInactive = false,
+
+  onUpload,
+  onDownload,
+  onCancel,
+  onRestore,
   onInactivate,
   onActivate,
+
   canView = true,
   canEdit = true,
   canUpload = true,
+  canDownload = false,
+  canCancel = false,
+  canRestore = false,
   canInactivate = true,
   canActivate = true,
 }) => {
   const [confirmVisible, setConfirmVisible] = useState(false)
+  const [examConfirmVisible, setExamConfirmVisible] = useState(false)
+  const [examActionType, setExamActionType] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const showView = Boolean(viewTo && canView)
   const showEdit = Boolean(editTo && !isInactive && canEdit)
-  const showUpload = Boolean(uploadTo && !isInactive && canUpload)
+  const showUpload = Boolean((uploadTo || onUpload) && !isInactive && canUpload)
+  const showDownload = Boolean(onDownload && canDownload)
+  const showCancel = Boolean(onCancel && canCancel)
+  const showRestore = Boolean(onRestore && canRestore)
 
   const showInactivate = Boolean(!isInactive && onInactivate && canInactivate)
   const showActivate = Boolean(isInactive && onActivate && canActivate)
@@ -58,6 +74,13 @@ const AppActionButtons = ({
   const handleCloseModal = () => {
     if (!isSubmitting) {
       setConfirmVisible(false)
+    }
+  }
+
+  const handleCloseExamModal = () => {
+    if (!isSubmitting) {
+      setExamConfirmVisible(false)
+      setExamActionType(null)
     }
   }
 
@@ -79,6 +102,30 @@ const AppActionButtons = ({
     }
   }
 
+  const handleExamConfirm = async () => {
+    try {
+      setIsSubmitting(true)
+
+      if (examActionType === 'cancel') {
+        await onCancel()
+      }
+
+      if (examActionType === 'restore') {
+        await onRestore()
+      }
+
+      setExamConfirmVisible(false)
+      setExamActionType(null)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openExamConfirm = (type) => {
+    setExamActionType(type)
+    setExamConfirmVisible(true)
+  }
+
   return (
     <>
       <CButtonGroup className="d-flex gap-2" size="sm" role="group">
@@ -94,9 +141,15 @@ const AppActionButtons = ({
           </CButton>
         )}
 
-        {showUpload && (
-          <CButton color="info" className="rounded-pill" as={Link} to={uploadTo} title="Upload">
+        {showUpload && !uploadTo && (
+          <CButton color="info" className="rounded-pill text-white" type="button" title="Upload" onClick={onUpload}>
             <CIcon icon={cilCloudUpload} />
+          </CButton>
+        )}
+
+        {showDownload && (
+          <CButton color="info" className="rounded-pill text-white" type="button" title="Download" onClick={onDownload}>
+            <CIcon icon={cilCloudDownload} />
           </CButton>
         )}
 
@@ -108,6 +161,18 @@ const AppActionButtons = ({
 
         {showActivate && (
           <CButton color="success" className="rounded-pill" type="button" title="Ativar" onClick={() => setConfirmVisible(true)}>
+            <CIcon icon={cilReload} />
+          </CButton>
+        )}
+
+        {showCancel && (
+          <CButton color="danger" className="rounded-pill text-white" type="button" title="Cancelar exame" onClick={() => openExamConfirm('cancel')}>
+            <CIcon icon={cilXCircle} />
+          </CButton>
+        )}
+
+        {showRestore && (
+          <CButton color="success" className="rounded-pill" type="button" title="Retomar exame" onClick={() => openExamConfirm('restore')}>
             <CIcon icon={cilReload} />
           </CButton>
         )}
@@ -148,6 +213,51 @@ const AppActionButtons = ({
                 'Inativar'
               ) : (
                 'Ativar'
+              )}
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
+
+      {(showCancel || showRestore) && (
+        <CModal visible={examConfirmVisible} onClose={handleCloseExamModal}>
+          <CModalHeader>
+            <CModalTitle>
+              {examActionType === 'cancel' ? 'Cancelar Exame' : 'Retomar Exame'}
+            </CModalTitle>
+          </CModalHeader>
+
+          <CModalBody>
+            {examActionType === 'cancel' ? (
+              <>
+                Você deseja cancelar <strong>{itemLabel}</strong>? O exame será movido para cancelados.
+              </>
+            ) : (
+              <>
+                Você deseja retomar <strong>{itemLabel}</strong>? O exame voltará para o fluxo de atendimento.
+              </>
+            )}
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton color="secondary" variant="outline" onClick={handleCloseExamModal} disabled={isSubmitting}>
+              Fechar
+            </CButton>
+
+            <CButton
+              color={examActionType === 'cancel' ? 'danger' : 'success'}
+              onClick={handleExamConfirm}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <CSpinner size="sm" className="me-2" />
+                  Processando...
+                </>
+              ) : examActionType === 'cancel' ? (
+                'Cancelar Exame'
+              ) : (
+                'Retomar'
               )}
             </CButton>
           </CModalFooter>

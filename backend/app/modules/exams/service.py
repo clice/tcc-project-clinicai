@@ -778,6 +778,73 @@ def cancel_exam(
     return build_exam_response(exam)
 
 
+def restore_exam(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """
+    Retoma um exame cancelado.
+
+    Regras:
+    - Exame cancelado sem arquivo volta para pending.
+    - Exame cancelado com arquivo volta para processing.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    if not exam.status or exam.status.name != StatusName.CANCELED.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames cancelados podem ser retomados.",
+        )
+
+    next_status_name = (
+        StatusName.PROCESSING.value
+        if exam.file_path
+        else StatusName.PENDING.value
+    )
+
+    next_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=next_status_name,
+        applies_to=StatusScope.EXAM.value,
+    )
+
+    old_data = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
+    exam.status_id = next_status.id
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Exame retomado.",
+        old_data=old_data,
+        new_data={
+            "status_id": next_status.id,
+            "status_name": next_status_name,
+        },
+    )
+
+    db.commit()
+    db.refresh(exam)
+
+    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
+
+    return build_exam_response(exam)
+
+
 def upload_exam_file(
     db: Session,
     exam_id: int,

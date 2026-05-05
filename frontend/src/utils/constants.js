@@ -70,6 +70,13 @@ export const roleOptions = [
 
 // STATUS
 
+export const statusColors = {
+  pending: 'warning',
+  processing: 'info',
+  completed: 'success',
+  canceled: 'danger',
+}
+
 export const statusNameOptions = [
   { value: 'active', label: 'Ativo' },
   { value: 'inactive', label: 'Inativo' },
@@ -87,3 +94,31 @@ export const statusScopeOptions = [
   { value: 'exam', label: 'Exame' },
   { value: 'ai_analysis', label: 'Análise de IA' },
 ]
+
+// EXAMS
+
+export const examTypeLabels = {
+  colonoscopy: 'Colonoscopia',
+  endoscopy: 'Endoscopia',
+}
+
+export const examTypeOptions = [
+  { value: 'endoscopy', label: 'Endoscopia' },
+  { value: 'colonoscopy', label: 'Colonoscopia' },
+]
+
+// AI ANALYSIS
+
+export const aiStatusLabels = {
+  pending: 'Pendente',
+  processing: 'Processando',
+  completed: 'Concluída',
+  failed: 'Falhou',
+}
+
+export const aiStatusColors = {
+  pending: 'secondary',
+  processing: 'warning',
+  completed: 'success',
+  failed: 'danger',
+}

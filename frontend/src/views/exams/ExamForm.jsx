@@ -24,14 +24,19 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useFeedback } from 'src/hooks/useFeedback'
+
+import { examService } from 'src/services/examService'
+
+import { examTypeOptions, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
+import { getErrorMessage } from 'src/utils/errors'
 import {
-  aiAnalyses as aiAnalysesMock,
-  clinics as clinicsMock,
-  exams as examsMock,
-  patients as patientsMock,
-  statuses as statusesMock,
-  users as usersMock,
-} from 'src/mocks/data'
+  formatCpfBR,
+  formatPhoneBR,
+  formatZipCodeBR,
+  onlyNumbers,
+} from 'src/utils/formatters'
+import { getUserRole, ROLES } from 'src/utils/permissions'
 
 const emptyExam = {
   clinic_id: '',
@@ -56,25 +61,6 @@ const emptyExam = {
   file_mime_type: '',
 }
 
-const examTypeOptions = [
-  { value: 'endoscopy', label: 'Endoscopia' },
-  { value: 'colonoscopy', label: 'Colonoscopia' },
-]
-
-const aiStatusLabels = {
-  not_processed: 'Não processado',
-  processing: 'Processando',
-  completed: 'Concluída',
-  failed: 'Falhou',
-}
-
-const aiStatusColors = {
-  not_processed: 'secondary',
-  processing: 'info',
-  completed: 'success',
-  failed: 'danger',
-}
-
 const formatConfidence = (value) => {
   if (value === undefined || value === null) return '-'
 
@@ -91,6 +77,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [doctors, setDoctors] = useState([])
   const [statuses, setStatuses] = useState([])
   const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -140,71 +127,65 @@ const ExamForm = ({ mode = 'create' }) => {
   }, [doctors, form.clinic_id])
 
   const examStatuses = useMemo(() => {
-    return statuses.filter((status) => status.applies_to === 'exams')
+    return statuses.filter(
+      (status) => status.applies_to === 'exam' || status.applies_to === 'exams',
+    )
   }, [statuses])
 
   useEffect(() => {
-    setIsLoading(true)
-    setError('')
-    setSuccess('')
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
+        setSuccess('')
 
-    setClinics(Array.isArray(clinicsMock) ? clinicsMock : [])
-    setPatients(Array.isArray(patientsMock) ? patientsMock : [])
-    setDoctors(Array.isArray(usersMock) ? usersMock : [])
-    setStatuses(Array.isArray(statusesMock) ? statusesMock : [])
+        const options = await examService.getFormOptions()
 
-    if (isCreateMode) {
-      const processingStatus = statusesMock.find(
-        (status) => status.applies_to === 'exams' && status.name === 'processing',
-      )
+        setClinics(options.clinics || [])
+        setPatients(options.patients || [])
+        setDoctors(options.doctors || [])
+        setStatuses(options.statuses || [])
 
-      setForm({
-        ...emptyExam,
-        status_id: processingStatus ? String(processingStatus.id) : '',
-      })
+        if (isCreateMode) {
+          setForm(emptyExam)
+          setAiAnalysis(null)
+          return
+        }
 
-      setAiAnalysis(null)
-      setIsLoading(false)
-      return
+        const examData = await examService.getById(id)
+
+        setForm({
+          clinic_id: examData.clinic_id ? String(examData.clinic_id) : '',
+          patient_id: examData.patient_id ? String(examData.patient_id) : '',
+          doctor_id: examData.doctor_id ? String(examData.doctor_id) : '',
+          status_id: examData.status_id ? String(examData.status_id) : '',
+
+          exam_type: examData.exam_type ?? '',
+          exam_date: examData.exam_date ?? '',
+
+          title: examData.title ?? '',
+          description: examData.description ?? '',
+          clinical_indication: examData.clinical_indication ?? '',
+          findings: examData.findings ?? '',
+          conclusion: examData.conclusion ?? '',
+
+          ai_analysis_status: 'not_processed',
+          ai_summary: '',
+
+          file_path: examData.file_path ?? '',
+          file_name: examData.file_name ?? '',
+          file_mime_type: examData.file_mime_type ?? '',
+        })
+
+        setAiAnalysis(null)
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Erro ao carregar dados do exame.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const examData = examsMock.find((exam) => String(exam.id) === String(id))
-
-    if (!examData) {
-      setError('Exame não encontrado no mock.')
-      setIsLoading(false)
-      return
-    }
-
-    const analysisData = aiAnalysesMock.find(
-      (analysis) => String(analysis.exam_id) === String(examData.id),
-    )
-
-    setForm({
-      clinic_id: examData.clinic_id ? String(examData.clinic_id) : '',
-      patient_id: examData.patient_id ? String(examData.patient_id) : '',
-      doctor_id: examData.doctor_id ? String(examData.doctor_id) : '',
-      status_id: examData.status_id ? String(examData.status_id) : '',
-
-      exam_type: examData.exam_type ?? '',
-      exam_date: examData.exam_date ?? '',
-
-      title: examData.title ?? '',
-      description: examData.description ?? '',
-      clinical_indication: examData.clinical_indication ?? '',
-      findings: examData.findings ?? '',
-      conclusion: examData.conclusion ?? '',
-
-      ai_analysis_status: examData.ai_analysis_status ?? 'not_processed',
-      ai_summary: examData.ai_summary ?? '',
-
-      file_path: examData.file_path ?? '',
-      file_name: examData.file_name ?? '',
-      file_mime_type: examData.file_mime_type ?? '',
-    })
-
-    setAiAnalysis(analysisData ?? null)
-    setIsLoading(false)
+    loadData()
   }, [id, isCreateMode])
 
   const updateField = (field, value) => {
@@ -234,20 +215,14 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const handleFileChange = (event) => {
-    const file = event.target.files?.[0]
+    const file = event.target.files?.[0] || null
 
-    if (!file) {
-      updateField('file_name', '')
-      updateField('file_mime_type', '')
-      updateField('file_path', '')
-      return
-    }
+    setSelectedFile(file)
 
     setForm((current) => ({
       ...current,
-      file_name: file.name,
-      file_mime_type: file.type,
-      file_path: `uploads/exams/${file.name}`,
+      file_name: file?.name || '',
+      file_mime_type: file?.type || '',
     }))
   }
 
@@ -259,11 +234,6 @@ const ExamForm = ({ mode = 'create' }) => {
 
     if (!form.patient_id) {
       setError('Selecione o paciente do exame.')
-      return false
-    }
-
-    if (!form.status_id) {
-      setError('Selecione o status do exame.')
       return false
     }
 
@@ -280,43 +250,20 @@ const ExamForm = ({ mode = 'create' }) => {
     return true
   }
 
-  const buildPayload = () => {
-    const clinic = clinics.find((item) => String(item.id) === String(form.clinic_id))
-    const patient = patients.find((item) => String(item.id) === String(form.patient_id))
-    const doctor = doctors.find((item) => String(item.id) === String(form.doctor_id))
-    const status = statuses.find((item) => String(item.id) === String(form.status_id))
+  const buildPayload = () => ({
+    clinic_id: Number(form.clinic_id),
+    patient_id: Number(form.patient_id),
+    doctor_id: form.doctor_id ? Number(form.doctor_id) : null,
 
-    return {
-      clinic_id: Number(form.clinic_id),
-      clinic_name: clinic?.name ?? null,
+    exam_type: form.exam_type,
+    exam_date: form.exam_date || null,
 
-      patient_id: Number(form.patient_id),
-      patient_name: patient?.name ?? null,
-
-      doctor_id: form.doctor_id ? Number(form.doctor_id) : null,
-      doctor_name: doctor?.name ?? null,
-
-      status_id: Number(form.status_id),
-      status_name: status?.name ?? null,
-      status_display_name: status?.display_name ?? null,
-
-      exam_type: form.exam_type,
-      exam_date: form.exam_date || null,
-
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      clinical_indication: form.clinical_indication.trim() || null,
-      findings: form.findings.trim() || null,
-      conclusion: form.conclusion.trim() || null,
-
-      ai_analysis_status: form.ai_analysis_status || 'not_processed',
-      ai_summary: form.ai_summary.trim() || null,
-
-      file_path: form.file_path || null,
-      file_name: form.file_name || null,
-      file_mime_type: form.file_mime_type || null,
-    }
-  }
+    title: form.title.trim(),
+    description: form.description.trim() || null,
+    clinical_indication: form.clinical_indication.trim() || null,
+    findings: form.findings.trim() || null,
+    conclusion: form.conclusion.trim() || null,
+  })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -333,19 +280,24 @@ const ExamForm = ({ mode = 'create' }) => {
 
       const payload = buildPayload()
 
-      console.log('Payload mock de exame:', payload)
+      let savedExam
 
       if (isCreateMode) {
-        setSuccess('Exame cadastrado com sucesso no mock.')
-        navigate('/exams')
-        return
+        savedExam = await examService.create(payload)
       }
 
       if (isEditMode) {
-        setSuccess('Exame atualizado com sucesso no mock.')
+        savedExam = await examService.update(id, payload)
       }
+
+      if (selectedFile && savedExam?.id) {
+        await examService.uploadFile(savedExam.id, selectedFile)
+      }
+
+      setSuccess('Exame salvo com sucesso.')
+      navigate('/exams')
     } catch (err) {
-      setError(err.message || 'Erro ao salvar exame.')
+      setError(err.response?.data?.detail || 'Erro ao salvar exame.')
     } finally {
       setIsSaving(false)
     }
@@ -362,9 +314,11 @@ const ExamForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <CButton color="secondary" size="lg" variant="outline" as={Link} to="/exams">
-          Voltar
-        </CButton>
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/exams">
+            Voltar
+          </CButton>
+        </div>
       </div>
 
       <CRow className="g-4">

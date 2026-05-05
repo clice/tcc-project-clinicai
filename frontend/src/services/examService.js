@@ -10,22 +10,15 @@ export const examService = {
   /**
   * Lista todos os exames cadastrados.
   */
-  list: async ({
-    search = '',
-    clinicId = '',
-    patientId = '',
-    doctorId = '',
-    statusId = '',
-    includeInactive = true,
-  } = {}) => {
+  list: async (params = {}) => {
     const response = await api.get('/exams/', {
       params: {
-        search: search || undefined,
-        clinic_id: clinicId || undefined,
-        patient_id: patientId || undefined,
-        doctor_id: doctorId || undefined,
-        status_id: statusId || undefined,
-        include_inactive: includeInactive,
+        search: params.search || undefined,
+        clinic_id: params.clinicId || undefined,
+        patient_id: params.patientId || undefined,
+        doctor_id: params.doctorId || undefined,
+        status_id: params.statusId || undefined,
+        include_inactive: params.includeInactive ?? true,
       },
     })
 
@@ -47,7 +40,7 @@ export const examService = {
     const response = await api.post('/exams/', payload)
     return response.data
   },
-  
+
   /**
    * Atualiza parcialmente um exame existente.
    */
@@ -56,30 +49,54 @@ export const examService = {
     return response.data
   },
 
+  /**
+   * Atualiza status para cancelado.
+   */
   cancel: async (id) => {
     const response = await api.patch(`/exams/${id}/cancel`)
     return response.data
   },
 
+  /**
+   * Atualiza status para restaurado.
+   */
+  restore: async (id) => {
+    const response = await api.patch(`/exams/${id}/restore`)
+    return response.data
+  },
+
+  /**
+   * 
+   */
   getFormOptions: async () => {
     const response = await api.get('/exams/form-options')
     return response.data
   },
 
-  uploadFileMetadata: async (id, payload) => {
-    const response = await api.post(`/exams/${id}/upload`, null, {
-      params: {
-        file_path: payload.file_path,
-        file_name: payload.file_name,
-        file_mime_type: payload.file_mime_type,
+  /**
+   * Permite o upload do arquivo de exame.
+   */
+  uploadFile: async (id, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post(`/exams/${id}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
     })
 
     return response.data
   },
 
-  downloadFileMetadata: async (id) => {
-    const response = await api.get(`/exams/${id}/download`)
+  /**
+   * Permite o download do arquivo de exame.
+   */
+  downloadFile: async (id) => {
+    const response = await api.get(`/exams/${id}/download`, {
+      responseType: 'blob',
+    })
+
     return response.data
   },
 }

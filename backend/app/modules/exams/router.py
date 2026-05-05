@@ -15,6 +15,7 @@ from app.modules.exams.service import (
     get_exam_by_id,
     list_exam_form_options,
     list_exams,
+    restore_exam,
     update_exam,
     upload_exam_file,
 )
@@ -122,6 +123,25 @@ def cancel_exam_route(
     Cancela logicamente um exame.
     """
     return cancel_exam(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+    
+    
+@router.patch("/{exam_id}/restore", response_model=ExamResponse)
+def restore_exam_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:change_status")),
+):
+    """
+    Retoma um exame cancelado.
+
+    Se o exame possuir arquivo, retorna para processing.
+    Se não possuir arquivo, retorna para pending.
+    """
+    return restore_exam(
         db=db,
         exam_id=exam_id,
         current_user=current_user,
