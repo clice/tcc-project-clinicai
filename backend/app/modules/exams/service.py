@@ -5,6 +5,7 @@ Concentra as regras de negócio relacionadas aos exames.
 """
 
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -81,6 +82,50 @@ def build_exam_response(exam: Exam) -> dict:
         "created_at": exam.created_at,
         "updated_at": exam.updated_at,
     }
+
+
+def build_exam_storage_dir(patient_id: int) -> Path:
+    """
+    Cria e retorna o diretório seguro do paciente para armazenar exames.
+    """
+    patient_dir = UPLOAD_DIR / str(patient_id)
+    patient_dir.mkdir(parents=True, exist_ok=True)
+
+    return patient_dir
+
+
+def build_exam_file_name(
+    *,
+    exam_id: int,
+    patient_id: int,
+    file_extension: str,
+) -> str:
+    """
+    Gera um nome padronizado e seguro para o arquivo do exame.
+    """
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    short_uuid = uuid4().hex[:8]
+
+    return f"exam_{exam_id}_patient_{patient_id}_{timestamp}_{short_uuid}{file_extension}"
+
+
+def resolve_safe_exam_file_path(file_path: str) -> Path:
+    """
+    Garante que o arquivo solicitado está dentro da pasta segura de uploads.
+    Evita path traversal no download.
+    """
+    base_dir = UPLOAD_DIR.resolve()
+    resolved_path = Path(file_path).resolve()
+
+    try:
+        resolved_path.relative_to(base_dir)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail="Caminho de arquivo inválido.",
+        ) from exc
+
+    return resolved_path
 
 
 def validate_user_can_access_exam(
@@ -763,7 +808,7 @@ def upload_exam_file(
 
     file_extension = Path(file.filename or "").suffix.lower()
 
-    if file_extension not in {".jpg", ".jpeg", ".png", ".pdf"}:
+    if file_extension not in ALLOWED_EXAM_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail="Extensão de arquivo não permitida.",
@@ -776,13 +821,18 @@ def upload_exam_file(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
-            detail="Arquivo muito grande. Tamanho máximo permitido: 10 MB.",
+            detail=f"Arquivo muito grande. Tamanho máximo permitido: {settings.max_upload_size_mb} MB.",
         )
 
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
 
-    stored_file_name = f"{uuid4()}{file_extension}"
-    stored_file_path = UPLOAD_DIR / stored_file_name
+    stored_file_name = build_exam_file_name(
+        exam_id=exam.id,
+        patient_id=exam.patient_id,
+        file_extension=file_extension,
+    )
+
+    stored_file_path = patient_dir / stored_file_name
 
     old_data = {
         "file_path": exam.file_path,
@@ -808,7 +858,7 @@ def upload_exam_file(
     )
 
     exam.file_path = str(stored_file_path)
-    exam.file_name = file.filename
+    exam.file_name = stored_file_name
     exam.file_mime_type = file.content_type
     exam.status_id = processing_status.id
 
@@ -859,7 +909,7 @@ def download_exam_file(
             detail="Este exame não possui arquivo vinculado.",
         )
 
-    file_path = Path(exam.file_path)
+    file_path = resolve_safe_exam_file_path(exam.file_path)
 
     if not file_path.exists():
         raise HTTPException(

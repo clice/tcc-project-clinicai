@@ -93,7 +93,7 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
         (SystemModule.EXAMS, PermissionAction.UPDATE, "Atualizar Exames", "Permite editar dados de exames."),
         (SystemModule.EXAMS, PermissionAction.DELETE, "Excluir Exames", "Permite excluir exames."),
         (SystemModule.EXAMS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Exames", "Permite cancelar, concluir ou alterar status de exames."),
-        (SystemModule.EXAMS, PermissionAction.UPLOAD, "Uplaod Exames", "Permite fazer o upload dos exames."),
+        (SystemModule.EXAMS, PermissionAction.UPLOAD, "Upload de Exames", "Permite fazer o upload dos exames."),
         (SystemModule.EXAMS, PermissionAction.DOWNLOAD, "Baixar Exames", "Permite baixar os exames."),
 
         # AI Analysis
