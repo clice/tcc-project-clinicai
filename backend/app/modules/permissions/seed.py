@@ -52,12 +52,16 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
         (SystemModule.USERS, PermissionAction.READ, "Visualizar Usuários", "Permite visualizar usuários cadastrados."),
         (SystemModule.USERS, PermissionAction.UPDATE, "Atualizar Usuários", "Permite editar dados de usuários."),
         (SystemModule.USERS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Usuários", "Permite ativar, inativar ou bloquear usuários."),
+        (SystemModule.USERS, PermissionAction.READ_PROFILE, "Visualizar Próprio Perfil", "Permite visualizar os dados do próprio usuário autenticado."),
+        (SystemModule.USERS, PermissionAction.UPDATE_PROFILE, "Atualizar Próprio Perfil", "Permite editar dados do próprio usuário autenticado."),
 
         # Clinics
         (SystemModule.CLINICS, PermissionAction.CREATE, "Criar Clínicas", "Permite cadastrar novas clínicas."),
         (SystemModule.CLINICS, PermissionAction.READ, "Visualizar Clínicas", "Permite visualizar clínicas cadastradas."),
         (SystemModule.CLINICS, PermissionAction.UPDATE, "Atualizar Clínicas", "Permite editar dados de clínicas."),
         (SystemModule.CLINICS, PermissionAction.CHANGE_STATUS, "Alterar Status das Clínicas", "Permite ativar, inativar ou bloquear clínicas."),
+        (SystemModule.CLINICS, PermissionAction.READ_PROFILE, "Visualizar Própria Clínica", "Permite visualizar os dados da clínica vinculada ao usuário autenticado."),
+        (SystemModule.CLINICS, PermissionAction.UPDATE_PROFILE, "Atualizar Própria Clínica", "Permite editar dados da clínica vinculada ao usuário autenticado."),
 
         # Roles
         (SystemModule.ROLES, PermissionAction.CREATE, "Criar Perfis de Acesso", "Permite cadastrar novos perfis de acesso."),

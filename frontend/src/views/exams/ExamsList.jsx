@@ -317,16 +317,6 @@ const ExamsList = () => {
               <AppTable data={filteredExams} columns={columns} emptyMessage="Nenhum exame encontrado." />
             </>
           )}
-
-          {/* {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando exames...</p>
-          ) : (
-            <AppTable
-              data={examsWithAi}
-              columns={columns}
-              emptyMessage="Nenhum exame encontrado."
-            />
-          )} */}
         </CCardBody>
       </CCard>
 

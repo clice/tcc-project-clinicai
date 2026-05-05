@@ -11,6 +11,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { CContainer, CSpinner } from '@coreui/react'
 
 import { routes } from 'src/routes'
+import RoleRoute from 'src/components/auth/RoleRoute'
 
 const AppContent = () => {
   return (
@@ -25,12 +26,17 @@ const AppContent = () => {
                   path={route.path}
                   exact={route.exact}
                   name={route.name}
-                  element={<route.element />}
+                  element={
+                    <RoleRoute allowedRoles={route.roles}>
+                      <route.element />
+                    </RoleRoute>
+                  }
                 />
               )
             )
           })}
-          <Route path="/" element={<Navigate to="dashboard" replace />} />
+
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
     </CContainer>

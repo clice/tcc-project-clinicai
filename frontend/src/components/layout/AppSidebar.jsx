@@ -6,24 +6,57 @@
  * Renderiza o menu configurado em src/_nav.jsx.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import { CCloseButton, CSidebar, CSidebarBrand, CSidebarHeader } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from 'src/components/navigation/AppSidebarNav'
+import { useAuth } from 'src/hooks/useAuth'
 
 import { logo } from 'src/assets/brand/logo'
 import { sygnet } from 'src/assets/brand/sygnet'
 
 import navigation from 'src/_nav'
 
+const filterNavigationByRole = (items, roleName) => {
+  return items
+    .map((item) => {
+      const allowedByRole = !item.roles || item.roles.includes(roleName)
+
+      if (!allowedByRole) {
+        return null
+      }
+
+      if (item.items) {
+        const filteredItems = filterNavigationByRole(item.items, roleName)
+
+        if (filteredItems.length === 0) {
+          return null
+        }
+
+        return {
+          ...item,
+          items: filteredItems,
+        }
+      }
+
+      return item
+    })
+    .filter(Boolean)
+}
+
 const AppSidebar = () => {
   const dispatch = useDispatch()
+  const { roleName } = useAuth()
 
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  const filteredNavigation = useMemo(() => {
+    return filterNavigationByRole(navigation, roleName)
+  }, [roleName])
 
   return (
     <CSidebar
@@ -49,7 +82,7 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={filteredNavigation} />
     </CSidebar>
   )
 }

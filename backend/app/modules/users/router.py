@@ -19,6 +19,7 @@ from app.modules.users.schema import (
 from app.modules.users.service import (
     activate_user,
     create_user,
+    get_user_by_id,
     get_user_response,
     inactivate_user,
     list_users,
@@ -154,3 +155,31 @@ def activate_user_route(
     Ativa um usuário inativo.
     """
     return activate_user(db=db, user_id=user_id, current_user=current_user)
+
+
+@router.get("/me")
+def get_my_profile(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("users:read_profile")),
+):
+    """
+    Busca dados de uma clínica para o perfil.
+    """
+    return get_user_by_id(db, current_user.id)
+
+
+@router.patch("/me")
+def update_my_profile(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("users:update_profile")),
+):
+    """
+    Atualiza parcialmente os dados do perfil do usuário.
+    """
+    return update_user(
+        db=db,
+        user_id=current_user.id,
+        payload=payload,
+        current_user=current_user,
+    )

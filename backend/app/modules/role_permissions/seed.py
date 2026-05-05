@@ -85,11 +85,11 @@ def seed_role_permissions(
 
     # Doctor
     doctor_permissions = [
-        "users:read",
-        "users:update",
-        
-        "clinics:read",
-        "clinics:update",
+        "users:read_profile",
+        "users:update_profile",
+
+        "clinics:read_profile",
+        "clinics:update_profile",
         
         "patients:create",
         "patients:read",
@@ -99,7 +99,6 @@ def seed_role_permissions(
         "exams:create",
         "exams:read",
         "exams:update",
-        "exams:delete",
         "exams:upload",
         "exams:download",
         "exams:change_status",
@@ -112,11 +111,11 @@ def seed_role_permissions(
 
     # Clinic_staff
     clinic_staff_permissions = [
-        "users:read",
-        "users:update",
-        
-        "clinics:read",
-        "clinics:update",
+        "users:read_profile",
+        "users:update_profile",
+
+        "clinics:read_profile",
+        "clinics:update_profile",
         
         "patients:create",
         "patients:read",
