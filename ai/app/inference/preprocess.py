@@ -10,8 +10,7 @@ from io import BytesIO
 import numpy as np
 from PIL import Image
 
-
-TARGET_IMAGE_SIZE = (224, 224)
+from app.config import TARGET_IMAGE_SIZE
 
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:
