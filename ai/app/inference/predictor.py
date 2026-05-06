@@ -2,8 +2,10 @@
 Módulo responsável pela inferência da IA.
 """
 
-import random
+import torch
 
+from app.config import CLASS_LABELS
+from app.inference.model_loader import DEVICE, model
 from app.inference.preprocess import preprocess_image
 
 
@@ -17,21 +19,25 @@ def predict_image(image_bytes: bytes) -> dict:
     - retorna resultado estruturado.
     """
 
-    processed_image = preprocess_image(image_bytes)
+    image_tensor = preprocess_image(image_bytes)
+    
+    image_tensor = image_tensor.to(DEVICE)
+    
+    with torch.no_grad():
+        outputs = model(image_tensor)
+        
+        probabilities = torch.softmax(outputs, dim=1)
+        
+        confidence, predicted_class = torch.max(probabilities, dim=1)
 
-    # Apenas para validar fluxo
-    _ = processed_image.shape
+    predicted_class_index = predicted_class.item()
 
-    labels = ["normal", "abnormal"]
-
-    predicted_label = random.choice(labels)
-
-    confidence = round(random.uniform(0.75, 0.99), 2)
+    predicted_label = CLASS_LABELS[predicted_class_index]
 
     return {
         "label": predicted_label,
-        "confidence": confidence,
-        "model_name": "mock_cnn",
+        "confidence": round(confidence.item(), 4),
+        "model_name": "mock_pytorch_classifier",
         "model_version": "0.1.0",
         "gradcam_available": False,
     }
