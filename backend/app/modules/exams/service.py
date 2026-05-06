@@ -786,6 +786,11 @@ def cancel_exam(
 ) -> dict:
     """
     Cancela logicamente um exame.
+
+    Regras:
+    - somente exames em PROCESSING ou PENDING podem ser cancelados;
+    - COMPLETED não pode ser cancelado;
+    - FAILED deve ser reprocessado, não cancelado.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -793,6 +798,15 @@ def cancel_exam(
         current_user=current_user,
         exam=exam,
     )
+
+    if not exam.status or exam.status.name not in {
+        StatusName.PROCESSING.value,
+        StatusName.PENDING.value,
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames em processamento ou pendentes podem ser cancelados.",
+        )
 
     canceled_status = get_status_by_name_and_applies_to(
         db=db,
@@ -836,10 +850,10 @@ def restore_exam(
     current_user: User,
 ) -> dict:
     """
-    Retoma um exame cancelado.
+    Reprocessa um exame cancelado ou com falha.
 
     Regra:
-    - Exame cancelado volta para PROCESSING, pois precisa passar novamente pelo fluxo de IA.
+    - CANCELED ou FAILED volta para PROCESSING.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -848,17 +862,24 @@ def restore_exam(
         exam=exam,
     )
 
-    if not exam.status or exam.status.name != StatusName.CANCELED.value:
+    if not exam.status or exam.status.name not in {
+        StatusName.CANCELED.value,
+        StatusName.FAILED.value,
+    }:
         raise HTTPException(
             status_code=400,
-            detail="Apenas exames cancelados podem ser retomados.",
+            detail="Apenas exames cancelados ou com falha podem ser reprocessados.",
         )
 
-    next_status_name = StatusName.PROCESSING.value
+    if not exam.file_path:
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível reprocessar exame sem arquivo vinculado.",
+        )
 
-    next_status = get_status_by_name_and_applies_to(
+    processing_status = get_status_by_name_and_applies_to(
         db=db,
-        name=next_status_name,
+        name=StatusName.PROCESSING.value,
         applies_to=StatusScope.EXAM.value,
     )
 
@@ -867,7 +888,7 @@ def restore_exam(
         "status_name": exam.status.name if exam.status else None,
     }
 
-    exam.status_id = next_status.id
+    exam.status_id = processing_status.id
 
     create_audit_log(
         db=db,
@@ -876,11 +897,11 @@ def restore_exam(
         action=AuditAction.UPDATE,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Exame retomado.",
+        description="Exame enviado para reprocessamento.",
         old_data=old_data,
         new_data={
-            "status_id": next_status.id,
-            "status_name": next_status_name,
+            "status_id": processing_status.id,
+            "status_name": StatusName.PROCESSING.value,
         },
     )
 

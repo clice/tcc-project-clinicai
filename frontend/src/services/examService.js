@@ -96,7 +96,15 @@ export const examService = {
   },
 
   /**
-   * Atualiza status para restaurado.
+   * Atualiza status para reprocessamento.
+   */
+  reprocess: async (id) => {
+    const response = await api.patch(`/exams/${id}/restore`)
+    return response.data
+  },
+
+  /**
+   * Atualiza status para restaurar.
    */
   restore: async (id) => {
     const response = await api.patch(`/exams/${id}/restore`)
@@ -123,16 +131,11 @@ export const examService = {
   },
 
   /**
-   * Permite substituir o arquivo de exame.
+   * Permite fazer o download dos arquivos.
    */
-  replaceFile: async (id, file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await api.post(`/exams/${id}/replace-file`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  downloadAiFile: async (id) => {
+    const response = await api.get(`/exams/${id}/ai-file/download`, {
+      responseType: 'blob',
     })
 
     return response.data
