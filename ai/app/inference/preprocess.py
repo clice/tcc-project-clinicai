@@ -28,11 +28,9 @@ transform = transforms.Compose(
 
 def preprocess_image(image_bytes: bytes) -> torch.Tensor:
     """
-    Realiza o pré-processamento da imagem para 
-    entrada na ResNet-50.
+    Realiza o pré-processamento da imagem para entrada na ResNet-50.
     """
 
-    # Converte a imagem para RGB
     image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
     image_tensor = transform(image)
