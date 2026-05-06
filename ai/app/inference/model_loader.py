@@ -2,10 +2,9 @@
 Responsável pelo carregamento do modelo de IA.
 """
 
-from pathlib import Path
-
 import torch
 import torch.nn as nn
+from torchvision import models
 
 from app.config import MODEL_PATH
 
@@ -13,38 +12,40 @@ from app.config import MODEL_PATH
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class MockClassifier(nn.Module):
+def create_resnet50_model(num_classes: int = 2)-> nn.Module:
     """
-    Modelo temporário apenas para validar
-    integração com PyTorch.
+    Cria uma ResNet-50 adaptada para classificação binária.
+
+    A camada final original é substituída para retornar
+    duas classes: normal e abnormal.
     """
-
-    def __init__(self):
-        super().__init__()
-
-        self.flatten = nn.Flatten()
-
-        self.linear = nn.Linear(224 * 224 * 3, 2)
-
-    def forward(self, x):
-        x = self.flatten(x)
-
-        return self.linear(x)
+    
+    model = models.resnet50(weights=None)
+    
+    in_features = model.fc.in_features
+    
+    model.fc = nn.Linear(in_features, num_classes)
+    
+    model.fc = nn.Linear(in_features, num_classes)
+    
+    return model
 
 
 def load_model() -> nn.Module:
     """
     Carrega o modelo da IA.
 
-    Nesta etapa:
-    - usa modelo mock;
-    - prepara estrutura para modelos reais.
+    Se existir um arquivo de pesos em MODEL_PATH, ele será carregado.
+    Caso contrário, usa uma ResNet-50 sem treinamento específico.
     """
 
-    model = MockClassifier()
+    model = create_resnet50_model(num_classes=2)
+    
+    if MODEL_PATH.exists():
+        state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+        model.load_state_dict(state_dict)
 
     model.to(DEVICE)
-
     model.eval()
 
     return model

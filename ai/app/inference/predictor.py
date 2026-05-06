@@ -37,7 +37,7 @@ def predict_image(image_bytes: bytes) -> dict:
     return {
         "label": predicted_label,
         "confidence": round(confidence.item(), 4),
-        "model_name": "mock_pytorch_classifier",
+        "model_name": "resnet50_binary_classifier",
         "model_version": "0.1.0",
         "gradcam_available": False,
     }
