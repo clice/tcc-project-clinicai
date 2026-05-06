@@ -5,7 +5,10 @@ Este serviço será responsável por receber imagens de exames,
 executar o modelo de IA e retornar o resultado da análise.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
+
+from app.schemas import PredictionResponse
+from app.inference.predictor import predict_image
 
 
 app = FastAPI(
@@ -35,3 +38,21 @@ def health_check():
         "status": "ok",
         "service": "clinicai-ai",
     }
+
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict_exam_image(file: UploadFile = File(...)):
+    """
+    Recebe uma imagem de exame e retorna uma predição.
+
+    Fluxo atual:
+    - upload da imagem;
+    - preprocessamento;
+    - inferência simulada.
+    """
+
+    image_bytes = await file.read()
+    
+    prediction = predict_image(image_bytes)
+    
+    return PredictionResponse(**prediction)
