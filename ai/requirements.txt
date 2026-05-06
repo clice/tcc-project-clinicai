@@ -1,0 +1,24 @@
+# API
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# IA / Deep Learning
+torch==2.5.1
+torchvision==0.20.1
+
+# Processamento de imagens
+opencv-python-headless==4.10.0.84
+pillow==11.0.0
+numpy==2.1.3
+
+# Validação e configurações
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Métricas e avaliação
+scikit-learn==1.6.0
+matplotlib==3.10.0
+
+# Utilitários
+tqdm==4.67.1

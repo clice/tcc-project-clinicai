@@ -126,7 +126,8 @@ docker compose up --build -d
 |---------|-----|
 | Frontend | http://localhost:3000 |
 | Backend | http://localhost:8000 |
-| Documentação API | http://localhost:8000/docs |
+| Documentação Backend API | http://localhost:8000/docs |
+| Documentação IA API | http://localhost:8001/docs |
 
 ---
 
