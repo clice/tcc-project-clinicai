@@ -31,7 +31,6 @@ class AIAnalysis(Base):
     model_version = Column(String(50), nullable=False)
 
     gradcam_path = Column(String(255), nullable=True)
-
     processing_time_ms = Column(Integer, nullable=True)
 
     ai_notes = Column(Text, nullable=True)
@@ -46,6 +45,14 @@ class AIAnalysis(Base):
         index=True,
     )
 
+    status_id = Column(
+        Integer,
+        ForeignKey("statuses.id"),
+        nullable=False,
+        index=True,
+    )
+
+    # Chave primária
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -59,10 +66,15 @@ class AIAnalysis(Base):
         nullable=False,
     )
 
+    # Relacionamentos com outras tabelas do sistema
     exam = relationship("Exam", back_populates="ai_analysis")
+    status = relationship("Status")
 
 
     def __repr__(self):
+        """
+        Representação textual útil para debug.
+        """
         return (
             f"<AIAnalysis(id={self.id}, exam_id={self.exam_id}, "
             f"prediction_label='{self.prediction_label}', confidence={self.confidence})>"

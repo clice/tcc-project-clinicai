@@ -1,115 +1,168 @@
 /**
  * Listagem de exames.
  *
- * Exibe exames vinculados a pacientes, clínicas, médicos
- * e resultados simulados de análise por IA.
+ * Exibe exames vinculados a pacientes, médicos e clínicas.
+ * Também apresenta status do exame, status estimado da IA e ação de download.
  */
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
+import { 
+  CAlert, 
+  CBadge, 
+  CButton, 
+  CCard, 
+  CCardBody, 
+  CFormInput,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+  CSpinner,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import {
+  cilCloudUpload,
+  cilFolderOpen,
+  cilUser,
+  cilPencil,
+  cilReload,
+} from '@coreui/icons'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
-import { exams as examsMock, aiAnalyses as aiAnalysesMock } from 'src/mocks/data'
+import { useAuth } from 'src/hooks/useAuth'
+import { useFeedback } from 'src/hooks/useFeedback'
+
+import { examService } from 'src/services/examService'
+
+import { examTypeLabels, statusColors, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
+import { getErrorMessage } from 'src/utils/errors'
+import { formatDateTimeBR } from 'src/utils/formatters'
+import { canManageExams } from 'src/utils/permissions'
 
 const examTabs = [
   { key: 'processing', label: 'Processando' },
-  { key: 'review_required', label: 'Revisão' },
-  { key: 'approved', label: 'Aprovados' },
+  { key: 'pending', label: 'Pendentes' },
+  { key: 'completed', label: 'Concluídos' },
+  { key: 'failed', label: 'Falha na IA' },
   { key: 'canceled', label: 'Cancelados' },
 ]
 
-const examTypeLabels = {
-  colonoscopy: 'Colonoscopia',
-  endoscopy: 'Endoscopia',
-}
+const getAiStatusFromExam = (exam) => {
+  if (exam.status_name === 'processing') return 'processing'
+  if (exam.status_name === 'pending') return 'completed'
+  if (exam.status_name === 'completed') return 'completed'
+  if (exam.status_name === 'failed') return 'failed'
+  if (exam.status_name === 'canceled') return 'canceled'
 
-const statusColors = {
-  processing: 'info',
-  review_required: 'warning',
-  approved: 'success',
-  canceled: 'danger',
-}
-
-const aiStatusLabels = {
-  not_processed: 'Não processado',
-  processing: 'Processando',
-  completed: 'Concluída',
-  failed: 'Falhou',
-}
-
-const aiStatusColors = {
-  not_processed: 'secondary',
-  processing: 'info',
-  completed: 'success',
-  failed: 'danger',
-}
-
-const formatDateBR = (value) => {
-  if (!value) return '-'
-
-  const date = new Date(`${value}T00:00:00`)
-
-  if (Number.isNaN(date.getTime())) return '-'
-
-  return date.toLocaleDateString('pt-BR')
+  return 'not_processed'
 }
 
 const ExamsList = () => {
+  const { user } = useAuth()
+  const { showError, showSuccess } = useFeedback()
+
   const [activeTab, setActiveTab] = useState('processing')
-  const [exams, setExams] = useState(examsMock)
-  const [error, setError] = useState('')
-  const [isLoading] = useState(false)
+  const [exams, setExams] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleCancel = useCallback((exam) => {
-    setError('')
+  const canManage = canManageExams(user)
 
-    setExams((current) =>
-      current.map((item) =>
-        String(item.id) === String(exam.id)
-          ? {
-              ...item,
-              status_id: '10',
-              status_name: 'canceled',
-              status_display_name: 'Cancelado',
-              ai_analysis_status: 'not_processed',
-              ai_summary: 'Análise não realizada devido ao cancelamento do exame.',
-              updated_at: new Date().toISOString(),
-            }
-          : item,
-      ),
-    )
-  }, [])
+  const loadExams = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      showError('')
+
+      const data = await examService.list({
+        includeInactive: true,
+      })
+
+      setExams(Array.isArray(data) ? data : [])
+    } catch (err) {
+      showError(getErrorMessage(err, 'Erro ao carregar exames.'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [showError])
+
+  useEffect(() => {
+    void loadExams()
+  }, [loadExams])
 
   const filteredExams = useMemo(() => {
     return exams.filter((exam) => exam.status_name === activeTab)
   }, [exams, activeTab])
 
-  const counts = useMemo(
+  const tabCounts = useMemo(
     () => ({
       processing: exams.filter((exam) => exam.status_name === 'processing').length,
-      review_required: exams.filter((exam) => exam.status_name === 'review_required').length,
-      approved: exams.filter((exam) => exam.status_name === 'approved').length,
+      pending: exams.filter((exam) => exam.status_name === 'pending').length,
+      completed: exams.filter((exam) => exam.status_name === 'completed').length,
+      failed: exams.filter((exam) => exam.status_name === 'failed').length,
       canceled: exams.filter((exam) => exam.status_name === 'canceled').length,
     }),
     [exams],
   )
 
-  const examsWithAi = useMemo(() => {
-    return filteredExams.map((exam) => {
-      const aiAnalysis = aiAnalysesMock.find(
-        (analysis) => String(analysis.exam_id) === String(exam.id),
-      )
+  const handleDownloadFile = useCallback(
+    async (exam) => {
+      try {
+        showError('')
 
-      return {
-        ...exam,
-        aiAnalysis,
+        const blob = await examService.downloadFile(exam.id)
+
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+
+        link.href = url
+        link.download = exam.file_name || `exame-${exam.id}`
+        document.body.appendChild(link)
+        link.click()
+
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch {
+        showError('Erro ao baixar arquivo do exame.')
       }
-    })
-  }, [filteredExams])
+    },
+    [showError],
+  )
+
+  const handleCancelExam = useCallback(
+    async (exam) => {
+      try {
+        showError('')
+
+        await examService.cancel(exam.id)
+
+        showSuccess('Exame cancelado com sucesso.')
+        await loadExams()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao cancelar exame.'))
+      }
+    },
+    [loadExams, showError, showSuccess],
+  )
+
+  const handleRestoreExam = useCallback(
+    async (exam) => {
+      try {
+        showError('')
+
+        await examService.restore(exam.id)
+
+        showSuccess('Exame retomado com sucesso.')
+        await loadExams()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao retomar exame.'))
+      }
+    },
+    [loadExams, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
@@ -125,7 +178,7 @@ const ExamsList = () => {
       {
         accessorKey: 'exam_date',
         header: 'Data',
-        cell: ({ getValue }) => formatDateBR(getValue()),
+        cell: ({ getValue }) => formatDateTimeBR(getValue()),
       },
       {
         accessorKey: 'patient_name',
@@ -138,32 +191,25 @@ const ExamsList = () => {
         cell: ({ getValue }) => getValue() || '-',
       },
       {
-        accessorKey: 'status_name',
+        accessorKey: 'status_display_name',
         header: 'Status',
-        cell: ({ row }) => (
+        cell: ({ row, getValue }) => (
           <CBadge color={statusColors[row.original.status_name] || 'secondary'}>
-            {row.original.status_display_name || row.original.status_name}
+            {getValue() || row.original.status_name || '-'}
           </CBadge>
         ),
       },
       {
-        accessorKey: 'ai_analysis_status',
+        id: 'ai_status',
         header: 'IA',
-        cell: ({ getValue }) => (
-          <CBadge color={aiStatusColors[getValue()] || 'secondary'}>
-            {aiStatusLabels[getValue()] || getValue() || 'Não processado'}
-          </CBadge>
-        ),
-      },
-      {
-        id: 'confidence',
-        header: 'Confiança',
         cell: ({ row }) => {
-          const confidence = row.original.aiAnalysis?.confidence
+          const aiStatus = getAiStatusFromExam(row.original)
 
-          if (confidence === undefined || confidence === null) return '-'
-
-          return `${Math.round(confidence * 100)}%`
+          return (
+            <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>
+              {aiStatusLabels[aiStatus] || aiStatus}
+            </CBadge>
+          )
         },
       },
       {
@@ -172,6 +218,11 @@ const ExamsList = () => {
         enableSorting: false,
         cell: ({ row }) => {
           const exam = row.original
+
+          const isProcessing = exam.status_name === 'processing'
+          const isPending = exam.status_name === 'pending'
+          const isCompleted = exam.status_name === 'completed'
+          const isFailed = exam.status_name === 'failed'
           const isCanceled = exam.status_name === 'canceled'
 
           return (
@@ -181,13 +232,22 @@ const ExamsList = () => {
               editTo={`/exams/${exam.id}/edit`}
               isInactive={isCanceled}
               canView
-              onInactivate={() => handleCancel(exam)}
+              canEdit={canManage && (isProcessing || isPending)}
+              canUpload={false}
+              canDownload={Boolean(exam.file_name)}
+              canCancel={canManage && (isProcessing || isPending || isFailed)}
+              canRestore={canManage && isCanceled}
+              canInactivate={false}
+              canActivate={false}
+              onDownload={() => handleDownloadFile(exam)}
+              onCancel={() => handleCancelExam(exam)}
+              onRestore={() => handleRestoreExam(exam)}
             />
           )
         },
       },
     ],
-    [handleCancel],
+    [canManage, handleCancelExam, handleDownloadFile, handleRestoreExam],
   )
 
   return (
@@ -197,34 +257,38 @@ const ExamsList = () => {
           <div className="text-body-secondary">Registros de Saúde</div>
           <h1 className="h3 mb-0">Exames</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie exames, arquivos enviados e resultados simulados da análise por IA.
+            Gerencie exames, análise por IA e revisão médica.
           </p>
         </div>
-        
-        <CButton color="primary" size="lg" as={Link} to="/exams/create">
-          Cadastrar Exame
-        </CButton>
+
+        <div className="d-flex justify-content-center mt-4">
+          <CButton color="primary" size="lg" as={Link} to="/exams/create">
+            Cadastrar Exame
+          </CButton>
+        </div>
       </div>
 
       <CCard>
         <CCardBody>
-          {error && <CAlert color="danger">{error}</CAlert>}
-
-          <AppTabs
-            activeTab={activeTab}
-            counts={counts}
-            onChange={setActiveTab}
-            tabs={examTabs}
-          />
-
           {isLoading ? (
-            <p className="text-body-secondary mb-0">Carregando exames...</p>
+            <div className="d-flex justify-content-center py-5">
+              <CSpinner />
+            </div>
           ) : (
-            <AppTable
-              data={examsWithAi}
-              columns={columns}
-              emptyMessage="Nenhum exame encontrado."
-            />
+            <>
+              <AppTabs
+                tabs={examTabs}
+                counts={tabCounts}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+              />
+
+              <AppTable
+                data={filteredExams}
+                columns={columns}
+                emptyMessage="Nenhum exame encontrado."
+              />
+            </>
           )}
         </CCardBody>
       </CCard>

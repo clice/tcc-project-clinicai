@@ -46,6 +46,7 @@ def create_ai_analysis_route(
 @router.get("/", response_model=list[AIAnalysisResponse])
 def list_ai_analysis_route(
     exam_id: int | None = Query(default=None),
+    status_id: int | None = Query(default=None),
     model_name: str | None = Query(default=None),
     model_version: str | None = Query(default=None),
     prediction_label: str | None = Query(default=None),
@@ -59,6 +60,7 @@ def list_ai_analysis_route(
         db=db,
         current_user=current_user,
         exam_id=exam_id,
+        status_id=status_id,
         model_name=model_name,
         model_version=model_version,
         prediction_label=prediction_label,

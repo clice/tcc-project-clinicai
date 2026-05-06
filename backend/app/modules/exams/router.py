@@ -2,24 +2,24 @@
 Rotas do módulo de exames.
 """
 
-from fastapi import APIRouter, Depends, Query
+from datetime import date
+
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_permission
-from app.modules.exams.schema import (
-    ExamCreate,
-    ExamResponse,
-    ExamUpdate,
-)
+from app.modules.exams.schema import ExamCreate, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
     cancel_exam,
     create_exam,
     download_exam_file,
     get_exam_by_id,
+    list_exam_form_options,
     list_exams,
+    replace_exam_file,
+    restore_exam,
     update_exam,
-    upload_exam_file,
 )
 from app.modules.users.model import User
 
@@ -27,18 +27,50 @@ from app.modules.users.model import User
 router = APIRouter(prefix="/exams", tags=["Exams"])
 
 
+@router.get("/form-options")
+def get_exam_form_options_route(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:read")),
+):
+    """
+    Retorna dados auxiliares para o formulário de exames.
+    Essa rota evita que o frontend dependa de várias rotas administrativas.
+    """
+    return list_exam_form_options(db=db, current_user=current_user)
+
+
 @router.post("/", response_model=ExamResponse, status_code=201)
 def create_exam_route(
-    payload: ExamCreate,
+    clinic_id: int = Form(...),
+    patient_id: int = Form(...),
+    doctor_id: int | None = Form(default=None),
+    exam_type: str = Form(...),
+    exam_date: date | None = Form(default=None),
+    title: str = Form(...),
+    description: str | None = Form(default=None),
+    clinical_indication: str | None = Form(default=None),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("exams:create")),
 ):
     """
     Cria um novo exame.
     """
+    payload = ExamCreate(
+        clinic_id=clinic_id,
+        patient_id=patient_id,
+        doctor_id=doctor_id,
+        exam_type=exam_type,
+        exam_date=exam_date,
+        title=title,
+        description=description,
+        clinical_indication=clinical_indication,
+    )
+
     return create_exam(
         db=db,
         payload=payload,
+        file=file,
         current_user=current_user,
     )
 
@@ -117,37 +149,50 @@ def cancel_exam_route(
         exam_id=exam_id,
         current_user=current_user,
     )
-
-
-@router.post("/{exam_id}/upload-file", response_model=ExamResponse)
-def upload_exam_file_route(
+    
+    
+@router.patch("/{exam_id}/restore", response_model=ExamResponse)
+def restore_exam_route(
     exam_id: int,
-    file_path: str,
-    file_name: str,
-    file_mime_type: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:update")),
+    current_user: User = Depends(require_permission("exams:change_status")),
 ):
     """
-    Vincula informações de arquivo ao exame.
+    Retoma um exame cancelado.
 
-    Upload físico será implementado depois com UploadFile.
+    Se o exame possuir arquivo, retorna para processing.
+    Se não possuir arquivo, retorna para pending.
     """
-    return upload_exam_file(
+    return restore_exam(
         db=db,
         exam_id=exam_id,
-        file_path=file_path,
-        file_name=file_name,
-        file_mime_type=file_mime_type,
         current_user=current_user,
     )
 
 
-@router.get("/{exam_id}/download-file")
+# @router.post("/{exam_id}/upload", response_model=ExamResponse)
+# def upload_exam_file_route(
+#     exam_id: int,
+#     file: UploadFile = File(...),
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(require_permission("exams:upload")),
+# ):
+#     """
+#     Vincula informações de arquivo ao exame.
+#     """
+#     return upload_exam_file(
+#         db=db,
+#         exam_id=exam_id,
+#         file=file,
+#         current_user=current_user,
+#     )
+
+
+@router.get("/{exam_id}/download")
 def download_exam_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_permission("exams:download")),
 ):
     """
     Retorna informações do arquivo vinculado ao exame.
@@ -157,3 +202,22 @@ def download_exam_file_route(
         exam_id=exam_id,
         current_user=current_user,
     )
+
+@router.post("/{exam_id}/replace-file", response_model=ExamResponse)
+def replace_exam_file_route(
+    exam_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:upload")),
+):
+    """
+    Substitui arquivo do exame.
+    """
+    return replace_exam_file(
+        db=db,
+        exam_id=exam_id,
+        file=file,
+        current_user=current_user,
+    )
+    
+    

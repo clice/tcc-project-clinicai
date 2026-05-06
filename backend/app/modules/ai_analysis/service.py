@@ -7,12 +7,18 @@ Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import AuditAction, AuditEntity, RoleName
+from app.common.access_control import (
+    ensure_user_can_access_exam,
+    filter_query_by_user_scope,
+)
+from app.common.constants import AuditAction, AuditEntity, StatusName, StatusScope
+from app.common.services import apply_update_data, model_dump_update
 from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.exams.model import Exam
-from app.modules.users.model import User
 from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.audit_logs.service import create_audit_log
+from app.modules.exams.model import Exam
+from app.modules.statuses.service import get_status_by_name_and_applies_to
+from app.modules.users.model import User
 
 
 def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
@@ -22,6 +28,9 @@ def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
     return {
         "id": ai_analysis.id,
         "exam_id": ai_analysis.exam_id,
+        "status_id": ai_analysis.status_id,
+        "status_name": ai_analysis.status.name if ai_analysis.status else None,
+        "status_display_name": ai_analysis.status.display_name if ai_analysis.status else None,
         "prediction_label": ai_analysis.prediction_label,
         "prediction_class": ai_analysis.prediction_class,
         "confidence": ai_analysis.confidence,
@@ -44,19 +53,9 @@ def validate_user_can_access_exam(
     """
     Garante que o usuário autenticado pode acessar o exame/análise.
     """
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if role_name == RoleName.CLINIC_STAFF.value and exam.clinic_id == current_user.clinic_id:
-        return
-
-    if role_name == RoleName.DOCTOR.value and exam.doctor_id == current_user.id:
-        return
-
-    raise HTTPException(
-        status_code=403,
+    ensure_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
         detail="Você não tem permissão para acessar esta análise de IA.",
     )
 
@@ -92,6 +91,23 @@ def validate_exam_exists(
     return exam
 
 
+def validate_exam_can_receive_ai_analysis(exam: Exam) -> None:
+    """
+    Valida se o exame está apto para receber resultado de IA.
+    """
+    if exam.status and exam.status.name == StatusName.CANCELED.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível criar análise de IA para exame cancelado.",
+        )
+
+    if not exam.file_path:
+        raise HTTPException(
+            status_code=400,
+            detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
+        )
+
+
 def get_ai_analysis_model_by_id(
     db: Session,
     ai_analysis_id: int,
@@ -102,6 +118,7 @@ def get_ai_analysis_model_by_id(
     ai_analysis = (
         db.query(AIAnalysis)
         .options(
+            joinedload(AIAnalysis.status),
             joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
             joinedload(AIAnalysis.exam).joinedload(Exam.patient),
             joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
@@ -118,6 +135,11 @@ def get_ai_analysis_model_by_id(
         )
 
     return ai_analysis
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_ai_analysis_by_id(
@@ -158,6 +180,7 @@ def get_ai_analysis_by_exam_id(
     ai_analysis = (
         db.query(AIAnalysis)
         .options(
+            joinedload(AIAnalysis.status),
             joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
             joinedload(AIAnalysis.exam).joinedload(Exam.patient),
             joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
@@ -183,6 +206,7 @@ def list_ai_analysis(
     model_name: str | None = None,
     model_version: str | None = None,
     prediction_label: str | None = None,
+    status_id: int | None = None,
 ) -> list[dict]:
     """
     Lista análises de IA com filtros opcionais e escopo por usuário.
@@ -191,6 +215,7 @@ def list_ai_analysis(
         db.query(AIAnalysis)
         .join(Exam, AIAnalysis.exam_id == Exam.id)
         .options(
+            joinedload(AIAnalysis.status),
             joinedload(AIAnalysis.exam).joinedload(Exam.clinic),
             joinedload(AIAnalysis.exam).joinedload(Exam.patient),
             joinedload(AIAnalysis.exam).joinedload(Exam.doctor),
@@ -198,31 +223,17 @@ def list_ai_analysis(
         )
     )
 
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        pass
-
-    elif role_name == RoleName.CLINIC_STAFF.value:
-        if current_user.clinic_id is None:
-            raise HTTPException(
-                status_code=403,
-                detail="Usuário não está vinculado a uma clínica.",
-            )
-
-        query = query.filter(Exam.clinic_id == current_user.clinic_id)
-
-    elif role_name == RoleName.DOCTOR.value:
-        query = query.filter(Exam.doctor_id == current_user.id)
-
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário sem permissão para listar análises de IA.",
-        )
+    query = filter_query_by_user_scope(
+        query=query,
+        model=Exam,
+        current_user=current_user,
+    )
 
     if exam_id:
         query = query.filter(AIAnalysis.exam_id == exam_id)
+
+    if status_id:
+        query = query.filter(AIAnalysis.status_id == status_id)
 
     if model_name:
         query = query.filter(AIAnalysis.model_name.ilike(f"%{model_name.strip()}%"))
@@ -249,11 +260,13 @@ def create_ai_analysis(
     Cria uma análise de IA para um exame.
     Cada exame pode ter apenas uma análise.
     """
-    validate_exam_exists(
+    exam = validate_exam_exists(
         db=db,
         exam_id=payload.exam_id,
         current_user=current_user,
     )
+
+    validate_exam_can_receive_ai_analysis(exam)
 
     existing_analysis = (
         db.query(AIAnalysis)
@@ -267,18 +280,33 @@ def create_ai_analysis(
             detail="Este exame já possui uma análise de IA.",
         )
 
-    exam = validate_exam_exists(
+    completed_ai_status = get_status_by_name_and_applies_to(
         db=db,
-        exam_id=payload.exam_id,
-        current_user=current_user,
+        name=StatusName.COMPLETED.value,
+        applies_to=StatusScope.AI_ANALYSIS.value,
     )
 
-    ai_analysis = AIAnalysis(**payload.model_dump())
+    completed_exam_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.COMPLETED.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+
+    ai_analysis = AIAnalysis(
+        **payload.model_dump(),
+        status_id=completed_ai_status.id,
+    )
 
     db.add(ai_analysis)
     db.flush()
 
-    # Adiciona log
+    old_exam_status = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
+    exam.status_id = completed_exam_status.id
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -290,6 +318,7 @@ def create_ai_analysis(
         new_data={
             "id": ai_analysis.id,
             "exam_id": ai_analysis.exam_id,
+            "status_id": ai_analysis.status_id,
             "prediction_label": ai_analysis.prediction_label,
             "prediction_class": ai_analysis.prediction_class,
             "confidence": ai_analysis.confidence,
@@ -297,6 +326,11 @@ def create_ai_analysis(
             "model_version": ai_analysis.model_version,
             "gradcam_path": ai_analysis.gradcam_path,
             "processing_time_ms": ai_analysis.processing_time_ms,
+            "old_exam_status": old_exam_status,
+            "new_exam_status": {
+                "status_id": completed_exam_status.id,
+                "status_name": StatusName.COMPLETED.value,
+            },
         },
     )
 
@@ -330,7 +364,7 @@ def update_ai_analysis(
         exam=ai_analysis.exam,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
 
     if not update_data:
         return build_ai_analysis_response(ai_analysis)
@@ -346,11 +380,9 @@ def update_ai_analysis(
         "ai_notes": ai_analysis.ai_notes,
         "raw_response": ai_analysis.raw_response,
     }
-    
-    for field, value in update_data.items():
-        setattr(ai_analysis, field, value)
 
-    # Adiciona log
+    apply_update_data(ai_analysis, update_data)
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -362,7 +394,7 @@ def update_ai_analysis(
         old_data=old_data,
         new_data=update_data,
     )
-    
+
     db.commit()
     db.refresh(ai_analysis)
 

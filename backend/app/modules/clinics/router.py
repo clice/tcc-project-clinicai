@@ -152,3 +152,31 @@ def activate_clinic_route(
         clinic_id=clinic_id,
         current_user=current_user,
     )
+
+
+@router.get("/me")
+def get_my_clinic(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:read_profile")),
+):
+    """
+    Busca dados de uma clínica para o perfil.
+    """
+    return get_clinic_by_id(db, current_user.clinic_id)
+
+
+@router.patch("/me")
+def update_my_clinic(
+    payload: ClinicUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:update_profile")),
+):
+    """
+    Atualiza parcialmente os dados do perfil da clínica.
+    """
+    return update_clinic(
+        db=db,
+        clinic_id=current_user.clinic_id,
+        payload=payload,
+        current_user=current_user,
+    )

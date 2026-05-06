@@ -7,26 +7,10 @@ Contém as regras de negócio relacionadas aos logs de auditoria.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import AuditAction, AuditEntity, RoleName
+from app.common.constants import AuditAction, AuditEntity
+from app.common.services import enum_to_value, is_admin_master
 from app.modules.audit_logs.model import AuditLog
 from app.modules.users.model import User
-
-
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
-
-
-def normalize_audit_value(value):
-    """
-    Converte enums em strings antes de salvar no banco.
-    """
-    if hasattr(value, "value"):
-        return value.value
-
-    return value
 
 
 def build_audit_log_response(audit_log: AuditLog) -> dict:
@@ -49,6 +33,10 @@ def build_audit_log_response(audit_log: AuditLog) -> dict:
         "user_agent": audit_log.user_agent,
         "created_at": audit_log.created_at,
     }
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def create_audit_log(
@@ -75,8 +63,8 @@ def create_audit_log(
     audit_log = AuditLog(
         user_id=user_id,
         clinic_id=clinic_id,
-        action=normalize_audit_value(action),
-        entity=normalize_audit_value(entity),
+        action=enum_to_value(action),
+        entity=enum_to_value(entity),
         entity_id=entity_id,
         description=description,
         old_data=old_data,

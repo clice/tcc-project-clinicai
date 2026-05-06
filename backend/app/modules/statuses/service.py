@@ -9,6 +9,11 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.constants import AuditAction, AuditEntity
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+    normalize_update_data,
+)
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
 from app.modules.statuses.schema import StatusCreate, StatusUpdate
@@ -87,6 +92,11 @@ def check_status_duplicate(
             status_code=400,
             detail="Já existe um status com esse nome para essa referência.",
         )
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_status_by_id(db: Session, status_id: int) -> Status:
@@ -170,7 +180,9 @@ def update_status(
     Atualiza parcialmente um status e registra log de auditoria.
     """
     status = get_status_by_id(db=db, status_id=status_id)
-    update_data = payload.model_dump(exclude_unset=True)
+    
+    update_data = model_dump_update(payload)
+    update_data = normalize_update_data(update_data)
 
     if not update_data:
         return status
@@ -182,12 +194,6 @@ def update_status(
         "description": status.description,
     }
 
-    if "name" in update_data and update_data["name"] is not None:
-        update_data["name"] = update_data["name"].value
-
-    if "applies_to" in update_data and update_data["applies_to"] is not None:
-        update_data["applies_to"] = update_data["applies_to"].value
-
     new_name = update_data.get("name", status.name)
     new_applies_to = update_data.get("applies_to", status.applies_to)
 
@@ -198,8 +204,7 @@ def update_status(
         ignore_status_id=status_id,
     )
 
-    for field, value in update_data.items():
-        setattr(status, field, value)
+    apply_update_data(status, update_data)
 
     # Adiciona log
     create_audit_log(

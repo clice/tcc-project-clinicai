@@ -9,6 +9,10 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+)
 from app.modules.permissions.model import Permission
 from app.modules.roles.model import Role
 from app.modules.role_permissions.model import RolePermission
@@ -78,6 +82,11 @@ def check_role_permission_duplicate(
             status_code=400,
             detail="Essa permissão já está vinculada a esse perfil.",
         )
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_role_permission_by_id(
@@ -186,7 +195,7 @@ def update_role_permission(
         role_permission_id=role_permission_id,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
 
     if not update_data:
         return role_permission
@@ -214,8 +223,7 @@ def update_role_permission(
         ignore_role_permission_id=role_permission_id,
     )
 
-    for field, value in update_data.items():
-        setattr(role_permission, field, value)
+    apply_update_data(role_permission, update_data)
 
     # Adiciona log
     create_audit_log(

@@ -88,6 +88,10 @@ class AIAnalysisResponse(BaseModel):
     id: int
     exam_id: int
 
+    status_id: int
+    status_name: str | None = None
+    status_display_name: str | None = None
+
     prediction_label: str
     prediction_class: int | None = None
     confidence: float

@@ -26,9 +26,9 @@ import {
   CSpinner,
 } from '@coreui/react'
 
+import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
-import { useAuth } from 'src/hooks/useAuth'
 import { addressService } from 'src/services/addressService'
 import { patientService } from 'src/services/patientService'
 import { clinicService } from 'src/services/clinicService'

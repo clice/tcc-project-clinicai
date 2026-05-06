@@ -45,7 +45,8 @@ class PermissionAction(StrEnum):
     CHANGE_STATUS = "change_status"
     UPLOAD = "upload"
     DOWNLOAD = "download"
-    MANAGE = "manage"
+    READ_PROFILE = "read_profile"
+    UPDATE_PROFILE = "update_profile"
 
 
 class RoleName(StrEnum):

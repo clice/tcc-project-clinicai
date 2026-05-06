@@ -9,6 +9,11 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.common.constants import AuditAction, AuditEntity
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+    normalize_update_data,
+)
 from app.modules.permissions.model import Permission
 from app.modules.users.model import User
 from app.modules.permissions.schema import PermissionCreate, PermissionUpdate
@@ -38,6 +43,11 @@ def check_permission_duplicate(
             status_code=400,
             detail="Já existe uma permissão com esse nome.",
         )
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_permission_by_id(db: Session, permission_id: int) -> Permission:
@@ -124,7 +134,8 @@ def update_permission(
     """
     permission = get_permission_by_id(db, permission_id)
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
+    update_data = normalize_update_data(update_data)
 
     if not update_data:
         return permission
@@ -136,9 +147,6 @@ def update_permission(
         "module": permission.module,
     }
 
-    if "module" in update_data and update_data["module"] is not None:
-        update_data["module"] = update_data["module"].value
-
     new_name = update_data.get("name", permission.name)
 
     check_permission_duplicate(
@@ -147,8 +155,7 @@ def update_permission(
         ignore_permission_id=permission_id,
     )
 
-    for field, value in update_data.items():
-        setattr(permission, field, value)
+    apply_update_data(permission, update_data)
 
     create_audit_log(
         db=db,

@@ -16,8 +16,7 @@ class ExamBase(BaseModel):
 
     clinic_id: int
     patient_id: int
-    doctor_id: int
-    status_id: int
+    doctor_id: int | None = None
 
     exam_type: str = Field(..., min_length=2, max_length=80)
     exam_date: date | None = None
@@ -25,15 +24,6 @@ class ExamBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=180)
     description: str | None = None
     clinical_indication: str | None = None
-    findings: str | None = None
-    conclusion: str | None = None
-
-    ai_analysis_status: str | None = Field(default=None, max_length=50)
-    ai_summary: str | None = None
-
-    file_path: str | None = Field(default=None, max_length=255)
-    file_name: str | None = Field(default=None, max_length=180)
-    file_mime_type: str | None = Field(default=None, max_length=100)
 
     @field_validator("exam_type", "title")
     @classmethod
@@ -43,13 +33,6 @@ class ExamBase(BaseModel):
     @field_validator(
         "description",
         "clinical_indication",
-        "findings",
-        "conclusion",
-        "ai_analysis_status",
-        "ai_summary",
-        "file_path",
-        "file_name",
-        "file_mime_type",
     )
     @classmethod
     def normalize_optional_fields(cls, value: str | None) -> str | None:
@@ -69,11 +52,6 @@ class ExamUpdate(BaseModel):
     Schema usado para atualização parcial de exame.
     """
 
-    clinic_id: int | None = None
-    patient_id: int | None = None
-    doctor_id: int | None = None
-    status_id: int | None = None
-
     exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None
 
@@ -82,13 +60,6 @@ class ExamUpdate(BaseModel):
     clinical_indication: str | None = None
     findings: str | None = None
     conclusion: str | None = None
-
-    ai_analysis_status: str | None = Field(default=None, max_length=50)
-    ai_summary: str | None = None
-
-    file_path: str | None = Field(default=None, max_length=255)
-    file_name: str | None = Field(default=None, max_length=180)
-    file_mime_type: str | None = Field(default=None, max_length=100)
 
     @field_validator("exam_type", "title")
     @classmethod
@@ -103,16 +74,24 @@ class ExamUpdate(BaseModel):
         "clinical_indication",
         "findings",
         "conclusion",
-        "ai_analysis_status",
-        "ai_summary",
-        "file_path",
-        "file_name",
-        "file_mime_type",
     )
     @classmethod
     def normalize_optional_fields(cls, value: str | None) -> str | None:
         return normalize_optional_text(value)
 
+
+class ExamMedicalReview(BaseModel):
+    """
+    Schema usado para o exame quando realizado revisão pelo médico.
+    """
+    findings: str = Field(..., min_length=3)
+    conclusion: str = Field(..., min_length=3)
+
+    @field_validator("findings", "conclusion")
+    @classmethod
+    def normalize_required_fields(cls, value: str) -> str:
+        return normalize_required_text(value, "Campo obrigatório.")
+    
 
 class ExamResponse(BaseModel):
     """
@@ -127,7 +106,7 @@ class ExamResponse(BaseModel):
     patient_id: int
     patient_name: str | None = None
 
-    doctor_id: int
+    doctor_id: int | None = None
     doctor_name: str | None = None
 
     status_id: int
@@ -142,9 +121,6 @@ class ExamResponse(BaseModel):
     clinical_indication: str | None = None
     findings: str | None = None
     conclusion: str | None = None
-
-    ai_analysis_status: str | None = None
-    ai_summary: str | None = None
 
     file_path: str | None = None
     file_name: str | None = None

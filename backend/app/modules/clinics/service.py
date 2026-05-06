@@ -9,7 +9,12 @@ from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.access_control import ensure_user_can_access_clinic_data
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.services import (
+    apply_update_data,
+    model_dump_update,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.schema import ClinicCreate, ClinicUpdate
 from app.modules.statuses.model import Status
@@ -60,6 +65,17 @@ def check_clinic_duplicate(
         raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
 
 
+def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
+    """
+    Garante que usuários comuns acessem apenas a própria clínica.
+    """
+    ensure_user_can_access_clinic_data(
+        current_user=current_user,
+        clinic_id=clinic_id,
+        detail="Você não tem permissão para acessar esta clínica.",
+    )
+
+
 def build_clinic_response(clinic: Clinic) -> dict:
     """
     Monta a resposta incluindo dados do status relacionado.
@@ -86,30 +102,9 @@ def build_clinic_response(clinic: Clinic) -> dict:
     }
 
 
-def ensure_user_can_access_clinic(current_user: User, clinic_id: int) -> None:
-    """
-    Garante que o usuário autenticado pode acessar a clínica solicitada.
-
-    Regra:
-    - admin_master pode acessar qualquer clínica;
-    - usuários comuns só podem acessar a própria clínica.
-    """
-    role_name = current_user.role.name if current_user.role else None
-
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if current_user.clinic_id is None:
-        raise HTTPException(
-            status_code=403,
-            detail="Usuário não está vinculado a uma clínica.",
-        )
-
-    if current_user.clinic_id != clinic_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Você não tem permissão para acessar esta clínica.",
-        )
+# ========================================
+# MAIN METHODS
+# ========================================
 
 
 def get_clinic_by_id(db: Session, clinic_id: int) -> Clinic:
@@ -247,7 +242,7 @@ def update_clinic(
     """
     clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
 
     if not update_data:
         return build_clinic_response(clinic)
@@ -285,8 +280,7 @@ def update_clinic(
         "status_id": clinic.status_id,
     }
     
-    for field, value in update_data.items():
-        setattr(clinic, field, value)
+    apply_update_data(clinic, update_data)
 
     # Adiciona log
     create_audit_log(

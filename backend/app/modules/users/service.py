@@ -7,6 +7,12 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
+from app.common.services import (
+    apply_update_data,
+    is_admin_master, 
+    model_dump_update,
+    normalize_update_data,
+)
 from app.core.security import get_password_hash
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
@@ -14,24 +20,39 @@ from app.modules.statuses.model import Status
 from app.modules.users.model import User
 from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
 from app.modules.audit_logs.service import create_audit_log
+from app.modules.roles.service import get_role_by_id
 from app.modules.statuses.service import (
     get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
 
 
-def is_admin_master(user: User) -> bool:
-    """
-    Verifica se o usuário autenticado é admin_master.
-    """
-    return bool(user.role and user.role.name == RoleName.ADMIN_MASTER.value)
+def check_email_duplicate(
+    db: Session,
+    email: str,
+    ignore_user_id: int | None = None,
+) -> None:
+    query = db.query(User).filter(User.email == email)
+
+    if ignore_user_id is not None:
+        query = query.filter(User.id != ignore_user_id)
+
+    if query.first():
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
 
 
-def get_user_role_name(user: User) -> str | None:
-    """
-    Retorna o perfil do usuário.
-    """
-    return user.role.name if user.role else None
+def check_cpf_duplicate(
+    db: Session,
+    cpf: str,
+    ignore_user_id: int | None = None,
+) -> None:
+    query = db.query(User).filter(User.cpf == cpf)
+
+    if ignore_user_id is not None:
+        query = query.filter(User.id != ignore_user_id)
+
+    if query.first():
+        raise HTTPException(status_code=400, detail="CPF já cadastrado.")
 
 
 def validate_current_user_can_access_user(
@@ -83,33 +104,6 @@ def validate_current_user_can_manage_user_data(
         )
 
 
-def get_user_by_id(db: Session, user_id: int) -> User:
-    user = (
-        db.query(User)
-        .options(
-            joinedload(User.role),
-            joinedload(User.status),
-            joinedload(User.clinic),
-        )
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-
-    return user
-
-
-def get_role_by_id(db: Session, role_id: int) -> Role:
-    role = db.query(Role).filter(Role.id == role_id).first()
-
-    if not role:
-        raise HTTPException(status_code=400, detail="Perfil de acesso não encontrado.")
-
-    return role
-
-
 def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | None:
     if clinic_id is None:
         return None
@@ -132,34 +126,6 @@ def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | No
         )
 
     return clinic
-
-
-def check_email_duplicate(
-    db: Session,
-    email: str,
-    ignore_user_id: int | None = None,
-) -> None:
-    query = db.query(User).filter(User.email == email)
-
-    if ignore_user_id is not None:
-        query = query.filter(User.id != ignore_user_id)
-
-    if query.first():
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
-
-
-def check_cpf_duplicate(
-    db: Session,
-    cpf: str,
-    ignore_user_id: int | None = None,
-) -> None:
-    query = db.query(User).filter(User.cpf == cpf)
-
-    if ignore_user_id is not None:
-        query = query.filter(User.id != ignore_user_id)
-
-    if query.first():
-        raise HTTPException(status_code=400, detail="CPF já cadastrado.")
 
 
 def validate_user_business_rules(
@@ -197,7 +163,7 @@ def validate_user_business_rules(
     return role
 
 
-def build_user_list_item(user: User) -> dict:
+def build_user_response(user: User) -> dict:
     return {
         "id": user.id,
         "name": user.name,
@@ -217,12 +183,50 @@ def build_user_list_item(user: User) -> dict:
     }
 
 
+def get_user_response(
+    db: Session,
+    user_id: int,
+    current_user: User,
+) -> dict:
+    user = get_user_by_id(db, user_id)
+
+    validate_current_user_can_access_user(
+        current_user=current_user,
+        target_user=user,
+    )
+
+    return build_user_response(user)
+
+
+# ========================================
+# MAIN METHODS
+# ========================================
+
+
+def get_user_by_id(db: Session, user_id: int) -> User:
+    user = (
+        db.query(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.status),
+            joinedload(User.clinic),
+        )
+        .filter(User.id == user_id)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    return user
+
+
 def create_user(
     db: Session,
     payload: UserCreate,
     current_user: User,
 ) -> dict:
-    email = str(payload.email)
+    email = payload.email if isinstance(payload.email, str) else str(payload.email)
 
     check_email_duplicate(db, email)
     check_cpf_duplicate(db, payload.cpf)
@@ -280,7 +284,7 @@ def create_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def list_users(
@@ -341,22 +345,7 @@ def list_users(
 
     users = query.order_by(User.name.asc()).all()
 
-    return [build_user_list_item(user) for user in users]
-
-
-def get_user_response(
-    db: Session,
-    user_id: int,
-    current_user: User,
-) -> dict:
-    user = get_user_by_id(db, user_id)
-
-    validate_current_user_can_access_user(
-        current_user=current_user,
-        target_user=user,
-    )
-
-    return build_user_list_item(user)
+    return [build_user_response(user) for user in users]
 
 
 def update_user(
@@ -372,10 +361,11 @@ def update_user(
         target_user=user,
     )
 
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = model_dump_update(payload)
+    update_data = normalize_update_data(update_data)
 
     if not update_data:
-        return build_user_list_item(user)
+        return build_user_response(user)
 
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
@@ -420,8 +410,7 @@ def update_user(
         "clinic_id": user.clinic_id,
     }
     
-    for field, value in update_data.items():
-        setattr(user, field, value)
+    apply_update_data(user, update_data)
 
     # Adiciona log
     create_audit_log(
@@ -441,7 +430,7 @@ def update_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def update_user_password(
@@ -485,7 +474,7 @@ def update_user_password(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def inactivate_user(
@@ -546,7 +535,7 @@ def inactivate_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
 
 
 def activate_user(
@@ -601,4 +590,4 @@ def activate_user(
 
     user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_list_item(user)
+    return build_user_response(user)
