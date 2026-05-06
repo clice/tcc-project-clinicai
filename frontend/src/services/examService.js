@@ -82,8 +82,8 @@ export const examService = {
   /**
    * Atualiza parcialmente um exame existente.
    */
-  cancel: async (id) => {
-    const response = await api.patch(`/exams/${id}/cancel`)
+  update: async (id, payload) => {
+    const response = await api.patch(`/exams/${id}`, payload)
     return response.data
   },
 
@@ -106,7 +106,7 @@ export const examService = {
   /**
    * 
    */
-  etFormOptions: async () => {
+  getFormOptions: async () => {
     const response = await api.get('/exams/form-options')
     return response.data
   },
@@ -117,6 +117,22 @@ export const examService = {
   downloadFile: async (id) => {
     const response = await api.get(`/exams/${id}/download`, {
       responseType: 'blob',
+    })
+
+    return response.data
+  },
+
+  /**
+   * Permite substituir o arquivo de exame.
+   */
+  replaceFile: async (id, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await api.post(`/exams/${id}/replace-file`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
 
     return response.data

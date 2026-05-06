@@ -17,9 +17,9 @@ from app.modules.exams.service import (
     get_exam_by_id,
     list_exam_form_options,
     list_exams,
+    replace_exam_file,
     restore_exam,
     update_exam,
-    upload_exam_file,
 )
 from app.modules.users.model import User
 
@@ -202,3 +202,22 @@ def download_exam_file_route(
         exam_id=exam_id,
         current_user=current_user,
     )
+
+@router.post("/{exam_id}/replace-file", response_model=ExamResponse)
+def replace_exam_file_route(
+    exam_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:upload")),
+):
+    """
+    Substitui arquivo do exame.
+    """
+    return replace_exam_file(
+        db=db,
+        exam_id=exam_id,
+        file=file,
+        current_user=current_user,
+    )
+    
+    

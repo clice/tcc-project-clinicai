@@ -16,7 +16,7 @@ class ExamBase(BaseModel):
 
     clinic_id: int
     patient_id: int
-    doctor_id: int
+    doctor_id: int | None = None
 
     exam_type: str = Field(..., min_length=2, max_length=80)
     exam_date: date | None = None
@@ -106,7 +106,7 @@ class ExamResponse(BaseModel):
     patient_id: int
     patient_name: str | None = None
 
-    doctor_id: int
+    doctor_id: int | None = None
     doctor_name: str | None = None
 
     status_id: int

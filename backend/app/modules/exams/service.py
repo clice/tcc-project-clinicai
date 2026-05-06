@@ -736,41 +736,28 @@ def update_exam(
     if not update_data:
         return build_exam_response(exam)
 
-    clinic_id = update_data.get("clinic_id", exam.clinic_id)
-    patient_id = update_data.get("patient_id", exam.patient_id)
-    doctor_id = update_data.get("doctor_id", exam.doctor_id)
-
-    if current_user.role and current_user.role.name == RoleName.DOCTOR.value:
-        doctor_id = current_user.id
-        update_data["doctor_id"] = current_user.id
-
     validate_user_can_access_clinic(
         current_user=current_user,
-        clinic_id=clinic_id,
-    )
-
-    validate_exam_relationships(
-        db=db,
-        clinic_id=clinic_id,
-        patient_id=patient_id,
-        doctor_id=doctor_id,
-        status_id=exam.status_id,
+        clinic_id=exam.clinic_id,
     )
 
     old_data = {
-        "clinic_id": exam.clinic_id,
-        "patient_id": exam.patient_id,
-        "doctor_id": exam.doctor_id,
         "exam_type": exam.exam_type,
-        "exam_date": str(exam.exam_date) if exam.exam_date else None,
+        "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
         "title": exam.title,
         "description": exam.description,
         "clinical_indication": exam.clinical_indication,
-        "findings": exam.findings,
-        "conclusion": exam.conclusion,
     }
 
     apply_update_data(exam, update_data)
+
+    audit_new_data = {
+        "exam_type": exam.exam_type,
+        "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
+        "title": exam.title,
+        "description": exam.description,
+        "clinical_indication": exam.clinical_indication,
+    }
 
     create_audit_log(
         db=db,
@@ -779,9 +766,9 @@ def update_exam(
         action=AuditAction.UPDATE,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Exame atualizado.",
+        description="Dados básicos do exame atualizados.",
         old_data=old_data,
-        new_data=update_data,
+        new_data=audit_new_data,
     )
 
     db.commit()
@@ -851,9 +838,8 @@ def restore_exam(
     """
     Retoma um exame cancelado.
 
-    Regras:
-    - Exame cancelado sem arquivo volta para pending.
-    - Exame cancelado com arquivo volta para processing.
+    Regra:
+    - Exame cancelado volta para PROCESSING, pois precisa passar novamente pelo fluxo de IA.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -868,11 +854,7 @@ def restore_exam(
             detail="Apenas exames cancelados podem ser retomados.",
         )
 
-    next_status_name = (
-        StatusName.PROCESSING.value
-        if exam.file_path
-        else StatusName.PENDING.value
-    )
+    next_status_name = StatusName.PROCESSING.value
 
     next_status = get_status_by_name_and_applies_to(
         db=db,
@@ -1115,6 +1097,103 @@ def mark_exam_ai_failed(
     exam.status_id = failed_status.id
 
     db.commit()
+    db.refresh(exam)
+
+    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
+
+    return build_exam_response(exam)
+
+
+def replace_exam_file(
+    db: Session,
+    exam_id: int,
+    file: UploadFile,
+    current_user: User,
+) -> dict:
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    if not exam.status or exam.status.name not in {
+        StatusName.PROCESSING.value,
+        StatusName.FAILED.value,
+    }:
+        raise HTTPException(
+            status_code=400,
+            detail="A imagem só pode ser substituída em exames em processamento ou com falha.",
+        )
+
+    validate_exam_file(file)
+
+    old_file_path = exam.file_path
+
+    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
+    file_extension = Path(file.filename or "").suffix.lower()
+
+    stored_file_name = build_exam_file_name(
+        exam_id=exam.id,
+        patient_id=exam.patient_id,
+        file_extension=file_extension,
+    )
+
+    stored_file_path = patient_dir / stored_file_name
+
+    try:
+        with stored_file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        processing_status = get_status_by_name_and_applies_to(
+            db=db,
+            name=StatusName.PROCESSING.value,
+            applies_to=StatusScope.EXAM.value,
+        )
+
+        old_data = {
+            "file_path": exam.file_path,
+            "file_name": exam.file_name,
+            "file_mime_type": exam.file_mime_type,
+            "status_name": exam.status.name if exam.status else None,
+        }
+
+        exam.file_path = str(stored_file_path)
+        exam.file_name = stored_file_name
+        exam.file_mime_type = file.content_type
+        exam.status_id = processing_status.id
+
+        create_audit_log(
+            db=db,
+            user_id=current_user.id,
+            clinic_id=exam.clinic_id,
+            action=AuditAction.UPLOAD,
+            entity=AuditEntity.EXAM,
+            entity_id=exam.id,
+            description="Imagem do exame substituída.",
+            old_data=old_data,
+            new_data={
+                "file_path": exam.file_path,
+                "file_name": exam.file_name,
+                "file_mime_type": exam.file_mime_type,
+                "status_name": StatusName.PROCESSING.value,
+            },
+        )
+
+        db.commit()
+
+    except Exception as exc:
+        db.rollback()
+        delete_exam_file_safely(str(stored_file_path))
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao substituir imagem do exame.",
+        ) from exc
+
+    if old_file_path and old_file_path != str(stored_file_path):
+        delete_exam_file_safely(old_file_path)
+
     db.refresh(exam)
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)

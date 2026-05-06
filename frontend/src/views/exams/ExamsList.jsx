@@ -42,47 +42,33 @@ import { examService } from 'src/services/examService'
 import { examTypeLabels, statusColors, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateTimeBR } from 'src/utils/formatters'
-import { getUserRole, ROLES, canManageExams } from 'src/utils/permissions'
+import { canManageExams } from 'src/utils/permissions'
 
 const examTabs = [
-  { key: 'pending', label: 'Pendentes' },
   { key: 'processing', label: 'Processando' },
+  { key: 'pending', label: 'Pendentes' },
   { key: 'completed', label: 'Concluídos' },
+  { key: 'failed', label: 'Falha na IA' },
   { key: 'canceled', label: 'Cancelados' },
 ]
 
 const getAiStatusFromExam = (exam) => {
-  if (exam.status_name === 'canceled') {
-    return 'canceled'
-  }
+  if (exam.status_name === 'processing') return 'processing'
+  if (exam.status_name === 'pending') return 'completed'
+  if (exam.status_name === 'completed') return 'completed'
+  if (exam.status_name === 'failed') return 'failed'
+  if (exam.status_name === 'canceled') return 'canceled'
 
-  if (!exam.file_name) {
-    return 'pending'
-  }
-
-  if (exam.status_name === 'processing') {
-    return 'processing'
-  }
-
-  if (exam.status_name === 'completed') {
-    return 'completed'
-  }
-
-  return 'processing'
+  return 'not_processed'
 }
 
 const ExamsList = () => {
   const { user } = useAuth()
   const { showError, showSuccess } = useFeedback()
 
-  const [activeTab, setActiveTab] = useState('pending')
+  const [activeTab, setActiveTab] = useState('processing')
   const [exams, setExams] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-
-  const [selectedExam, setSelectedExam] = useState(null)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [uploadModalVisible, setUploadModalVisible] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
 
   const canManage = canManageExams(user)
 
@@ -113,76 +99,54 @@ const ExamsList = () => {
 
   const tabCounts = useMemo(
     () => ({
-      pending: exams.filter((exam) => exam.status_name === 'pending').length,
       processing: exams.filter((exam) => exam.status_name === 'processing').length,
+      pending: exams.filter((exam) => exam.status_name === 'pending').length,
       completed: exams.filter((exam) => exam.status_name === 'completed').length,
+      failed: exams.filter((exam) => exam.status_name === 'failed').length,
       canceled: exams.filter((exam) => exam.status_name === 'canceled').length,
     }),
     [exams],
   )
 
-  const handleOpenUploadModal = useCallback((exam) => {
-    setSelectedExam(exam)
-    setSelectedFile(null)
-    setUploadModalVisible(true)
-  }, [])  
+  const handleDownloadFile = useCallback(
+    async (exam) => {
+      try {
+        showError('')
 
-  const handleUploadFile = useCallback(async () => {
-    if (!selectedExam || !selectedFile) {
-      showError('Selecione um arquivo para enviar.')
-      return
-    }
+        const blob = await examService.downloadFile(exam.id)
 
-    try {
-      setIsUploading(true)
-      showError('')
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
 
-      await examService.uploadFile(selectedExam.id, selectedFile)
+        link.href = url
+        link.download = exam.file_name || `exame-${exam.id}`
+        document.body.appendChild(link)
+        link.click()
 
-      setUploadModalVisible(false)
-      setSelectedExam(null)
-      setSelectedFile(null)
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } catch {
+        showError('Erro ao baixar arquivo do exame.')
+      }
+    },
+    [showError],
+  )
 
-      await loadExams()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao enviar arquivo do exame.')
-    } finally {
-      setIsUploading(false)
-    }
-  }, [selectedExam, selectedFile, loadExams])
+  const handleCancelExam = useCallback(
+    async (exam) => {
+      try {
+        showError('')
 
-  const handleDownloadFile = useCallback(async (exam) => {
-    try {
-      showError('')
+        await examService.cancel(exam.id)
 
-      const blob = await examService.downloadFile(exam.id)
-
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-
-      link.href = url
-      link.download = exam.file_name || `exame-${exam.id}`
-      document.body.appendChild(link)
-      link.click()
-
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch {
-      showError('Erro ao baixar arquivo do exame.')
-    }
-  }, [])  
-
-  const handleCancelExam = async (exam) => {
-    try {
-      showError('')
-
-      await examService.cancel(exam.id)
-      showSuccess('Exame cancelado com sucesso.')
-      await loadExams()
-    } catch (err) {
-      showError(getErrorMessage(err, 'Erro ao cancelar exame.'))
-    }
-  }
+        showSuccess('Exame cancelado com sucesso.')
+        await loadExams()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao cancelar exame.'))
+      }
+    },
+    [loadExams, showError, showSuccess],
+  )
 
   const handleRestoreExam = useCallback(
     async (exam) => {
@@ -191,21 +155,14 @@ const ExamsList = () => {
 
         await examService.restore(exam.id)
 
+        showSuccess('Exame retomado com sucesso.')
         await loadExams()
       } catch (err) {
-        showError(err.response?.data?.detail || 'Erro ao retomar exame.')
+        showError(getErrorMessage(err, 'Erro ao retomar exame.'))
       }
     },
-    [loadExams],
+    [loadExams, showError, showSuccess],
   )
-
-  const handleCloseUploadModal = useCallback(() => {
-    if (isUploading) return
-
-    setUploadModalVisible(false)
-    setSelectedExam(null)
-    setSelectedFile(null)
-  }, [isUploading])
 
   const columns = useMemo(
     () => [
@@ -234,6 +191,15 @@ const ExamsList = () => {
         cell: ({ getValue }) => getValue() || '-',
       },
       {
+        accessorKey: 'status_display_name',
+        header: 'Status',
+        cell: ({ row, getValue }) => (
+          <CBadge color={statusColors[row.original.status_name] || 'secondary'}>
+            {getValue() || row.original.status_name || '-'}
+          </CBadge>
+        ),
+      },
+      {
         id: 'ai_status',
         header: 'IA',
         cell: ({ row }) => {
@@ -241,7 +207,7 @@ const ExamsList = () => {
 
           return (
             <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>
-              {aiStatusLabels[aiStatus] || '-'}
+              {aiStatusLabels[aiStatus] || aiStatus}
             </CBadge>
           )
         },
@@ -253,9 +219,10 @@ const ExamsList = () => {
         cell: ({ row }) => {
           const exam = row.original
 
-          const isPending = exam.status_name === 'pending'
           const isProcessing = exam.status_name === 'processing'
+          const isPending = exam.status_name === 'pending'
           const isCompleted = exam.status_name === 'completed'
+          const isFailed = exam.status_name === 'failed'
           const isCanceled = exam.status_name === 'canceled'
 
           return (
@@ -264,27 +231,23 @@ const ExamsList = () => {
               viewTo={`/exams/${exam.id}`}
               editTo={`/exams/${exam.id}/edit`}
               isInactive={isCanceled}
-
               canView
-              canEdit={isPending || isProcessing}
-              canUpload={isPending}
-              canDownload={Boolean(exam.file_name) && (isProcessing || isCompleted)}
-              canCancel={isPending || isProcessing}
-              canRestore={isCanceled}
-
+              canEdit={canManage && (isProcessing || isPending)}
+              canUpload={false}
+              canDownload={Boolean(exam.file_name)}
+              canCancel={canManage && (isProcessing || isPending || isFailed)}
+              canRestore={canManage && isCanceled}
               canInactivate={false}
               canActivate={false}
-
-              onUpload={() => handleOpenUploadModal(exam)}
               onDownload={() => handleDownloadFile(exam)}
               onCancel={() => handleCancelExam(exam)}
               onRestore={() => handleRestoreExam(exam)}
             />
           )
         },
-      }
+      },
     ],
-    [canManage, handleCancelExam],
+    [canManage, handleCancelExam, handleDownloadFile, handleRestoreExam],
   )
 
   return (
@@ -294,7 +257,7 @@ const ExamsList = () => {
           <div className="text-body-secondary">Registros de Saúde</div>
           <h1 className="h3 mb-0">Exames</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie exames, arquivos enviados e acompanhamento inicial da análise por IA.
+            Gerencie exames, análise por IA e revisão médica.
           </p>
         </div>
 
@@ -313,56 +276,22 @@ const ExamsList = () => {
             </div>
           ) : (
             <>
-              <AppTabs tabs={examTabs} counts={tabCounts} activeTab={activeTab} onChange={setActiveTab} />
-              <AppTable data={filteredExams} columns={columns} emptyMessage="Nenhum exame encontrado." />
+              <AppTabs
+                tabs={examTabs}
+                counts={tabCounts}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+              />
+
+              <AppTable
+                data={filteredExams}
+                columns={columns}
+                emptyMessage="Nenhum exame encontrado."
+              />
             </>
           )}
         </CCardBody>
       </CCard>
-
-      <CModal visible={uploadModalVisible} onClose={handleCloseUploadModal}>
-        <CModalHeader>
-          <CModalTitle>Enviar arquivo do exame</CModalTitle>
-        </CModalHeader>
-
-        <CModalBody>
-          <p className="mb-2">
-            Exame: <strong>{selectedExam?.title}</strong>
-          </p>
-
-          <p className="text-body-secondary small">
-            Formatos permitidos: PDF, JPG, JPEG ou PNG.
-          </p>
-
-          <CFormInput
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            disabled={isUploading}
-            onChange={(event) => {
-              setSelectedFile(event.target.files?.[0] || null)
-            }}
-          />
-        </CModalBody>
-
-        <CModalFooter>
-          <CButton
-            color="secondary"
-            variant="outline"
-            onClick={handleCloseUploadModal}
-            disabled={isUploading}
-          >
-            Fechar
-          </CButton>
-
-          <CButton
-            color="primary"
-            onClick={handleUploadFile}
-            disabled={isUploading || !selectedFile}
-          >
-            {isUploading ? 'Enviando...' : 'Enviar arquivo'}
-          </CButton>
-        </CModalFooter>
-      </CModal>
     </>
   )
 }
