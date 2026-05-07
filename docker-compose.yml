@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./ai:/app
-      - ai_models:/app/app/models
+      - ./ai/models:/app/models
     ports:
       - "8001:8001"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload

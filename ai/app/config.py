@@ -7,7 +7,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-MODEL_DIR = BASE_DIR / "models"
+AI_ROOT_DIR = BASE_DIR.parent
+
+MODEL_DIR = AI_ROOT_DIR / "models" / "exported"
 
 MODEL_NAME = "model.pt"
 
