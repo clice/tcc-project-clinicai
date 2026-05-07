@@ -1,56 +1,98 @@
 """
-Responsável pelo carregamento do modelo de IA.
+Carregamento do modelo treinado do ClinicAI.
 """
+
+from pathlib import Path
 
 import torch
 import torch.nn as nn
 from torchvision import models
 
-from app.config import MODEL_PATH
+
+# =========================================================
+# CONFIGURAÇÕES
+# =========================================================
+
+DEVICE = torch.device(
+    "cuda" if torch.cuda.is_available() else "cpu"
+)
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+MODEL_PATH = (
+    BASE_DIR
+    / "models"
+    / "exported"
+    / "model.pt"
+)
+
+NUM_CLASSES = 2
 
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# =========================================================
+# MODELO
+# =========================================================
 
-
-def create_resnet50_model(num_classes: int = 2) -> nn.Module:
+def create_model() -> nn.Module:
     """
-    Cria uma ResNet-50 adaptada para classificação binária.
-
-    A camada final original é substituída para retornar
-    duas classes: normal e abnormal.
+    Cria arquitetura ResNet50 binária.
     """
-    
-    model = models.resnet50(weights=None)
+
+    model = models.resnet50(
+        weights=None
+    )
 
     in_features = model.fc.in_features
 
-    model.fc = nn.Linear(in_features, num_classes)
+    model.fc = nn.Linear(
+        in_features,
+        NUM_CLASSES,
+    )
 
     return model
 
 
+# =========================================================
+# LOAD
+# =========================================================
+
 def load_model() -> nn.Module:
     """
-    Carrega o modelo de IA.
-
-    Se existir um arquivo de pesos em MODEL_PATH, ele será carregado.
-    Caso contrário, usa uma ResNet-50 sem treinamento específico.
+    Carrega modelo treinado do disco.
     """
 
-    model = create_resnet50_model(num_classes=2)
+    if not MODEL_PATH.exists():
 
-    if MODEL_PATH.exists():
-        state_dict = torch.load(
+        raise FileNotFoundError(
+            (
+                "Modelo treinado não encontrado.\n"
+                f"Esperado em: {MODEL_PATH}"
+            )
+        )
+
+    model = create_model()
+
+    model.load_state_dict(
+        torch.load(
             MODEL_PATH,
             map_location=DEVICE,
             weights_only=True,
         )
-        model.load_state_dict(state_dict)
+    )
 
     model.to(DEVICE)
+
     model.eval()
+
+    print(
+        f"\nModelo carregado com sucesso em: {DEVICE}"
+    )
 
     return model
 
+
+# =========================================================
+# SINGLETON
+# =========================================================
 
 model = load_model()
