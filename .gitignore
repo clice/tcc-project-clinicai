@@ -26,11 +26,39 @@ ai/models/**/*.pth
 # Jupyter
 .ipynb_checkpoints/
 
-# Dataset
-ai/datasets/gastrointestinal/
+# Datasets reais
+ai/datasets/gastrowintestinal/*
+!ai/datasets/gastrointestinal/.gitkeep
+!ai/datasets/gastrointestinal/normal/
+!ai/datasets/gastrointestinal/normal/.gitkeep
+!ai/datasets/gastrointestinal/abnormal/
+!ai/datasets/gastrointestinal/abnormal/.gitkeep
 
-# Outputs experimentais
+# Modelos treinados
+ai/models/exported/*.pt
+ai/models/exported/*.pth
+ai/models/checkpoints/*.pt
+ai/models/checkpoints/*.pth
+
+# Relatórios e outputs gerados
+ai/reports/metrics/*.csv
+ai/reports/metrics/*.json
+ai/reports/figures/*.png
+ai/reports/gradcam/*.png
+ai/reports/training/*
+
+!ai/reports/metrics/.gitkeep
+!ai/reports/figures/.gitkeep
+!ai/reports/gradcam/.gitkeep
+!ai/reports/training/.gitkeep
+
+# Outputs antigos/experimentais
 ai/training/experiments/outputs/
+
+# Storage gerado pela API de IA
+ai/storage/gradcam/
+ai/storage/predictions/
+ai/storage/temp/
 
 # Torch cache
 .cache/

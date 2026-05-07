@@ -17,7 +17,7 @@ from pytorch_grad_cam.utils.image import (
 )
 from torchvision import models
 
-from app.config import TARGET_IMAGE_SIZE
+from ai.app.config import TARGET_IMAGE_SIZE
 
 
 DEVICE = torch.device(
