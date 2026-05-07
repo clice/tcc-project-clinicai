@@ -40,7 +40,11 @@ def load_model() -> nn.Module:
     model = create_resnet50_model(num_classes=2)
 
     if MODEL_PATH.exists():
-        state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+        state_dict = torch.load(
+            MODEL_PATH,
+            map_location=DEVICE,
+            weights_only=True,
+        )
         model.load_state_dict(state_dict)
 
     model.to(DEVICE)
