@@ -1,5 +1,5 @@
 """
-Módulo responsável pela inferência da IA.
+Módulo responsável pela inferência da IA do ClinicAI.
 """
 
 import torch
@@ -12,29 +12,24 @@ from app.inference.preprocess import preprocess_image
 
 def predict_image(image_bytes: bytes) -> dict:
     """
-    Executa uma predição simulada.
-
-    Nesta etapa:
-    - faz preprocessamento;
-    - simula uma inferência;
-    - retorna resultado estruturado.
+    Executa a predição da imagem enviada para a API.
     """
 
     image_tensor = preprocess_image(image_bytes)
-    
+
     image_tensor = image_tensor.to(DEVICE)
-    
+
     with torch.no_grad():
         outputs = model(image_tensor)
-        
+
         probabilities = torch.softmax(outputs, dim=1)
-        
+
         confidence, predicted_class = torch.max(probabilities, dim=1)
 
     predicted_class_index = predicted_class.item()
 
     predicted_label = CLASS_LABELS[predicted_class_index]
-    
+
     gradcam_path = generate_gradcam_from_bytes(image_bytes)
 
     return {
@@ -45,3 +40,4 @@ def predict_image(image_bytes: bytes) -> dict:
         "gradcam_available": True,
         "gradcam_path": gradcam_path,
     }
+    

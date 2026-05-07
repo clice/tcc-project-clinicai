@@ -26,8 +26,8 @@ ai/models/**/*.pth
 # Jupyter
 .ipynb_checkpoints/
 
-# Datasets reais
-ai/datasets/gastrowintestinal/*
+# Datasets da IA
+ai/datasets/gastrointestinal/*
 !ai/datasets/gastrointestinal/.gitkeep
 !ai/datasets/gastrointestinal/normal/
 !ai/datasets/gastrointestinal/normal/.gitkeep
