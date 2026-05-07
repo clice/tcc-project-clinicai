@@ -2,8 +2,9 @@
 Treinamento da ResNet50 para o ClinicAI.
 """
 
-from pathlib import Path
 import random
+import time
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -11,7 +12,6 @@ import torch
 import torch.nn as nn
 
 from sklearn.metrics import accuracy_score
-
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -20,7 +20,6 @@ from torchvision import models
 from training.datasets.build_dataset import (
     build_train_validation_split,
 )
-
 from training.datasets.gastro_dataset import (
     GastroDataset,
 )
@@ -30,11 +29,8 @@ from training.datasets.gastro_dataset import (
 # =========================================================
 
 SEED = 42
-
 BATCH_SIZE = 8
-
 NUM_EPOCHS = 10
-
 LEARNING_RATE = 0.0001
 
 DEVICE = torch.device(
@@ -43,62 +39,33 @@ DEVICE = torch.device(
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATASET_DIR = (
-    BASE_DIR
-    / "datasets"
-    / "gastrointestinal"
-)
+DATASET_DIR = BASE_DIR / "datasets" / "gastrointestinal"
 
-CHECKPOINT_DIR = (
-    BASE_DIR
-    / "models"
-    / "checkpoints"
-)
+CHECKPOINT_DIR = BASE_DIR / "models" / "checkpoints"
 
-BEST_MODEL_PATH = (
-    CHECKPOINT_DIR
-    / "best_model.pt"
-)
+BEST_MODEL_PATH = CHECKPOINT_DIR / "best_model.pt"
 
-FINAL_MODEL_PATH = (
-    BASE_DIR
-    / "models"
-    / "exported"
-    / "model.pt"
-)
+FINAL_MODEL_PATH = BASE_DIR / "models" / "exported" / "model.pt"
 
-REPORTS_DIR = (
-    BASE_DIR
-    / "reports"
-)
+REPORTS_DIR = BASE_DIR / "reports"
 
-METRICS_DIR = (
-    REPORTS_DIR
-    / "metrics"
-)
+METRICS_DIR = REPORTS_DIR / "metrics"
 
-FIGURES_DIR = (
-    REPORTS_DIR
-    / "figures"
-)
+FIGURES_DIR = REPORTS_DIR / "figures"
 
-CSV_HISTORY_PATH = (
-    METRICS_DIR
-    / "training_history.csv"
-)
+CSV_HISTORY_PATH = METRICS_DIR / "training_history.csv"
 
-TRAINING_CURVE_PATH = (
-    FIGURES_DIR
-    / "training_curves.png"
-)
+TRAINING_CURVE_PATH = FIGURES_DIR / "training_curves.png"
 
 # =========================================================
 # SEED
 # =========================================================
 
 torch.manual_seed(SEED)
-
 random.seed(SEED)
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
 
 # =========================================================
 # DATASET
@@ -106,15 +73,16 @@ random.seed(SEED)
 
 
 def create_dataloaders():
+    """
+    Cria DataLoaders de treino e validação.
+    """
 
     (
         train_paths,
         val_paths,
         train_labels,
         val_labels,
-    ) = build_train_validation_split(
-        DATASET_DIR
-    )
+    ) = build_train_validation_split(DATASET_DIR)
 
     train_dataset = GastroDataset(
         train_paths,
@@ -132,12 +100,16 @@ def create_dataloaders():
         train_dataset,
         batch_size=BATCH_SIZE,
         shuffle=True,
+        num_workers=2,
+        pin_memory=torch.cuda.is_available(),
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False,
+        num_workers=2,
+        pin_memory=torch.cuda.is_available(),
     )
 
     return train_loader, val_loader
@@ -149,6 +121,9 @@ def create_dataloaders():
 
 
 def create_model():
+    """
+    Cria ResNet50 binária usando transfer learning.
+    """
 
     model = models.resnet50(
         weights="IMAGENET1K_V1"
@@ -169,27 +144,33 @@ def create_model():
 # =========================================================
 
 
+def get_gpu_memory_info():
+    """
+    Retorna uso de memória da GPU em GB.
+    """
+
+    if not torch.cuda.is_available():
+        return 0.0, 0.0
+
+    allocated = torch.cuda.memory_allocated() / 1024**3
+    reserved = torch.cuda.memory_reserved() / 1024**3
+
+    return allocated, reserved
+
+
 def train():
+    """
+    Executa treinamento do modelo.
+    """
 
-    METRICS_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    FIGURES_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    CHECKPOINT_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+    METRICS_DIR.mkdir(parents=True, exist_ok=True)
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+    CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
+    FINAL_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     train_loader, val_loader = create_dataloaders()
 
     model = create_model()
-
     model.to(DEVICE)
 
     criterion = nn.CrossEntropyLoss()
@@ -207,26 +188,46 @@ def train():
     )
 
     best_val_loss = float("inf")
-
     history = []
 
     print(f"\nTraining on: {DEVICE}")
 
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(0)
+
+        total_memory = (
+            torch.cuda.get_device_properties(0).total_memory
+            / 1024**3
+        )
+
+        print(f"GPU: {gpu_name}")
+        print(f"VRAM total: {total_memory:.2f} GB")
+
+    training_start_time = time.time()
+
     for epoch in range(NUM_EPOCHS):
+        epoch_start_time = time.time()
+
+        if torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
 
         # =========================
         # TRAIN
         # =========================
 
         model.train()
-
         train_loss = 0.0
 
         for images, labels in train_loader:
+            images = images.to(
+                DEVICE,
+                non_blocking=True,
+            )
 
-            images = images.to(DEVICE)
-
-            labels = labels.to(DEVICE)
+            labels = labels.to(
+                DEVICE,
+                non_blocking=True,
+            )
 
             optimizer.zero_grad()
 
@@ -238,7 +239,6 @@ def train():
             )
 
             loss.backward()
-
             optimizer.step()
 
             train_loss += loss.item()
@@ -252,18 +252,20 @@ def train():
         model.eval()
 
         val_loss = 0.0
-
         predictions = []
-
         targets = []
 
         with torch.no_grad():
-
             for images, labels in val_loader:
+                images = images.to(
+                    DEVICE,
+                    non_blocking=True,
+                )
 
-                images = images.to(DEVICE)
-
-                labels = labels.to(DEVICE)
+                labels = labels.to(
+                    DEVICE,
+                    non_blocking=True,
+                )
 
                 outputs = model(images)
 
@@ -296,21 +298,40 @@ def train():
 
         scheduler.step(val_loss)
 
-        print(
-            f"\nEpoch {epoch + 1}/{NUM_EPOCHS}"
-        )
+        epoch_time = time.time() - epoch_start_time
+        current_lr = optimizer.param_groups[0]["lr"]
 
-        print(
-            f"Train Loss: {train_loss:.4f}"
-        )
+        gpu_memory_allocated, gpu_memory_reserved = get_gpu_memory_info()
 
-        print(
-            f"Val Loss: {val_loss:.4f}"
-        )
+        gpu_peak_memory = 0.0
 
-        print(
-            f"Val Accuracy: {val_accuracy:.4f}"
-        )
+        if torch.cuda.is_available():
+            gpu_peak_memory = (
+                torch.cuda.max_memory_allocated()
+                / 1024**3
+            )
+
+        # =========================
+        # LOG
+        # =========================
+
+        print(f"\nEpoch {epoch + 1}/{NUM_EPOCHS}")
+        print(f"Train Loss: {train_loss:.4f}")
+        print(f"Val Loss: {val_loss:.4f}")
+        print(f"Val Accuracy: {val_accuracy:.4f}")
+        print(f"Epoch Time: {epoch_time:.2f}s")
+        print(f"Learning Rate: {current_lr:.8f}")
+
+        if torch.cuda.is_available():
+            print(
+                f"GPU Memory Allocated: {gpu_memory_allocated:.2f} GB"
+            )
+            print(
+                f"GPU Memory Reserved : {gpu_memory_reserved:.2f} GB"
+            )
+            print(
+                f"GPU Peak Memory     : {gpu_peak_memory:.2f} GB"
+            )
 
         history.append(
             {
@@ -318,6 +339,20 @@ def train():
                 "train_loss": train_loss,
                 "val_loss": val_loss,
                 "val_accuracy": val_accuracy,
+                "epoch_time_seconds": round(epoch_time, 2),
+                "learning_rate": current_lr,
+                "gpu_memory_allocated_gb": round(
+                    gpu_memory_allocated,
+                    2,
+                ),
+                "gpu_memory_reserved_gb": round(
+                    gpu_memory_reserved,
+                    2,
+                ),
+                "gpu_peak_memory_gb": round(
+                    gpu_peak_memory,
+                    2,
+                ),
             }
         )
 
@@ -326,7 +361,6 @@ def train():
         # =========================
 
         if val_loss < best_val_loss:
-
             best_val_loss = val_loss
 
             torch.save(
@@ -334,9 +368,7 @@ def train():
                 BEST_MODEL_PATH,
             )
 
-            print(
-                "Best model updated."
-            )
+            print("Best model updated.")
 
     # =====================================================
     # EXPORT FINAL
@@ -393,23 +425,33 @@ def train():
     )
 
     plt.xlabel("Epoch")
-
     plt.ylabel("Loss")
-
     plt.title("Training Curves")
-
     plt.legend()
-
     plt.tight_layout()
 
     plt.savefig(TRAINING_CURVE_PATH)
-
     plt.close()
 
     print(
         f"\nTraining curves saved at:\n{TRAINING_CURVE_PATH}"
     )
 
+    # =====================================================
+    # TOTAL TIME
+    # =====================================================
+
+    total_training_time = time.time() - training_start_time
+
+    print(
+        f"\nTotal training time: {total_training_time:.2f}s"
+    )
+
+    print(
+        f"Total training time: {total_training_time / 60:.2f}min"
+    )
+
 
 if __name__ == "__main__":
     train()
+    

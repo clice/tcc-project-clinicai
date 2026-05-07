@@ -37,6 +37,7 @@ services:
     volumes:
       - ./ai:/app
       - ./ai/models:/app/models
+      - torch_cache:/root/.cache/torch
     ports:
       - "8001:8001"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
@@ -68,3 +69,4 @@ volumes:
   postgres_data:
   uploads_data:
   ai_models:
+  torch_cache:
