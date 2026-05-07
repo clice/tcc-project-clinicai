@@ -19,18 +19,18 @@ dist/
 build/
 
 # Modelos treinados
-models/exported/*.pt
-models/checkpoints/*.pt
-models/**/*.pth
+ai/models/exported/*.pt
+ai/models/checkpoints/*.pt
+ai/models/**/*.pth
 
 # Jupyter
 .ipynb_checkpoints/
 
 # Dataset
-datasets/gastrointestinal/
+ai/datasets/gastrointestinal/
 
 # Outputs experimentais
-training/experiments/outputs/
+ai/training/experiments/outputs/
 
 # Torch cache
 .cache/
