@@ -119,11 +119,13 @@ def create_dataloaders():
     train_dataset = GastroDataset(
         train_paths,
         train_labels,
+        train=True,
     )
 
     val_dataset = GastroDataset(
         val_paths,
         val_labels,
+        train=False,
     )
 
     train_loader = DataLoader(
