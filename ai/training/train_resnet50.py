@@ -32,6 +32,7 @@ SEED = 42
 BATCH_SIZE = 8
 NUM_EPOCHS = 10
 LEARNING_RATE = 0.0001
+EARLY_STOPPING_PATIENCE = 4
 
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
@@ -188,6 +189,7 @@ def train():
     )
 
     best_val_loss = float("inf")
+    epochs_without_improvement = 0
     history = []
 
     print(f"\nTraining on: {DEVICE}")
@@ -361,7 +363,10 @@ def train():
         # =========================
 
         if val_loss < best_val_loss:
+            
             best_val_loss = val_loss
+
+            epochs_without_improvement = 0
 
             torch.save(
                 model.state_dict(),
@@ -369,6 +374,30 @@ def train():
             )
 
             print("Best model updated.")
+
+        else:
+
+            epochs_without_improvement += 1
+
+            print(
+                f"No improvement for "
+                f"{epochs_without_improvement} epoch(s)."
+            )
+            
+        # =========================
+        # EARLY STOPPING
+        # =========================
+
+        if (
+            epochs_without_improvement
+            >= EARLY_STOPPING_PATIENCE
+        ):
+
+            print(
+                "\nEarly stopping triggered."
+            )
+
+            break
 
     # =====================================================
     # EXPORT FINAL
