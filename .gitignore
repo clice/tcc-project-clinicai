@@ -1,94 +1,156 @@
-# Python
+# =====================================================
+# ClinicAI
+# =====================================================
+
+# =====================================================
+# PYTHON
+# =====================================================
+
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.venv/
-venv/
 
-# Environment
-.env
-
-# FastAPI / Python tooling
 .pytest_cache/
 .mypy_cache/
 
-# Node
+# Virtual environments
+.venv/
+venv/
+
+# =====================================================
+# ENVIRONMENT VARIABLES
+# =====================================================
+
+.env
+*.env
+
+# =====================================================
+# NODE / FRONTEND
+# =====================================================
+
 node_modules/
+
 dist/
 build/
 
-# Modelos treinados
-ai/models/exported/*.pt
-ai/models/checkpoints/*.pt
-ai/models/**/*.pth
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Datasets da IA
-ai/datasets/gastrointestinal/*
-!ai/datasets/gastrointestinal/.gitkeep
-!ai/datasets/gastrointestinal/normal/
-!ai/datasets/gastrointestinal/normal/.gitkeep
-!ai/datasets/gastrointestinal/abnormal/
-!ai/datasets/gastrointestinal/abnormal/.gitkeep
-
-# Modelos treinados
-ai/models/exported/*.pt
-ai/models/exported/*.pth
-ai/models/checkpoints/*.pt
-ai/models/checkpoints/*.pth
-
-# Relatórios e outputs gerados
-ai/reports/metrics/*.csv
-ai/reports/metrics/*.json
-ai/reports/figures/*.png
-ai/reports/gradcam/*.png
-ai/reports/training/*
-
-!ai/reports/metrics/.gitkeep
-!ai/reports/figures/.gitkeep
-!ai/reports/gradcam/.gitkeep
-!ai/reports/training/.gitkeep
-
-# Outputs antigos/experimentais
-ai/training/experiments/outputs/
-
-# Storage gerado pela API de IA
-ai/storage/gradcam/
-ai/storage/predictions/
-ai/storage/temp/
-
-# Torch cache
-.cache/
-
-# OS / Editor
-.DS_Store
-Thumbs.db
-.vscode/
-
-# Logs
-*.log
-
-# Docker
-postgres_data/
-
-# testing
-/coverage
-
-# Storage da API de IA
-ai/storage/gradcam/
-ai/storage/predictions/
-ai/storage/temp/
-
-# misc
 .eslintcache
-.idea
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# upload exams
+# =====================================================
+# JUPYTER
+# =====================================================
+
+.ipynb_checkpoints/
+
+# =====================================================
+# IA - DATASETS
+# =====================================================
+
+ai/datasets/gastrointestinal/*
+!ai/datasets/gastrointestinal/.gitkeep
+
+!ai/datasets/gastrointestinal/normal/
+!ai/datasets/gastrointestinal/normal/.gitkeep
+
+!ai/datasets/gastrointestinal/abnormal/
+!ai/datasets/gastrointestinal/abnormal/.gitkeep
+
+# =====================================================
+# IA - MODELOS TREINADOS
+# =====================================================
+
+ai/models/exported/*.pt
+ai/models/exported/*.pth
+
+ai/models/checkpoints/*.pt
+ai/models/checkpoints/*.pth
+
+# =====================================================
+# IA - RELATÓRIOS
+# =====================================================
+
+# GradCAM
+ai/reports/gradcam/*.jpg
+ai/reports/gradcam/*.jpeg
+ai/reports/gradcam/*.png
+
+# Métricas
+ai/reports/metrics/*.csv
+ai/reports/metrics/*.json
+
+# Figuras
+ai/reports/figures/*.png
+ai/reports/figures/*.jpg
+
+# Training outputs
+ai/reports/training/*
+
+# Mantém estrutura
+!ai/reports/gradcam/.gitkeep
+!ai/reports/metrics/.gitkeep
+!ai/reports/figures/.gitkeep
+!ai/reports/training/.gitkeep
+
+# =====================================================
+# IA - OUTPUTS EXPERIMENTAIS
+# =====================================================
+
+ai/training/experiments/outputs/
+
+# =====================================================
+# IA - CACHE
+# =====================================================
+
+.cache/
+
+# =====================================================
+# IA - STORAGE TEMPORÁRIO
+# =====================================================
+
+ai/storage/gradcam/
+ai/storage/predictions/
+ai/storage/temp/
+
+# =====================================================
+# FASTAPI / UPLOADS
+# =====================================================
+
 uploads/
+backend/uploads/
+
+# =====================================================
+# DOCKER
+# =====================================================
+
+postgres_data/
+
+# =====================================================
+# TESTES / COVERAGE
+# =====================================================
+
+coverage/
+htmlcov/
+
+# =====================================================
+# IDE / EDITOR
+# =====================================================
+
+.vscode/
+.idea/
+
+# =====================================================
+# OS FILES
+# =====================================================
+
+.DS_Store
+Thumbs.db
+
+# =====================================================
+# LOGS
+# =====================================================
+
+*.log
