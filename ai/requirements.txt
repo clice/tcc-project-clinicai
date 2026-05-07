@@ -20,5 +20,8 @@ pydantic-settings==2.7.1
 scikit-learn==1.6.0
 matplotlib==3.10.0
 
+# Visualização de dados
+seaborn==0.13.2
+
 # Utilitários
 tqdm==4.67.1

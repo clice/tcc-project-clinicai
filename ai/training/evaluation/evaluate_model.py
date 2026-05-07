@@ -4,6 +4,9 @@ Avaliação do modelo treinado.
 
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 import torch
 import torch.nn as nn
 from sklearn.metrics import (
@@ -42,6 +45,18 @@ MODEL_PATH = (
     / "models"
     / "exported"
     / "model.pt"
+)
+
+OUTPUT_DIR = (
+    BASE_DIR
+    / "training"
+    / "experiments"
+    / "outputs"
+)
+
+CONFUSION_MATRIX_PATH = (
+    OUTPUT_DIR
+    / "confusion_matrix.png"
 )
 
 BATCH_SIZE = 8
@@ -90,6 +105,44 @@ def create_validation_loader():
     )
 
     return val_loader
+
+
+def save_confusion_matrix(matrix):
+    """
+    Salva matriz de confusão como imagem.
+    """
+
+    OUTPUT_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    plt.figure(figsize=(6, 6))
+
+    sns.heatmap(
+        matrix,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=["normal", "abnormal"],
+        yticklabels=["normal", "abnormal"],
+    )
+
+    plt.xlabel("Predicted")
+
+    plt.ylabel("Actual")
+
+    plt.title("Confusion Matrix")
+
+    plt.tight_layout()
+
+    plt.savefig(CONFUSION_MATRIX_PATH)
+
+    plt.close()
+
+    print(
+        f"\nConfusion matrix saved at:\n{CONFUSION_MATRIX_PATH}"
+    )
 
 
 def evaluate():
@@ -190,6 +243,8 @@ def evaluate():
     print("\n=== Confusion Matrix ===\n")
 
     print(matrix)
+    
+    save_confusion_matrix(matrix)
 
     print("\n=== Classification Report ===\n")
 
