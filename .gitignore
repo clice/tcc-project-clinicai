@@ -49,6 +49,11 @@ postgres_data/
 # testing
 /coverage
 
+# Storage da API de IA
+ai/storage/gradcam/
+ai/storage/predictions/
+ai/storage/temp/
+
 # misc
 .eslintcache
 .idea
