@@ -1,64 +1,120 @@
 """
-Geração de GradCAM durante a inferência.
+Geração de GradCAM para inferência do ClinicAI.
 """
 
+from io import BytesIO
 from pathlib import Path
+from uuid import uuid4
 
 import cv2
 import numpy as np
-import torch
+
 from PIL import Image
+
 from pytorch_grad_cam import GradCAM
+
 from pytorch_grad_cam.utils.image import (
     preprocess_image as gradcam_preprocess_image,
     show_cam_on_image,
 )
-from uuid import uuid4
 
-from app.config import GRADCAM_DIR
-from app.config import BASE_DIR, TARGET_IMAGE_SIZE
-from app.inference.model_loader import model
+from training.preprocessing.pipeline import (
+    preprocess_for_training,
+)
+
+from app.config import TARGET_IMAGE_SIZE
+
+from app.inference.model_loader import (
+    DEVICE,
+    model,
+)
+
+# =========================================================
+# DIRETÓRIO
+# =========================================================
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+GRADCAM_OUTPUT_DIR = (
+    BASE_DIR
+    / "reports"
+    / "gradcam"
+)
+
+GRADCAM_OUTPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+# =========================================================
+# FUNÇÃO
+# =========================================================
 
 
-def generate_gradcam_from_bytes(image_bytes: bytes) -> str:
+def generate_gradcam_from_bytes(
+    image_bytes: bytes,
+) -> str:
     """
-    Gera GradCAM a partir dos bytes da imagem enviada para a API.
+    Gera GradCAM para imagem enviada à API.
     """
-    
-    GRADCAM_DIR.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
 
-    gradcam_filename = f"{uuid4()}.jpg"
-
-    gradcam_path = (
-        GRADCAM_DIR
-        / gradcam_filename
-    )
+    # =====================================================
+    # LOAD IMAGE
+    # =====================================================
 
     image = Image.open(
-        __import__("io").BytesIO(image_bytes)
+        BytesIO(image_bytes)
     ).convert("RGB")
 
-    image = image.resize(TARGET_IMAGE_SIZE)
+    image = np.array(image)
 
-    rgb_image = np.array(image).astype(np.float32) / 255.0
+    # =====================================================
+    # PREPROCESSING MÉDICO
+    # =====================================================
+
+    image = preprocess_for_training(image)
+
+    # =====================================================
+    # RESIZE
+    # =====================================================
+
+    image = cv2.resize(
+        image,
+        TARGET_IMAGE_SIZE,
+    )
+
+    rgb_image = image.astype(np.float32) / 255.0
+
+    # =====================================================
+    # TENSOR
+    # =====================================================
 
     input_tensor = gradcam_preprocess_image(
         rgb_image,
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
-    )
+    ).to(DEVICE)
 
-    target_layers = [model.layer4[-1]]
+    # =====================================================
+    # TARGET LAYER
+    # =====================================================
+
+    target_layers = [
+        model.layer4[-1]
+    ]
+
+    # =====================================================
+    # CAM
+    # =====================================================
 
     cam = GradCAM(
         model=model,
         target_layers=target_layers,
     )
 
-    grayscale_cam = cam(input_tensor=input_tensor)[0]
+    grayscale_cam = cam(
+        input_tensor=input_tensor
+    )[0]
 
     visualization = show_cam_on_image(
         rgb_image,
@@ -66,9 +122,23 @@ def generate_gradcam_from_bytes(image_bytes: bytes) -> str:
         use_rgb=True,
     )
 
-    cv2.imwrite(
-        str(gradcam_path),
-        cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR),
+    # =====================================================
+    # SAVE
+    # =====================================================
+
+    filename = f"{uuid4()}.jpg"
+
+    output_path = (
+        GRADCAM_OUTPUT_DIR
+        / filename
     )
 
-    return str(gradcam_path)
+    cv2.imwrite(
+        str(output_path),
+        cv2.cvtColor(
+            visualization,
+            cv2.COLOR_RGB2BGR,
+        ),
+    )
+
+    return str(output_path)

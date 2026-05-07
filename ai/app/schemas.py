@@ -15,6 +15,11 @@ class PredictionResponse(BaseModel):
     Por enquanto, este schema ainda será usado com uma predição simulada.
     Depois será conectado ao modelo real treinado.
     """
+    
+    exam_domain: str = Field(
+        ...,
+        description="Domínio médico do modelo utilizado.",
+    )
 
     label: str = Field(
         ...,
@@ -37,6 +42,11 @@ class PredictionResponse(BaseModel):
         ...,
         description="Versão do modelo utilizado.",
     )
+    
+    model_path: str = Field(
+        ...,
+        description="Dispositivo usado durante inferência.",
+    )
 
     gradcam_available: bool = Field(
         default=False,
@@ -46,4 +56,9 @@ class PredictionResponse(BaseModel):
     gradcam_path: str | None = Field(
         default=None,
         description="Caminho local do GradCAM gerado.",
+    )    
+    
+    device: str = Field(
+        ...,
+        description="Caminho do modelo carregado.",
     )
