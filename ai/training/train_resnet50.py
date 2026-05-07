@@ -126,16 +126,11 @@ def create_model():
     Cria ResNet50 binária usando transfer learning.
     """
 
-    model = models.resnet50(
-        weights="IMAGENET1K_V1"
-    )
+    model = models.resnet50(weights="IMAGENET1K_V1")
 
     in_features = model.fc.in_features
 
-    model.fc = nn.Linear(
-        in_features,
-        2,
-    )
+    model.fc = nn.Linear(in_features, 2)
 
     return model
 
@@ -176,16 +171,18 @@ def train():
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = Adam(
-        model.parameters(),
-        lr=LEARNING_RATE,
-    )
+    optimizer = Adam(model.parameters(), lr=LEARNING_RATE)
 
     scheduler = ReduceLROnPlateau(
         optimizer,
         mode="min",
         patience=2,
         factor=0.5,
+    )
+    
+    scaler = torch.amp.GradScaler(
+        "cuda",
+        enabled=torch.cuda.is_available(),
     )
 
     best_val_loss = float("inf")
@@ -197,10 +194,7 @@ def train():
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
 
-        total_memory = (
-            torch.cuda.get_device_properties(0).total_memory
-            / 1024**3
-        )
+        total_memory = (torch.cuda.get_device_properties(0).total_memory / 1024**3)
 
         print(f"GPU: {gpu_name}")
         print(f"VRAM total: {total_memory:.2f} GB")
@@ -221,27 +215,27 @@ def train():
         train_loss = 0.0
 
         for images, labels in train_loader:
-            images = images.to(
-                DEVICE,
-                non_blocking=True,
-            )
-
-            labels = labels.to(
-                DEVICE,
-                non_blocking=True,
-            )
+            images = images.to(DEVICE, non_blocking=True)
+            labels = labels.to(DEVICE, non_blocking=True)
 
             optimizer.zero_grad()
 
-            outputs = model(images)
+            with torch.amp.autocast(
+                "cuda",
+                enabled=torch.cuda.is_available(),
+            ):
+                outputs = model(images)
 
-            loss = criterion(
-                outputs,
-                labels,
-            )
+                loss = criterion(
+                    outputs,
+                    labels,
+                )
 
-            loss.backward()
-            optimizer.step()
+            scaler.scale(loss).backward()
+
+            scaler.step(optimizer)
+
+            scaler.update()
 
             train_loss += loss.item()
 
@@ -363,40 +357,21 @@ def train():
         # =========================
 
         if val_loss < best_val_loss:
-            
             best_val_loss = val_loss
-
             epochs_without_improvement = 0
-
-            torch.save(
-                model.state_dict(),
-                BEST_MODEL_PATH,
-            )
-
+            torch.save(model.state_dict(), BEST_MODEL_PATH)
             print("Best model updated.")
 
         else:
-
             epochs_without_improvement += 1
-
-            print(
-                f"No improvement for "
-                f"{epochs_without_improvement} epoch(s)."
-            )
+            print(f"No improvement for {epochs_without_improvement} epoch(s).")
             
         # =========================
         # EARLY STOPPING
         # =========================
 
-        if (
-            epochs_without_improvement
-            >= EARLY_STOPPING_PATIENCE
-        ):
-
-            print(
-                "\nEarly stopping triggered."
-            )
-
+        if epochs_without_improvement >= EARLY_STOPPING_PATIENCE:
+            print("\nEarly stopping triggered.")
             break
 
     # =====================================================
