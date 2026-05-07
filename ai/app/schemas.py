@@ -42,3 +42,8 @@ class PredictionResponse(BaseModel):
         default=False,
         description="Indica se o GradCAM foi gerado para a imagem.",
     )
+    
+    gradcam_path: str | None = Field(
+        default=None,
+        description="Caminho local do GradCAM gerado.",
+    )

@@ -5,6 +5,7 @@ Módulo responsável pela inferência da IA.
 import torch
 
 from app.config import CLASS_LABELS
+from app.inference.gradcam import generate_gradcam_from_bytes
 from app.inference.model_loader import DEVICE, model
 from app.inference.preprocess import preprocess_image
 
@@ -33,11 +34,14 @@ def predict_image(image_bytes: bytes) -> dict:
     predicted_class_index = predicted_class.item()
 
     predicted_label = CLASS_LABELS[predicted_class_index]
+    
+    gradcam_path = generate_gradcam_from_bytes(image_bytes)
 
     return {
         "label": predicted_label,
         "confidence": round(confidence.item(), 4),
         "model_name": "resnet50_binary_classifier",
         "model_version": "0.1.0",
-        "gradcam_available": False,
+        "gradcam_available": True,
+        "gradcam_path": gradcam_path,
     }
