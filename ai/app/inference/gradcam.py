@@ -13,27 +13,29 @@ from pytorch_grad_cam.utils.image import (
     preprocess_image as gradcam_preprocess_image,
     show_cam_on_image,
 )
+from uuid import uuid4
 
+from app.config import GRADCAM_DIR
 from app.config import BASE_DIR, TARGET_IMAGE_SIZE
 from app.inference.model_loader import model
-
-
-OUTPUT_DIR = (
-    BASE_DIR.parent
-    / "training"
-    / "experiments"
-    / "outputs"
-)
-
-API_GRADCAM_PATH = OUTPUT_DIR / "api_gradcam_result.jpg"
 
 
 def generate_gradcam_from_bytes(image_bytes: bytes) -> str:
     """
     Gera GradCAM a partir dos bytes da imagem enviada para a API.
     """
+    
+    GRADCAM_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    gradcam_filename = f"{uuid4()}.jpg"
+
+    gradcam_path = (
+        GRADCAM_DIR
+        / gradcam_filename
+    )
 
     image = Image.open(
         __import__("io").BytesIO(image_bytes)
@@ -65,8 +67,8 @@ def generate_gradcam_from_bytes(image_bytes: bytes) -> str:
     )
 
     cv2.imwrite(
-        str(API_GRADCAM_PATH),
+        str(gradcam_path),
         cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR),
     )
 
-    return str(API_GRADCAM_PATH)
+    return str(gradcam_path)
