@@ -18,6 +18,23 @@ node_modules/
 dist/
 build/
 
+# Modelos treinados
+models/exported/*.pt
+models/checkpoints/*.pt
+models/**/*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Dataset
+datasets/gastrointestinal/
+
+# Outputs experimentais
+training/experiments/outputs/
+
+# Torch cache
+.cache/
+
 # OS / Editor
 .DS_Store
 Thumbs.db
