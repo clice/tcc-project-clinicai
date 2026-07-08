@@ -82,10 +82,20 @@ class ExamUpdate(BaseModel):
 
 class ExamMedicalReview(BaseModel):
     """
-    Schema usado para o exame quando realizado revisão pelo médico.
+    Schema usado quando o médico realiza a revisão do resultado da IA.
+
+    has_discrepancy indica o desfecho da revisão:
+    - False (padrão): médico confirma a análise da IA -> exame vai para 'completed'.
+    - True: médico identificou um problema/divergência na análise da IA
+      -> exame vai para 'completed_with_divergence'.
+
+    Em ambos os casos o exame é encerrado (nenhum dos dois reabre o exame
+    para nova ação); a diferença é só a sinalização do resultado, para não
+    misturar exames concluídos normalmente com os que tiveram divergência.
     """
     findings: str = Field(..., min_length=3)
     conclusion: str = Field(..., min_length=3)
+    has_discrepancy: bool = False
 
     @field_validator("findings", "conclusion")
     @classmethod
@@ -121,6 +131,10 @@ class ExamResponse(BaseModel):
     clinical_indication: str | None = None
     findings: str | None = None
     conclusion: str | None = None
+
+    reviewed_by_id: int | None = None
+    reviewed_by_name: str | None = None
+    reviewed_at: datetime | None = None
 
     file_path: str | None = None
     file_name: str | None = None

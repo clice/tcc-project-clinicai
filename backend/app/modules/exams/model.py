@@ -42,6 +42,10 @@ class Exam(Base):
     doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False, index=True)
 
+    # Revisão médica do resultado da IA
+    reviewed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+
     # Datas de auditoria
     created_at = Column(
         DateTime(timezone=True),
@@ -60,6 +64,7 @@ class Exam(Base):
     clinic = relationship("Clinic", back_populates="exams")
     patient = relationship("Patient", back_populates="exams")
     doctor = relationship("User", foreign_keys=[doctor_id])
+    reviewed_by = relationship("User", foreign_keys=[reviewed_by_id])
     status = relationship("Status", back_populates="exams")
 
     ai_analysis = relationship(
