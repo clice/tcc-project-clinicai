@@ -169,7 +169,7 @@ export const canAccessRole = (user, allowedRoles = []) => {
 
 // CLINICS
 export const canManageClinics = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.CLINICS_READ,
     PERMISSIONS.CLINICS_CREATE,
     PERMISSIONS.CLINICS_UPDATE,
@@ -179,7 +179,7 @@ export const canManageClinics = (user) => {
 
 // PATIENTS
 export const canManagePatients = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.PATIENTS_READ,
     PERMISSIONS.PATIENTS_CREATE,
     PERMISSIONS.PATIENTS_UPDATE,
@@ -189,7 +189,7 @@ export const canManagePatients = (user) => {
 
 // EXAMS
 export const canManageExams = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.EXAMS_READ,
     PERMISSIONS.EXAMS_CREATE,
     PERMISSIONS.EXAMS_UPDATE,
@@ -202,7 +202,7 @@ export const canManageExams = (user) => {
 
 // AI ANALYSIS
 export const canManageAiAnalysis = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.AI_ANALYSIS_READ,
     PERMISSIONS.AI_ANALYSIS_CREATE,
     PERMISSIONS.AI_ANALYSIS_UPDATE,
@@ -213,7 +213,7 @@ export const canManageAiAnalysis = (user) => {
 
 // USERS
 export const canManageUsers = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.USERS_READ,
     PERMISSIONS.USERS_CREATE,
     PERMISSIONS.USERS_UPDATE,
@@ -223,7 +223,7 @@ export const canManageUsers = (user) => {
 
 // AUDIT LOGS
 export const canManageAuditLogs = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.AUDIT_LOGS_READ,
   ])
 }
@@ -234,7 +234,7 @@ export const canManageAugitLogs = canManageAuditLogs
 
 // ROLES
 export const canManageRoles = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.ROLES_READ,
     PERMISSIONS.ROLES_CREATE,
     PERMISSIONS.ROLES_UPDATE,
@@ -244,7 +244,7 @@ export const canManageRoles = (user) => {
 
 // PERMISSIONS
 export const canManagePermissions = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.PERMISSIONS_READ,
     PERMISSIONS.PERMISSIONS_CREATE,
     PERMISSIONS.PERMISSIONS_UPDATE,
@@ -254,7 +254,7 @@ export const canManagePermissions = (user) => {
 
 // STATUSES
 export const canManageStatuses = (user) => {
-  hasAnyPermission(user, [
+  return hasAnyPermission(user, [
     PERMISSIONS.STATUSES_READ,
     PERMISSIONS.STATUSES_CREATE,
     PERMISSIONS.STATUSES_UPDATE,

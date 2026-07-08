@@ -13,7 +13,7 @@ from app.common.services import (
     model_dump_update,
     normalize_update_data,
 )
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -452,7 +452,27 @@ def update_user_password(
             detail="Você não tem permissão para alterar a senha deste usuário.",
         )
 
+    is_self_service = current_user.id == user.id and not is_admin_master(current_user)
+
+    # Quando o próprio usuário troca a própria senha, exigimos a senha atual.
+    # Um admin_master resetando a senha de outro usuário não precisa informá-la.
+    if is_self_service:
+        if not payload.current_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Informe a senha atual para definir uma nova senha.",
+            )
+
+        if not verify_password(payload.current_password, user.password_hash):
+            raise HTTPException(
+                status_code=400,
+                detail="Senha atual incorreta.",
+            )
+
     user.password_hash = get_password_hash(payload.password)
+
+    # Invalida tokens (access e refresh) emitidos antes da troca de senha.
+    user.token_version += 1
 
     # Adiciona log
     create_audit_log(
@@ -466,6 +486,7 @@ def update_user_password(
         old_data=None,
         new_data={
             "password_updated": True,
+            "token_version": user.token_version,
         },
     )
     

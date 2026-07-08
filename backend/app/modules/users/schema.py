@@ -54,7 +54,7 @@ class UserCreate(UserBase):
     Schema usado para criação de usuário.
     """
 
-    password: str = Field(..., min_length=6, max_length=128)
+    password: str = Field(..., min_length=8, max_length=128)
 
 
 class UserUpdate(BaseModel):
@@ -101,9 +101,14 @@ class UserUpdate(BaseModel):
 class UserPasswordUpdate(BaseModel):
     """
     Schema exclusivo para troca de senha.
+
+    current_password é obrigatório quando o próprio usuário troca a própria
+    senha (validado no service). Não é exigido quando um admin_master
+    reseta a senha de outro usuário.
     """
 
-    password: str = Field(..., min_length=6, max_length=128)
+    password: str = Field(..., min_length=8, max_length=128)
+    current_password: str | None = Field(default=None, max_length=128)
 
 
 class UserResponse(BaseModel):

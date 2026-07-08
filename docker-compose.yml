@@ -41,13 +41,9 @@ services:
     ports:
       - "8001:8001"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # GPU é opcional. O código já cai para CPU sozinho (torch.cuda.is_available()).
+    # Para usar GPU NVIDIA localmente, suba com:
+    #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
 
   frontend:
     build:
