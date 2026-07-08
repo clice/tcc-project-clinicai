@@ -90,6 +90,25 @@ def authenticate_user(
             detail="Email ou senha inválidos.",
         )
 
+    if (
+        not user.status
+        or user.status.applies_to != StatusScope.USER.value
+        or user.status.name != StatusName.ACTIVE.value
+    ):
+        create_audit_log(
+            db=db,
+            user_id=user.id,
+            clinic_id=user.clinic_id,
+            action=AuditAction.LOGIN_FAILED,
+            entity=AuditEntity.AUTH,
+            entity_id=user.id,
+            description="Tentativa de login com credenciais corretas em conta inativa.",
+            new_data={"email": normalized_email},
+            ip_address=ip_address,
+            user_agent=user_agent,
+            commit=True,
+        )
+
     validate_active_user(user)
 
     user.last_access_at = datetime.now(timezone.utc)
