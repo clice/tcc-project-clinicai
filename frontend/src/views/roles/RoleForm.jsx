@@ -140,12 +140,23 @@ const RoleForm = ({ mode = 'create' }) => {
   
   /**
    * Monta o payload enviado para a API de roles.
+   * 'name' só é enviado na criação — na edição é imutável (o backend
+   * nem aceita mais esse campo em RoleUpdate).
    */
-  const buildPayload = () => ({
-    name: form.name,
-    display_name: form.display_name.trim(),
-    description: form.description.trim() || null,
-  })
+  const buildPayload = () => {
+    if (isEditMode) {
+      return {
+        display_name: form.display_name.trim(),
+        description: form.description.trim() || null,
+      }
+    }
+
+    return {
+      name: form.name,
+      display_name: form.display_name.trim(),
+      description: form.description.trim() || null,
+    }
+  }
 
   const validateForm = () => {
     if (!form.name) return 'Selecione o perfil.'
@@ -224,7 +235,7 @@ const RoleForm = ({ mode = 'create' }) => {
                 <CFormLabel>Perfil</CFormLabel>
                 <CFormSelect
                   value={form.name}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(event) => updateField('name', event.target.value)}
                   required
                 >
@@ -235,6 +246,11 @@ const RoleForm = ({ mode = 'create' }) => {
                     </option>
                   ))}
                 </CFormSelect>
+                {isEditMode && (
+                  <div className="form-text">
+                    O perfil não pode ser alterado após a criação.
+                  </div>
+                )}
               </CCol>
 
               <CCol md={6}>

@@ -49,9 +49,15 @@ class RoleUpdate(BaseModel):
     """
     Schema usado para atualização de role.
     Todos os campos são opcionais para permitir update parcial.
+
+    'name' propositalmente NÃO está aqui: é o campo do qual toda a lógica
+    de autorização do sistema depende (ex: role.name == "admin_master").
+    Permitir renomear um perfil já existente para outro valor do enum
+    poderia, na prática, transformar um perfil comum em admin_master (ou
+    vice-versa) sem passar por nenhuma validação de negócio adicional.
+    'name' só é definido na criação do perfil.
     """
 
-    name: RoleName | None = None
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=255)
 

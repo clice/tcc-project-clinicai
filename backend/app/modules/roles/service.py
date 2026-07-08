@@ -131,14 +131,6 @@ def update_role(
         "description": role.description,
     }
 
-    new_name = update_data.get("name", role.name)
-
-    check_role_duplicate(
-        db=db,
-        name=new_name,
-        ignore_role_id=role_id,
-    )
-
     apply_update_data(role, update_data)
 
     # Adiciona log

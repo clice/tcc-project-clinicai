@@ -24,11 +24,20 @@ import psycopg
 
 from app.core.config import settings
 
+# psycopg.connect() não entende o sufixo de dialect/driver do SQLAlchemy
+# (ex: "postgresql+psycopg://"). Normalizamos para o formato que o
+# psycopg puro aceita antes de testar a conexão.
+db_url = settings.database_url
+if "+" in db_url.split("://", 1)[0]:
+    scheme, rest = db_url.split("://", 1)
+    base_scheme = scheme.split("+", 1)[0]
+    db_url = f"{base_scheme}://{rest}"
+
 max_attempts = 30
 
 for attempt in range(1, max_attempts + 1):
     try:
-        conn = psycopg.connect(settings.database_url, connect_timeout=3)
+        conn = psycopg.connect(db_url, connect_timeout=3)
         conn.close()
         break
     except Exception as exc:
