@@ -67,6 +67,16 @@ export const userService = {
   },
 
   /**
+   * Atualiza os dados cadastrais do próprio usuário autenticado
+   * (nome, e-mail, telefone, CPF). Não permite alterar role_id,
+   * clinic_id ou status_id, exclusivo do admin_master.
+   */
+  updateMyProfile: async (payload) => {
+    const response = await api.patch('/users/me', payload)
+    return response.data
+  },
+
+  /**
    * Atualiza a senha do próprio usuário autenticado (doctor, clinic_staff
    * ou admin_master), sempre exigindo a senha atual.
    */

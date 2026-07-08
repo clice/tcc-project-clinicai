@@ -73,6 +73,22 @@ export const AuthProvider = ({ children }) => {
   }
 
   /**
+   * Recarrega os dados do usuário autenticado sem afetar o loading global.
+   * Usado após a edição do próprio perfil (nome, e-mail, telefone etc.),
+   * pra refletir a mudança imediatamente no cabeçalho.
+   */
+  const refreshUser = async () => {
+    if (!token) return null
+
+    const currentUser = await authService.getCurrentUser()
+
+    setUser(currentUser)
+    setStoredUser(currentUser)
+
+    return currentUser
+  }
+
+  /**
    * Login
    */
   const login = async (email, password) => {
@@ -118,6 +134,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       login,
       logout,
+      refreshUser,
     }),
     [token, user, loading, isAuthenticated],
   )

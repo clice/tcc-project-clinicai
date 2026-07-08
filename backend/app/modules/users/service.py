@@ -367,6 +367,19 @@ def update_user(
     if not update_data:
         return build_user_response(user)
 
+    # Autoedição de perfil (rota /users/me): o próprio usuário não pode
+    # alterar seu perfil de acesso, status ou clínica — mesmo que envie
+    # esses campos manualmente pela API. Reservado ao admin_master.
+    is_self_edit = current_user.id == user_id and not is_admin_master(current_user)
+
+    if is_self_edit and any(
+        field in update_data for field in ("role_id", "status_id", "clinic_id")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Você não pode alterar seu próprio perfil de acesso, status ou clínica.",
+        )
+
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
     new_role_id = update_data.get("role_id", user.role_id)
