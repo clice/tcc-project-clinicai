@@ -151,6 +151,7 @@ class UserListResponse(UserResponse):
     """
 
     role_name: str | None = None
+    role_display_name: str | None = None
     status_name: str | None = None
     status_display_name: str | None = None
     clinic_name: str | None = None

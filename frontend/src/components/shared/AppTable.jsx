@@ -128,7 +128,10 @@ export default function AppTable({
                     const sorted = header.column.getIsSorted()
 
                     return (
-                      <CTableHeaderCell key={header.id}>
+                      <CTableHeaderCell
+                        key={header.id}
+                        style={{ width: header.column.columnDef.meta?.width }}
+                      >
                         {header.isPlaceholder ? null : (
                           <div
                             onClick={header.column.getCanSort()
@@ -186,7 +189,10 @@ export default function AppTable({
               table.getRowModel().rows.map((row) => (
                 <CTableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <CTableDataCell key={cell.id}>
+                    <CTableDataCell
+                      key={cell.id}
+                      style={{ width: cell.column.columnDef.meta?.width }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

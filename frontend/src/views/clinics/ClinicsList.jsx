@@ -92,10 +92,10 @@ const ClinicsList = () => {
 
   const columns = useMemo(
     () => [
-      { accessorKey: 'name', header: 'Nome' },
+      { accessorKey: 'name', header: 'Nome', meta: { width: '40%' } },
       { accessorKey: 'cnpj', header: 'CNPJ', cell: ({ getValue }) => formatCnpjBR(getValue()) || '-' },
       { accessorKey: 'city', header: 'Cidade', cell: ({ getValue }) => getValue() || '-' },
-      { accessorKey: 'state', header: 'UF', cell: ({ getValue }) => getValue() || '-' },
+      { accessorKey: 'state', header: 'UF', cell: ({ getValue }) => getValue() || '-', meta: { width: '70px' } },
       {
         id: 'actions',
         header: 'Ações',

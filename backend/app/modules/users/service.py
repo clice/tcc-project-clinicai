@@ -177,6 +177,7 @@ def build_user_response(user: User) -> dict:
         "created_at": user.created_at,
         "updated_at": user.updated_at,
         "role_name": user.role.name if user.role else None,
+        "role_display_name": user.role.display_name if user.role else None,
         "status_name": user.status.name if user.status else None,
         "status_display_name": user.status.display_name if user.status else None,
         "clinic_name": user.clinic.name if user.clinic else None,
@@ -367,8 +368,8 @@ def update_user(
     if not update_data:
         return build_user_response(user)
 
-    # Autoedição de perfil (rota /users/me): ninguém, nem o próprio
-    # admin_master, pode alterar perfil de acesso, status ou clínica
+    # Autoedição de perfil (rota /users/me): ninguém — nem o próprio
+    # admin_master — pode alterar perfil de acesso, status ou clínica
     # da própria conta por essa rota. Essas mudanças só acontecem via
     # /users/{id} (gestão de outros usuários), que já exige users:update
     # (exclusivo de admin_master).
