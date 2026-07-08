@@ -90,9 +90,11 @@ def list_audit_logs(
     user_id: int | None = None,
     entity: str | None = None,
     action: str | None = None,
-) -> list[dict]:
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
     """
-    Lista logs de auditoria com filtros opcionais.
+    Lista logs de auditoria com filtros opcionais e paginação.
 
     Regra:
     - admin_master visualiza todos;
@@ -103,6 +105,11 @@ def list_audit_logs(
             status_code=403,
             detail="Apenas administrador master pode visualizar logs de auditoria.",
         )
+
+    # Trava os limites pra evitar respostas gigantes (ex: alguém passando
+    # limit=999999) e pra sempre ter um valor sensato por padrão.
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
 
     query = (
         db.query(AuditLog)
@@ -124,6 +131,18 @@ def list_audit_logs(
     if action:
         query = query.filter(AuditLog.action == action)
 
-    logs = query.order_by(AuditLog.created_at.desc()).all()
+    total = query.count()
 
-    return [build_audit_log_response(log) for log in logs]
+    logs = (
+        query.order_by(AuditLog.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
+
+    return {
+        "items": [build_audit_log_response(log) for log in logs],
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
