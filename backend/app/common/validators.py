@@ -140,6 +140,32 @@ def validate_password_length(value: str) -> str:
     return value
 
 
+def validate_birth_date(value):
+    """
+    Valida se a data de nascimento é plausível.
+
+    Regras:
+    - não pode estar no futuro;
+    - não pode implicar idade acima de 130 anos (proteção contra erro de
+      digitação, ex: ano trocado).
+    """
+    if value is None:
+        return None
+
+    from datetime import date as _date
+
+    today = _date.today()
+
+    if value > today:
+        raise ValueError("Data de nascimento não pode estar no futuro.")
+
+    max_age_days = 130 * 365
+    if (today - value).days > max_age_days:
+        raise ValueError("Data de nascimento inválida (idade acima de 130 anos).")
+
+    return value
+
+
 def is_valid_cpf(cpf: str | None) -> bool:
     """
     Valida CPF pelo algoritmo oficial dos dígitos verificadores.
