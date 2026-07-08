@@ -14,6 +14,7 @@ from app.common.validators import (
     normalize_required_text,
     normalize_state,
     normalize_zip_code,
+    validate_birth_date,
     validate_cpf,
 )
 
@@ -87,6 +88,11 @@ class PatientBase(BaseModel):
     def normalize_email_field(cls, value: str | None) -> str | None:
         return normalize_optional_email(value)
 
+    @field_validator("birth_date")
+    @classmethod
+    def validate_birth_date_field(cls, value: date | None) -> date | None:
+        return validate_birth_date(value)
+
 
 class PatientCreate(PatientBase):
     """
@@ -152,6 +158,11 @@ class PatientUpdate(BaseModel):
             return None
 
         return validate_cpf(value, required=True)
+
+    @field_validator("birth_date")
+    @classmethod
+    def validate_birth_date_field(cls, value: date | None) -> date | None:
+        return validate_birth_date(value)
 
     @field_validator("zip_code")
     @classmethod
