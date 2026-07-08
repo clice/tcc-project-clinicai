@@ -147,14 +147,6 @@ def update_permission(
         "module": permission.module,
     }
 
-    new_name = update_data.get("name", permission.name)
-
-    check_permission_duplicate(
-        db=db,
-        name=new_name,
-        ignore_permission_id=permission_id,
-    )
-
     apply_update_data(permission, update_data)
 
     create_audit_log(

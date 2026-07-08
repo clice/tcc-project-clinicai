@@ -96,13 +96,24 @@ const StatusForm = ({ mode = 'create' }) => {
 
   /**
    * Monta o payload enviado para a API.
+   * name e applies_to só são enviados na criação — são imutáveis na
+   * edição (o backend nem aceita mais esses campos em StatusUpdate).
    */
-  const buildPayload = () => ({
-    name: form.name,
-    display_name: form.display_name.trim(),
-    applies_to: form.applies_to,
-    description: form.description.trim() || null,
-  })
+  const buildPayload = () => {
+    if (isEditMode) {
+      return {
+        display_name: form.display_name.trim(),
+        description: form.description.trim() || null,
+      }
+    }
+
+    return {
+      name: form.name,
+      display_name: form.display_name.trim(),
+      applies_to: form.applies_to,
+      description: form.description.trim() || null,
+    }
+  }
 
   /**
    * Valida os campos do formulário antes de enviar para a API.
@@ -187,7 +198,7 @@ const StatusForm = ({ mode = 'create' }) => {
                 <CFormLabel>Nome Técnico</CFormLabel>
                 <CFormSelect
                   value={form.name}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(e) => updateField('name', e.target.value)}
                   required
                 >
@@ -215,7 +226,7 @@ const StatusForm = ({ mode = 'create' }) => {
                 <CFormLabel>Aplicado em</CFormLabel>
                 <CFormSelect
                   value={form.applies_to}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(e) => updateField('applies_to', e.target.value)}
                   required
                 >
@@ -226,6 +237,11 @@ const StatusForm = ({ mode = 'create' }) => {
                     </option>
                   ))}
                 </CFormSelect>
+                {isEditMode && (
+                  <div className="form-text">
+                    Nome técnico e escopo não podem ser alterados após a criação.
+                  </div>
+                )}
               </CCol>
 
               <CCol md={12}>
