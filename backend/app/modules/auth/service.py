@@ -15,10 +15,18 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_refresh_token,
+    get_password_hash,
     verify_password,
 )
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.users.model import User
+
+# Hash "isca": usado só para gastar o mesmo tempo de bcrypt quando o
+# e-mail não existe, evitando que alguém descubra e-mails cadastrados
+# medindo a diferença de tempo de resposta entre "e-mail não existe"
+# (que antes retornava na hora) e "e-mail existe, senha errada" (que
+# roda bcrypt, propositalmente lento). Gerado uma vez, no import.
+_DUMMY_PASSWORD_HASH = get_password_hash("senha-isca-nao-usada-para-login-real")
 
 
 def authenticate_user(
@@ -38,6 +46,11 @@ def authenticate_user(
     user = db.query(User).filter(User.email == normalized_email).first()
 
     if not user:
+        # Roda o bcrypt mesmo sem usuário encontrado, só para gastar o
+        # mesmo tempo do caminho "senha errada" — impede enumeração de
+        # e-mail por medição de tempo de resposta.
+        verify_password(password, _DUMMY_PASSWORD_HASH)
+
         create_audit_log(
             db=db,
             user_id=None,

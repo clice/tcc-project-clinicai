@@ -12,6 +12,7 @@ from app.common.validators import (
     normalize_phone,
     normalize_required_text,
     validate_cpf,
+    validate_password_length,
 )
 
 
@@ -55,6 +56,11 @@ class UserCreate(UserBase):
     """
 
     password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_field(cls, value: str) -> str:
+        return validate_password_length(value)
 
 
 class UserUpdate(BaseModel):
@@ -109,6 +115,11 @@ class UserPasswordUpdate(BaseModel):
 
     password: str = Field(..., min_length=8, max_length=128)
     current_password: str | None = Field(default=None, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_field(cls, value: str) -> str:
+        return validate_password_length(value)
 
 
 class UserResponse(BaseModel):

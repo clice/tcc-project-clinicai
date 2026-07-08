@@ -125,6 +125,21 @@ def normalize_phone(value: str | None) -> str | None:
     return cleaned
 
 
+def validate_password_length(value: str) -> str:
+    """
+    Garante que a senha não ultrapasse o limite de 72 bytes do bcrypt.
+
+    O bcrypt ignora silenciosamente qualquer byte além do 72º — ou seja,
+    duas senhas diferentes que compartilhem os primeiros 72 bytes seriam
+    tratadas como idênticas. Como caracteres não-ASCII podem ocupar mais
+    de 1 byte em UTF-8, validamos o tamanho em bytes, não em caracteres.
+    """
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("Senha não pode ultrapassar 72 bytes (bcrypt).")
+
+    return value
+
+
 def is_valid_cpf(cpf: str | None) -> bool:
     """
     Valida CPF pelo algoritmo oficial dos dígitos verificadores.
