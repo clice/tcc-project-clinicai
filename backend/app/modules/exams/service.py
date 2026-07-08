@@ -894,7 +894,7 @@ def restore_exam(
         db=db,
         user_id=current_user.id,
         clinic_id=exam.clinic_id,
-        action=AuditAction.UPDATE,
+        action=AuditAction.RESTORE_EXAM,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
         description="Exame enviado para reprocessamento.",

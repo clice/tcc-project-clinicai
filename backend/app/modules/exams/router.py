@@ -170,24 +170,6 @@ def restore_exam_route(
     )
 
 
-# @router.post("/{exam_id}/upload", response_model=ExamResponse)
-# def upload_exam_file_route(
-#     exam_id: int,
-#     file: UploadFile = File(...),
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(require_permission("exams:upload")),
-# ):
-#     """
-#     Vincula informações de arquivo ao exame.
-#     """
-#     return upload_exam_file(
-#         db=db,
-#         exam_id=exam_id,
-#         file=file,
-#         current_user=current_user,
-#     )
-
-
 @router.get("/{exam_id}/download")
 def download_exam_file_route(
     exam_id: int,

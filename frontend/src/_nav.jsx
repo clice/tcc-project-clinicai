@@ -56,10 +56,6 @@ const _nav = [
     to: '/exams',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_staff'],    
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   },
 
   ////////// SYSTEM
