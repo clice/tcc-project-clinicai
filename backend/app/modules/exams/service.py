@@ -23,7 +23,7 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
-from app.modules.audit_logs.service import create_audit_log
+from app.modules.audit_logs.service import create_audit_log, list_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate
@@ -1128,6 +1128,36 @@ def mark_exam_ai_failed(
     return build_exam_response(exam)
 
 
+def get_exam_history(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """
+    Retorna o histórico de eventos/alterações de status de um exame (RF36).
+
+    Regra: quem pode ver o exame (mesma clínica, ou admin_master) pode ver
+    seu histórico — não é preciso ter a permissão audit_logs:read
+    (que é exclusiva de admin_master) para consultar o histórico do
+    próprio exame.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    return list_audit_logs(
+        db=db,
+        current_user=current_user,
+        entity=AuditEntity.EXAM.value,
+        entity_id=exam_id,
+        limit=200,
+        skip_permission_check=True,
+    )
+
+
 def review_exam(
     db: Session,
     exam_id: int,
@@ -1149,8 +1179,20 @@ def review_exam(
     e propositalmente ficam em status diferentes para não misturar, nas
     listagens, exames concluídos normalmente com os que tiveram divergência
     sinalizada pelo médico.
+
+    Conforme RN10, apenas usuários com perfil médico (role == doctor)
+    podem registrar a conclusão clínica — diferente do restante do
+    sistema, aqui o admin_master NÃO tem passagem livre por permissão:
+    revisar um exame exige julgamento clínico de um médico de verdade,
+    não é uma ação administrativa.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    if not current_user.role or current_user.role.name != RoleName.DOCTOR.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas usuários com perfil médico podem revisar exames.",
+        )
 
     validate_user_can_access_exam(
         current_user=current_user,
