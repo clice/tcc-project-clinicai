@@ -54,9 +54,37 @@ export const userService = {
 
   /**
    * Atualiza somente a senha do usuário.
+   * currentPassword só é necessário quando o próprio usuário troca a
+   * própria senha; um admin_master resetando a senha de outro usuário
+   * pode omitir esse campo.
    */
-  updatePassword: async (id, password) => {
-    const response = await api.patch(`/users/${id}/password`, { password })
+  updatePassword: async (id, password, currentPassword) => {
+    const response = await api.patch(`/users/${id}/password`, {
+      password,
+      current_password: currentPassword || undefined,
+    })
+    return response.data
+  },
+
+  /**
+   * Atualiza os dados cadastrais do próprio usuário autenticado
+   * (nome, e-mail, telefone, CPF). Não permite alterar role_id,
+   * clinic_id ou status_id, exclusivo do admin_master.
+   */
+  updateMyProfile: async (payload) => {
+    const response = await api.patch('/users/me', payload)
+    return response.data
+  },
+
+  /**
+   * Atualiza a senha do próprio usuário autenticado (doctor, clinic_staff
+   * ou admin_master), sempre exigindo a senha atual.
+   */
+  updateMyPassword: async (password, currentPassword) => {
+    const response = await api.patch('/users/me/password', {
+      password,
+      current_password: currentPassword,
+    })
     return response.data
   },
 

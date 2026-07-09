@@ -13,7 +13,7 @@ from app.common.services import (
     model_dump_update,
     normalize_update_data,
 )
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -177,6 +177,7 @@ def build_user_response(user: User) -> dict:
         "created_at": user.created_at,
         "updated_at": user.updated_at,
         "role_name": user.role.name if user.role else None,
+        "role_display_name": user.role.display_name if user.role else None,
         "status_name": user.status.name if user.status else None,
         "status_display_name": user.status.display_name if user.status else None,
         "clinic_name": user.clinic.name if user.clinic else None,
@@ -367,6 +368,21 @@ def update_user(
     if not update_data:
         return build_user_response(user)
 
+    # Autoedição de perfil (rota /users/me): ninguém — nem o próprio
+    # admin_master — pode alterar perfil de acesso, status ou clínica
+    # da própria conta por essa rota. Essas mudanças só acontecem via
+    # /users/{id} (gestão de outros usuários), que já exige users:update
+    # (exclusivo de admin_master).
+    is_self_edit = current_user.id == user_id
+
+    if is_self_edit and any(
+        field in update_data for field in ("role_id", "status_id", "clinic_id")
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Alteração de perfil de acesso, status ou clínica não é permitida na autoedição de perfil.",
+        )
+
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
     new_role_id = update_data.get("role_id", user.role_id)
@@ -452,7 +468,27 @@ def update_user_password(
             detail="Você não tem permissão para alterar a senha deste usuário.",
         )
 
+    is_self_service = current_user.id == user.id and not is_admin_master(current_user)
+
+    # Quando o próprio usuário troca a própria senha, exigimos a senha atual.
+    # Um admin_master resetando a senha de outro usuário não precisa informá-la.
+    if is_self_service:
+        if not payload.current_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Informe a senha atual para definir uma nova senha.",
+            )
+
+        if not verify_password(payload.current_password, user.password_hash):
+            raise HTTPException(
+                status_code=400,
+                detail="Senha atual incorreta.",
+            )
+
     user.password_hash = get_password_hash(payload.password)
+
+    # Invalida tokens (access e refresh) emitidos antes da troca de senha.
+    user.token_version += 1
 
     # Adiciona log
     create_audit_log(
@@ -466,6 +502,7 @@ def update_user_password(
         old_data=None,
         new_data={
             "password_updated": True,
+            "token_version": user.token_version,
         },
     )
     

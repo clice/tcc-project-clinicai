@@ -65,7 +65,7 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
 
-        <CDropdownItem href="#">
+        <CDropdownItem as="button" type="button" onClick={() => navigate('/profile')}>
           <CIcon icon={cilUser} className="me-2" />
           Perfil
         </CDropdownItem>

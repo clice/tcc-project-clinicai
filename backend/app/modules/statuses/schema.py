@@ -50,11 +50,18 @@ class StatusUpdate(BaseModel):
     """
     Schema usado para atualização de status.
     Todos os campos são opcionais para permitir update parcial com PATCH.
+
+    'name' e 'applies_to' propositalmente NÃO estão aqui: praticamente toda
+    regra de negócio do sistema (incluindo o bloqueio de login em
+    get_current_user, que verifica status.name == "active" diretamente)
+    depende desses dois campos para identificar um status específico.
+    Alterá-los numa linha já existente reatribuiria silenciosamente o
+    significado daquele status para todo mundo que o usa, sem nenhuma
+    trava que impeça isso além da checagem de duplicidade. 'name' e
+    'applies_to' só são definidos na criação do status.
     """
 
-    name: StatusName | None = None
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
-    applies_to: StatusScope | None = None
     description: str | None = Field(default=None, max_length=255)
 
     @field_validator("display_name")

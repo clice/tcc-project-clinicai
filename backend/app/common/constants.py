@@ -19,6 +19,8 @@ class AuditAction(StrEnum):
     LOGIN_FAILED = "login_failed"
     LOGOUT = "logout"
     CANCEL_EXAM = "cancel_exam"
+    RESTORE_EXAM = "restore_exam"
+    REVIEW_EXAM = "review_exam"
     UPLOAD = "upload"
     DOWNLOAD = "download"
     RUN_AI_ANALYSIS = "run_ai_analysis"
@@ -45,6 +47,7 @@ class PermissionAction(StrEnum):
     CHANGE_STATUS = "change_status"
     UPLOAD = "upload"
     DOWNLOAD = "download"
+    REVIEW = "review"
     READ_PROFILE = "read_profile"
     UPDATE_PROFILE = "update_profile"
 
@@ -69,7 +72,9 @@ class StatusName(StrEnum):
     PENDING = "pending"
     CANCELED = "canceled"
     COMPLETED = "completed"
+    COMPLETED_WITH_DIVERGENCE = "completed_with_divergence"
     PROCESSING = "processing"
+    AWAITING_REVIEW = "awaiting_review"
     FAILED = "failed"
 
 

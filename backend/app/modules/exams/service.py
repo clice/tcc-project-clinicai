@@ -23,10 +23,10 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
-from app.modules.audit_logs.service import create_audit_log
+from app.modules.audit_logs.service import create_audit_log, list_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
-from app.modules.exams.schema import ExamCreate, ExamUpdate
+from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.statuses.service import (
@@ -75,6 +75,9 @@ def build_exam_response(exam: Exam) -> dict:
         "clinical_indication": exam.clinical_indication,
         "findings": exam.findings,
         "conclusion": exam.conclusion,
+        "reviewed_by_id": exam.reviewed_by_id,
+        "reviewed_by_name": exam.reviewed_by.name if exam.reviewed_by else None,
+        "reviewed_at": exam.reviewed_at,
         "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
@@ -894,7 +897,7 @@ def restore_exam(
         db=db,
         user_id=current_user.id,
         clinic_id=exam.clinic_id,
-        action=AuditAction.UPDATE,
+        action=AuditAction.RESTORE_EXAM,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
         description="Exame enviado para reprocessamento.",
@@ -1116,6 +1119,135 @@ def mark_exam_ai_failed(
     )
 
     exam.status_id = failed_status.id
+
+    db.commit()
+    db.refresh(exam)
+
+    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
+
+    return build_exam_response(exam)
+
+
+def get_exam_history(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """
+    Retorna o histórico de eventos/alterações de status de um exame (RF36).
+
+    Regra: quem pode ver o exame (mesma clínica, ou admin_master) pode ver
+    seu histórico — não é preciso ter a permissão audit_logs:read
+    (que é exclusiva de admin_master) para consultar o histórico do
+    próprio exame.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    return list_audit_logs(
+        db=db,
+        current_user=current_user,
+        entity=AuditEntity.EXAM.value,
+        entity_id=exam_id,
+        limit=200,
+        skip_permission_check=True,
+    )
+
+
+def review_exam(
+    db: Session,
+    exam_id: int,
+    payload: ExamMedicalReview,
+    current_user: User,
+) -> dict:
+    """
+    Registra a revisão médica do resultado da análise de IA.
+
+    Regra:
+    - o exame precisa estar em 'awaiting_review' (IA já concluiu, aguardando
+      o médico). Não é possível revisar um exame ainda em processamento,
+      cancelado, com falha ou já concluído;
+    - has_discrepancy=False -> exame vai para 'completed'
+      (médico confirma a análise da IA);
+    - has_discrepancy=True -> exame vai para 'completed_with_divergence'
+      (médico identificou um problema na análise da IA).
+    Em ambos os casos o exame é encerrado: os dois desfechos são finais,
+    e propositalmente ficam em status diferentes para não misturar, nas
+    listagens, exames concluídos normalmente com os que tiveram divergência
+    sinalizada pelo médico.
+
+    Conforme RN10, apenas usuários com perfil médico (role == doctor)
+    podem registrar a conclusão clínica — diferente do restante do
+    sistema, aqui o admin_master NÃO tem passagem livre por permissão:
+    revisar um exame exige julgamento clínico de um médico de verdade,
+    não é uma ação administrativa.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    if not current_user.role or current_user.role.name != RoleName.DOCTOR.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas usuários com perfil médico podem revisar exames.",
+        )
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    if not exam.status or exam.status.name != StatusName.AWAITING_REVIEW.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames aguardando revisão médica podem ser revisados.",
+        )
+
+    target_status_name = (
+        StatusName.COMPLETED_WITH_DIVERGENCE.value
+        if payload.has_discrepancy
+        else StatusName.COMPLETED.value
+    )
+
+    target_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=target_status_name,
+        applies_to=StatusScope.EXAM.value,
+    )
+
+    old_data = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
+    exam.findings = payload.findings
+    exam.conclusion = payload.conclusion
+    exam.reviewed_by_id = current_user.id
+    exam.reviewed_at = datetime.now(timezone.utc)
+    exam.status_id = target_status.id
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.REVIEW_EXAM,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description=(
+            "Exame revisado com divergência sinalizada pelo médico."
+            if payload.has_discrepancy
+            else "Exame revisado e confirmado pelo médico."
+        ),
+        old_data=old_data,
+        new_data={
+            "status_id": target_status.id,
+            "status_name": target_status_name,
+            "has_discrepancy": payload.has_discrepancy,
+            "reviewed_by_id": current_user.id,
+        },
+    )
 
     db.commit()
     db.refresh(exam)

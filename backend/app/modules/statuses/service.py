@@ -194,16 +194,6 @@ def update_status(
         "description": status.description,
     }
 
-    new_name = update_data.get("name", status.name)
-    new_applies_to = update_data.get("applies_to", status.applies_to)
-
-    check_status_duplicate(
-        db=db,
-        name=new_name,
-        applies_to=new_applies_to,
-        ignore_status_id=status_id,
-    )
-
     apply_update_data(status, update_data)
 
     # Adiciona log

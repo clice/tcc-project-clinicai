@@ -63,28 +63,6 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
         (SystemModule.CLINICS, PermissionAction.READ_PROFILE, "Visualizar Própria Clínica", "Permite visualizar os dados da clínica vinculada ao usuário autenticado."),
         (SystemModule.CLINICS, PermissionAction.UPDATE_PROFILE, "Atualizar Própria Clínica", "Permite editar dados da clínica vinculada ao usuário autenticado."),
 
-        # Roles
-        (SystemModule.ROLES, PermissionAction.CREATE, "Criar Perfis de Acesso", "Permite cadastrar novos perfis de acesso."),
-        (SystemModule.ROLES, PermissionAction.READ, "Visualizar Perfis de Acesso", "Permite visualizar perfis de acesso."),
-        (SystemModule.ROLES, PermissionAction.UPDATE, "Atualizar Perfis de Acesso", "Permite editar perfis de acesso."),
-        (SystemModule.ROLES, PermissionAction.DELETE, "Excluir Perfis de Acesso", "Permite excluir perfis de acesso."),
-
-        # Permissions
-        (SystemModule.PERMISSIONS, PermissionAction.CREATE, "Criar Permissões", "Permite cadastrar novas permissões do sistema."),
-        (SystemModule.PERMISSIONS, PermissionAction.READ, "Visualizar Permissões", "Permite visualizar permissões do sistema."),
-        (SystemModule.PERMISSIONS, PermissionAction.UPDATE, "Atualizar Permissões", "Permite editar permissões do sistema."),
-
-        # Role Permissions
-        (SystemModule.ROLE_PERMISSIONS, PermissionAction.CREATE, "Vincular Permissões", "Permite vincular permissões a perfis."),
-        (SystemModule.ROLE_PERMISSIONS, PermissionAction.READ, "Visualizar Permissões por Perfil", "Permite visualizar vínculos entre perfis e permissões."),
-        (SystemModule.ROLE_PERMISSIONS, PermissionAction.UPDATE, "Atualizar Permissões por Perfil", "Permite atualizar vínculos entre perfis e permissões."),
-        (SystemModule.ROLE_PERMISSIONS, PermissionAction.DELETE, "Remover Permissões por Perfil", "Permite remover permissões de perfis."),
-
-        # Statuses
-        (SystemModule.STATUSES, PermissionAction.CREATE, "Criar Status", "Permite cadastrar status do sistema."),
-        (SystemModule.STATUSES, PermissionAction.READ, "Visualizar Status", "Permite visualizar status do sistema."),
-        (SystemModule.STATUSES, PermissionAction.UPDATE, "Atualizar Status", "Permite editar status do sistema."),
-
         # Patients
         (SystemModule.PATIENTS, PermissionAction.CREATE, "Criar Pacientes", "Permite cadastrar novos pacientes."),
         (SystemModule.PATIENTS, PermissionAction.READ, "Visualizar Pacientes", "Permite visualizar pacientes cadastrados."),
@@ -95,8 +73,8 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
         (SystemModule.EXAMS, PermissionAction.CREATE, "Criar Exames", "Permite cadastrar exames."),
         (SystemModule.EXAMS, PermissionAction.READ, "Visualizar Exames", "Permite visualizar exames cadastrados."),
         (SystemModule.EXAMS, PermissionAction.UPDATE, "Atualizar Exames", "Permite editar dados de exames."),
-        (SystemModule.EXAMS, PermissionAction.DELETE, "Excluir Exames", "Permite excluir exames."),
         (SystemModule.EXAMS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Exames", "Permite cancelar, concluir ou alterar status de exames."),
+        (SystemModule.EXAMS, PermissionAction.REVIEW, "Revisar Exames", "Permite realizar a revisão médica do resultado da análise de IA."),
         (SystemModule.EXAMS, PermissionAction.UPLOAD, "Upload de Exames", "Permite fazer o upload dos exames."),
         (SystemModule.EXAMS, PermissionAction.DOWNLOAD, "Baixar Exames", "Permite baixar os exames."),
 

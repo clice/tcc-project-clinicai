@@ -286,9 +286,9 @@ def create_ai_analysis(
         applies_to=StatusScope.AI_ANALYSIS.value,
     )
 
-    completed_exam_status = get_status_by_name_and_applies_to(
+    awaiting_review_exam_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.COMPLETED.value,
+        name=StatusName.AWAITING_REVIEW.value,
         applies_to=StatusScope.EXAM.value,
     )
 
@@ -305,7 +305,7 @@ def create_ai_analysis(
         "status_name": exam.status.name if exam.status else None,
     }
 
-    exam.status_id = completed_exam_status.id
+    exam.status_id = awaiting_review_exam_status.id
 
     create_audit_log(
         db=db,
@@ -314,7 +314,7 @@ def create_ai_analysis(
         action=AuditAction.RUN_AI_ANALYSIS,
         entity=AuditEntity.AI_ANALYSIS,
         entity_id=ai_analysis.id,
-        description="Análise de IA criada para exame.",
+        description="Análise de IA criada para exame. Exame movido para aguardando revisão médica.",
         new_data={
             "id": ai_analysis.id,
             "exam_id": ai_analysis.exam_id,
@@ -328,8 +328,8 @@ def create_ai_analysis(
             "processing_time_ms": ai_analysis.processing_time_ms,
             "old_exam_status": old_exam_status,
             "new_exam_status": {
-                "status_id": completed_exam_status.id,
-                "status_name": StatusName.COMPLETED.value,
+                "status_id": awaiting_review_exam_status.id,
+                "status_name": StatusName.AWAITING_REVIEW.value,
             },
         },
     )

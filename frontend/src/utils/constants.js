@@ -73,8 +73,11 @@ export const roleOptions = [
 export const statusColors = {
   pending: 'warning',
   processing: 'info',
+  awaiting_review: 'warning',
   completed: 'success',
+  completed_with_divergence: 'dark',
   canceled: 'danger',
+  failed: 'danger',
 }
 
 export const statusNameOptions = [
@@ -83,7 +86,9 @@ export const statusNameOptions = [
   { value: 'pending', label: 'Pendente' },
   { value: 'canceled', label: 'Cancelado' },
   { value: 'completed', label: 'Concluído' },
+  { value: 'completed_with_divergence', label: 'Concluído com Divergência' },
   { value: 'processing', label: 'Processando' },
+  { value: 'awaiting_review', label: 'Aguardando Revisão Médica' },
   { value: 'failed', label: 'Falhou' },
 ]
 
@@ -114,6 +119,7 @@ export const aiStatusLabels = {
   processing: 'Processando',
   completed: 'Concluída',
   failed: 'Falhou',
+  not_processed: 'Não processado',
 }
 
 export const aiStatusColors = {
@@ -121,4 +127,5 @@ export const aiStatusColors = {
   processing: 'warning',
   completed: 'success',
   failed: 'danger',
+  not_processed: 'secondary',
 }

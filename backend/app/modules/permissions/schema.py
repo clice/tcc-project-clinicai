@@ -86,20 +86,17 @@ class PermissionUpdate(BaseModel):
     """
     Schema usado para atualização de permission.
     Todos os campos são opcionais para permitir update parcial com PATCH.
+
+    'name' propositalmente NÃO está aqui: é a string usada em todo o código
+    para checar autorização (ex: require_permission("users:update")).
+    Renomear uma permissão já existente mudaria silenciosamente o que ela
+    concede a todas as roles já vinculadas a ela, sem criar nenhum vínculo
+    novo. 'name' só é definido na criação da permissão.
     """
 
-    name: str | None = Field(default=None, min_length=5, max_length=100)
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=255)
     module: SystemModule | None = None
-
-    @field_validator("name")
-    @classmethod
-    def normalize_name(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-
-        return validate_permission_name(value)
 
     @field_validator("display_name")
     @classmethod

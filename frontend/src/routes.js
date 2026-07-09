@@ -1,5 +1,5 @@
 /**
- * 
+ * ARQUIVO DAS ROTAS DO SISTEMA
  */
 
 import React from 'react'
@@ -7,6 +7,9 @@ import AuditLogsList from './views/audit-logs/AuditLogsList'
 
 // DASHBOARD
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
+
+// PROFILE
+const ProfilePage = React.lazy(() => import('./views/profile/ProfilePage'))
 
 // COMING SOON
 const ComingSoon = React.lazy(() => import('./views/coming-soon/ComingSoon'))
@@ -79,6 +82,7 @@ const ViewStatus = () => React.createElement(StatusForm, { mode: 'view' })
 export const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
+  { path: '/profile', name: 'Meu Perfil', element: ProfilePage },
 
   ////////// ADMIN
 

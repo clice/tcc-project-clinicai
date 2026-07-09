@@ -120,13 +120,24 @@ const PermissionForm = ({ mode = 'create' }) => {
 
   /**
    * Monta o payload enviado para a API.
+   * name e module só são enviados na criação — são imutáveis na edição
+   * (o backend nem aceita mais o campo name em PermissionUpdate).
    */
-  const buildPayload = () => ({
-    name: normalizePermissionName(permissionName),
-    display_name: form.display_name.trim(),
-    description: form.description.trim() || null,
-    module: form.module.trim(),
-  })
+  const buildPayload = () => {
+    if (isEditMode) {
+      return {
+        display_name: form.display_name.trim(),
+        description: form.description.trim() || null,
+      }
+    }
+
+    return {
+      name: normalizePermissionName(permissionName),
+      display_name: form.display_name.trim(),
+      description: form.description.trim() || null,
+      module: form.module.trim(),
+    }
+  }
 
   const validateForm = () => {
     if (!form.module) return 'Selecione o módulo da permissão.'
@@ -201,7 +212,7 @@ const PermissionForm = ({ mode = 'create' }) => {
                 <CFormLabel>Módulo</CFormLabel>
                 <CFormSelect
                   value={form.module}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(event) => updateField('module', event.target.value)}
                   required
                 >
@@ -218,7 +229,7 @@ const PermissionForm = ({ mode = 'create' }) => {
                 <CFormLabel>Ação</CFormLabel>
                 <CFormSelect
                   value={form.action}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(event) => updateField('action', event.target.value)}
                   required
                 >
@@ -234,6 +245,11 @@ const PermissionForm = ({ mode = 'create' }) => {
               <CCol md={4}>
                 <CFormLabel>Nome técnico</CFormLabel>
                 <CFormInput value={permissionName} disabled readOnly placeholder="modulo:acao" />
+                {isEditMode && (
+                  <div className="form-text">
+                    Módulo, ação e nome técnico não podem ser alterados após a criação.
+                  </div>
+                )}
               </CCol>
 
               <CCol md={6}>

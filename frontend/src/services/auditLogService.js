@@ -9,18 +9,40 @@ import api from 'src/services/api'
 
 export const auditLogService = {
   /**
-   * Lista todos logs cadastrados.
+   * Lista logs cadastrados, paginado.
+   * Retorna { items, total, limit, offset }.
    */
-  list: async ({ clinicId = '', userId = '', entity = '', action = '' } = {}) => {
+  list: async ({
+    clinicId = '',
+    userId = '',
+    entity = '',
+    action = '',
+    limit = 50,
+    offset = 0,
+  } = {}) => {
     const response = await api.get('/audit-logs/', {
       params: {
         clinic_id: clinicId || undefined,
         user_id: userId || undefined,
         entity: entity || undefined,
         action: action || undefined,
+        limit,
+        offset,
       },
     })
 
-    return Array.isArray(response.data) ? response.data : []
+    const data = response.data
+
+    if (Array.isArray(data)) {
+      // Compatibilidade defensiva, caso a API antiga (sem paginação) responda.
+      return { items: data, total: data.length, limit, offset }
+    }
+
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      total: data?.total ?? 0,
+      limit: data?.limit ?? limit,
+      offset: data?.offset ?? offset,
+    }
   },
 }

@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CAlert, CBadge, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -18,7 +18,7 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { userService } from 'src/services/userService'
 
-import { formatCpfBR, formatDateTimeBR, formatPhoneBR } from 'src/utils/formatters'
+import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getErrorMessage } from 'src/utils/errors'
 import { canManageUsers } from 'src/utils/permissions'
 
@@ -26,6 +26,12 @@ const userTabs = [
   { key: 'active', label: 'Ativos' },
   { key: 'inactive', label: 'Inativos' },
 ]
+
+const roleBadgeColors = {
+  admin_master: 'danger',
+  doctor: 'primary',
+  clinic_staff: 'info',
+}
 
 const UsersList = () => {
   const { user } = useAuth()
@@ -107,17 +113,14 @@ const UsersList = () => {
         },
       },
       {
-        accessorKey: 'phone',
-        header: 'Telefone',
-        cell: ({ getValue }) => {
-          const value = getValue()
-          return value ? formatPhoneBR(value) : '-'
-        },
-      },
-      {
         accessorKey: 'role_display_name',
         header: 'Perfil',
-        cell: ({ getValue, row }) => getValue() || row.original.role_name || '-',
+        cell: ({ getValue, row }) => {
+          const label = getValue() || row.original.role_name || '-'
+          const roleName = row.original.role_name
+
+          return <CBadge color={roleBadgeColors[roleName] || 'secondary'}>{label}</CBadge>
+        },
       },
       {
         accessorKey: 'clinic_name',

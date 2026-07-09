@@ -12,6 +12,7 @@ from app.common.validators import (
     normalize_phone,
     normalize_required_text,
     validate_cpf,
+    validate_password_length,
 )
 
 
@@ -54,7 +55,12 @@ class UserCreate(UserBase):
     Schema usado para criação de usuário.
     """
 
-    password: str = Field(..., min_length=6, max_length=128)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_field(cls, value: str) -> str:
+        return validate_password_length(value)
 
 
 class UserUpdate(BaseModel):
@@ -101,9 +107,19 @@ class UserUpdate(BaseModel):
 class UserPasswordUpdate(BaseModel):
     """
     Schema exclusivo para troca de senha.
+
+    current_password é obrigatório quando o próprio usuário troca a própria
+    senha (validado no service). Não é exigido quando um admin_master
+    reseta a senha de outro usuário.
     """
 
-    password: str = Field(..., min_length=6, max_length=128)
+    password: str = Field(..., min_length=8, max_length=128)
+    current_password: str | None = Field(default=None, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_field(cls, value: str) -> str:
+        return validate_password_length(value)
 
 
 class UserResponse(BaseModel):
@@ -135,6 +151,7 @@ class UserListResponse(UserResponse):
     """
 
     role_name: str | None = None
+    role_display_name: str | None = None
     status_name: str | None = None
     status_display_name: str | None = None
     clinic_name: str | None = None

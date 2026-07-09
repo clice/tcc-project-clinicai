@@ -183,3 +183,21 @@ def update_my_profile(
         payload=payload,
         current_user=current_user,
     )
+
+
+@router.patch("/me/password")
+def update_my_password(
+    payload: UserPasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("users:update_profile")),
+):
+    """
+    Permite que o próprio usuário (doctor, clinic_staff, admin_master)
+    troque sua senha, exigindo a senha atual.
+    """
+    return update_user_password(
+        db=db,
+        user_id=current_user.id,
+        payload=payload,
+        current_user=current_user,
+    )

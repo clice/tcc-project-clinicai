@@ -212,8 +212,8 @@ const UserForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if ((isCreateMode || form.password || form.confirmPassword) && form.password.trim().length < 6) {
-      showError('A senha deve ter no mínimo 6 caracteres.')
+    if ((isCreateMode || form.password || form.confirmPassword) && form.password.trim().length < 8) {
+      showError('A senha deve ter no mínimo 8 caracteres.')
       return false
     }
 

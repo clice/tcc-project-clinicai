@@ -125,6 +125,47 @@ def normalize_phone(value: str | None) -> str | None:
     return cleaned
 
 
+def validate_password_length(value: str) -> str:
+    """
+    Garante que a senha não ultrapasse o limite de 72 bytes do bcrypt.
+
+    O bcrypt ignora silenciosamente qualquer byte além do 72º — ou seja,
+    duas senhas diferentes que compartilhem os primeiros 72 bytes seriam
+    tratadas como idênticas. Como caracteres não-ASCII podem ocupar mais
+    de 1 byte em UTF-8, validamos o tamanho em bytes, não em caracteres.
+    """
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("Senha não pode ultrapassar 72 bytes (bcrypt).")
+
+    return value
+
+
+def validate_birth_date(value):
+    """
+    Valida se a data de nascimento é plausível.
+
+    Regras:
+    - não pode estar no futuro;
+    - não pode implicar idade acima de 130 anos (proteção contra erro de
+      digitação, ex: ano trocado).
+    """
+    if value is None:
+        return None
+
+    from datetime import date as _date
+
+    today = _date.today()
+
+    if value > today:
+        raise ValueError("Data de nascimento não pode estar no futuro.")
+
+    max_age_days = 130 * 365
+    if (today - value).days > max_age_days:
+        raise ValueError("Data de nascimento inválida (idade acima de 130 anos).")
+
+    return value
+
+
 def is_valid_cpf(cpf: str | None) -> bool:
     """
     Valida CPF pelo algoritmo oficial dos dígitos verificadores.

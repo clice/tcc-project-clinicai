@@ -40,3 +40,14 @@ class AuditLogResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class AuditLogListResponse(BaseModel):
+    """
+    Schema paginado usado na listagem de audit logs.
+    """
+
+    items: list[AuditLogResponse]
+    total: int
+    limit: int
+    offset: int

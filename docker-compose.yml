@@ -21,11 +21,29 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/app
+      - uploads_data:/app/uploads
     ports:
       - "8000:8000"
     depends_on:
       - db
+      - ai
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  ai:
+    build:
+      context: ./ai
+    container_name: clinicai_ai
+    restart: unless-stopped
+    volumes:
+      - ./ai:/app
+      - ./ai/models:/app/models
+      - torch_cache:/root/.cache/torch
+    ports:
+      - "8001:8001"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+    # GPU é opcional. O código já cai para CPU sozinho (torch.cuda.is_available()).
+    # Para usar GPU NVIDIA localmente, suba com:
+    #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
 
   frontend:
     build:
@@ -45,3 +63,6 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
+  ai_models:
+  torch_cache:

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_permission
-from app.modules.exams.schema import ExamCreate, ExamResponse, ExamUpdate
+from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
     cancel_exam,
     create_exam,
@@ -19,6 +19,7 @@ from app.modules.exams.service import (
     list_exams,
     replace_exam_file,
     restore_exam,
+    review_exam,
     update_exam,
 )
 from app.modules.users.model import User
@@ -170,22 +171,27 @@ def restore_exam_route(
     )
 
 
-# @router.post("/{exam_id}/upload", response_model=ExamResponse)
-# def upload_exam_file_route(
-#     exam_id: int,
-#     file: UploadFile = File(...),
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(require_permission("exams:upload")),
-# ):
-#     """
-#     Vincula informações de arquivo ao exame.
-#     """
-#     return upload_exam_file(
-#         db=db,
-#         exam_id=exam_id,
-#         file=file,
-#         current_user=current_user,
-#     )
+@router.patch("/{exam_id}/review", response_model=ExamResponse)
+def review_exam_route(
+    exam_id: int,
+    payload: ExamMedicalReview,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:review")),
+):
+    """
+    Registra a revisão médica do resultado da análise de IA.
+
+    O exame precisa estar em 'awaiting_review'. has_discrepancy=False conclui
+    o exame confirmando a análise da IA (status 'completed');
+    has_discrepancy=True conclui sinalizando divergência
+    (status 'completed_with_divergence').
+    """
+    return review_exam(
+        db=db,
+        exam_id=exam_id,
+        payload=payload,
+        current_user=current_user,
+    )
 
 
 @router.get("/{exam_id}/download")

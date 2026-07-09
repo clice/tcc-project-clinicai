@@ -1,0 +1,16 @@
+# Override opcional para habilitar GPU NVIDIA no serviço de IA.
+#
+# Uso (requer NVIDIA Container Toolkit instalado na máquina):
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+#
+# Sem esse arquivo, o serviço de IA sobe normalmente em CPU.
+
+services:
+  ai:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
