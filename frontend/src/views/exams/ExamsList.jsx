@@ -46,16 +46,19 @@ import { canManageExams } from 'src/utils/permissions'
 
 const examTabs = [
   { key: 'processing', label: 'Processando' },
-  { key: 'pending', label: 'Pendentes' },
+  { key: 'awaiting_review', label: 'Aguardando Revisão' },
   { key: 'completed', label: 'Concluídos' },
+  { key: 'completed_with_divergence', label: 'Divergência' },
+  { key: 'pending', label: 'Pendentes' },
   { key: 'failed', label: 'Falha na IA' },
   { key: 'canceled', label: 'Cancelados' },
 ]
 
 const getAiStatusFromExam = (exam) => {
   if (exam.status_name === 'processing') return 'processing'
-  if (exam.status_name === 'pending') return 'completed'
+  if (exam.status_name === 'awaiting_review') return 'completed'
   if (exam.status_name === 'completed') return 'completed'
+  if (exam.status_name === 'completed_with_divergence') return 'completed'
   if (exam.status_name === 'failed') return 'failed'
   if (exam.status_name === 'canceled') return 'canceled'
 
@@ -100,8 +103,12 @@ const ExamsList = () => {
   const tabCounts = useMemo(
     () => ({
       processing: exams.filter((exam) => exam.status_name === 'processing').length,
-      pending: exams.filter((exam) => exam.status_name === 'pending').length,
+      awaiting_review: exams.filter((exam) => exam.status_name === 'awaiting_review').length,
       completed: exams.filter((exam) => exam.status_name === 'completed').length,
+      completed_with_divergence: exams.filter(
+        (exam) => exam.status_name === 'completed_with_divergence',
+      ).length,
+      pending: exams.filter((exam) => exam.status_name === 'pending').length,
       failed: exams.filter((exam) => exam.status_name === 'failed').length,
       canceled: exams.filter((exam) => exam.status_name === 'canceled').length,
     }),
