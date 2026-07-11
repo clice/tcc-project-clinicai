@@ -1,5 +1,5 @@
 /**
- * ARQUIVO DAS ROTAS DO SISTEMA
+ * 
  */
 
 import React from 'react'
@@ -100,10 +100,10 @@ export const routes = [
   { path: '/clinics/:id', name: 'Detalhes da Clínica', element: ViewClinic, roles: ['admin_master']},
 
   // EXAMS
-  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor']},
+  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor']},
+  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor']},
+  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor']},
 
   /////////// SYSTEM
 

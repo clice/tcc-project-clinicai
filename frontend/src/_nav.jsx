@@ -55,7 +55,7 @@ const _nav = [
     name: 'Exames',
     to: '/exams',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],    
+    roles: ['admin_master', 'doctor'],    
   },
 
   ////////// SYSTEM

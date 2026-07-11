@@ -122,12 +122,6 @@ def seed_role_permissions(
         "patients:read",
         "patients:update",
         "patients:change_status",
-        
-        "exams:read",
-        "exams:download",
-        
-        "ai_analysis:read",
-        "ai_analysis:download",
     ]
 
     role_permission_map = {
