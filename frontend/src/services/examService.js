@@ -112,6 +112,20 @@ export const examService = {
   },
 
   /**
+   * Registra a revisão médica do resultado da análise de IA.
+   *
+   * O exame precisa estar em 'awaiting_review'. has_discrepancy=false conclui
+   * confirmando a análise da IA (status final 'completed'); has_discrepancy=true
+   * conclui sinalizando divergência (status final 'completed_with_divergence').
+   * Em ambos os casos o exame é encerrado — não é possível reprocessar a
+   * partir daqui (RN10).
+   */
+  review: async (id, payload) => {
+    const response = await api.patch(`/exams/${id}/review`, payload)
+    return response.data
+  },
+
+  /**
    * 
    */
   getFormOptions: async () => {
