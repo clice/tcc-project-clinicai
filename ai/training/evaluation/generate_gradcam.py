@@ -1,5 +1,17 @@
 """
 Geração de GradCAM para o modelo treinado.
+
+** VERSÃO EXPLORATÓRIA ANTIGA — NÃO É O PROTOCOLO OFICIAL **
+Script para o modelo antigo (torchvision.models.resnet50 direto, não
+timm), anterior ao trabalho de fidelidade ao protocolo de Pedro Viana.
+Mantido apenas como referência histórica — a explicabilidade oficial do
+ClinicAI está em `app/explainability/gradcam.py`.
+
+Atenção: o import abaixo (`from ai.app.config import TARGET_IMAGE_SIZE`)
+usa um caminho que não bate com a convenção do resto do projeto (`from
+app.config import ...`) e provavelmente falha se executado no mesmo
+ambiente/contêiner que os demais scripts — não foi corrigido de
+propósito, para preservar este arquivo exatamente como estava.
 """
 
 from pathlib import Path
@@ -157,3 +169,4 @@ def generate_gradcam():
 
 if __name__ == "__main__":
     generate_gradcam()
+    

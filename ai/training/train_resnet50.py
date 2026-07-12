@@ -1,5 +1,15 @@
 """
 Treinamento da ResNet50 para o ClinicAI.
+
+** VERSÃO EXPLORATÓRIA ANTIGA — NÃO É O PROTOCOLO OFICIAL **
+Este script reflete uma configuração de treino anterior ao trabalho de
+fidelidade ao método de Pedro Viana (2026), feito posteriormente no
+notebook de treino do Ensemble Stacking (fonte oficial de treino do
+ClinicAI). Os hiperparâmetros aqui (batch_size=8, 10 épocas,
+learning_rate=0.0001, ReduceLROnPlateau, torchvision.models direto)
+divergem do protocolo documentado na monografia. Mantido apenas como
+referência histórica do desenvolvimento — não usar para gerar os pesos
+que vão para produção.
 """
 
 import random

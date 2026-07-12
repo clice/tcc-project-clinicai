@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, UploadFile
 from app.config import ACTIVE_MODEL_NAME
 from app.schemas import PredictionResponse
 from app.inference import models_config  # registra os modelos disponíveis
-from app.inference.predictor import predict_image
+from ai.app.inference.timm_predictor import predict_image
 from app.inference.registry import available_models
 
 

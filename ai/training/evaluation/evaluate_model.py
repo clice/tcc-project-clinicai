@@ -1,5 +1,11 @@
 """
 Avaliação do modelo treinado.
+
+** VERSÃO EXPLORATÓRIA ANTIGA — NÃO É O PROTOCOLO OFICIAL **
+Avalia o modelo produzido por `train_resnet50.py` (também exploratório,
+não fiel ao protocolo de Pedro Viana validado no notebook de treino).
+Mantido apenas como referência histórica — a avaliação oficial acontece
+no próprio notebook do Ensemble Stacking.
 """
 
 from pathlib import Path
@@ -253,3 +259,4 @@ def evaluate():
 
 if __name__ == "__main__":
     evaluate()
+    

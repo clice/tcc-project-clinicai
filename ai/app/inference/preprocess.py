@@ -1,72 +1,49 @@
 """
 Pré-processamento usado na inferência da IA.
 
-Importante:
-Este arquivo deve manter o mesmo pipeline usado no treinamento,
-para evitar diferença entre treino e produção.
+Importante: este arquivo reaproveita o mesmo pipeline usado no
+treinamento (`training.preprocessing.pipeline`) e as mesmas constantes de
+normalização/tamanho definidas em `app.config` — evita que treino e
+inferência divirjam silenciosamente (foi exatamente esse tipo de
+divergência, com um pipeline de pré-processamento diferente do usado no
+treino, que foi corrigida nesta revisão do módulo).
 """
 
 import io
 
+import numpy as np
 from PIL import Image
 from torchvision import transforms
 
+from app.config import NORMALIZE_MEAN, NORMALIZE_STD, TARGET_IMAGE_SIZE
 from training.preprocessing.pipeline import preprocess_for_training
-
-
-IMAGE_SIZE = (224, 224)
-
-NORMALIZE_MEAN = [0.485, 0.456, 0.406]
-
-NORMALIZE_STD = [0.229, 0.224, 0.225]
-
 
 inference_transform = transforms.Compose(
     [
         transforms.ToPILImage(),
-        transforms.Resize(IMAGE_SIZE),
+        transforms.Resize(TARGET_IMAGE_SIZE),
         transforms.ToTensor(),
-        transforms.Normalize(
-            mean=NORMALIZE_MEAN,
-            std=NORMALIZE_STD,
-        ),
+        transforms.Normalize(mean=NORMALIZE_MEAN, std=NORMALIZE_STD),
     ]
 )
 
 
 def preprocess_image(image_bytes: bytes):
     """
-    Recebe uma imagem em bytes e retorna tensor pronto para o modelo.
+    Recebe uma imagem em bytes e retorna um tensor pronto para o modelo.
 
     Pipeline:
-    1. Abre imagem recebida pela API.
-    2. Converte para RGB.
-    3. Aplica o mesmo pré-processamento usado no treinamento.
-    4. Redimensiona.
-    5. Normaliza com padrão ImageNet.
-    6. Adiciona dimensão de batch.
+    1. Abre a imagem recebida pela API e converte para RGB.
+    2. Aplica o mesmo pré-processamento usado no treinamento (extração
+       de ROI + remoção de reflexos especulares).
+    3. Redimensiona e normaliza com o padrão ImageNet.
+    4. Adiciona a dimensão de batch.
     """
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image_array = np.array(image)
 
-    image = Image.open(
-        io.BytesIO(image_bytes)
-    ).convert("RGB")
+    processed_array = preprocess_for_training(image_array)
 
-    image_array = preprocess_for_training(
-        image=image_to_numpy(image)
-    )
-
-    image_tensor = inference_transform(
-        image_array
-    )
+    image_tensor = inference_transform(processed_array)
 
     return image_tensor.unsqueeze(0)
-
-
-def image_to_numpy(image: Image.Image):
-    """
-    Converte imagem PIL para array numpy.
-    """
-
-    import numpy as np
-
-    return np.array(image)

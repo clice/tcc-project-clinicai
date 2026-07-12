@@ -1,5 +1,10 @@
 """
 Teste do builder de dataset.
+
+** VERSÃO EXPLORATÓRIA ANTIGA **
+Script manual de conferência do `build_dataset.py` — funcional, mas
+associado ao fluxo de treino exploratório antigo (`train_resnet50.py`),
+não ao notebook oficial do Ensemble Stacking.
 """
 
 from pathlib import Path

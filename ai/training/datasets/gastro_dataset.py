@@ -22,7 +22,12 @@ def build_train_transform(image_size):
     """
     Transformações usadas no treino.
 
-    Inclui data augmentation leve.
+    Inclui Data Augmentation fiel ao protocolo de Pedro Viana (2026),
+    validado no notebook de treino: flip horizontal, flip vertical e
+    rotação de até 10 graus. Não inclui ColorJitter nem RandomAffine —
+    esses dois eram adições próprias de uma versão anterior deste módulo,
+    removidas por não fazerem parte do protocolo documentado na
+    monografia.
     """
 
     return transforms.Compose(
@@ -35,19 +40,12 @@ def build_train_transform(image_size):
                 p=0.5
             ),
 
+            transforms.RandomVerticalFlip(
+                p=0.5
+            ),
+
             transforms.RandomRotation(
                 degrees=10
-            ),
-
-            transforms.ColorJitter(
-                brightness=0.1,
-                contrast=0.1,
-            ),
-
-            transforms.RandomAffine(
-                degrees=0,
-                translate=(0.03, 0.03),
-                scale=(0.95, 1.05),
             ),
 
             transforms.ToTensor(),
@@ -157,3 +155,4 @@ class GastroDataset(Dataset):
             image_tensor,
             torch.tensor(label),
         )
+        
