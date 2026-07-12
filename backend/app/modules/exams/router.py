@@ -9,8 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_permission
+from app.modules.ai_analysis.schema import AIAnalysisResponse
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
+    analyze_exam,
     cancel_exam,
     create_exam,
     download_exam_file,
@@ -175,6 +177,27 @@ def restore_exam_route(
     )
 
 
+@router.post("/{exam_id}/analyze", response_model=AIAnalysisResponse)
+async def analyze_exam_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("ai_analysis:create")),
+):
+    """
+    Envia o exame para análise pelo serviço de IA (RF41-48).
+
+    O exame precisa estar em 'processing' e ter um arquivo enviado. Em
+    caso de sucesso, o exame passa para 'awaiting_review'; em caso de
+    falha na comunicação com o serviço de IA, o exame é marcado como
+    'failed' (RN12 permite reenvio posterior).
+    """
+    return await analyze_exam(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.patch("/{exam_id}/review", response_model=ExamResponse)
 def review_exam_route(
     exam_id: int,
@@ -229,3 +252,4 @@ def replace_exam_file_route(
         file=file,
         current_user=current_user,
     )
+    

@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     max_upload_size_mb: int = 10
 
+    # Serviço de IA (container separado, ver docker-compose.yml)
+    ai_service_url: str = "http://ai:8001"
+    ai_service_timeout_seconds: int = 120
+
     # Configurações de autenticação JWT
     secret_key: str
     algorithm: str

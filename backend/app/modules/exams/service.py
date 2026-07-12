@@ -23,7 +23,10 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
+from app.modules.ai_analysis.client import AIServiceError, request_prediction
 from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analysis.schema import AIAnalysisCreate
+from app.modules.ai_analysis.service import create_ai_analysis
 from app.modules.audit_logs.service import create_audit_log, list_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -1416,3 +1419,98 @@ def replace_exam_file(
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
     return build_exam_response(exam, current_user=current_user)
+
+
+async def analyze_exam(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """
+    Dispara a análise de IA de um exame (RF41-48): lê o arquivo do disco,
+    chama o serviço de IA (container separado, via `ai_analysis.client`)
+    e, conforme o resultado:
+    - sucesso: cria o registro de AIAnalysis e move o exame para
+      'Aguardando Revisão Médica' (feito por `create_ai_analysis`);
+    - falha: marca o exame como 'Falhou', com log de auditoria (feito
+      por `mark_exam_ai_failed`).
+
+    Só aceita exames em 'Processando' (RN21) — evita analisar duas vezes
+    o mesmo exame ou analisar um exame cancelado/já concluído.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    ensure_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+        detail="Você não tem permissão para analisar este exame.",
+    )
+
+    if not exam.status or exam.status.name != StatusName.PROCESSING.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames em processamento podem ser enviados para análise de IA.",
+        )
+
+    if not exam.file_path:
+        raise HTTPException(
+            status_code=400,
+            detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
+        )
+
+    file_path = resolve_safe_exam_file_path(exam.file_path)
+
+    if not file_path.exists():
+        mark_exam_ai_failed(
+            db=db,
+            exam_id=exam_id,
+            error_message="Arquivo do exame não encontrado no disco.",
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Arquivo do exame não encontrado no disco. Exame marcado como falha.",
+        )
+
+    image_bytes = file_path.read_bytes()
+    started_at = datetime.now(timezone.utc)
+
+    try:
+        prediction = await request_prediction(
+            image_bytes=image_bytes,
+            filename=exam.file_name or file_path.name,
+            content_type=exam.file_mime_type or "application/octet-stream",
+        )
+    except AIServiceError as exc:
+        mark_exam_ai_failed(db=db, exam_id=exam_id, error_message=str(exc))
+        raise HTTPException(
+            status_code=502,
+            detail=f"Falha ao processar exame no serviço de IA: {exc}",
+        ) from exc
+
+    processing_time_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
+
+    label = prediction.get("label")
+
+    # O serviço de IA devolve a classe como texto ("normal"/"abnormal"),
+    # não como índice numérico — esse mapeamento precisa continuar batendo
+    # com `CLASS_LABELS` em `ai/app/config.py` (0 = normal, 1 = abnormal).
+    if label == "abnormal":
+        prediction_class = 1
+    elif label == "normal":
+        prediction_class = 0
+    else:
+        prediction_class = None
+
+    payload = AIAnalysisCreate(
+        exam_id=exam_id,
+        prediction_label=label or "desconhecido",
+        prediction_class=prediction_class,
+        confidence=prediction.get("confidence", 0.0),
+        model_name=prediction.get("model_name", "desconhecido"),
+        model_version=prediction.get("model_version", "0.0.0"),
+        gradcam_path=prediction.get("gradcam_path"),
+        processing_time_ms=processing_time_ms,
+        raw_response=str(prediction),
+    )
+
+    return create_ai_analysis(db=db, payload=payload, current_user=current_user)
