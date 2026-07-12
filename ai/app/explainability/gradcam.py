@@ -15,6 +15,13 @@ Ou seja: o Grad-CAM aqui é um apoio visual sobre uma das três entradas do
 ensemble, não uma prova causal da decisão final. Isso deve continuar
 sendo comunicado ao usuário na interface (já é, na tela de Revisão
 Médica do frontend).
+
+Limitação adicional: esta função está amarrada especificamente à
+ResNet-50 do domínio gastrointestinal (`app.inference.domains.
+gastrointestinal.resnet50`). Se um domínio novo for adicionado (ver
+`app/inference/domains/README.md`), o Grad-CAM dele não vai funcionar
+automaticamente — esta função precisará ser generalizada para receber
+qual modelo/domínio usar como base.
 """
 
 from io import BytesIO
@@ -31,7 +38,7 @@ from pytorch_grad_cam.utils.image import (
 
 from app.config import GRADCAM_DIR, NORMALIZE_MEAN, NORMALIZE_STD, TARGET_IMAGE_SIZE
 from app.inference.model_loader import DEVICE
-from app.inference.models_config import resnet50
+from app.inference.domains.gastrointestinal import resnet50
 from training.preprocessing.pipeline import preprocess_for_training
 
 GRADCAM_DIR.mkdir(parents=True, exist_ok=True)

@@ -21,6 +21,11 @@ class BasePredictor(ABC):
     #: retornado na resposta da API — ex: "resnet50", "ensemble_stacking").
     name: str
 
+    #: Domínio clínico ao qual este modelo se aplica (ex: "gastrointestinal",
+    #: "head_ct", "mammography"). Usado para rotear a predição certa
+    #: conforme o tipo de exame — ver `app.inference.domain_registry`.
+    domain: str
+
     @abstractmethod
     def predict_proba(self, image_tensor) -> np.ndarray:
         """

@@ -63,28 +63,13 @@ ai/datasets/gastrointestinal/*
 # IA - MODELOS TREINADOS
 # =====================================================
 
-ai/models/exported/*.pt
-ai/models/exported/*.pth
+ai/models/exported/**/*.pt
+ai/models/exported/**/*.pth
+ai/models/exported/**/*.joblib
+!ai/models/exported/**/.gitkeep
 
 ai/models/checkpoints/*.pt
 ai/models/checkpoints/*.pth
-
-# =====================================================
-# IA - RELATÓRIOS (usados pelo script exploratório antigo
-# train_resnet50.py, restaurado como referência histórica)
-# =====================================================
-
-# Métricas
-ai/reports/metrics/*.csv
-ai/reports/metrics/*.json
-
-# Figuras
-ai/reports/figures/*.png
-ai/reports/figures/*.jpg
-
-# Mantém estrutura
-!ai/reports/metrics/.gitkeep
-!ai/reports/figures/.gitkeep
 
 # =====================================================
 # IA - OUTPUTS EXPERIMENTAIS

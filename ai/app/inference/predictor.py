@@ -1,36 +1,37 @@
 """
 Módulo responsável pela inferência da IA do ClinicAI.
 
-Este arquivo não sabe mais qual arquitetura está por trás da predição —
-ele só pede ao registro (`registry.py`) o modelo configurado como ativo
-(`app.config.ACTIVE_MODEL_NAME`) e usa a interface comum `BasePredictor`.
-Trocar de modelo (ex: recuar do Ensemble Stacking para a ResNet-50
-isolada, ou adicionar um modelo novo no futuro) é uma mudança de
-configuração, não de código.
+Este arquivo não sabe qual arquitetura nem qual domínio clínico está por
+trás da predição — ele só pede ao registro (`registry.py`) o modelo
+correto para o tipo de exame recebido, e usa a interface comum
+`BasePredictor`. Adicionar um domínio novo (outro tipo de exame, outro
+conjunto de modelos) não muda nada aqui — ver
+`app/inference/domains/README.md`.
 """
 
 import numpy as np
 
-from app.config import ACTIVE_MODEL_NAME, CLASS_LABELS, EXAM_DOMAIN, MODEL_VERSION
+from app.config import CLASS_LABELS, MODEL_VERSION
 from app.explainability.gradcam import generate_gradcam_from_bytes
 from app.inference.model_loader import DEVICE
 from app.inference.preprocess import preprocess_image
-from app.inference.registry import get_predictor
-from app.inference import models_config  # noqa: F401  (garante que os modelos foram registrados)
+from app.inference.registry import resolve_active_predictor
+from app.inference import domains  # noqa: F401  (garante que os modelos foram registrados)
 
 
-def predict_image(image_bytes: bytes, model_name: str | None = None) -> dict:
+def predict_image(image_bytes: bytes, exam_type: str | None = None) -> dict:
     """
     Executa inferência da IA sobre uma imagem médica.
 
     Args:
         image_bytes: Bytes da imagem enviada.
-        model_name: Nome de um modelo específico já registrado (ex:
-            "resnet50"), para uso pontual (debug, comparação manual).
-            Se omitido, usa `app.config.ACTIVE_MODEL_NAME` — o
-            comportamento normal do serviço.
+        exam_type: Tipo de exame informado pelo backend (ex: "endoscopy",
+            "colonoscopy") — usado para resolver automaticamente o
+            domínio clínico e o modelo ativo daquele domínio (ver
+            `app.config.EXAM_TYPE_TO_DOMAIN` e `ACTIVE_MODEL_BY_DOMAIN`).
+            Se omitido, usa `app.config.DEFAULT_DOMAIN`.
     """
-    predictor = get_predictor(model_name or ACTIVE_MODEL_NAME)
+    predictor = resolve_active_predictor(exam_type)
 
     image_tensor = preprocess_image(image_bytes)
 
@@ -47,7 +48,7 @@ def predict_image(image_bytes: bytes, model_name: str | None = None) -> dict:
         "confidence": round(confidence, 4),
         "model_name": predictor.name,
         "model_version": MODEL_VERSION,
-        "exam_domain": EXAM_DOMAIN,
+        "exam_domain": predictor.domain,
         "device": str(DEVICE),
         "gradcam_available": True,
         "gradcam_path": gradcam_path,

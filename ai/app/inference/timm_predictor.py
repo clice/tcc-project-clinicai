@@ -2,10 +2,10 @@
 Preditor genérico para qualquer arquitetura disponível na biblioteca
 `timm` (CNNs e Vision Transformers).
 
-Cobre hoje ResNet-50, EfficientNet-B4 e PVTv2-B2 — mas serve para
-qualquer outro modelo do `timm` sem precisar de código novo: basta
-instanciar com o nome do modelo e o caminho dos pesos treinados (ver
-`models_config.py`).
+Cobre hoje ResNet-50, EfficientNet-B4 e PVTv2-B2 (domínio gastrointestinal)
+— mas serve para qualquer outro modelo do `timm`, de qualquer domínio,
+sem precisar de código novo: basta instanciar com o nome do modelo e o
+caminho dos pesos treinados (ver `app/inference/domains/`).
 """
 
 from pathlib import Path
@@ -27,11 +27,13 @@ class TimmCNNPredictor(BasePredictor):
     def __init__(
         self,
         name: str,
+        domain: str,
         timm_model_name: str,
         weights_path: Path,
         num_classes: int = 2,
     ):
         self.name = name
+        self.domain = domain
         self.timm_model_name = timm_model_name
         self.weights_path = Path(weights_path)
         self.num_classes = num_classes

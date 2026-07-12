@@ -23,9 +23,15 @@ class EnsembleStackingPredictor(BasePredictor):
     associar cada posição do vetor a um modelo específico.
     """
 
-    name = "ensemble_stacking"
-
-    def __init__(self, base_predictors: list[BasePredictor], meta_classifier_path: Path):
+    def __init__(
+        self,
+        name: str,
+        domain: str,
+        base_predictors: list[BasePredictor],
+        meta_classifier_path: Path,
+    ):
+        self.name = name
+        self.domain = domain
         self.base_predictors = base_predictors
         self.meta_classifier_path = Path(meta_classifier_path)
         self._meta_classifier = None
