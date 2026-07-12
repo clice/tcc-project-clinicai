@@ -83,6 +83,9 @@ def list_exams_route(
     patient_id: int | None = Query(default=None),
     doctor_id: int | None = Query(default=None),
     status_id: int | None = Query(default=None),
+    ai_prediction_class: int | None = Query(
+        default=None, description="0 = normal, 1 = anormal"
+    ),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("exams:read")),
@@ -98,6 +101,7 @@ def list_exams_route(
         patient_id=patient_id,
         doctor_id=doctor_id,
         status_id=status_id,
+        ai_prediction_class=ai_prediction_class,
         include_inactive=include_inactive,
     )
 
@@ -225,5 +229,3 @@ def replace_exam_file_route(
         file=file,
         current_user=current_user,
     )
-    
-    

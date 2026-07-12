@@ -1,6 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
-import { CBadge, CCard, CCardBody, CCol, CProgress, CRow, CSpinner } from '@coreui/react'
+import {
+  CBadge,
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CProgress,
+  CRow,
+  CSpinner,
+} from '@coreui/react'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useExamStatusCounts } from 'src/hooks/useExamStatusCounts'
@@ -14,26 +26,39 @@ import { getUserRole, ROLES } from 'src/utils/permissions'
 
 /**
  * Dashboard — RF54 (indicadores gerais), RF55 (distribuição de exames por
- * status) e RF56 (indicadores da análise de IA).
- *
- * RF57 (filtrar por período/clínica/médico/status/resultado) fica fora
- * desta primeira versão — é um recurso maior, tratado à parte depois.
+ * status), RF56 (indicadores da análise de IA) e RF57 (filtro por
+ * período, clínica, médico, status ou resultado).
  *
  * Nota sobre a tese: a Tabela 11 (Dashboard e Monitoramento) hoje só lista
  * RF54–RF57, mas a faixa é citada como "RF54–RF59" tanto no cabeçalho da
  * tabela quanto no UC12 — vale conferir se RF58/RF59 existem e faltaram na
  * tabela, ou se a faixa deveria ser "RF54–RF57".
  *
- * Escopo por perfil:
- * - Administrador Master: todos os indicadores (usuários, clínicas,
- *   pacientes, exames, distribuição por status, indicadores de IA).
- * - Médico: pacientes, exames, distribuição por status e indicadores de
- *   IA — sem contagem de usuários/clínicas (fora do escopo de gestão dele).
- * - Funcionário da Clínica: pacientes, exames e distribuição por status
- *   (indicadores agregados de volume/operação). SEM indicadores de IA —
- *   esse perfil não tem permissão de acesso a `ai_analysis` (Art. 34 do
- *   CFM), então RF56 fica de fora para ele, não só ai_analysis:read.
+ * Os filtros (RF57) se aplicam às seções RF55 e RF56 — os cards de
+ * indicadores gerais (RF54) permanecem como uma contagem total fixa da
+ * plataforma, não como algo "filtrável" no sentido operacional do RF57.
+ *
+ * Visibilidade de cada filtro por perfil:
+ * - Período e Status: todos os perfis.
+ * - Clínica: só Administrador Master (Médico e Funcionário da Clínica já
+ *   são automaticamente restritos à própria clínica/aos próprios exames
+ *   pelo backend — oferecer o filtro seria redundante ou geraria erro).
+ * - Médico: Administrador Master e Funcionário da Clínica (o próprio
+ *   Médico já só vê os seus exames).
+ * - Resultado (normal/anormal, predição da IA): Administrador Master e
+ *   Médico apenas — Funcionário da Clínica não tem acesso a resultados
+ *   diagnósticos (Art. 34 do CFM); o backend já rejeitaria esse filtro
+ *   para esse perfil, mas nem chega a oferecer a opção na interface.
  */
+
+const emptyFilters = {
+  dateFrom: '',
+  dateTo: '',
+  clinicId: '',
+  doctorId: '',
+  status: '',
+  aiPredictionClass: '',
+}
 
 const Dashboard = () => {
   const { user } = useAuth()
@@ -41,21 +66,29 @@ const Dashboard = () => {
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isClinicStaff = roleName === ROLES.CLINIC_STAFF
 
-  const { counts: examCounts, isLoading: isLoadingExamCounts } = useExamStatusCounts()
+  const [filters, setFilters] = useState(emptyFilters)
+
+  const { counts: examCounts, isLoading: isLoadingExamCounts } = useExamStatusCounts(filters)
 
   const [generalCounts, setGeneralCounts] = useState({
     users: null,
     clinics: null,
     patients: null,
+    exams: null,
   })
   const [isLoadingGeneral, setIsLoadingGeneral] = useState(true)
 
+  const [clinicOptions, setClinicOptions] = useState([])
+  const [doctorOptions, setDoctorOptions] = useState([])
+
+  // Indicadores gerais (RF54) — contagem fixa da plataforma, sem filtro.
   useEffect(() => {
     const loadGeneralCounts = async () => {
       try {
         setIsLoadingGeneral(true)
 
         const patients = await patientService.list({ includeInactive: true })
+
         const next = {
           patients: Array.isArray(patients) ? patients.length : null,
           users: null,
@@ -69,6 +102,7 @@ const Dashboard = () => {
           ])
           next.clinics = Array.isArray(clinics) ? clinics.length : null
           next.users = Array.isArray(users) ? users.length : null
+          setClinicOptions(Array.isArray(clinics) ? clinics : [])
         }
 
         setGeneralCounts(next)
@@ -82,10 +116,26 @@ const Dashboard = () => {
     void loadGeneralCounts()
   }, [isAdminMaster])
 
-  // RF56: aproveita as contagens por status já existentes (RF55) para
+  // Opções de médico para o filtro (RF57) — só carregadas para os perfis
+  // que efetivamente enxergam esse filtro (Admin Master e Funcionário).
+  useEffect(() => {
+    if (!isAdminMaster && !isClinicStaff) return
+
+    const loadDoctors = async () => {
+      try {
+        const doctors = await userService.list({ role: 'doctor' })
+        setDoctorOptions(Array.isArray(doctors) ? doctors : [])
+      } catch {
+        setDoctorOptions([])
+      }
+    }
+
+    void loadDoctors()
+  }, [isAdminMaster, isClinicStaff])
+
+  // RF56: aproveita as contagens por status já filtradas (RF55) para
   // derivar os indicadores de IA, em vez de buscar a análise de cada
-  // exame individualmente — falha/conclusão/divergência já são, no fundo,
-  // estados do próprio fluxo de exame.
+  // exame individualmente.
   const aiIndicators = useMemo(() => {
     const totalProcessedByAi =
       examCounts.awaiting_review +
@@ -103,7 +153,7 @@ const Dashboard = () => {
     }
   }, [examCounts])
 
-  const totalExams = useMemo(
+  const totalFilteredExams = useMemo(
     () => Object.values(examCounts).reduce((sum, value) => sum + value, 0),
     [examCounts],
   )
@@ -117,6 +167,12 @@ const Dashboard = () => {
     return value === null ? '-' : value
   }
 
+  const handleFilterChange = (field) => (event) => {
+    setFilters((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const hasActiveFilters = Object.values(filters).some((value) => value !== '')
+
   return (
     <>
       <div className="mb-4">
@@ -127,7 +183,7 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* RF54 — Indicadores gerais da plataforma */}
+      {/* RF54 — Indicadores gerais da plataforma (sem filtro) */}
       <CRow className="mb-4">
         {isAdminMaster && (
           <>
@@ -166,14 +222,121 @@ const Dashboard = () => {
         <CCol sm={6} lg={3}>
           <CCard className="mb-3">
             <CCardBody>
-              <div className="text-body-secondary small">Exames</div>
+              <div className="text-body-secondary small">
+                Exames {hasActiveFilters ? '(filtrados)' : ''}
+              </div>
               <div className="fs-4 fw-semibold">
-                {renderCount(totalExams, isLoadingExamCounts)}
+                {renderCount(totalFilteredExams, isLoadingExamCounts)}
               </div>
             </CCardBody>
           </CCard>
         </CCol>
       </CRow>
+
+      {/* RF57 — Filtros, aplicados às seções abaixo (RF55 e RF56) */}
+      <CCard className="mb-4">
+        <CCardBody>
+          <h2 className="h6 mb-3">Filtrar Indicadores</h2>
+          <CRow className="g-3 align-items-end">
+            <CCol sm={6} lg={2}>
+              <CFormLabel htmlFor="dateFrom">Período — de</CFormLabel>
+              <CFormInput
+                type="date"
+                id="dateFrom"
+                value={filters.dateFrom}
+                onChange={handleFilterChange('dateFrom')}
+              />
+            </CCol>
+            <CCol sm={6} lg={2}>
+              <CFormLabel htmlFor="dateTo">Período — até</CFormLabel>
+              <CFormInput
+                type="date"
+                id="dateTo"
+                value={filters.dateTo}
+                onChange={handleFilterChange('dateTo')}
+              />
+            </CCol>
+
+            {isAdminMaster && (
+              <CCol sm={6} lg={2}>
+                <CFormLabel htmlFor="clinicFilter">Clínica</CFormLabel>
+                <CFormSelect
+                  id="clinicFilter"
+                  value={filters.clinicId}
+                  onChange={handleFilterChange('clinicId')}
+                >
+                  <option value="">Todas</option>
+                  {clinicOptions.map((clinic) => (
+                    <option key={clinic.id} value={clinic.id}>
+                      {clinic.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
+            )}
+
+            {(isAdminMaster || isClinicStaff) && (
+              <CCol sm={6} lg={2}>
+                <CFormLabel htmlFor="doctorFilter">Médico</CFormLabel>
+                <CFormSelect
+                  id="doctorFilter"
+                  value={filters.doctorId}
+                  onChange={handleFilterChange('doctorId')}
+                >
+                  <option value="">Todos</option>
+                  {doctorOptions.map((doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
+            )}
+
+            <CCol sm={6} lg={2}>
+              <CFormLabel htmlFor="statusFilter">Status</CFormLabel>
+              <CFormSelect
+                id="statusFilter"
+                value={filters.status}
+                onChange={handleFilterChange('status')}
+              >
+                <option value="">Todos</option>
+                {Object.keys(examStatusLabels).map((status) => (
+                  <option key={status} value={status}>
+                    {examStatusLabels[status]}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {!isClinicStaff && (
+              <CCol sm={6} lg={2}>
+                <CFormLabel htmlFor="resultFilter">Resultado (IA)</CFormLabel>
+                <CFormSelect
+                  id="resultFilter"
+                  value={filters.aiPredictionClass}
+                  onChange={handleFilterChange('aiPredictionClass')}
+                >
+                  <option value="">Todos</option>
+                  <option value="0">Normal</option>
+                  <option value="1">Anormal</option>
+                </CFormSelect>
+              </CCol>
+            )}
+
+            <CCol sm={6} lg={2}>
+              <CButton
+                color="secondary"
+                variant="outline"
+                disabled={!hasActiveFilters}
+                onClick={() => setFilters(emptyFilters)}
+              >
+                Limpar filtros
+              </CButton>
+            </CCol>
+          </CRow>
+        </CCardBody>
+      </CCard>
 
       {/* RF55 — Distribuição de exames por status */}
       <CRow className="mb-4">
@@ -186,28 +349,32 @@ const Dashboard = () => {
                 <div className="d-flex justify-content-center py-4">
                   <CSpinner />
                 </div>
-              ) : totalExams === 0 ? (
-                <p className="text-body-secondary mb-0">Nenhum exame cadastrado ainda.</p>
+              ) : totalFilteredExams === 0 ? (
+                <p className="text-body-secondary mb-0">
+                  Nenhum exame encontrado para os filtros selecionados.
+                </p>
               ) : (
-                statusDistributionEntries.map((status) => {
-                  const count = examCounts[status] ?? 0
-                  const percent = totalExams > 0 ? (count / totalExams) * 100 : 0
+                statusDistributionEntries
+                  .filter((status) => !filters.status || filters.status === status)
+                  .map((status) => {
+                    const count = examCounts[status] ?? 0
+                    const percent = totalFilteredExams > 0 ? (count / totalFilteredExams) * 100 : 0
 
-                  return (
-                    <div key={status} className="mb-3">
-                      <div className="d-flex justify-content-between mb-1">
-                        <span>
-                          <CBadge color={statusColors[status]} className="me-2">
-                            &nbsp;
-                          </CBadge>
-                          {examStatusLabels[status]}
-                        </span>
-                        <span className="text-body-secondary">{count}</span>
+                    return (
+                      <div key={status} className="mb-3">
+                        <div className="d-flex justify-content-between mb-1">
+                          <span>
+                            <CBadge color={statusColors[status]} className="me-2">
+                              &nbsp;
+                            </CBadge>
+                            {examStatusLabels[status]}
+                          </span>
+                          <span className="text-body-secondary">{count}</span>
+                        </div>
+                        <CProgress thin color={statusColors[status]} value={percent} />
                       </div>
-                      <CProgress thin color={statusColors[status]} value={percent} />
-                    </div>
-                  )
-                })
+                    )
+                  })
               )}
             </CCardBody>
           </CCard>

@@ -1,15 +1,14 @@
 /**
  * Hook para contagem de exames por status.
  *
- * Usado tanto pela barra lateral (badges do submenu de Exames) quanto pela
- * listagem de exames (cards de resumo), para não duplicar a lógica de
- * contagem em dois lugares.
+ * Usado tanto pela barra lateral (badges do submenu de Exames, sempre sem
+ * filtro) quanto pela listagem/dashboard de exames (que pode aplicar
+ * filtros de período, clínica, médico e resultado da IA — RF57).
  *
- * Nota: hoje isso busca a lista completa de exames e conta no cliente,
- * seguindo o mesmo padrão que a listagem já usava para os badges das
- * antigas abas. Se o volume de exames crescer muito, vale considerar um
- * endpoint de agregação no backend (`GET /exams/status-counts` ou similar)
- * em vez de trazer a lista inteira só para contar.
+ * Nota: hoje isso busca a lista completa de exames (já filtrada pelo
+ * backend quando aplicável) e conta no cliente. Se o volume de exames
+ * crescer muito, vale considerar um endpoint de agregação no backend em
+ * vez de trazer a lista inteira só para contar.
  */
 
 import { useCallback, useEffect, useState } from 'react'
@@ -26,7 +25,21 @@ const emptyCounts = {
   canceled: 0,
 }
 
-export const useExamStatusCounts = () => {
+// Filtros aplicados no cliente (exam_date não é filtrável no backend hoje).
+const applyClientSideFilters = (exams, { dateFrom, dateTo } = {}) => {
+  if (!dateFrom && !dateTo) return exams
+
+  return exams.filter((exam) => {
+    if (!exam.exam_date) return false
+    if (dateFrom && exam.exam_date < dateFrom) return false
+    if (dateTo && exam.exam_date > dateTo) return false
+    return true
+  })
+}
+
+export const useExamStatusCounts = (filters = {}) => {
+  const { clinicId, doctorId, aiPredictionClass, dateFrom, dateTo } = filters
+
   const [counts, setCounts] = useState(emptyCounts)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -34,8 +47,17 @@ export const useExamStatusCounts = () => {
     try {
       setIsLoading(true)
 
-      const data = await examService.list({ includeInactive: true })
-      const exams = Array.isArray(data) ? data : []
+      const data = await examService.list({
+        includeInactive: true,
+        clinicId: clinicId || undefined,
+        doctorId: doctorId || undefined,
+        aiPredictionClass:
+          aiPredictionClass === '' || aiPredictionClass === undefined
+            ? undefined
+            : Number(aiPredictionClass),
+      })
+
+      const exams = applyClientSideFilters(Array.isArray(data) ? data : [], { dateFrom, dateTo })
 
       const nextCounts = { ...emptyCounts }
       exams.forEach((exam) => {
@@ -51,7 +73,8 @@ export const useExamStatusCounts = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clinicId, doctorId, aiPredictionClass, dateFrom, dateTo])
 
   useEffect(() => {
     void refresh()

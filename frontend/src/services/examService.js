@@ -49,6 +49,8 @@ export const examService = {
         patient_id: params.patientId || undefined,
         doctor_id: params.doctorId || undefined,
         status_id: params.statusId || undefined,
+        ai_prediction_class:
+          params.aiPredictionClass === undefined ? undefined : params.aiPredictionClass,
         include_inactive: params.includeInactive ?? true,
       },
     })

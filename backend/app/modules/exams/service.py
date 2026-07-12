@@ -23,6 +23,7 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
+from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.audit_logs.service import create_audit_log, list_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -53,10 +54,26 @@ ALLOWED_EXAM_EXTENSIONS = {
 }
 
 
-def build_exam_response(exam: Exam) -> dict:
+def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
     """
     Monta a resposta incluindo dados relacionados.
+
+    Os campos de predição da IA (ai_prediction_label/ai_prediction_class)
+    só são incluídos se current_user for informado e não for
+    Funcionário da Clínica — esse perfil não tem acesso a resultados
+    diagnósticos (Art. 34 do CFM), mesmo agregados na listagem de exames.
+    Quando current_user não é informado (uso interno), os campos vêm
+    preenchidos por padrão.
     """
+    role_name = current_user.role.name if current_user and current_user.role else None
+    can_see_ai_prediction = role_name != RoleName.CLINIC_STAFF.value
+
+    ai_prediction_label = None
+    ai_prediction_class = None
+    if can_see_ai_prediction and exam.ai_analysis:
+        ai_prediction_label = exam.ai_analysis.prediction_label
+        ai_prediction_class = exam.ai_analysis.prediction_class
+
     return {
         "id": exam.id,
         "clinic_id": exam.clinic_id,
@@ -81,6 +98,8 @@ def build_exam_response(exam: Exam) -> dict:
         "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
+        "ai_prediction_label": ai_prediction_label,
+        "ai_prediction_class": ai_prediction_class,
         "created_at": exam.created_at,
         "updated_at": exam.updated_at,
     }
@@ -510,7 +529,7 @@ def get_exam_by_id(
         exam=exam,
     )
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def list_exams(
@@ -521,6 +540,7 @@ def list_exams(
     patient_id: int | None = None,
     doctor_id: int | None = None,
     status_id: int | None = None,
+    ai_prediction_class: int | None = None,
     include_inactive: bool = True,
 ) -> list[dict]:
     """
@@ -533,6 +553,7 @@ def list_exams(
             joinedload(Exam.patient),
             joinedload(Exam.doctor),
             joinedload(Exam.status),
+            joinedload(Exam.ai_analysis),
         )
         .join(Status, Exam.status_id == Status.id)
     )
@@ -582,6 +603,16 @@ def list_exams(
     if status_id:
         query = query.filter(Exam.status_id == status_id)
 
+    if ai_prediction_class is not None:
+        if role_name == RoleName.CLINIC_STAFF.value:
+            raise HTTPException(
+                status_code=403,
+                detail="Funcionário da clínica não tem permissão para filtrar por resultado da IA.",
+            )
+        query = query.join(AIAnalysis, AIAnalysis.exam_id == Exam.id).filter(
+            AIAnalysis.prediction_class == ai_prediction_class
+        )
+
     if search:
         term = f"%{search.strip()}%"
         query = query.filter(
@@ -603,7 +634,7 @@ def list_exams(
 
     exams = query.order_by(Exam.created_at.desc()).all()
 
-    return [build_exam_response(exam) for exam in exams]
+    return [build_exam_response(exam, current_user=current_user) for exam in exams]
 
 
 def create_exam(
@@ -709,7 +740,7 @@ def create_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def update_exam(
@@ -737,7 +768,7 @@ def update_exam(
     update_data = model_dump_update(payload)
 
     if not update_data:
-        return build_exam_response(exam)
+        return build_exam_response(exam, current_user=current_user)
 
     validate_user_can_access_clinic(
         current_user=current_user,
@@ -779,7 +810,7 @@ def update_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def cancel_exam(
@@ -844,7 +875,7 @@ def cancel_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def restore_exam(
@@ -913,7 +944,7 @@ def restore_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def upload_exam_file(
@@ -1040,7 +1071,7 @@ def upload_exam_file(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def download_exam_file(
@@ -1154,6 +1185,10 @@ def mark_exam_ai_failed(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
+    # Sem current_user aqui (função de sistema, sem usuário autenticado no
+    # fluxo) — na prática é irrelevante: um exame que acabou de falhar
+    # nunca tem análise de IA associada, então ai_prediction_* já viria
+    # None de qualquer forma.
     return build_exam_response(exam)
 
 
@@ -1283,7 +1318,7 @@ def review_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def replace_exam_file(
@@ -1380,4 +1415,4 @@ def replace_exam_file(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)

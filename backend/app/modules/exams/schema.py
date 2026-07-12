@@ -140,6 +140,13 @@ class ExamResponse(BaseModel):
     file_name: str | None = None
     file_mime_type: str | None = None
 
+    # Preenchidos apenas se o exame tiver análise de IA concluída e o
+    # usuário tiver permissão de ver resultados diagnósticos (Funcionário
+    # da Clínica nunca recebe esses dois campos preenchidos — ver
+    # build_exam_response no service).
+    ai_prediction_label: str | None = None
+    ai_prediction_class: int | None = None
+
     created_at: datetime
     updated_at: datetime
 
