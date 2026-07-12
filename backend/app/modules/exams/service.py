@@ -1103,6 +1103,11 @@ def mark_exam_ai_failed(
 ) -> dict:
     """
     Marca exame como FAILED quando a análise da IA falhar.
+
+    Sem current_user: esta função é acionada pelo próprio fluxo de
+    integração com o módulo de IA (falha de inferência), não por uma ação
+    direta de um usuário autenticado — por isso o log de auditoria é
+    registrado com user_id=None, identificando uma ação do sistema.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -1118,7 +1123,31 @@ def mark_exam_ai_failed(
         applies_to=StatusScope.EXAM.value,
     )
 
+    old_data = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
     exam.status_id = failed_status.id
+
+    create_audit_log(
+        db=db,
+        user_id=None,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.AI_ANALYSIS_FAILED,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description=(
+            f"Falha na análise de IA: {error_message}"
+            if error_message
+            else "Falha na análise de IA."
+        ),
+        old_data=old_data,
+        new_data={
+            "status_id": failed_status.id,
+            "status_name": StatusName.FAILED.value,
+        },
+    )
 
     db.commit()
     db.refresh(exam)

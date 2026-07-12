@@ -24,6 +24,7 @@ class AuditAction(StrEnum):
     UPLOAD = "upload"
     DOWNLOAD = "download"
     RUN_AI_ANALYSIS = "run_ai_analysis"
+    AI_ANALYSIS_FAILED = "ai_analysis_failed"
 
 
 class AuditEntity(StrEnum):
