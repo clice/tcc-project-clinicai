@@ -80,6 +80,19 @@ export const statusColors = {
   failed: 'danger',
 }
 
+// Rótulos em português dos status de exame — plural, porque são usados
+// como título de card/lista ("Concluídos", "Cancelados"). Compartilhado
+// entre ExamsList.jsx e Dashboard.jsx para não duplicar a mesma lista.
+export const examStatusLabels = {
+  pending: 'Pendentes',
+  processing: 'Processando',
+  awaiting_review: 'Aguardando Revisão Médica',
+  completed: 'Concluídos',
+  completed_with_divergence: 'Concluídos com Divergência',
+  failed: 'Falha na IA',
+  canceled: 'Cancelados',
+}
+
 export const statusNameOptions = [
   { value: 'active', label: 'Ativo' },
   { value: 'inactive', label: 'Inativo' },

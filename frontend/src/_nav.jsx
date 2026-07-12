@@ -23,10 +23,6 @@ const _nav = [
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_staff'],
-    badge: {
-      color: 'info',
-      text: 'EM BREVE',
-    },
   },
 
   ////////// ADMIN

@@ -40,20 +40,10 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { examService } from 'src/services/examService'
 
-import { examTypeLabels, statusColors, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
+import { examTypeLabels, statusColors, examStatusLabels, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateTimeBR } from 'src/utils/formatters'
 import { canManageExams } from 'src/utils/permissions'
-
-const examStatusLabels = {
-  processing: 'Processando',
-  awaiting_review: 'Aguardando Revisão Médica',
-  completed: 'Concluídos',
-  completed_with_divergence: 'Concluídos com Divergência',
-  pending: 'Pendentes',
-  failed: 'Falha na IA',
-  canceled: 'Cancelados',
-}
 
 // Os três estados mais relevantes do dia a dia — os cards de resumo focam
 // neles; os demais (falha, cancelado, pendente) ficam só no submenu
