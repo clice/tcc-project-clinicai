@@ -58,3 +58,4 @@ async def request_prediction(
         return response.json()
     except ValueError as exc:
         raise AIServiceError(f"Resposta do serviço de IA não é um JSON válido: {exc}") from exc
+    

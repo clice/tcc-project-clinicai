@@ -345,6 +345,142 @@ def create_ai_analysis(
     return build_ai_analysis_response(ai_analysis)
 
 
+def get_ai_metrics(db: Session) -> dict:
+    """
+    Métricas agregadas do módulo de IA, exclusivas do Administrador
+    Master (a rota que chama esta função é protegida por `require_admin`,
+    não por uma permissão compartilhada com o Médico).
+
+    Reúne informações de governança/infraestrutura do modelo — distintas
+    dos indicadores operacionais (RF54-56) já disponíveis a todos os
+    perfis no Dashboard do frontend.
+    """
+    from collections import Counter
+    from datetime import datetime, timedelta, timezone
+
+    from sqlalchemy import func as sa_func
+
+    from app.modules.audit_logs.model import AuditLog
+
+    total_analyses = db.query(AIAnalysis).count()
+
+    # --- Uso por modelo/versão ---
+    model_usage_rows = (
+        db.query(
+            AIAnalysis.model_name,
+            AIAnalysis.model_version,
+            sa_func.count(AIAnalysis.id).label("count"),
+        )
+        .group_by(AIAnalysis.model_name, AIAnalysis.model_version)
+        .all()
+    )
+    by_model = [
+        {
+            "model_name": row.model_name,
+            "model_version": row.model_version,
+            "domain": None,  # todos os modelos hoje são do domínio gastrointestinal
+            "count": row.count,
+        }
+        for row in model_usage_rows
+    ]
+
+    # --- Confiança: estatísticas + distribuição em faixas de 10% ---
+    confidences = [value for (value,) in db.query(AIAnalysis.confidence).all()]
+
+    confidence_mean = sum(confidences) / len(confidences) if confidences else None
+    confidence_min = min(confidences) if confidences else None
+    confidence_max = max(confidences) if confidences else None
+
+    confidence_distribution: dict[str, int] = {
+        f"{i * 10}-{i * 10 + 10}%": 0 for i in range(10)
+    }
+    for value in confidences:
+        bucket_index = min(int(value * 10), 9)  # 1.0 exato cai no último bucket
+        bucket_key = f"{bucket_index * 10}-{bucket_index * 10 + 10}%"
+        confidence_distribution[bucket_key] += 1
+
+    # --- Tempo de processamento ---
+    processing_times = [
+        value
+        for (value,) in db.query(AIAnalysis.processing_time_ms).all()
+        if value is not None
+    ]
+    processing_time_mean_ms = (
+        sum(processing_times) / len(processing_times) if processing_times else None
+    )
+    processing_time_min_ms = min(processing_times) if processing_times else None
+    processing_time_max_ms = max(processing_times) if processing_times else None
+
+    # --- Taxa de divergência (exames concluídos, com ou sem divergência) ---
+    completed_status = get_status_by_name_and_applies_to(
+        db=db, name=StatusName.COMPLETED.value, applies_to=StatusScope.EXAM.value,
+    )
+    completed_with_divergence_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.COMPLETED_WITH_DIVERGENCE.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+    completed_count = (
+        db.query(Exam).filter(Exam.status_id == completed_status.id).count()
+    )
+    divergence_count = (
+        db.query(Exam).filter(Exam.status_id == completed_with_divergence_status.id).count()
+    )
+    total_concluded = completed_count + divergence_count
+    divergence_rate = (divergence_count / total_concluded) if total_concluded > 0 else 0.0
+
+    # --- Falhas: contagem + últimas ocorrências (via log de auditoria) ---
+    failed_status = get_status_by_name_and_applies_to(
+        db=db, name=StatusName.FAILED.value, applies_to=StatusScope.EXAM.value,
+    )
+    failure_count = db.query(Exam).filter(Exam.status_id == failed_status.id).count()
+
+    recent_failure_logs = (
+        db.query(AuditLog)
+        .filter(AuditLog.action == AuditAction.AI_ANALYSIS_FAILED.value)
+        .order_by(AuditLog.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    recent_failures = [
+        {
+            "exam_id": log.entity_id,
+            "description": log.description,
+            "created_at": log.created_at,
+        }
+        for log in recent_failure_logs
+    ]
+
+    # --- Volume diário nos últimos 30 dias ---
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    recent_dates = [
+        value
+        for (value,) in db.query(AIAnalysis.created_at)
+        .filter(AIAnalysis.created_at >= thirty_days_ago)
+        .all()
+    ]
+    day_counts = Counter(date.strftime("%Y-%m-%d") for date in recent_dates)
+    analyses_last_30_days = [
+        {"date": day, "count": count} for day, count in sorted(day_counts.items())
+    ]
+
+    return {
+        "total_analyses": total_analyses,
+        "by_model": by_model,
+        "confidence_mean": confidence_mean,
+        "confidence_min": confidence_min,
+        "confidence_max": confidence_max,
+        "confidence_distribution": confidence_distribution,
+        "processing_time_mean_ms": processing_time_mean_ms,
+        "processing_time_min_ms": processing_time_min_ms,
+        "processing_time_max_ms": processing_time_max_ms,
+        "divergence_rate": round(divergence_rate, 4),
+        "failure_count": failure_count,
+        "recent_failures": recent_failures,
+        "analyses_last_30_days": analyses_last_30_days,
+    }
+
+
 def update_ai_analysis(
     db: Session,
     ai_analysis_id: int,

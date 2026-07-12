@@ -26,4 +26,14 @@ export const aiAnalysisService = {
       throw err
     }
   },
+
+  /**
+   * Métricas agregadas de governança/infraestrutura do módulo de IA —
+   * exclusivas do Administrador Master. A rota já é protegida no backend
+   * por `require_admin`; qualquer outro perfil recebe 403.
+   */
+  getMetrics: async () => {
+    const response = await api.get('/ai-analysis/metrics')
+    return response.data
+  },
 }

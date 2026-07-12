@@ -5,6 +5,7 @@ import {
   CButton,
   CCard,
   CCardBody,
+  CCardHeader,
   CCol,
   CFormInput,
   CFormLabel,
@@ -12,16 +13,24 @@ import {
   CProgress,
   CRow,
   CSpinner,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
 } from '@coreui/react'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useExamStatusCounts } from 'src/hooks/useExamStatusCounts'
 
+import { aiAnalysisService } from 'src/services/aiAnalysisService'
 import { clinicService } from 'src/services/clinicService'
 import { patientService } from 'src/services/patientService'
 import { userService } from 'src/services/userService'
 
 import { examStatusLabels, statusColors } from 'src/utils/constants'
+import { formatDateTimeBR } from 'src/utils/formatters'
 import { getUserRole, ROLES } from 'src/utils/permissions'
 
 /**
@@ -80,6 +89,33 @@ const Dashboard = () => {
 
   const [clinicOptions, setClinicOptions] = useState([])
   const [doctorOptions, setDoctorOptions] = useState([])
+
+  const [aiMetrics, setAiMetrics] = useState(null)
+  const [isLoadingAiMetrics, setIsLoadingAiMetrics] = useState(true)
+
+  // Métricas de governança/infraestrutura de IA — exclusivas do Admin
+  // Master. A rota já é protegida no backend (require_admin); aqui só
+  // evitamos a chamada desnecessária para os outros perfis.
+  useEffect(() => {
+    if (!isAdminMaster) {
+      setIsLoadingAiMetrics(false)
+      return
+    }
+
+    const loadAiMetrics = async () => {
+      try {
+        setIsLoadingAiMetrics(true)
+        const data = await aiAnalysisService.getMetrics()
+        setAiMetrics(data)
+      } catch {
+        setAiMetrics(null)
+      } finally {
+        setIsLoadingAiMetrics(false)
+      }
+    }
+
+    void loadAiMetrics()
+  }, [isAdminMaster])
 
   // Indicadores gerais (RF54) — contagem fixa da plataforma, sem filtro.
   useEffect(() => {
@@ -424,6 +460,123 @@ const Dashboard = () => {
             </CCard>
           </CCol>
         </CRow>
+      )}
+
+      {isAdminMaster && (
+        <CCard className="mb-4 border-info">
+          <CCardHeader className="bg-info-subtle">
+            <strong>Métricas de IA (Administrador Master)</strong>
+          </CCardHeader>
+
+          <CCardBody>
+            {isLoadingAiMetrics ? (
+              <div className="d-flex justify-content-center py-4">
+                <CSpinner />
+              </div>
+            ) : !aiMetrics ? (
+              <p className="text-body-secondary mb-0">
+                Não foi possível carregar as métricas de IA no momento.
+              </p>
+            ) : (
+              <>
+                <CRow className="mb-4">
+                  <CCol sm={4}>
+                    <div className="text-body-secondary small">Total de análises realizadas</div>
+                    <div className="fs-4 fw-semibold">{aiMetrics.total_analyses}</div>
+                  </CCol>
+                  <CCol sm={4}>
+                    <div className="text-body-secondary small">Confiança média</div>
+                    <div className="fs-4 fw-semibold">
+                      {aiMetrics.confidence_mean !== null
+                        ? `${(aiMetrics.confidence_mean * 100).toFixed(1)}%`
+                        : '-'}
+                    </div>
+                    <div className="text-body-secondary small">
+                      Mín. {aiMetrics.confidence_min !== null ? `${(aiMetrics.confidence_min * 100).toFixed(1)}%` : '-'}
+                      {' · '}
+                      Máx. {aiMetrics.confidence_max !== null ? `${(aiMetrics.confidence_max * 100).toFixed(1)}%` : '-'}
+                    </div>
+                  </CCol>
+                  <CCol sm={4}>
+                    <div className="text-body-secondary small">Tempo médio de processamento</div>
+                    <div className="fs-4 fw-semibold">
+                      {aiMetrics.processing_time_mean_ms !== null
+                        ? `${Math.round(aiMetrics.processing_time_mean_ms)} ms`
+                        : '-'}
+                    </div>
+                  </CCol>
+                </CRow>
+
+                <h2 className="h6 mb-3">Uso por Modelo</h2>
+                {aiMetrics.by_model.length === 0 ? (
+                  <p className="text-body-secondary">Nenhuma análise registrada ainda.</p>
+                ) : (
+                  <CTable small responsive className="mb-4">
+                    <CTableHead>
+                      <CTableRow>
+                        <CTableHeaderCell>Modelo</CTableHeaderCell>
+                        <CTableHeaderCell>Versão</CTableHeaderCell>
+                        <CTableHeaderCell>Análises</CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {aiMetrics.by_model.map((row) => (
+                        <CTableRow key={`${row.model_name}-${row.model_version}`}>
+                          <CTableDataCell>{row.model_name}</CTableDataCell>
+                          <CTableDataCell>{row.model_version}</CTableDataCell>
+                          <CTableDataCell>{row.count}</CTableDataCell>
+                        </CTableRow>
+                      ))}
+                    </CTableBody>
+                  </CTable>
+                )}
+
+                <h2 className="h6 mb-3">Distribuição de Confiança</h2>
+                <div className="mb-4">
+                  {Object.entries(aiMetrics.confidence_distribution).map(([faixa, count]) => {
+                    const percent =
+                      aiMetrics.total_analyses > 0 ? (count / aiMetrics.total_analyses) * 100 : 0
+                    return (
+                      <div key={faixa} className="mb-2">
+                        <div className="d-flex justify-content-between mb-1">
+                          <span className="small">{faixa}</span>
+                          <span className="text-body-secondary small">{count}</span>
+                        </div>
+                        <CProgress thin value={percent} />
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <h2 className="h6 mb-3">Falhas Recentes</h2>
+                {aiMetrics.recent_failures.length === 0 ? (
+                  <p className="text-body-secondary mb-0">Nenhuma falha registrada.</p>
+                ) : (
+                  <CTable small responsive>
+                    <CTableHead>
+                      <CTableRow>
+                        <CTableHeaderCell>Exame</CTableHeaderCell>
+                        <CTableHeaderCell>Descrição</CTableHeaderCell>
+                        <CTableHeaderCell>Quando</CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {aiMetrics.recent_failures.map((failure, index) => (
+                        <CTableRow key={`${failure.exam_id}-${index}`}>
+                          <CTableDataCell>#{failure.exam_id ?? '-'}</CTableDataCell>
+                          <CTableDataCell>{failure.description ?? '-'}</CTableDataCell>
+                          <CTableDataCell>
+                            {failure.created_at ? formatDateTimeBR(failure.created_at) : '-'}
+                          </CTableDataCell>
+                        </CTableRow>
+                      ))}
+                    </CTableBody>
+                  </CTable>
+                )}
+              </>
+            )}
+          </CCardBody>
+        </CCard>
       )}
     </>
   )
