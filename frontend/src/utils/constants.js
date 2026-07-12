@@ -86,9 +86,9 @@ export const statusColors = {
 export const examStatusLabels = {
   pending: 'Pendentes',
   processing: 'Processando',
-  awaiting_review: 'Aguardando Revisão Médica',
+  awaiting_review: 'Aguardando Revisão',
   completed: 'Concluídos',
-  completed_with_divergence: 'Concluídos com Divergência',
+  completed_with_divergence: 'Com Divergência',
   failed: 'Falha na IA',
   canceled: 'Cancelados',
 }
@@ -99,9 +99,9 @@ export const statusNameOptions = [
   { value: 'pending', label: 'Pendente' },
   { value: 'canceled', label: 'Cancelado' },
   { value: 'completed', label: 'Concluído' },
-  { value: 'completed_with_divergence', label: 'Concluído com Divergência' },
+  { value: 'completed_with_divergence', label: 'Com Divergência' },
   { value: 'processing', label: 'Processando' },
-  { value: 'awaiting_review', label: 'Aguardando Revisão Médica' },
+  { value: 'awaiting_review', label: 'Aguardando Revisão' },
   { value: 'failed', label: 'Falhou' },
 ]
 

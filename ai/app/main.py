@@ -1,14 +1,18 @@
 """
 API de Inteligência Artificial do ClinicAI.
 
-Este serviço será responsável por receber imagens de exames,
-executar o modelo de IA e retornar o resultado da análise.
+Este serviço recebe imagens de exames, executa o modelo de IA configurado
+como ativo (Ensemble Stacking, por padrão) e retorna o resultado da
+análise.
 """
 
 from fastapi import FastAPI, File, UploadFile
 
+from app.config import ACTIVE_MODEL_NAME
 from app.schemas import PredictionResponse
+from app.inference import models_config  # registra os modelos disponíveis
 from app.inference.predictor import predict_image
+from app.inference.registry import available_models
 
 
 app = FastAPI(
@@ -40,19 +44,26 @@ def health_check():
     }
 
 
+@app.get("/models")
+def list_models():
+    """
+    Lista os modelos preditivos registrados e qual está ativo — útil
+    para conferir rapidamente se o serviço subiu com o Ensemble Stacking
+    ou recuou para um modelo isolado (ver `app.config.ACTIVE_MODEL_NAME`).
+    """
+    return {
+        "active_model": ACTIVE_MODEL_NAME,
+        "available_models": available_models(),
+    }
+
+
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_exam_image(file: UploadFile = File(...)):
     """
-    Recebe uma imagem de exame e retorna uma predição.
-
-    Fluxo atual:
-    - upload da imagem;
-    - preprocessamento;
-    - inferência simulada.
+    Recebe uma imagem de exame e retorna a predição do modelo ativo.
     """
-
     image_bytes = await file.read()
-    
+
     prediction = predict_image(image_bytes)
-    
+
     return PredictionResponse(**prediction)
