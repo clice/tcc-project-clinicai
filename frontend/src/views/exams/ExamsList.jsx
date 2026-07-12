@@ -6,19 +6,21 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { 
   CAlert, 
   CBadge, 
   CButton, 
   CCard, 
   CCardBody, 
+  CCol,
   CFormInput,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
   CModalTitle,
+  CRow,
   CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -31,7 +33,6 @@ import {
 } from '@coreui/icons'
 
 import AppTable from 'src/components/shared/AppTable'
-import AppTabs from 'src/components/shared/AppTabs'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 
 import { useAuth } from 'src/hooks/useAuth'
@@ -44,15 +45,20 @@ import { getErrorMessage } from 'src/utils/errors'
 import { formatDateTimeBR } from 'src/utils/formatters'
 import { canManageExams } from 'src/utils/permissions'
 
-const examTabs = [
-  { key: 'processing', label: 'Processando' },
-  { key: 'awaiting_review', label: 'Aguardando Revisão' },
-  { key: 'completed', label: 'Concluídos' },
-  { key: 'completed_with_divergence', label: 'Divergência' },
-  { key: 'pending', label: 'Pendentes' },
-  { key: 'failed', label: 'Falha na IA' },
-  { key: 'canceled', label: 'Cancelados' },
-]
+const examStatusLabels = {
+  processing: 'Processando',
+  awaiting_review: 'Aguardando Revisão Médica',
+  completed: 'Concluídos',
+  completed_with_divergence: 'Concluídos com Divergência',
+  pending: 'Pendentes',
+  failed: 'Falha na IA',
+  canceled: 'Cancelados',
+}
+
+// Os três estados mais relevantes do dia a dia — os cards de resumo focam
+// neles; os demais (falha, cancelado, pendente) ficam só no submenu
+// lateral, disponíveis mas sem disputar espaço visual no topo da página.
+const summaryCardStatuses = ['processing', 'awaiting_review', 'completed']
 
 const getAiStatusFromExam = (exam) => {
   if (exam.status_name === 'processing') return 'processing'
@@ -69,7 +75,11 @@ const ExamsList = () => {
   const { user } = useAuth()
   const { showError, showSuccess } = useFeedback()
 
-  const [activeTab, setActiveTab] = useState('processing')
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Sem ?status= na URL = visão geral (todos os exames), útil quando se
+  // clica em "Exames" no topo do submenu, sem escolher um status específico.
+  const statusFilter = searchParams.get('status')
+
   const [exams, setExams] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -97,8 +107,9 @@ const ExamsList = () => {
   }, [loadExams])
 
   const filteredExams = useMemo(() => {
-    return exams.filter((exam) => exam.status_name === activeTab)
-  }, [exams, activeTab])
+    if (!statusFilter) return exams
+    return exams.filter((exam) => exam.status_name === statusFilter)
+  }, [exams, statusFilter])
 
   const tabCounts = useMemo(
     () => ({
@@ -262,7 +273,9 @@ const ExamsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">Exames</h1>
+          <h1 className="h3 mb-0">
+            {statusFilter ? `Exames: ${examStatusLabels[statusFilter] || statusFilter}` : 'Exames'}
+          </h1>
           <p className="text-body-secondary mb-0">
             Gerencie exames, análise por IA e revisão médica.
           </p>
@@ -275,6 +288,23 @@ const ExamsList = () => {
         </div>
       </div>
 
+      <CRow className="mb-4">
+        {summaryCardStatuses.map((status) => (
+          <CCol sm={4} key={status}>
+            <CCard
+              role="button"
+              className={statusFilter === status ? 'border-primary' : ''}
+              onClick={() => setSearchParams(status === statusFilter ? {} : { status })}
+            >
+              <CCardBody>
+                <div className="text-body-secondary small">{examStatusLabels[status]}</div>
+                <div className="fs-4 fw-semibold">{tabCounts[status] ?? 0}</div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        ))}
+      </CRow>
+
       <CCard>
         <CCardBody>
           {isLoading ? (
@@ -282,20 +312,11 @@ const ExamsList = () => {
               <CSpinner />
             </div>
           ) : (
-            <>
-              <AppTabs
-                tabs={examTabs}
-                counts={tabCounts}
-                activeTab={activeTab}
-                onChange={setActiveTab}
-              />
-
-              <AppTable
-                data={filteredExams}
-                columns={columns}
-                emptyMessage="Nenhum exame encontrado."
-              />
-            </>
+            <AppTable
+              data={filteredExams}
+              columns={columns}
+              emptyMessage="Nenhum exame encontrado."
+            />
           )}
         </CCardBody>
       </CCard>

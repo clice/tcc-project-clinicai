@@ -71,12 +71,12 @@ export const roleOptions = [
 // STATUS
 
 export const statusColors = {
-  pending: 'warning',
+  pending: 'secondary',
   processing: 'info',
   awaiting_review: 'warning',
   completed: 'success',
   completed_with_divergence: 'dark',
-  canceled: 'danger',
+  canceled: 'secondary',
   failed: 'danger',
 }
 
@@ -119,13 +119,15 @@ export const aiStatusLabels = {
   processing: 'Processando',
   completed: 'Concluída',
   failed: 'Falhou',
+  canceled: 'Cancelada',
   not_processed: 'Não processado',
 }
 
 export const aiStatusColors = {
   pending: 'secondary',
-  processing: 'warning',
+  processing: 'info',
   completed: 'success',
   failed: 'danger',
+  canceled: 'secondary',
   not_processed: 'secondary',
 }

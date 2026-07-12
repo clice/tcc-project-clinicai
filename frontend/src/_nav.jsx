@@ -51,11 +51,65 @@ const _nav = [
     roles: ['admin_master', 'doctor', 'clinic_staff'],
   },
   {
-    component: CNavItem,
+    component: CNavGroup,
     name: 'Exames',
     to: '/exams',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor'],    
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    items: [
+      {
+        component: CNavItem,
+        name: 'Processando',
+        to: '/exams?status=processing',
+        badgeKey: 'processing',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Revisão',
+        to: '/exams?status=awaiting_review',
+        badgeKey: 'awaiting_review',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Concluídos',
+        to: '/exams?status=completed',
+        badgeKey: 'completed',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Divergência',
+        to: '/exams?status=completed_with_divergence',
+        badgeKey: 'completed_with_divergence',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Falha na IA',
+        to: '/exams?status=failed',
+        badgeKey: 'failed',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Cancelados',
+        to: '/exams?status=canceled',
+        badgeKey: 'canceled',
+        roles: ['admin_master', 'doctor', 'clinic_staff'],
+      },
+      {
+        component: CNavItem,
+        name: 'Pendentes',
+        to: '/exams?status=pending',
+        badgeKey: 'pending',
+        // Reservado — hoje nenhum exame chega a esse status (upload é
+        // obrigatório no cadastro). Visível só para o Administrador Master
+        // enquanto isso não se tornar um estado alcançável de verdade.
+        roles: ['admin_master'],
+      },
+    ],
   },
 
   ////////// SYSTEM

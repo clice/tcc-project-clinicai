@@ -423,7 +423,7 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>Data nascimento</CFormLabel>
+                    <CFormLabel>Data de Nascimento</CFormLabel>
                     <CFormInput
                       type="date"
                       value={form.birth_date}
