@@ -7,96 +7,11 @@ padronizar os dados enviados nas respostas e documentar automaticamente os endpo
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator, model_validator
-
-from app.common.constants import PermissionAction, SystemModule
+from pydantic import BaseModel, Field, field_validator
 from app.common.validators import (
-    normalize_lower_text,
     normalize_optional_text,
     normalize_required_text,
 )
-
-
-def validate_permission_name(value: str) -> str:
-    """
-    Valida o nome interno da permissão no formato modulo:acao.
-
-    Exemplo:
-    users:create
-    patients:read
-    exams:change_status
-    """
-    value = normalize_lower_text(value, "Nome da permissão é obrigatório.")
-
-    parts = value.split(":")
-
-    if len(parts) != 2:
-        raise ValueError("Use o padrão modulo:acao. Exemplo: users:create.")
-
-    module, action = parts
-
-    valid_modules = {item.value for item in SystemModule}
-    valid_actions = {item.value for item in PermissionAction}
-
-    if module not in valid_modules:
-        raise ValueError("Módulo da permissão inválido.")
-
-    if action not in valid_actions:
-        raise ValueError("Ação da permissão inválida.")
-
-    return value
-
-
-class PermissionBase(BaseModel):
-    """
-    Schema base com os campos compartilhados entre criação e resposta.
-    """
-
-    name: str = Field(..., min_length=5, max_length=100)
-    display_name: str = Field(..., min_length=2, max_length=100)
-    description: str | None = Field(default=None, max_length=255)
-    module: SystemModule
-
-    @field_validator("name")
-    @classmethod
-    def normalize_name(cls, value: str) -> str:
-        return validate_permission_name(value)
-
-    @field_validator("display_name")
-    @classmethod
-    def normalize_display_name(cls, value: str) -> str:
-        return normalize_required_text(value, "Nome de exibição é obrigatório.")
-
-    @field_validator("description")
-    @classmethod
-    def normalize_description(cls, value: str | None) -> str | None:
-        return normalize_optional_text(value)
-
-    @model_validator(mode="after")
-    def validate_name_matches_module(self) -> "PermissionBase":
-        """
-        Confere que o prefixo de `name` (ex: "users" em "users:create")
-        bate com `module` — sem essa checagem, era possível criar
-        name="users:create" com module="clinics", e a autorização (que usa
-        `name`) concederia acesso a um módulo diferente do que a interface
-        mostra (que agrupa por `module`).
-        """
-        prefix = self.name.split(":")[0]
-        if prefix != self.module.value:
-            raise ValueError(
-                f"O módulo do nome ('{prefix}', extraído de '{self.name}') precisa "
-                f"ser igual ao campo module ('{self.module.value}')."
-            )
-        return self
-
-
-class PermissionCreate(PermissionBase):
-    """
-    Schema usado para criação de permission.
-    Todos os campos principais são obrigatórios.
-    """
-
-    pass
 
 
 class PermissionUpdate(BaseModel):
@@ -104,17 +19,9 @@ class PermissionUpdate(BaseModel):
     Schema usado para atualização de permission.
     Todos os campos são opcionais para permitir update parcial com PATCH.
 
-    'name' propositalmente NÃO está aqui: é a string usada em todo o código
-    para checar autorização (ex: require_permission("users:update")).
-    Renomear uma permissão já existente mudaria silenciosamente o que ela
-    concede a todas as roles já vinculadas a ela, sem criar nenhum vínculo
-    novo. 'name' só é definido na criação da permissão.
-
-    'module' também NÃO está aqui, pelo mesmo motivo: é derivado do
-    prefixo de 'name' (ver PermissionBase.validate_name_matches_module) —
-    permitir editá-lo isoladamente criava divergência entre o que a
-    autorização usa (name) e o que a interface agrupa/exibe (module),
-    sem nenhuma validação impedindo isso.
+    Nome técnico e módulo não são editáveis. O catálogo fechado define esses
+    campos exclusivamente em código e migrations; a API permite ajustar apenas
+    os textos apresentados ao administrador.
     """
 
     display_name: str | None = Field(default=None, min_length=2, max_length=100)

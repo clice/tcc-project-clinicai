@@ -1,13 +1,11 @@
 /**
  * Listagem de permissões.
  *
- * Exibe as permissões cadastradas no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * Exibe o catálogo oficial e permite visualizar ou editar seus textos.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CAlert, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -80,14 +78,8 @@ const PermissionsList = () => {
           <div className="text-body-secondary">Configurações</div>
           <h1 className="h3 mb-0">Permissões</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie permissões técnicas usadas no controle de acesso.
+            Consulte o catálogo técnico fechado usado no controle de acesso.
           </p>
-        </div>
-        
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/permissions/create">
-            Cadastrar Permissão
-          </CButton>
         </div>
       </div>
 
@@ -97,7 +89,7 @@ const PermissionsList = () => {
 
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <AppTable

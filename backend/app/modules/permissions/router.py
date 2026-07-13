@@ -9,13 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.modules.permissions.schema import (
-    PermissionCreate,
-    PermissionResponse,
-    PermissionUpdate,
-)
+from app.modules.permissions.schema import PermissionResponse, PermissionUpdate
 from app.modules.permissions.service import (
-    create_permission,
     get_permission_by_id,
     list_permissions,
     update_permission,
@@ -23,19 +18,6 @@ from app.modules.permissions.service import (
 
 
 router = APIRouter(prefix="/permissions", tags=["Permissions"])
-
-
-@router.post("/", response_model=PermissionResponse, status_code=201)
-def create_permission_route(
-    payload: PermissionCreate,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
-):
-    """
-    Cria uma nova permissão do sistema.
-    Apenas administradores devem poder criar permissões.
-    """
-    return create_permission(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[PermissionResponse])

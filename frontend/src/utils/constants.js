@@ -2,30 +2,6 @@
  * Utilitários de nomeclaturas das etiquetas do sistema.
  */
 
-// ACTIONS
-
-export const actionLabels = {
-  create: 'Criar',
-  read: 'Visualizar',
-  update: 'Atualizar',
-  delete: 'Excluir',
-  change_status: 'Alterar status',
-  upload: 'Upload',
-  download: 'Download',
-  manage: 'Gerenciar',
-}
-
-export const actionOptions = [
-  { value: 'create', label: actionLabels.create },
-  { value: 'read', label: actionLabels.read },
-  { value: 'update', label: actionLabels.update },
-  { value: 'delete', label: actionLabels.delete },
-  { value: 'change_status', label: actionLabels.change_status },
-  { value: 'upload', label: actionLabels.upload },
-  { value: 'download', label: actionLabels.download },
-  { value: 'manage', label: actionLabels.manage },
-]
-
 // MODULES
 
 export const moduleLabels = {
@@ -40,19 +16,6 @@ export const moduleLabels = {
   role_permissions: 'Permissões por Perfil',
   statuses: 'Status',
 }
-
-export const moduleOptions = [
-  { value: 'users', label: moduleLabels.users },
-  { value: 'clinics', label: moduleLabels.clinics },
-  { value: 'patients', label: moduleLabels.patients },
-  { value: 'exams', label: moduleLabels.exams },
-  { value: 'ai_analysis', label: moduleLabels.ai_analysis },
-  { value: 'audit_logs', label: moduleLabels.audit_logs },
-  { value: 'roles', label: moduleLabels.roles },
-  { value: 'permissions', label: moduleLabels.permissions },
-  { value: 'role_permissions', label: moduleLabels.role_permissions },
-  { value: 'statuses', label: moduleLabels.statuses },
-]
 
 // ROLES
 

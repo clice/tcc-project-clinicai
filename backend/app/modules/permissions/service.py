@@ -16,33 +16,8 @@ from app.common.services import (
 )
 from app.modules.permissions.model import Permission
 from app.modules.users.model import User
-from app.modules.permissions.schema import PermissionCreate, PermissionUpdate
+from app.modules.permissions.schema import PermissionUpdate
 from app.modules.audit_logs.service import create_audit_log
-
-
-def check_permission_duplicate(
-    db: Session,
-    name: str,
-    ignore_permission_id: int | None = None,
-) -> None:
-    """
-    Verifica se já existe outra permission com o mesmo name.
-    O campo name deve ser único porque será usado internamente
-    para autorização.
-    """
-    query = db.query(Permission).filter(Permission.name == name)
-
-    # Usado no update para ignorar o próprio registro.
-    if ignore_permission_id is not None:
-        query = query.filter(Permission.id != ignore_permission_id)
-
-    duplicated = query.first()
-
-    if duplicated:
-        raise HTTPException(
-            status_code=400,
-            detail="Já existe uma permissão com esse nome.",
-        )
 
 
 # ========================================
@@ -76,51 +51,6 @@ def list_permissions(db: Session) -> list[Permission]:
         .order_by(Permission.module.asc(), Permission.display_name.asc())
         .all()
     )
-
-
-def create_permission(
-    db: Session,
-    payload: PermissionCreate,
-    current_user: User,
-) -> Permission:
-    """
-    Cria uma nova permissão.
-    """
-    module = payload.module.value
-
-    check_permission_duplicate(db=db, name=payload.name)
-
-    permission = Permission(
-        name=payload.name,
-        display_name=payload.display_name,
-        description=payload.description,
-        module=module,
-    )
-
-    db.add(permission)
-    db.flush()
-
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
-        clinic_id=current_user.clinic_id,
-        action=AuditAction.CREATE,
-        entity=AuditEntity.PERMISSION,
-        entity_id=permission.id,
-        description="Permissão cadastrada.",
-        new_data={
-            "id": permission.id,
-            "name": permission.name,
-            "display_name": permission.display_name,
-            "description": permission.description,
-            "module": permission.module,
-        },
-    )
-
-    db.commit()
-    db.refresh(permission)
-
-    return permission
 
 
 def update_permission(

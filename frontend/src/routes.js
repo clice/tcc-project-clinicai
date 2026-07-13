@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 
 import React from 'react'
@@ -65,7 +65,6 @@ const ViewRole = () => React.createElement(RoleForm, { mode: 'view' })
 const PermissionsList = React.lazy(() => import('./views/permissions/PermissionsList'))
 const PermissionForm = React.lazy(() => import('./views/permissions/PermissionForm'))
 
-const CreatePermission = () => React.createElement(PermissionForm, { mode: 'create' })
 const EditPermission = () => React.createElement(PermissionForm, { mode: 'edit' })
 const ViewPermission = () => React.createElement(PermissionForm, { mode: 'view' })
 
@@ -84,55 +83,147 @@ export const routes = [
   ////////// ADMIN
 
   // CLINICS
-  { path: '/clinics', name: 'Clínicas', element: ClinicsList, roles: ['admin_master']},
-  { path: '/clinics/create', name: 'Adicionar Clínica', element: CreateClinic, roles: ['admin_master']},
-  { path: '/clinics/:id/edit', name: 'Editar Clínica', element: EditClinic, roles: ['admin_master']},
-  { path: '/clinics/:id', name: 'Detalhes da Clínica', element: ViewClinic, roles: ['admin_master']},
+  { path: '/clinics', name: 'Clínicas', element: ClinicsList, roles: ['admin_master'] },
+  {
+    path: '/clinics/create',
+    name: 'Adicionar Clínica',
+    element: CreateClinic,
+    roles: ['admin_master'],
+  },
+  {
+    path: '/clinics/:id/edit',
+    name: 'Editar Clínica',
+    element: EditClinic,
+    roles: ['admin_master'],
+  },
+  {
+    path: '/clinics/:id',
+    name: 'Detalhes da Clínica',
+    element: ViewClinic,
+    roles: ['admin_master'],
+  },
 
   // PATIENTS
   // "permission" tem prioridade sobre "roles" (ver RoleRoute.jsx) — se um
   // admin remover patients:read do Médico, esta rota passa a bloquear
   // sozinha, sem precisar editar este arquivo. "roles" continua aqui como
   // fallback documentado, caso a permissão nunca chegue a ser removida.
-  { path: '/patients', name: 'Pacientes', element: PatientsList, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:read'},
-  { path: '/patients/create', name: 'Adicionar Paciente', element: CreatePatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:create'},
-  { path: '/patients/:id/edit', name: 'Editar Paciente', element: EditPatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:update'},
-  { path: '/patients/:id', name: 'Detalhes do Paciente', element: ViewPatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:read'},
+  {
+    path: '/patients',
+    name: 'Pacientes',
+    element: PatientsList,
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: 'patients:read',
+  },
+  {
+    path: '/patients/create',
+    name: 'Adicionar Paciente',
+    element: CreatePatient,
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: 'patients:create',
+  },
+  {
+    path: '/patients/:id/edit',
+    name: 'Editar Paciente',
+    element: EditPatient,
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: 'patients:update',
+  },
+  {
+    path: '/patients/:id',
+    name: 'Detalhes do Paciente',
+    element: ViewPatient,
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: 'patients:read',
+  },
 
   // EXAMS
-  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor'], permission: 'exams:read'},
-  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor'], permission: 'exams:create'},
-  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor'], permission: 'exams:update'},
-  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor'], permission: 'exams:read'},
+  {
+    path: '/exams',
+    name: 'Exames',
+    element: ExamsList,
+    roles: ['admin_master', 'doctor'],
+    permission: 'exams:read',
+  },
+  {
+    path: '/exams/create',
+    name: 'Adicionar Exame',
+    element: CreateExam,
+    roles: ['admin_master', 'doctor'],
+    permission: 'exams:create',
+  },
+  {
+    path: '/exams/:id/edit',
+    name: 'Editar Exame',
+    element: EditExam,
+    roles: ['admin_master', 'doctor'],
+    permission: 'exams:update',
+  },
+  {
+    path: '/exams/:id',
+    name: 'Detalhes do Exame',
+    element: ViewExam,
+    roles: ['admin_master', 'doctor'],
+    permission: 'exams:read',
+  },
 
   /////////// SYSTEM
 
   // USERS
-  { path: '/users', name: 'Usuários', element: UsersList, roles: ['admin_master']},
-  { path: '/users/create', name: 'Adicionar Usuário', element: CreateUser, roles: ['admin_master']},
-  { path: '/users/:id/edit', name: 'Editar Usuário', element: EditUser, roles: ['admin_master']},
-  { path: '/users/:id', name: 'Detalhes do Usuário', element: ViewUser, roles: ['admin_master']},
+  { path: '/users', name: 'Usuários', element: UsersList, roles: ['admin_master'] },
+  {
+    path: '/users/create',
+    name: 'Adicionar Usuário',
+    element: CreateUser,
+    roles: ['admin_master'],
+  },
+  { path: '/users/:id/edit', name: 'Editar Usuário', element: EditUser, roles: ['admin_master'] },
+  { path: '/users/:id', name: 'Detalhes do Usuário', element: ViewUser, roles: ['admin_master'] },
 
   // AUDIT LOGS
-  { path: '/audit-logs', name: 'Logs de Auditoria', element: AuditLogsList, roles: ['admin_master']},
+  {
+    path: '/audit-logs',
+    name: 'Logs de Auditoria',
+    element: AuditLogsList,
+    roles: ['admin_master'],
+  },
 
   ////////// CONFIGURATIONS
 
   // ROLES
-  { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master']},
-  { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master']},
-  { path: '/roles/:id', name: 'Detalhes do Perfil', element: ViewRole, roles: ['admin_master']},
+  { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master'] },
+  { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master'] },
+  { path: '/roles/:id', name: 'Detalhes do Perfil', element: ViewRole, roles: ['admin_master'] },
 
   // PERMISSIONS
-  { path: '/permissions', name: 'Permissões', element: PermissionsList, roles: ['admin_master']},
-  { path: '/permissions/create', name: 'Adicionar Permissão', element: CreatePermission, roles: ['admin_master']},
-  { path: '/permissions/:id/edit', name: 'Editar Permissão', element: EditPermission, roles: ['admin_master']},
-  { path: '/permissions/:id', name: 'Detalhes da Permissão', element: ViewPermission, roles: ['admin_master']},
+  { path: '/permissions', name: 'Permissões', element: PermissionsList, roles: ['admin_master'] },
+  {
+    path: '/permissions/:id/edit',
+    name: 'Editar Permissão',
+    element: EditPermission,
+    roles: ['admin_master'],
+  },
+  {
+    path: '/permissions/:id',
+    name: 'Detalhes da Permissão',
+    element: ViewPermission,
+    roles: ['admin_master'],
+  },
 
   // STATUSES
   { path: '/statuses', name: 'Status', element: StatusesList, roles: ['admin_master'] },
-  { path: '/statuses/:id/edit', name: 'Editar Status', element: EditStatus, roles: ['admin_master'] },
-  { path: '/statuses/:id', name: 'Detalhes do Status', element: ViewStatus, roles: ['admin_master'] },
+  {
+    path: '/statuses/:id/edit',
+    name: 'Editar Status',
+    element: EditStatus,
+    roles: ['admin_master'],
+  },
+  {
+    path: '/statuses/:id',
+    name: 'Detalhes do Status',
+    element: ViewStatus,
+    roles: ['admin_master'],
+  },
 ]
 
 export default routes

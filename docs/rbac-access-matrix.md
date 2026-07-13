@@ -73,3 +73,6 @@ O teste `frontend/scripts/check-action-permissions.mjs` simula uma role com
 uma única permissão por vez. Ele confirma que nenhuma concessão libera outra
 ação e também verifica se os componentes de lista e os botões adicionais estão
 ligados aos booleanos específicos.
+
+O catálogo técnico e o procedimento obrigatório para incluir novas permissões
+estão documentados em `docs/permission-catalog.md`.

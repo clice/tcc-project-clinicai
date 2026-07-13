@@ -8,7 +8,8 @@
 #   3) os dados iniciais (seeds/bootstrap) existam.
 #
 # Tudo aqui é idempotente. Migrations aplicam evoluções oficiais de dados;
-# seeds fazem somente bootstrap de registros ausentes. Em particular, a
+# seeds fazem bootstrap da primeira instalação e validam dados estruturais.
+# Em banco existente, permissões oficiais ausentes exigem migration e a
 # matriz RBAC editável não é reconciliada na inicialização.
 # =====================================================
 

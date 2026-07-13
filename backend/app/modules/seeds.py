@@ -38,7 +38,7 @@ def run_seed() -> None:
         print("Roles criados/verificados.")
         
         permissions = seed_permissions(db)
-        print("Permissions criadas/verificadas.")
+        print("Catálogo de permissions inicializado/validado.")
         
         bootstrapped_roles = seed_role_permissions(db, roles, permissions)
         if bootstrapped_roles:
