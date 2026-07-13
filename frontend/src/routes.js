@@ -97,7 +97,6 @@ export const routes = [
   { path: '/patients/create', name: 'Adicionar Paciente', element: CreatePatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
   { path: '/patients/:id/edit', name: 'Editar Paciente', element: EditPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
   { path: '/patients/:id', name: 'Detalhes do Paciente', element: ViewPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/clinics/:id', name: 'Detalhes da Clínica', element: ViewClinic, roles: ['admin_master']},
 
   // EXAMS
   { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor']},

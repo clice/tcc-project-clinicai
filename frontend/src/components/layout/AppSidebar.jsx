@@ -77,7 +77,10 @@ const injectCountBadges = (items, counts) => {
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const { roleName } = useAuth()
-  const { counts: examCounts } = useExamStatusCounts()
+  // O Funcionário da Clínica não tem exams:read (Art. 34 do CFM) — sem
+  // essa checagem, o hook tentava listar exames mesmo assim e recebia
+  // 403 silenciosamente a cada carregamento da sidebar.
+  const { counts: examCounts } = useExamStatusCounts({}, roleName !== 'clinic_staff')
 
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)

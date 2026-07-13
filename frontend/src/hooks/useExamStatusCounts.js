@@ -37,13 +37,18 @@ const applyClientSideFilters = (exams, { dateFrom, dateTo } = {}) => {
   })
 }
 
-export const useExamStatusCounts = (filters = {}) => {
+export const useExamStatusCounts = (filters = {}, enabled = true) => {
   const { clinicId, doctorId, aiPredictionClass, dateFrom, dateTo } = filters
 
   const [counts, setCounts] = useState(emptyCounts)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(enabled)
 
   const refresh = useCallback(async () => {
+    if (!enabled) {
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
 
@@ -74,7 +79,7 @@ export const useExamStatusCounts = (filters = {}) => {
       setIsLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clinicId, doctorId, aiPredictionClass, dateFrom, dateTo])
+  }, [enabled, clinicId, doctorId, aiPredictionClass, dateFrom, dateTo])
 
   useEffect(() => {
     void refresh()

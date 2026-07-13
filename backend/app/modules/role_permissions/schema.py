@@ -38,6 +38,16 @@ class RolePermissionUpdate(BaseModel):
     permission_id: int | None = Field(default=None, gt=0)
 
 
+class RolePermissionSyncRequest(BaseModel):
+    """
+    Schema usado para sincronizar, de uma vez só, todas as permissões de
+    uma role (substitui o padrão anterior do frontend de múltiplos
+    POST/DELETE sem transação).
+    """
+
+    permission_ids: list[int] = Field(default_factory=list)
+
+
 class RolePermissionResponse(BaseModel):
     """
     Schema usado para retorno da API.
@@ -59,3 +69,4 @@ class RolePermissionResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+    

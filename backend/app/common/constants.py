@@ -79,6 +79,36 @@ class StatusName(StrEnum):
     FAILED = "failed"
 
 
+# Matriz oficial e fechada de pares (name, applies_to) válidos. Sem essa
+# validação, o schema aceitava name e applies_to como enums independentes
+# — permitindo combinações sem sentido como completed/user ou active/exam,
+# que quebram a máquina de estados descrita na monografia (ex: um usuário
+# com status "completed" nunca autenticaria, já que get_current_user só
+# aceita active/user). Usada tanto na validação do schema (StatusBase)
+# quanto pode ser reaproveitada pelo frontend para filtrar as opções após
+# a escolha do escopo.
+ALLOWED_STATUS_BY_SCOPE: dict[str, set[str]] = {
+    StatusScope.USER.value: {StatusName.ACTIVE.value, StatusName.INACTIVE.value},
+    StatusScope.CLINIC.value: {StatusName.ACTIVE.value, StatusName.INACTIVE.value},
+    StatusScope.PATIENT.value: {StatusName.ACTIVE.value, StatusName.INACTIVE.value},
+    StatusScope.EXAM.value: {
+        StatusName.PENDING.value,
+        StatusName.PROCESSING.value,
+        StatusName.AWAITING_REVIEW.value,
+        StatusName.COMPLETED.value,
+        StatusName.COMPLETED_WITH_DIVERGENCE.value,
+        StatusName.CANCELED.value,
+        StatusName.FAILED.value,
+    },
+    StatusScope.AI_ANALYSIS.value: {
+        StatusName.PENDING.value,
+        StatusName.PROCESSING.value,
+        StatusName.COMPLETED.value,
+        StatusName.FAILED.value,
+    },
+}
+
+
 class SystemModule(StrEnum):
     USERS = "users"
     CLINICS = "clinics"

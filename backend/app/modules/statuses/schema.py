@@ -7,9 +7,9 @@ padronizar os dados enviados nas respostas e documentar automaticamente os endpo
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.common.constants import StatusName, StatusScope
+from app.common.constants import ALLOWED_STATUS_BY_SCOPE, StatusName, StatusScope
 from app.common.validators import (
     normalize_optional_text,
     normalize_required_text,
@@ -35,6 +35,22 @@ class StatusBase(BaseModel):
     @classmethod
     def normalize_description(cls, value: str | None) -> str | None:
         return normalize_optional_text(value)
+
+    @model_validator(mode="after")
+    def validate_name_applies_to_pair(self) -> "StatusBase":
+        """
+        Confere que a combinação (name, applies_to) é uma das oficialmente
+        previstas — sem isso, name e applies_to eram validados como enums
+        independentes, aceitando pares sem sentido como completed/user.
+        """
+        permitidos = ALLOWED_STATUS_BY_SCOPE.get(self.applies_to.value, set())
+        if self.name.value not in permitidos:
+            permitidos_str = ", ".join(sorted(permitidos)) or "(nenhum)"
+            raise ValueError(
+                f"Status '{self.name.value}' não é válido para o escopo "
+                f"'{self.applies_to.value}'. Válidos para esse escopo: {permitidos_str}."
+            )
+        return self
 
 
 class StatusCreate(StatusBase):

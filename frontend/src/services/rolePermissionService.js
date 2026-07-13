@@ -45,33 +45,25 @@ export const rolePermissionService = {
   },
 
   /**
-   * Sincroniza as permissões de uma role.
+   * Sincroniza as permissões de uma role, em uma única chamada
+   * transacional no backend.
+   *
+   * Antes, isso disparava vários POST/DELETE em paralelo (Promise.all)
+   * sem nenhuma transação — uma falha no meio deixava parte das
+   * permissões aplicada e parte não, e como as adições aconteciam antes
+   * das remoções, existia uma janela real em que a role tinha mais
+   * permissões do que deveria. O backend agora calcula a diferença e
+   * aplica tudo de uma vez, com rollback integral em caso de erro.
    */
   syncRolePermissions: async (roleId, selectedPermissionIds) => {
-    const currentLinks = await rolePermissionService.listByRole(roleId)
-
-    const currentPermissionIds = currentLinks.map((item) => Number(item.permission_id))
-    const selectedIds = selectedPermissionIds.map((id) => Number(id))
-
-    const permissionIdsToAdd = selectedIds.filter((id) => !currentPermissionIds.includes(id))
-
-    const linksToRemove = currentLinks.filter(
-      (link) => !selectedIds.includes(Number(link.permission_id)),
-    )
-
-    await Promise.all(
-      permissionIdsToAdd.map((permissionId) =>
-        rolePermissionService.create(roleId, permissionId),
-      ),
-    )
-
-    await Promise.all(
-      linksToRemove.map((link) => rolePermissionService.remove(link.id)),
-    )
+    const response = await api.put(`/role-permissions/roles/${roleId}`, {
+      permission_ids: selectedPermissionIds.map((id) => Number(id)),
+    })
 
     return {
       role_id: Number(roleId),
-      permission_ids: selectedIds,
+      permission_ids: selectedPermissionIds.map((id) => Number(id)),
+      role_permissions: response.data,
     }
   },
 }

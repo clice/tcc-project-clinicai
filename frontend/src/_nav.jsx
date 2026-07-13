@@ -51,49 +51,55 @@ const _nav = [
     name: 'Exames',
     to: '/exams',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    // clinic_staff removido: o Funcionário da Clínica não tem exams:read
+    // (Art. 34 do CFM — sem acesso a resultados diagnósticos, nem à
+    // listagem de exames). Antes, o menu mostrava esse grupo mesmo assim,
+    // e o hook de contagem de badges tentava listar exames e recebia 403
+    // silenciosamente — a interface passava impressão de acesso quebrado
+    // em vez de simplesmente não oferecer algo que o perfil não usa.
+    roles: ['admin_master', 'doctor'],
     items: [
       {
         component: CNavItem,
         name: 'Processando',
         to: '/exams?status=processing',
         badgeKey: 'processing',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,
         name: 'Revisão',
         to: '/exams?status=awaiting_review',
         badgeKey: 'awaiting_review',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,
         name: 'Concluídos',
         to: '/exams?status=completed',
         badgeKey: 'completed',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,
         name: 'Divergência',
         to: '/exams?status=completed_with_divergence',
         badgeKey: 'completed_with_divergence',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,
         name: 'Falha na IA',
         to: '/exams?status=failed',
         badgeKey: 'failed',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,
         name: 'Cancelados',
         to: '/exams?status=canceled',
         badgeKey: 'canceled',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor'],
       },
       {
         component: CNavItem,

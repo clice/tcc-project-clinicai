@@ -12,40 +12,6 @@ from app.modules.roles.model import Role
 from app.modules.role_permissions.model import RolePermission
 
 
-def get_or_create_role_permission(
-    db: Session,
-    role_id: int,
-    permission_id: int,
-) -> RolePermission:
-    """
-    Busca um vínculo existente ou cria um novo.
-
-    Evita duplicidade durante a execução dos seeds.
-    """
-    role_permission = (
-        db.query(RolePermission)
-        .filter(
-            RolePermission.role_id == role_id,
-            RolePermission.permission_id == permission_id,
-        )
-        .first()
-    )
-
-    if role_permission:
-        return role_permission
-
-    role_permission = RolePermission(
-        role_id=role_id,
-        permission_id=permission_id,
-    )
-
-    db.add(role_permission)
-    db.commit()
-    db.refresh(role_permission)
-
-    return role_permission
-
-
 def apply_permissions_to_role(
     db: Session,
     role: Role,
@@ -53,22 +19,53 @@ def apply_permissions_to_role(
     permission_names: list[str],
 ) -> None:
     """
-    Vincula uma lista de permissões a uma role.
+    Reconcilia os vínculos de uma role com a matriz oficial de permissões:
+    adiciona os que estão faltando E remove os que existem no banco mas
+    não estão mais na lista atual.
 
-    Caso alguma permissão ainda não exista no seed de permissions,
-    ela é ignorada para evitar quebra durante o desenvolvimento.
+    Antes, esta função só adicionava (get_or_create), nunca removia — se
+    uma versão anterior do seed concedeu uma permissão a uma role e a
+    versão atual a retirou da lista, rodar o seed de novo num banco já
+    inicializado NÃO revogava o vínculo antigo. Isso já aconteceu de
+    verdade neste projeto: o Funcionário da Clínica chegou a ter
+    exams:read/ai_analysis:read concedidos, removidos manualmente depois
+    — um reseed num banco desatualizado reintroduziria esse acesso.
+
+    Permissões oficiais ausentes do catálogo de `permissions` (ainda não
+    seedadas) fazem a função levantar erro, em vez de ignorar
+    silenciosamente — um nome errado na matriz deve ser percebido agora,
+    não silenciar um vínculo que a role deveria ter.
     """
+    permissoes_desejadas: dict[str, Permission] = {}
     for permission_name in permission_names:
         permission = permissions.get(permission_name)
-
         if not permission:
-            continue
+            raise ValueError(
+                f"Permissão '{permission_name}' referenciada para a role "
+                f"'{role.name}' não existe no catálogo de permissions seedadas. "
+                "Corrija o nome na matriz ou adicione a permissão ao seed de permissions."
+            )
+        permissoes_desejadas[permission_name] = permission
 
-        get_or_create_role_permission(
-            db=db,
-            role_id=role.id,
-            permission_id=permission.id,
-        )
+    vinculos_atuais = (
+        db.query(RolePermission).filter(RolePermission.role_id == role.id).all()
+    )
+    permission_id_by_id = {p.id: p for p in permissions.values()}
+    ids_atuais = {rp.permission_id for rp in vinculos_atuais}
+    ids_desejados = {p.id for p in permissoes_desejadas.values()}
+
+    # Remove vínculos que existem no banco mas não estão mais na matriz.
+    ids_para_remover = ids_atuais - ids_desejados
+    if ids_para_remover:
+        db.query(RolePermission).filter(
+            RolePermission.role_id == role.id,
+            RolePermission.permission_id.in_(ids_para_remover),
+        ).delete(synchronize_session=False)
+
+    # Adiciona vínculos que estão na matriz mas ainda não existem no banco.
+    ids_para_adicionar = ids_desejados - ids_atuais
+    for permission_id in ids_para_adicionar:
+        db.add(RolePermission(role_id=role.id, permission_id=permission_id))
 
 
 def seed_role_permissions(
@@ -142,3 +139,10 @@ def seed_role_permissions(
             permissions=permissions,
             permission_names=permission_names,
         )
+
+    # Commit único no final: a reconciliação (remover + adicionar) de
+    # todas as roles acontece na mesma transação — uma falha no meio não
+    # deixa metade das roles com privilégios revogados e a outra metade
+    # ainda com os antigos.
+    db.commit()
+    

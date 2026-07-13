@@ -7,7 +7,7 @@ padronizar os dados enviados nas respostas e documentar automaticamente os endpo
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.common.constants import PermissionAction, SystemModule
 from app.common.validators import (
@@ -72,6 +72,23 @@ class PermissionBase(BaseModel):
     def normalize_description(cls, value: str | None) -> str | None:
         return normalize_optional_text(value)
 
+    @model_validator(mode="after")
+    def validate_name_matches_module(self) -> "PermissionBase":
+        """
+        Confere que o prefixo de `name` (ex: "users" em "users:create")
+        bate com `module` — sem essa checagem, era possível criar
+        name="users:create" com module="clinics", e a autorização (que usa
+        `name`) concederia acesso a um módulo diferente do que a interface
+        mostra (que agrupa por `module`).
+        """
+        prefix = self.name.split(":")[0]
+        if prefix != self.module.value:
+            raise ValueError(
+                f"O módulo do nome ('{prefix}', extraído de '{self.name}') precisa "
+                f"ser igual ao campo module ('{self.module.value}')."
+            )
+        return self
+
 
 class PermissionCreate(PermissionBase):
     """
@@ -92,11 +109,16 @@ class PermissionUpdate(BaseModel):
     Renomear uma permissão já existente mudaria silenciosamente o que ela
     concede a todas as roles já vinculadas a ela, sem criar nenhum vínculo
     novo. 'name' só é definido na criação da permissão.
+
+    'module' também NÃO está aqui, pelo mesmo motivo: é derivado do
+    prefixo de 'name' (ver PermissionBase.validate_name_matches_module) —
+    permitir editá-lo isoladamente criava divergência entre o que a
+    autorização usa (name) e o que a interface agrupa/exibe (module),
+    sem nenhuma validação impedindo isso.
     """
 
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=255)
-    module: SystemModule | None = None
 
     @field_validator("display_name")
     @classmethod
@@ -128,3 +150,4 @@ class PermissionResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+    

@@ -89,6 +89,41 @@ def check_role_permission_duplicate(
 # ========================================
 
 
+def build_role_permission_response(role_permission: RolePermission) -> dict:
+    """
+    Monta a resposta enriquecida (com nomes de role/permission) a partir
+    do objeto ORM.
+
+    Antes, o router devolvia o objeto `RolePermission` cru para
+    `RolePermissionResponse` (via `from_attributes`), mas o model só tem
+    os relacionamentos `role`/`permission` (objetos aninhados) — não os
+    campos escalares `role_name`, `permission_name` etc. que o schema
+    declara. O Pydantic simplesmente não encontrava esses atributos e
+    devolvia `None` silenciosamente. Esta função busca os valores certos
+    dentro dos relacionamentos.
+    """
+    return {
+        "id": role_permission.id,
+        "role_id": role_permission.role_id,
+        "permission_id": role_permission.permission_id,
+        "role_name": role_permission.role.name if role_permission.role else None,
+        "role_display_name": (
+            role_permission.role.display_name if role_permission.role else None
+        ),
+        "permission_name": (
+            role_permission.permission.name if role_permission.permission else None
+        ),
+        "permission_display_name": (
+            role_permission.permission.display_name if role_permission.permission else None
+        ),
+        "permission_module": (
+            role_permission.permission.module if role_permission.permission else None
+        ),
+        "created_at": role_permission.created_at,
+        "updated_at": role_permission.updated_at,
+    }
+
+
 def get_role_permission_by_id(
     db: Session,
     role_permission_id: int,
@@ -286,3 +321,86 @@ def delete_role_permission(
     db.commit()
 
     return {"detail": "Vínculo removido com sucesso."}
+
+
+def sync_role_permissions(
+    db: Session,
+    role_id: int,
+    permission_ids: list[int],
+    current_user: User,
+) -> list[RolePermission]:
+    """
+    Sincroniza, em uma única transação, todos os vínculos de uma role com
+    a lista final de permission_ids desejada.
+
+    Antes, o frontend fazia isso com vários POST/DELETE via Promise.all:
+    se uma requisição falhasse no meio, parte das permissões ficava
+    aplicada e parte não. Além disso, como as adições aconteciam antes das
+    remoções, existia uma janela real (mesmo que curta) em que a role
+    tinha MAIS permissões do que a matriz final pretendia — um problema de
+    segurança, não só de consistência. Aqui, tudo é calculado e aplicado
+    de uma vez, com rollback integral em qualquer erro.
+    """
+    role = validate_role_exists(db=db, role_id=role_id)
+
+    ids_invalidos = [
+        pid for pid in permission_ids
+        if db.query(Permission.id).filter(Permission.id == pid).first() is None
+    ]
+    if ids_invalidos:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Permissões inexistentes: {ids_invalidos}.",
+        )
+
+    vinculos_atuais = (
+        db.query(RolePermission)
+        .options(joinedload(RolePermission.permission))
+        .filter(RolePermission.role_id == role_id)
+        .all()
+    )
+    ids_atuais = {rp.permission_id for rp in vinculos_atuais}
+    ids_desejados = set(permission_ids)
+
+    ids_para_remover = ids_atuais - ids_desejados
+    ids_para_adicionar = ids_desejados - ids_atuais
+
+    if not ids_para_remover and not ids_para_adicionar:
+        return vinculos_atuais
+
+    try:
+        if ids_para_remover:
+            db.query(RolePermission).filter(
+                RolePermission.role_id == role_id,
+                RolePermission.permission_id.in_(ids_para_remover),
+            ).delete(synchronize_session=False)
+
+        for permission_id in ids_para_adicionar:
+            db.add(RolePermission(role_id=role_id, permission_id=permission_id))
+
+        db.flush()
+
+        create_audit_log(
+            db=db,
+            user_id=current_user.id,
+            clinic_id=current_user.clinic_id,
+            action=AuditAction.UPDATE,
+            entity=AuditEntity.ROLE_PERMISSION,
+            entity_id=role_id,
+            description=f"Permissões do perfil '{role.name}' sincronizadas.",
+            old_data={"permission_ids": sorted(ids_atuais)},
+            new_data={"permission_ids": sorted(ids_desejados)},
+        )
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    return (
+        db.query(RolePermission)
+        .options(joinedload(RolePermission.role), joinedload(RolePermission.permission))
+        .filter(RolePermission.role_id == role_id)
+        .all()
+    )
+    
