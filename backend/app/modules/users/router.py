@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_admin, require_permission
 from app.modules.users.schema import (
     UserCreate,
     UserListResponse,
@@ -34,11 +34,11 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def create_user_route(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:create")),
+    current_user=Depends(require_admin),
 ):
     """
     Cria um novo usuário.
-    Inicialmente, somente usuários com permissão users:create podem criar usuários.
+    A administração de usuários é exclusiva do Administrador Master.
     """
     return create_user(db=db, payload=payload, current_user=current_user)
 
@@ -50,7 +50,7 @@ def list_users_route(
     role: str | None = Query(default=None),
     status: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:read")),
+    current_user=Depends(require_admin),
 ):
     """
     Lista usuários.
@@ -96,7 +96,7 @@ def list_doctors_route(
 def get_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:read")),
+    current_user=Depends(require_admin),
 ):
     """
     Busca usuário específico pelo ID.
@@ -109,7 +109,7 @@ def update_user_route(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:update")),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza parcialmente um usuário.
@@ -123,7 +123,7 @@ def update_user_password_route(
     user_id: int,
     payload: UserPasswordUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:update")),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza a senha de um usuário.
@@ -136,7 +136,7 @@ def update_user_password_route(
 def inactivate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:change_status")),
+    current_user=Depends(require_admin),
 ):
     """
     Inativa um usuário.
@@ -149,7 +149,7 @@ def inactivate_user_route(
 def activate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("users:change_status")),
+    current_user=Depends(require_admin),
 ):
     """
     Ativa um usuário inativo.

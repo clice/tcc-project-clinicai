@@ -10,8 +10,12 @@ export const ROLES = {
 
 /**
  * Catálogo de permissões reais do sistema — cada string aqui corresponde
- * a uma permissão de fato seedada no backend (ver `permissions/seed.py`)
- * e checada por `require_permission(...)` em pelo menos uma rota.
+ * a uma permissão de fato seedada no backend (ver `permissions/seed.py`).
+ * Em módulos delegáveis, a permissão é checada por `require_permission(...)`.
+ * Nos módulos estruturais Clínicas, Usuários administrativos e Auditoria,
+ * a role fixa `admin_master` é a barreira autoritativa da rota; as constantes
+ * administrativas permanecem disponíveis para as ações da interface até a
+ * conclusão da autorização por ação prevista na RBAC-05.
  *
  * Decisão arquitetural (achados PM-03/AU-01 de revisão): configuração
  * estrutural do sistema — Perfis, Permissões, Vínculos Perfil↔Permissão

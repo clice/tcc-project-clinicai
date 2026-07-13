@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_admin, require_permission
 from app.modules.clinics.schema import (
     ClinicCreate,
     ClinicResponse,
@@ -34,7 +34,7 @@ router = APIRouter(prefix="/clinics", tags=["Clinics"])
 def create_clinic_route(
     payload: ClinicCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:create")),
+    current_user=Depends(require_admin),
 ):
     """
     Cria uma nova clínica.
@@ -51,7 +51,7 @@ def list_clinics_route(
     search: str | None = Query(default=None),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:read")),
+    current_user=Depends(require_admin),
 ):
     """
     Lista clínicas cadastradas.
@@ -68,7 +68,7 @@ def list_clinics_route(
 def get_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:read")),
+    current_user=Depends(require_admin),
 ):
     """
     Busca uma clínica específica pelo ID.
@@ -88,7 +88,7 @@ def update_clinic_route(
     clinic_id: int,
     payload: ClinicUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:update")),
+    current_user=Depends(require_admin),
 ):
     """
     Atualiza parcialmente uma clínica.
@@ -112,7 +112,7 @@ def update_clinic_route(
 def inactivate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:change_status")),
+    current_user=Depends(require_admin),
 ):
     """
     Inativa uma clínica.
@@ -135,7 +135,7 @@ def inactivate_clinic_route(
 def activate_clinic_route(
     clinic_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:change_status")),
+    current_user=Depends(require_admin),
 ):
     """
     Ativa uma clínica.
