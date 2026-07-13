@@ -172,8 +172,8 @@ export const canManageExams = (user) => {
     PERMISSIONS.EXAMS_READ,
     PERMISSIONS.EXAMS_CREATE,
     PERMISSIONS.EXAMS_UPDATE,
-    PERMISSIONS.EXAMS_DELETE,
     PERMISSIONS.EXAMS_CHANGE_STATUS,
+    PERMISSIONS.EXAMS_REVIEW,
     PERMISSIONS.EXAMS_UPLOAD,
     PERMISSIONS.EXAMS_DOWNLOAD,
   ])
@@ -202,9 +202,7 @@ export const canManageUsers = (user) => {
 
 // AUDIT LOGS
 export const canManageAuditLogs = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.AUDIT_LOGS_READ,
-  ])
+  return hasAnyPermission(user, [PERMISSIONS.AUDIT_LOGS_READ])
 }
 
 export const canManageAugitLogs = canManageAuditLogs
@@ -213,30 +211,15 @@ export const canManageAugitLogs = canManageAuditLogs
 
 // ROLES
 export const canManageRoles = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.ROLES_READ,
-    PERMISSIONS.ROLES_CREATE,
-    PERMISSIONS.ROLES_UPDATE,
-    PERMISSIONS.ROLES_DELETE,
-  ])
+  return isAdminMaster(getUserRole(user))
 }
 
 // PERMISSIONS
 export const canManagePermissions = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.PERMISSIONS_READ,
-    PERMISSIONS.PERMISSIONS_CREATE,
-    PERMISSIONS.PERMISSIONS_UPDATE,
-    PERMISSIONS.PERMISSIONS_DELETE,
-  ])
+  return isAdminMaster(getUserRole(user))
 }
 
 // STATUSES
 export const canManageStatuses = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.STATUSES_READ,
-    PERMISSIONS.STATUSES_CREATE,
-    PERMISSIONS.STATUSES_UPDATE,
-    PERMISSIONS.STATUSES_CHANGE_STATUS,
-  ])
+  return isAdminMaster(getUserRole(user))
 }
