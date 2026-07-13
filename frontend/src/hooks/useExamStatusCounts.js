@@ -45,6 +45,9 @@ export const useExamStatusCounts = (filters = {}, enabled = true) => {
 
   const refresh = useCallback(async () => {
     if (!enabled) {
+      // Ao perder exams:read em runtime, não mantenha contagens obtidas
+      // enquanto o usuário ainda tinha acesso.
+      setCounts({ ...emptyCounts })
       setIsLoading(false)
       return
     }
@@ -82,7 +85,13 @@ export const useExamStatusCounts = (filters = {}, enabled = true) => {
   }, [enabled, clinicId, doctorId, aiPredictionClass, dateFrom, dateTo])
 
   useEffect(() => {
-    void refresh()
+    // Agenda fora do corpo síncrono do effect e cancela se as dependências
+    // mudarem antes da execução (por exemplo, após refresh de permissões).
+    const refreshTimer = window.setTimeout(() => {
+      void refresh()
+    }, 0)
+
+    return () => window.clearTimeout(refreshTimer)
   }, [refresh])
 
   return { counts, isLoading, refresh }

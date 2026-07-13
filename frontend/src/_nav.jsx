@@ -16,6 +16,8 @@ import {
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
+import { PERMISSIONS } from 'src/utils/permissions'
+
 const _nav = [
   {
     component: CNavItem,
@@ -45,6 +47,7 @@ const _nav = [
     to: '/patients',
     icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: PERMISSIONS.PATIENTS_READ,
   },
   {
     component: CNavGroup,
@@ -58,6 +61,7 @@ const _nav = [
     // silenciosamente — a interface passava impressão de acesso quebrado
     // em vez de simplesmente não oferecer algo que o perfil não usa.
     roles: ['admin_master', 'doctor'],
+    permission: PERMISSIONS.EXAMS_READ,
     items: [
       {
         component: CNavItem,
@@ -65,6 +69,7 @@ const _nav = [
         to: '/exams?status=processing',
         badgeKey: 'processing',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -72,6 +77,7 @@ const _nav = [
         to: '/exams?status=awaiting_review',
         badgeKey: 'awaiting_review',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -79,6 +85,7 @@ const _nav = [
         to: '/exams?status=completed',
         badgeKey: 'completed',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -86,6 +93,7 @@ const _nav = [
         to: '/exams?status=completed_with_divergence',
         badgeKey: 'completed_with_divergence',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -93,6 +101,7 @@ const _nav = [
         to: '/exams?status=failed',
         badgeKey: 'failed',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -100,6 +109,7 @@ const _nav = [
         to: '/exams?status=canceled',
         badgeKey: 'canceled',
         roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
       },
       {
         component: CNavItem,
@@ -120,7 +130,7 @@ const _nav = [
     component: CNavTitle,
     name: 'Sistema',
     roles: ['admin_master'],
-  },  
+  },
   {
     component: CNavItem,
     name: 'Usuários',
@@ -134,10 +144,10 @@ const _nav = [
     to: '/audit-logs',
     icon: <CIcon icon={cilShieldAlt} customClassName="nav-icon" />,
     roles: ['admin_master'],
-  }, 
+  },
 
   ////////// CONFIGURATIONS
-  
+
   {
     component: CNavGroup,
     name: 'Configurações',
@@ -164,7 +174,7 @@ const _nav = [
         roles: ['admin_master'],
       },
     ],
-  }, 
+  },
 ]
 
 export default _nav

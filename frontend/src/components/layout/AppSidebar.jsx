@@ -20,35 +20,10 @@ import { logo } from 'src/assets/brand/logo'
 import { sygnet } from 'src/assets/brand/sygnet'
 
 import { statusColors } from 'src/utils/constants'
+import { filterNavigationByAccess } from 'src/utils/navigationAccess.mjs'
+import { hasPermission, PERMISSIONS } from 'src/utils/permissions'
 
 import navigation from 'src/_nav'
-
-const filterNavigationByRole = (items, roleName) => {
-  return items
-    .map((item) => {
-      const allowedByRole = !item.roles || item.roles.includes(roleName)
-
-      if (!allowedByRole) {
-        return null
-      }
-
-      if (item.items) {
-        const filteredItems = filterNavigationByRole(item.items, roleName)
-
-        if (filteredItems.length === 0) {
-          return null
-        }
-
-        return {
-          ...item,
-          items: filteredItems,
-        }
-      }
-
-      return item
-    })
-    .filter(Boolean)
-}
 
 // Preenche o badge de qualquer item que declare `badgeKey` (hoje, os
 // status de exame no submenu) com a contagem real vinda do backend.
@@ -76,19 +51,20 @@ const injectCountBadges = (items, counts) => {
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
-  const { roleName } = useAuth()
-  // O Funcionário da Clínica não tem exams:read (Art. 34 do CFM) — sem
-  // essa checagem, o hook tentava listar exames mesmo assim e recebia
-  // 403 silenciosamente a cada carregamento da sidebar.
-  const { counts: examCounts } = useExamStatusCounts({}, roleName !== 'clinic_staff')
+  const { roleName, user } = useAuth()
+  const canReadExams = hasPermission(user, PERMISSIONS.EXAMS_READ)
+  const { counts: examCounts } = useExamStatusCounts({}, canReadExams)
 
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   const filteredNavigation = useMemo(() => {
-    const roleFiltered = filterNavigationByRole(navigation, roleName)
-    return injectCountBadges(roleFiltered, examCounts)
-  }, [roleName, examCounts])
+    const accessibleNavigation = filterNavigationByAccess(navigation, {
+      roleName,
+      hasPermission: (permission) => hasPermission(user, permission),
+    })
+    return injectCountBadges(accessibleNavigation, examCounts)
+  }, [roleName, user, examCounts])
 
   return (
     <CSidebar

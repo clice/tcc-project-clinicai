@@ -31,7 +31,7 @@ import { userService } from 'src/services/userService'
 
 import { examStatusLabels, statusColors } from 'src/utils/constants'
 import { formatDateTimeBR } from 'src/utils/formatters'
-import { getUserRole, ROLES } from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 /**
  * Dashboard — RF54 (indicadores gerais), RF55 (distribuição de exames por
@@ -74,10 +74,14 @@ const Dashboard = () => {
   const roleName = getUserRole(user)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isClinicStaff = roleName === ROLES.CLINIC_STAFF
+  const canReadExams = hasPermission(user, PERMISSIONS.EXAMS_READ)
 
   const [filters, setFilters] = useState(emptyFilters)
 
-  const { counts: examCounts, isLoading: isLoadingExamCounts } = useExamStatusCounts(filters)
+  const { counts: examCounts, isLoading: isLoadingExamCounts } = useExamStatusCounts(
+    filters,
+    canReadExams,
+  )
 
   const [generalCounts, setGeneralCounts] = useState({
     users: null,
