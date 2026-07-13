@@ -9,6 +9,13 @@ A fonte autoritativa é
 consome em `frontend/src/utils/permissions.js` e a matriz de ações em
 `frontend/src/utils/actionPermissions.mjs`.
 
+A migration `c8d2e4f6a701` remove de bancos existentes a permissão legada
+`ai_analysis:download` e todos os seus vínculos. Durante o upgrade, os dados
+removidos ficam em tabelas de salvaguarda exclusivas da revisão, permitindo que
+um downgrade restaure os vínculos personalizados sem adivinhar a matriz antiga.
+As tabelas só são criadas quando o registro legado realmente existe; bancos
+novos ou já corrigidos não recebem estruturas vazias.
+
 ## Permissões oficiais
 
 | Módulo | Permissões |
