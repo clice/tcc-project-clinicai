@@ -90,16 +90,20 @@ export const routes = [
   { path: '/clinics/:id', name: 'Detalhes da Clínica', element: ViewClinic, roles: ['admin_master']},
 
   // PATIENTS
-  { path: '/patients', name: 'Pacientes', element: PatientsList, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/patients/create', name: 'Adicionar Paciente', element: CreatePatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/patients/:id/edit', name: 'Editar Paciente', element: EditPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
-  { path: '/patients/:id', name: 'Detalhes do Paciente', element: ViewPatient, roles: ['admin_master', 'doctor', 'clinic_staff']},
+  // "permission" tem prioridade sobre "roles" (ver RoleRoute.jsx) — se um
+  // admin remover patients:read do Médico, esta rota passa a bloquear
+  // sozinha, sem precisar editar este arquivo. "roles" continua aqui como
+  // fallback documentado, caso a permissão nunca chegue a ser removida.
+  { path: '/patients', name: 'Pacientes', element: PatientsList, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:read'},
+  { path: '/patients/create', name: 'Adicionar Paciente', element: CreatePatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:create'},
+  { path: '/patients/:id/edit', name: 'Editar Paciente', element: EditPatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:update'},
+  { path: '/patients/:id', name: 'Detalhes do Paciente', element: ViewPatient, roles: ['admin_master', 'doctor', 'clinic_staff'], permission: 'patients:read'},
 
   // EXAMS
-  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor']},
-  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor']},
-  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor']},
-  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor']},
+  { path: '/exams', name: 'Exames', element: ExamsList, roles: ['admin_master', 'doctor'], permission: 'exams:read'},
+  { path: '/exams/create', name: 'Adicionar Exame', element: CreateExam, roles: ['admin_master', 'doctor'], permission: 'exams:create'},
+  { path: '/exams/:id/edit', name: 'Editar Exame', element: EditExam, roles: ['admin_master', 'doctor'], permission: 'exams:update'},
+  { path: '/exams/:id', name: 'Detalhes do Exame', element: ViewExam, roles: ['admin_master', 'doctor'], permission: 'exams:read'},
 
   /////////// SYSTEM
 

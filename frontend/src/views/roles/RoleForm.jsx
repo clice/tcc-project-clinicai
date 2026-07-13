@@ -26,6 +26,7 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { roleService } from 'src/services/roleService'
@@ -45,6 +46,7 @@ const RoleForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
+  const { refreshUser } = useAuth()
 
   const [form, setForm] = useState(emptyRole)
   const [permissions, setPermissions] = useState([])
@@ -202,6 +204,14 @@ const RoleForm = ({ mode = 'create' }) => {
       if (isEditMode) {
         await roleService.update(id, buildPayload())
         await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
+
+        // Se o usuário logado pertencer à role que acabou de ser editada,
+        // a lista de permissões dele (recebida uma única vez em
+        // /auth/me, no login) fica desatualizada até relogar — botões e
+        // menus baseados em permissão continuariam visíveis mesmo que o
+        // backend já negasse a ação com 403. Chamar refreshUser aqui
+        // resolve isso para o próprio editor, sem esperar um novo login.
+        await refreshUser()
 
         showSuccess('Perfil atualizado com sucesso.')
       }

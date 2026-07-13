@@ -27,7 +27,7 @@ const AppContent = () => {
                   exact={route.exact}
                   name={route.name}
                   element={
-                    <RoleRoute allowedRoles={route.roles}>
+                    <RoleRoute allowedRoles={route.roles} requiredPermission={route.permission}>
                       <route.element />
                     </RoleRoute>
                   }
