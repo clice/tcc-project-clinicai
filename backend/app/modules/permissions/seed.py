@@ -82,7 +82,14 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
         (SystemModule.AI_ANALYSIS, PermissionAction.CREATE, "Criar Análise por IA", "Permite solicitar análise automatizada de exames por IA."),
         (SystemModule.AI_ANALYSIS, PermissionAction.READ, "Visualizar Análise por IA", "Permite visualizar resultados de análises por IA."),
         (SystemModule.AI_ANALYSIS, PermissionAction.UPDATE, "Atualizar Análise por IA", "Permite atualizar ou revisar análise por IA."),
-        (SystemModule.AI_ANALYSIS, PermissionAction.DOWNLOAD, "Baixar Análise por IA", "Permite baixar a análise por IA."),
+        # Nota (achado PM-04 de revisão): "ai_analysis:download" NÃO existe
+        # aqui de propósito, e também já não é referenciada em
+        # role_permissions/seed.py — nunca chegou a ter uma rota que a
+        # exigisse de fato. O download do resultado de IA já é coberto por
+        # "exams:download" (baixa o arquivo do exame). Se um download
+        # específico da análise for implementado no futuro (ex: laudo em
+        # PDF separado), criar a permissão aqui E a rota que efetivamente
+        # a exige, nessa ordem.
 
         # Audit Logs
         (SystemModule.AUDIT_LOGS, PermissionAction.READ, "Visualizar Logs de Auditoria", "Permite visualizar registros de auditoria do sistema."),

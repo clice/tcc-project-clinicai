@@ -55,6 +55,13 @@ const RoleForm = ({ mode = 'create' }) => {
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
 
+  // O admin_master recebe bypass total na autorização do backend
+  // (require_admin/hasPermission) — desmarcar permissões dele aqui
+  // altera o banco, mas não reduz o acesso efetivo. Deixar essa matriz
+  // editável sugeria uma consequência que não existe de verdade.
+  const isAdminMasterRole = form.name === 'admin_master'
+  const isPermissionMatrixReadOnly = isReadOnly || isAdminMasterRole
+
   const title = useMemo(() => {
     if (isCreateMode) return 'Cadastrar Perfil'
     if (isEditMode) return 'Editar Perfil'
@@ -280,6 +287,14 @@ const RoleForm = ({ mode = 'create' }) => {
               <CCol xs={12}>
                 <h2 className="h5 mb-3">Permissões do Perfil</h2>
 
+                {isAdminMasterRole && (
+                  <div className="alert alert-info small mb-3">
+                    Acesso total fixo — o Administrador Master tem acesso irrestrito ao sistema
+                    por padrão. Esta matriz é somente leitura porque desmarcar itens aqui não
+                    reduz o acesso efetivo desse perfil.
+                  </div>
+                )}
+
                 <CRow className="g-3">
                   {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => (
                     <CCol md={6} key={moduleName}>
@@ -295,7 +310,7 @@ const RoleForm = ({ mode = 'create' }) => {
                                 id={`permission-${permission.id}`}
                                 label={permission.display_name || permission.name}
                                 checked={selectedPermissionIds.includes(Number(permission.id))}
-                                disabled={isReadOnly}
+                                disabled={isPermissionMatrixReadOnly}
                                 onChange={() => togglePermission(permission.id)}
                               />
 

@@ -17,6 +17,19 @@ def get_or_create_status(
     applies_to: StatusScope,
     description: str | None = None,
 ) -> Status:
+    """
+    Busca um status existente (por name + applies_to) ou cria um novo.
+
+    Nota (achado ST-03 de revisão): se o registro já existir, esta função
+    retorna como está — NÃO atualiza display_name/description a partir
+    dos valores passados aqui. Isso é intencional, não um descuido: um
+    administrador pode ter editado o texto de exibição de um status pela
+    interface, e reconciliar automaticamente a cada subida do serviço
+    sobrescreveria essa edição sem aviso. Uma correção no código deste
+    arquivo (mudar o texto padrão de um status) não chega, de propósito,
+    a bancos já inicializados — para isso, use uma migration explícita ou
+    edite o registro pela tela de Status.
+    """
     status = (
         db.query(Status)
         .filter(
@@ -178,3 +191,4 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Análise de IA com falha.",
         ),
     }
+    

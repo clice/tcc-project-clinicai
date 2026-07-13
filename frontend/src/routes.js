@@ -3,7 +3,6 @@
  */
 
 import React from 'react'
-import AuditLogsList from './views/audit-logs/AuditLogsList'
 
 // DASHBOARD
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
@@ -51,7 +50,7 @@ const EditUser = () => React.createElement(UserForm, { mode: 'edit' })
 const ViewUser = () => React.createElement(UserForm, { mode: 'view' })
 
 // AUDIT LOGS
-const AugitLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'))
+const AuditLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'))
 
 ////////// CONFIGURATIONS
 
@@ -59,7 +58,6 @@ const AugitLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'
 const RolesList = React.lazy(() => import('./views/roles/RolesList'))
 const RoleForm = React.lazy(() => import('./views/roles/RoleForm'))
 
-const CreateRole = () => React.createElement(RoleForm, { mode: 'create' })
 const EditRole = () => React.createElement(RoleForm, { mode: 'edit' })
 const ViewRole = () => React.createElement(RoleForm, { mode: 'view' })
 
@@ -75,7 +73,6 @@ const ViewPermission = () => React.createElement(PermissionForm, { mode: 'view' 
 const StatusesList = React.lazy(() => import('./views/statuses/StatusesList'))
 const StatusForm = React.lazy(() => import('./views/statuses/StatusForm'))
 
-const CreateStatus = () => React.createElement(StatusForm, { mode: 'create' })
 const EditStatus = () => React.createElement(StatusForm, { mode: 'edit' })
 const ViewStatus = () => React.createElement(StatusForm, { mode: 'view' })
 
@@ -119,7 +116,6 @@ export const routes = [
 
   // ROLES
   { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master']},
-  { path: '/roles/create', name: 'Adicionar Perfil', element: CreateRole, roles: ['admin_master']},
   { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master']},
   { path: '/roles/:id', name: 'Detalhes do Perfil', element: ViewRole, roles: ['admin_master']},
 
@@ -131,7 +127,6 @@ export const routes = [
 
   // STATUSES
   { path: '/statuses', name: 'Status', element: StatusesList, roles: ['admin_master'] },
-  { path: '/statuses/create', name: 'Adicionar Status', element: CreateStatus, roles: ['admin_master'] },
   { path: '/statuses/:id/edit', name: 'Editar Status', element: EditStatus, roles: ['admin_master'] },
   { path: '/statuses/:id', name: 'Detalhes do Status', element: ViewStatus, roles: ['admin_master'] },
 ]

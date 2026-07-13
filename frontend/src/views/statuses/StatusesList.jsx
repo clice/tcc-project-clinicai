@@ -6,8 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CAlert, CBadge, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CAlert, CBadge, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -77,12 +76,11 @@ const StatusesList = () => {
             Gerencie os estados usados por usuários, clínicas, pacientes e exames.
           </p>
         </div>
-
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/statuses/create">
-            Cadastrar Status
-          </CButton>
-        </div>
+        {/* Botão "Cadastrar Status" removido: os pares (name, applies_to)
+            válidos são uma matriz fechada (ver ALLOWED_STATUS_BY_SCOPE no
+            backend) e já vêm todos seedados — criar um novo só permitiria
+            duplicatas ou combinações inválidas. Os status existentes
+            continuam editáveis (nome de exibição e descrição). */}
       </div>
 
       <CCard>

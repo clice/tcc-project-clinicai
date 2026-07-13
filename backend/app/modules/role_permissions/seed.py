@@ -104,7 +104,6 @@ def seed_role_permissions(
         "ai_analysis:create",
         "ai_analysis:read",
         "ai_analysis:update",
-        "ai_analysis:download",
     ]
 
     # Clinic_staff
