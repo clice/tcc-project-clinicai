@@ -7,12 +7,12 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { 
-  CAlert, 
-  CBadge, 
-  CButton, 
-  CCard, 
-  CCardBody, 
+import {
+  CAlert,
+  CBadge,
+  CButton,
+  CCard,
+  CCardBody,
   CCol,
   CFormInput,
   CModal,
@@ -24,13 +24,7 @@ import {
   CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilCloudUpload,
-  cilFolderOpen,
-  cilUser,
-  cilPencil,
-  cilReload,
-} from '@coreui/icons'
+import { cilCloudUpload, cilFolderOpen, cilUser, cilPencil, cilReload } from '@coreui/icons'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -40,10 +34,17 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { examService } from 'src/services/examService'
 
-import { examTypeLabels, statusColors, examStatusLabels, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
+import {
+  examTypeLabels,
+  statusColors,
+  examStatusLabels,
+  aiStatusLabels,
+  aiStatusColors,
+} from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateTimeBR } from 'src/utils/formatters'
-import { canManageExams } from 'src/utils/permissions'
+import { getActionAccess } from 'src/utils/actionPermissions.mjs'
+import { hasPermission } from 'src/utils/permissions'
 
 // Os três estados mais relevantes do dia a dia — os cards de resumo focam
 // neles; os demais (falha, cancelado, pendente) ficam só no submenu
@@ -73,7 +74,10 @@ const ExamsList = () => {
   const [exams, setExams] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const canManage = canManageExams(user)
+  const { canView, canCreate, canEdit, canChangeStatus, canDownload } = getActionAccess(
+    'exams',
+    (permission) => hasPermission(user, permission),
+  )
 
   const loadExams = useCallback(async () => {
     try {
@@ -239,12 +243,12 @@ const ExamsList = () => {
               viewTo={`/exams/${exam.id}`}
               editTo={`/exams/${exam.id}/edit`}
               isInactive={isCanceled}
-              canView
-              canEdit={canManage && (isProcessing || isPending)}
+              canView={canView}
+              canEdit={canEdit && (isProcessing || isPending)}
               canUpload={false}
-              canDownload={Boolean(exam.file_name)}
-              canCancel={canManage && (isProcessing || isPending || isFailed)}
-              canRestore={canManage && isCanceled}
+              canDownload={canDownload && Boolean(exam.file_name)}
+              canCancel={canChangeStatus && (isProcessing || isPending || isFailed)}
+              canRestore={canChangeStatus && isCanceled}
               canInactivate={false}
               canActivate={false}
               onDownload={() => handleDownloadFile(exam)}
@@ -255,7 +259,15 @@ const ExamsList = () => {
         },
       },
     ],
-    [canManage, handleCancelExam, handleDownloadFile, handleRestoreExam],
+    [
+      canView,
+      canEdit,
+      canChangeStatus,
+      canDownload,
+      handleCancelExam,
+      handleDownloadFile,
+      handleRestoreExam,
+    ],
   )
 
   return (
@@ -271,11 +283,13 @@ const ExamsList = () => {
           </p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/exams/create">
-            Cadastrar Exame
-          </CButton>
-        </div>
+        {canCreate && (
+          <div className="d-flex justify-content-center mt-4">
+            <CButton color="primary" size="lg" as={Link} to="/exams/create">
+              Cadastrar Exame
+            </CButton>
+          </div>
+        )}
       </div>
 
       <CRow className="mb-4">

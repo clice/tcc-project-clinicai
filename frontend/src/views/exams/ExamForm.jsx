@@ -34,7 +34,7 @@ import { aiAnalysisService } from 'src/services/aiAnalysisService'
 
 import { examTypeOptions, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
-import { getUserRole, ROLES } from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const allowedImageTypes = ['image/jpeg', 'image/png']
 
@@ -101,7 +101,11 @@ const ExamForm = ({ mode = 'create' }) => {
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
   // (processando, concluído, falhou, cancelado) não admitem essa ação.
-  const canReview = isDoctor && !isCreateMode && form.status_name === 'awaiting_review'
+  const canReview =
+    isDoctor &&
+    hasPermission(user, PERMISSIONS.EXAMS_REVIEW) &&
+    !isCreateMode &&
+    form.status_name === 'awaiting_review'
 
   const title = useMemo(() => {
     if (isCreateMode) return 'Cadastrar Exame'
@@ -125,8 +129,7 @@ const ExamForm = ({ mode = 'create' }) => {
 
     return patients.filter(
       (patient) =>
-        String(patient.clinic_id) === String(form.clinic_id) &&
-        patient.status_name === 'active',
+        String(patient.clinic_id) === String(form.clinic_id) && patient.status_name === 'active',
     )
   }, [patients, form.clinic_id])
 
@@ -524,9 +527,7 @@ const ExamForm = ({ mode = 'create' }) => {
                         required
                       >
                         <option value="">
-                          {form.clinic_id
-                            ? 'Selecione...'
-                            : 'Selecione uma clínica primeiro'}
+                          {form.clinic_id ? 'Selecione...' : 'Selecione uma clínica primeiro'}
                         </option>
 
                         {availablePatients.map((patient) => (
@@ -627,9 +628,7 @@ const ExamForm = ({ mode = 'create' }) => {
                       value={form.clinical_indication}
                       disabled={isReadOnly}
                       placeholder="Ex: dor abdominal, rastreamento, refluxo persistente..."
-                      onChange={(event) =>
-                        updateField('clinical_indication', event.target.value)
-                      }
+                      onChange={(event) => updateField('clinical_indication', event.target.value)}
                     />
                   </CCol>
 
@@ -716,9 +715,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   <div className="mb-3">
                     <div className="text-body-secondary small">Tempo de processamento</div>
                     <div>
-                      {aiAnalysis.processing_time_ms
-                        ? `${aiAnalysis.processing_time_ms} ms`
-                        : '-'}
+                      {aiAnalysis.processing_time_ms ? `${aiAnalysis.processing_time_ms} ms` : '-'}
                     </div>
                   </div>
 
@@ -741,9 +738,9 @@ const ExamForm = ({ mode = 'create' }) => {
                       <div className="text-body-secondary">Não disponível.</div>
                     )}
                     <div className="form-text">
-                      Regiões destacadas influenciaram mais a predição. Apoio visual — não é
-                      prova causal do resultado, sobretudo combinado ao meta-classificador do
-                      Ensemble Stacking.
+                      Regiões destacadas influenciaram mais a predição. Apoio visual — não é prova
+                      causal do resultado, sobretudo combinado ao meta-classificador do Ensemble
+                      Stacking.
                     </div>
                   </div>
 
@@ -768,8 +765,8 @@ const ExamForm = ({ mode = 'create' }) => {
 
               <CCardBody>
                 <CAlert color="warning" className="small">
-                  Este exame está aguardando sua revisão. A conclusão registrada aqui é
-                  definitiva — o exame não retorna para processamento depois (RN10).
+                  Este exame está aguardando sua revisão. A conclusão registrada aqui é definitiva —
+                  o exame não retorna para processamento depois (RN10).
                 </CAlert>
 
                 <CForm onSubmit={handleReviewSubmit}>
@@ -852,7 +849,9 @@ const ExamForm = ({ mode = 'create' }) => {
 
                 <div className="mb-3">
                   <div className="text-body-secondary small">Desfecho</div>
-                  <CBadge color={form.status_name === 'completed_with_divergence' ? 'dark' : 'success'}>
+                  <CBadge
+                    color={form.status_name === 'completed_with_divergence' ? 'dark' : 'success'}
+                  >
                     {form.status_name === 'completed_with_divergence'
                       ? 'Concluído com divergência'
                       : 'Concluído'}

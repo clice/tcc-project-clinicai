@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CBadge, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CBadge, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -20,7 +20,8 @@ import { userService } from 'src/services/userService'
 
 import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getErrorMessage } from 'src/utils/errors'
-import { canManageUsers } from 'src/utils/permissions'
+import { getActionAccess } from 'src/utils/actionPermissions.mjs'
+import { hasPermission } from 'src/utils/permissions'
 
 const userTabs = [
   { key: 'active', label: 'Ativos' },
@@ -41,7 +42,9 @@ const UsersList = () => {
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const canManage = canManageUsers(user)
+  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess('users', (permission) =>
+    hasPermission(user, permission),
+  )
 
   const loadUsers = useCallback(async () => {
     try {
@@ -146,10 +149,10 @@ const UsersList = () => {
               viewTo={`/users/${selectedUser.id}`}
               editTo={`/users/${selectedUser.id}/edit`}
               isInactive={isInactive}
-              canView={canManage}
-              canEdit={canManage}
-              canInactivate={canManage && !isInactive}
-              canActivate={canManage && isInactive}
+              canView={canView}
+              canEdit={canEdit}
+              canInactivate={canChangeStatus && !isInactive}
+              canActivate={canChangeStatus && isInactive}
               onInactivate={() => handleChangeStatus(selectedUser)}
               onActivate={() => handleChangeStatus(selectedUser)}
             />
@@ -157,7 +160,7 @@ const UsersList = () => {
         },
       },
     ],
-    [canManage, loadUsers],
+    [canView, canEdit, canChangeStatus, loadUsers],
   )
 
   return (
@@ -170,24 +173,35 @@ const UsersList = () => {
             Gerencie usuários, perfis de acesso, status e vínculo com clínicas.
           </p>
         </div>
-        
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/users/create">
-            Cadastrar Usuário
-          </CButton>
-        </div>
+
+        {canCreate && (
+          <div className="d-flex justify-content-center mt-4">
+            <CButton color="primary" size="lg" as={Link} to="/users/create">
+              Cadastrar Usuário
+            </CButton>
+          </div>
+        )}
       </div>
 
       <CCard>
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <>
-              <AppTabs tabs={userTabs} counts={tabCounts} activeTab={activeTab}  onChange={setActiveTab} />
-              <AppTable data={filteredUsers} columns={columns} emptyMessage="Nenhum usuário encontrado." />
+              <AppTabs
+                tabs={userTabs}
+                counts={tabCounts}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+              />
+              <AppTable
+                data={filteredUsers}
+                columns={columns}
+                emptyMessage="Nenhum usuário encontrado."
+              />
             </>
           )}
         </CCardBody>

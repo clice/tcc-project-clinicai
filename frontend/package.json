@@ -11,6 +11,7 @@
   "author": "Clice Bezerra Brito Romão",
   "scripts": {
     "build": "vite build",
+    "check:actions": "node scripts/check-action-permissions.mjs",
     "check:navigation": "node scripts/check-navigation-access.mjs",
     "check:permissions": "node scripts/check-permissions.mjs",
     "lint": "eslint",

@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -21,7 +21,8 @@ import { patientService } from 'src/services/patientService'
 import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
-import { canManagePatients } from 'src/utils/permissions'
+import { getActionAccess } from 'src/utils/actionPermissions.mjs'
+import { hasPermission } from 'src/utils/permissions'
 
 const patientTabs = [
   { key: 'active', label: 'Ativos' },
@@ -36,7 +37,10 @@ const PatientsList = () => {
   const [patients, setPatients] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const canManage = canManagePatients(user)
+  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
+    'patients',
+    (permission) => hasPermission(user, permission),
+  )
 
   const loadPatients = useCallback(async () => {
     try {
@@ -73,7 +77,7 @@ const PatientsList = () => {
     }),
     [patients],
   )
-  
+
   /**
    * Mudança de status do paciente.
    */
@@ -99,9 +103,17 @@ const PatientsList = () => {
     () => [
       { accessorKey: 'name', header: 'Paciente' },
       { accessorKey: 'cpf', header: 'CPF', cell: ({ getValue }) => formatCpfBR(getValue()) || '-' },
-      { accessorKey: 'birth_date', header: 'Idade', cell: ({ getValue }) => calculateAge(getValue()) },
+      {
+        accessorKey: 'birth_date',
+        header: 'Idade',
+        cell: ({ getValue }) => calculateAge(getValue()),
+      },
       { accessorKey: 'sex', header: 'Sexo', cell: ({ getValue }) => formatSex(getValue()) },
-      { accessorKey: 'phone', header: 'Telefone', cell: ({ getValue }) => formatPhoneBR(getValue()) || '-' },
+      {
+        accessorKey: 'phone',
+        header: 'Telefone',
+        cell: ({ getValue }) => formatPhoneBR(getValue()) || '-',
+      },
       { accessorKey: 'doctor_name', header: 'Médico', cell: ({ getValue }) => getValue() || '-' },
       { accessorKey: 'clinic_name', header: 'Clínica', cell: ({ getValue }) => getValue() || '-' },
       {
@@ -118,10 +130,10 @@ const PatientsList = () => {
               viewTo={`/patients/${patient.id}`}
               editTo={`/patients/${patient.id}/edit`}
               isInactive={isInactive}
-              canView={canManage}
-              canEdit={canManage}
-              canInactivate={canManage && !isInactive}
-              canActivate={canManage && isInactive}
+              canView={canView}
+              canEdit={canEdit}
+              canInactivate={canChangeStatus && !isInactive}
+              canActivate={canChangeStatus && isInactive}
               onInactivate={() => handleChangeStatus(patient)}
               onActivate={() => handleChangeStatus(patient)}
             />
@@ -129,7 +141,7 @@ const PatientsList = () => {
         },
       },
     ],
-    [canManage, loadPatients],
+    [canView, canEdit, canChangeStatus, loadPatients],
   )
 
   return (
@@ -143,11 +155,13 @@ const PatientsList = () => {
           </p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/patients/create">
-            Cadastrar Paciente
-          </CButton>
-        </div>  
+        {canCreate && (
+          <div className="d-flex justify-content-center mt-4">
+            <CButton color="primary" size="lg" as={Link} to="/patients/create">
+              Cadastrar Paciente
+            </CButton>
+          </div>
+        )}
       </div>
 
       <CCard>
@@ -158,8 +172,17 @@ const PatientsList = () => {
             </div>
           ) : (
             <>
-              <AppTabs tabs={patientTabs} counts={tabCounts} activeTab={activeTab} onChange={setActiveTab} />
-              <AppTable data={filteredPatients} columns={columns} emptyMessage="Nenhum paciente encontrado." />
+              <AppTabs
+                tabs={patientTabs}
+                counts={tabCounts}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+              />
+              <AppTable
+                data={filteredPatients}
+                columns={columns}
+                emptyMessage="Nenhum paciente encontrado."
+              />
             </>
           )}
         </CCardBody>

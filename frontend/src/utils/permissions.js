@@ -14,8 +14,8 @@ export const ROLES = {
  * Em módulos delegáveis, a permissão é checada por `require_permission(...)`.
  * Nos módulos estruturais Clínicas, Usuários administrativos e Auditoria,
  * a role fixa `admin_master` é a barreira autoritativa da rota; as constantes
- * administrativas permanecem disponíveis para as ações da interface até a
- * conclusão da autorização por ação prevista na RBAC-05.
+ * administrativas são consultadas por ação na interface, enquanto a role
+ * continua sendo a barreira de entrada desses módulos.
  *
  * Decisão arquitetural (achados PM-03/AU-01 de revisão): configuração
  * estrutural do sistema — Perfis, Permissões, Vínculos Perfil↔Permissão
@@ -120,19 +120,6 @@ export const hasPermission = (user, permissionName) => {
 }
 
 /**
- * Verifica qualquer permissão do usuário
- */
-export const hasAnyPermission = (user, permissionNames = []) => {
-  const roleName = getUserRole(user)
-
-  if (isAdminMaster(roleName)) {
-    return true
-  }
-
-  return permissionNames.some((permissionName) => hasPermission(user, permissionName))
-}
-
-/**
  * Retorna se o usuário tem permissão de acesso ou não.
  */
 export const canAccessRole = (user, allowedRoles = []) => {
@@ -149,67 +136,6 @@ export const canAccessRole = (user, allowedRoles = []) => {
  * Verifica permissões específicas de acesso aos recursos do sistema.
  */
 ////////// ADMIN
-
-// CLINICS
-export const canManageClinics = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.CLINICS_READ,
-    PERMISSIONS.CLINICS_CREATE,
-    PERMISSIONS.CLINICS_UPDATE,
-    PERMISSIONS.CLINICS_CHANGE_STATUS,
-  ])
-}
-
-// PATIENTS
-export const canManagePatients = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.PATIENTS_READ,
-    PERMISSIONS.PATIENTS_CREATE,
-    PERMISSIONS.PATIENTS_UPDATE,
-    PERMISSIONS.PATIENTS_CHANGE_STATUS,
-  ])
-}
-
-// EXAMS
-export const canManageExams = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.EXAMS_READ,
-    PERMISSIONS.EXAMS_CREATE,
-    PERMISSIONS.EXAMS_UPDATE,
-    PERMISSIONS.EXAMS_CHANGE_STATUS,
-    PERMISSIONS.EXAMS_REVIEW,
-    PERMISSIONS.EXAMS_UPLOAD,
-    PERMISSIONS.EXAMS_DOWNLOAD,
-  ])
-}
-
-// AI ANALYSIS
-export const canManageAiAnalysis = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.AI_ANALYSIS_READ,
-    PERMISSIONS.AI_ANALYSIS_CREATE,
-    PERMISSIONS.AI_ANALYSIS_UPDATE,
-  ])
-}
-
-////////// SYSTEM
-
-// USERS
-export const canManageUsers = (user) => {
-  return hasAnyPermission(user, [
-    PERMISSIONS.USERS_READ,
-    PERMISSIONS.USERS_CREATE,
-    PERMISSIONS.USERS_UPDATE,
-    PERMISSIONS.USERS_CHANGE_STATUS,
-  ])
-}
-
-// AUDIT LOGS
-export const canManageAuditLogs = (user) => {
-  return hasAnyPermission(user, [PERMISSIONS.AUDIT_LOGS_READ])
-}
-
-export const canManageAugitLogs = canManageAuditLogs
 
 ////////// CONFIGURATIONS
 

@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -20,7 +20,8 @@ import { clinicService } from 'src/services/clinicService'
 
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCnpjBR } from 'src/utils/formatters'
-import { canManageClinics } from 'src/utils/permissions'
+import { getActionAccess } from 'src/utils/actionPermissions.mjs'
+import { hasPermission } from 'src/utils/permissions'
 
 const clinicTabs = [
   { key: 'active', label: 'Ativas' },
@@ -35,7 +36,10 @@ const ClinicsList = () => {
   const [activeTab, setActiveTab] = useState('active')
   const [isLoading, setIsLoading] = useState(true)
 
-  const canManage = canManageClinics(user)
+  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
+    'clinics',
+    (permission) => hasPermission(user, permission),
+  )
 
   const loadClinics = useCallback(async () => {
     try {
@@ -93,9 +97,18 @@ const ClinicsList = () => {
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Nome', meta: { width: '40%' } },
-      { accessorKey: 'cnpj', header: 'CNPJ', cell: ({ getValue }) => formatCnpjBR(getValue()) || '-' },
+      {
+        accessorKey: 'cnpj',
+        header: 'CNPJ',
+        cell: ({ getValue }) => formatCnpjBR(getValue()) || '-',
+      },
       { accessorKey: 'city', header: 'Cidade', cell: ({ getValue }) => getValue() || '-' },
-      { accessorKey: 'state', header: 'UF', cell: ({ getValue }) => getValue() || '-', meta: { width: '70px' } },
+      {
+        accessorKey: 'state',
+        header: 'UF',
+        cell: ({ getValue }) => getValue() || '-',
+        meta: { width: '70px' },
+      },
       {
         id: 'actions',
         header: 'Ações',
@@ -110,10 +123,10 @@ const ClinicsList = () => {
               viewTo={`/clinics/${clinic.id}`}
               editTo={`/clinics/${clinic.id}/edit`}
               isInactive={isInactive}
-              canView={canManage}
-              canEdit={canManage}
-              canInactivate={canManage && !isInactive}
-              canActivate={canManage && isInactive}
+              canView={canView}
+              canEdit={canEdit}
+              canInactivate={canChangeStatus && !isInactive}
+              canActivate={canChangeStatus && isInactive}
               onInactivate={() => handleChangeStatus(clinic)}
               onActivate={() => handleChangeStatus(clinic)}
             />
@@ -121,7 +134,7 @@ const ClinicsList = () => {
         },
       },
     ],
-    [canManage, loadClinics],
+    [canView, canEdit, canChangeStatus, loadClinics],
   )
 
   return (
@@ -135,23 +148,34 @@ const ClinicsList = () => {
           </p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/clinics/create">
-            Cadastrar Clínica
-          </CButton>
-        </div>    
+        {canCreate && (
+          <div className="d-flex justify-content-center mt-4">
+            <CButton color="primary" size="lg" as={Link} to="/clinics/create">
+              Cadastrar Clínica
+            </CButton>
+          </div>
+        )}
       </div>
 
       <CCard>
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <>
-              <AppTabs tabs={clinicTabs} counts={tabCounts} activeTab={activeTab}  onChange={setActiveTab} />
-              <AppTable data={filteredClinics} columns={columns} emptyMessage="Nenhuma clínica encontrada." />
+              <AppTabs
+                tabs={clinicTabs}
+                counts={tabCounts}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+              />
+              <AppTable
+                data={filteredClinics}
+                columns={columns}
+                emptyMessage="Nenhuma clínica encontrada."
+              />
             </>
           )}
         </CCardBody>
