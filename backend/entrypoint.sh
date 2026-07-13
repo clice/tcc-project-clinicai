@@ -5,11 +5,11 @@
 # Executado toda vez que o container do backend sobe. Garante que:
 #   1) o banco de dados esteja de fato aceitando conexões antes de seguir;
 #   2) as migrations (Alembic) estejam aplicadas;
-#   3) os dados iniciais (seeds) existam.
+#   3) os dados iniciais (seeds/bootstrap) existam.
 #
-# Tudo aqui é idempotente: rodar de novo não duplica nada nem quebra
-# se já tiver sido executado antes (migrations e seeds já são feitos
-# para isso).
+# Tudo aqui é idempotente. Migrations aplicam evoluções oficiais de dados;
+# seeds fazem somente bootstrap de registros ausentes. Em particular, a
+# matriz RBAC editável não é reconciliada na inicialização.
 # =====================================================
 
 set -e

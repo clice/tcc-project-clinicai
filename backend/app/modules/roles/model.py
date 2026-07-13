@@ -5,7 +5,7 @@ A tabela roles define os perfis principais de usuários,
 como administrador master, administrador da clínica, médico e funcionário.
 """
 
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -25,6 +25,15 @@ class Role(Base):
     name = Column(String(50), unique=True, nullable=False, index=True)
     display_name = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
+
+    # RBAC-01: distingue uma role nunca inicializada de uma role que o
+    # administrador configurou intencionalmente sem nenhuma permissão.
+    permissions_initialized = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
 
     # Datas de auditoria
     created_at = Column(

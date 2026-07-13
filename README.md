@@ -247,6 +247,32 @@ O projeto contribui com:
 
 ---
 
+## Bootstrap e evolução da matriz RBAC
+
+O executor `python -m app.modules.seeds`, chamado pelo entrypoint do backend,
+faz apenas o bootstrap inicial. O campo `roles.permissions_initialized`
+distingue uma role nunca inicializada de uma role configurada sem permissões.
+Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições
+administrativas permanecem como fonte da verdade.
+
+Mudanças oficiais de permissões em bancos existentes são implementadas por
+migrations de dados do Alembic. A migration `b7c1d4e2f901` introduz o marcador
+de bootstrap e revoga os privilégios legados `exams:read` e
+`ai_analysis:read` de `clinic_staff`.
+
+Somente quando houver intenção de descartar customizações e restaurar toda a
+matriz padrão, execute manualmente:
+
+```bash
+docker compose exec backend python -m app.modules.role_permissions.reconcile \
+  --confirm RECONCILE_RBAC
+```
+
+O comando registra quantos vínculos foram adicionados e removidos por role e
+não é executado automaticamente pelo entrypoint.
+
+---
+
 ## 📄 Observações
 
 Este projeto está em desenvolvimento contínuo como parte do Trabalho de Conclusão de Curso e

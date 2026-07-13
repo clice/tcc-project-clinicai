@@ -40,8 +40,18 @@ def run_seed() -> None:
         permissions = seed_permissions(db)
         print("Permissions criadas/verificadas.")
         
-        seed_role_permissions(db, roles, permissions)
-        print("Role permissions criadas/verificadas.")
+        bootstrapped_roles = seed_role_permissions(db, roles, permissions)
+        if bootstrapped_roles:
+            print(
+                "Role permissions inicializadas para: "
+                + ", ".join(bootstrapped_roles)
+                + "."
+            )
+        else:
+            print(
+                "Role permissions já configuradas; "
+                "customizações administrativas preservadas."
+            )
         
         clinics = seed_clinics(db, statuses)
         print("Clinics criadas/verificadas.")
