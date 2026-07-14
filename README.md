@@ -57,9 +57,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 ### 🧠 Inteligência Artificial
 
 - PyTorch, torchvision (ResNet-50 em produção; EfficientNet-B4 e PVTv2-B2 em desenvolvimento)
-- OpenCV (pré-processamento: ROI, remoção de reflexo especular, CLAHE)
+- OpenCV (pré-processamento: ROI, remoção de _Specular Highlights_)
 - Grad-CAM (explicabilidade)
-- Scikit-learn (métricas de avaliação; meta-classificador do Ensemble Stacking)
+- Scikit-learn (métricas de avaliação; meta-classificador do _Ensemble Stacking_)
 
 ### ⚙️ Infraestrutura
 
@@ -84,6 +84,7 @@ Frontend (React) → API REST (FastAPI) → PostgreSQL
     ├── frontend/       -> Interface web React
     ├── ai/             -> Serviço de inferência + scripts de treino do modelo
     ├── docs/           -> Documentação técnica
+    ├── scripts/        -> Download e geração do manifesto dos modelos
     ├── docker-compose.yml
     ├── docker-compose.gpu.yml  -> override opcional para GPU NVIDIA
     └── README.md
@@ -107,6 +108,7 @@ cd tcc-project-clinicai
 ### 3. Configurar variáveis de ambiente
 
 ```bash
+cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
@@ -114,7 +116,31 @@ cp frontend/.env.example frontend/.env
 Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles não possuem valores padrão
 no código, então o backend não sobe sem essas variáveis definidas.
 
-### 4. Subir os containers
+O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
+baixar os modelos. A tag padrão é `models-v0.1.0`.
+
+### 4. Baixar os modelos treinados
+
+Os pesos e o meta-classificador não são armazenados diretamente no Git. Antes de subir o
+sistema pela primeira vez, baixe os artefatos da GitHub Release configurada em `.env`:
+
+```bash
+docker compose --profile models run --rm model-downloader
+```
+
+O comando baixa e verifica os seguintes arquivos em
+`ai/models/exported/gastrointestinal/`:
+
+- `resnet50.pt`;
+- `efficientnet_b4.pt`;
+- `pvt_v2_b2.pt`;
+- `meta_classificador.joblib`;
+- `manifesto_modelos.json`.
+
+O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
+válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
+
+### 5. Subir os containers
 
 ```bash
 docker compose up --build -d
@@ -126,7 +152,7 @@ Para usar GPU NVIDIA no serviço de IA (opcional):
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build -d
 ```
 
-### 5. Banco de dados: migrations e dados iniciais
+### 6. Banco de dados: migrations e dados iniciais
 
 **Isso acontece automaticamente.** O container do backend, ao subir, executa nesta ordem
 (veja `backend/entrypoint.sh`):
@@ -146,27 +172,20 @@ docker compose exec backend python -m app.modules.seeds
 
 Os seeds são idempotentes, ou seja, rodar de novo não duplica dados.
 
-### 6. Modelo de IA treinado
-
-O serviço de IA (`ai/`) espera encontrar um modelo treinado em `ai/models/exported/model.pt`.
-Esse arquivo **não vai para o Git** (é um artefato binário grande). Enquanto a distribuição
-automática não estiver pronta, copie manualmente o arquivo `.pt` treinado para essa pasta antes
-de subir o serviço de IA, sem ele, o container `ai` falha ao iniciar.
-
 ---
 
-## 🔑 Credenciais de acesso (ambiente de desenvolvimento)
+## 🔑 Credenciais de Acesso
 
 Os seeds criam os seguintes usuários de demonstração. **OBS:. troque essas senhas antes de qualquer
 uso fora do ambiente de desenvolvimento**:
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| admin_master | admin@clinicai.com | clinicai123 |
-| doctor | doctor@clinicai.com | clinicai123 |
-| doctor | doctor2@clinicai.com | clinicai123 |
-| clinic_staff | staff@clinicai.com | clinicai123 |
-| clinic_staff (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
+| Administrador _Master_ | admin@clinicai.com | clinicai123 |
+| Médico | doctor@clinicai.com | clinicai123 |
+| Médico | doctor2@clinicai.com | clinicai123 |
+| Funcionário da Clínica | staff@clinicai.com | clinicai123 |
+| Funcionário da Clínica (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
 
 ---
 
@@ -192,14 +211,14 @@ uso fora do ambiente de desenvolvimento**:
 - Logs de Auditoria
 - Exames (upload, download, cancelamento, restauração)
 - Módulo de IA: classificação de imagens endoscópicas com ResNet-50, pré-processamento
-  (ROI, remoção de reflexo especular, CLAHE) e explicabilidade via Grad-CAM
+  (ROI, remoção de _Specular Highlights_) e explicabilidade via Grad-CAM
 
 ### 🔄 Em desenvolvimento
 
 - Fluxo de revisão médica do resultado da IA (status intermediário + tela dedicada)
 - Integração automática entre backend e serviço de IA (hoje a criação da análise ainda depende
   de um payload montado externamente)
-- Ensemble Stacking (EfficientNet-B4 + ResNet-50 + PVTv2-B2), conforme Viana (2026)
+- _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2), conforme Viana (2026)
 - Tela de resultado de IA no frontend (predição, confiança, Grad-CAM)
 
 ### 🚧 Planejados
@@ -215,16 +234,15 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 
 ### Pipeline de pré-processamento
 
-- Extração de ROI (região de interesse)
-- Remoção de reflexo especular
-- Realce de contraste (CLAHE)
-- Data augmentation (treino)
+- Extração de ROI (_Region of Interest_)
+- Remoção de _Specular Highlights_
+- _Data Augmentation_ (treino)
 
 ### Modelo
 
-- Em produção: ResNet-50 (transfer learning)
-- Em desenvolvimento: Ensemble Stacking (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
-  meta-classificador de regressão logística), baseado em Viana (2026)
+- Em produção: ResNet-50 (_Transfer Learning_)
+- Em desenvolvimento: _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
+  meta-classificador de _Logistic Regression_), baseado em Viana (2026)
 
 ### Explicabilidade
 
@@ -233,6 +251,73 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 ### Métricas de avaliação
 
 - Accuracy, Precision, Recall, F1-Score, Matriz de Confusão
+
+---
+
+## 📦 Publicação dos Modelos no GitHub Releases
+
+Esta seção é destinada à manutenção dos artefatos de IA. Quem deseja apenas executar o sistema
+deve seguir a seção **Como Executar o Projeto**.
+
+### 1. Preparar os artefatos
+
+Os quatro arquivos finais devem estar em `ai/models/exported/gastrointestinal/` com estes nomes:
+
+```text
+resnet50.pt
+efficientnet_b4.pt
+pvt_v2_b2.pt
+meta_classificador.joblib
+```
+
+A ordem das meta-features do meta-classificador deve ser ResNet-50, EfficientNet-B4 e PVTv2-B2,
+a mesma definida em `ai/app/inference/domains/gastrointestinal.py`.
+
+### 2. Gerar o manifesto
+
+Na raiz do projeto, execute:
+
+```bash
+python scripts/generate_model_manifest.py \
+  --release-tag models-v0.1.0 \
+  --model-version 0.1.0
+```
+
+O comando gera `manifesto_modelos.json` com o tamanho e o hash SHA-256 de cada artefato. Os
+modelos e o manifesto são ignorados pelo Git e devem ser anexados manualmente à release.
+
+### 3. Criar a release
+
+No GitHub, abra **Releases** e selecione **Draft a new release**. Use:
+
+- tag: `models-v0.1.0`;
+- título: `Modelos ClinicAI v0.1.0`;
+- opção **This is a pre-release**, enquanto o sistema estiver em desenvolvimento.
+
+Anexe exatamente os cinco arquivos:
+
+```text
+resnet50.pt
+efficientnet_b4.pt
+pvt_v2_b2.pt
+meta_classificador.joblib
+manifesto_modelos.json
+```
+
+Salve primeiro como rascunho, confira os nomes dos arquivos e somente depois publique.
+
+### 4. Versionar atualizações futuras
+
+A tag configurada em `.env` é fixa. Alterações posteriores no frontend, backend, README ou RBAC
+não modificam os artefatos da release `models-v0.1.0`.
+
+Se algum peso, meta-classificador, classe ou etapa de pré-processamento mudar, publique uma nova
+release, por exemplo `models-v0.1.1` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
+`.env.example`. Não substitua os arquivos de uma versão já publicada, pois as releases antigas
+devem continuar disponíveis para reprodutibilidade.
+
+O download atual usa assets públicos. Repositórios privados exigem um mecanismo de autenticação
+específico; tokens não devem ser armazenados no Compose, no README ou em arquivos versionados.
 
 ---
 
