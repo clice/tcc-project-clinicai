@@ -29,9 +29,11 @@ import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { userService } from 'src/services/userService'
+import ClinicProfileCard from './ClinicProfileCard'
 
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
+import { hasPermission, PERMISSIONS } from 'src/utils/permissions'
 
 const emptyProfile = {
   name: '',
@@ -236,6 +238,12 @@ const ProfilePage = () => {
           </CForm>
         </CCardBody>
       </CCard>
+
+      {user?.clinic_id && hasPermission(user, PERMISSIONS.CLINICS_READ_PROFILE) && (
+        <ClinicProfileCard
+          canUpdate={hasPermission(user, PERMISSIONS.CLINICS_UPDATE_PROFILE)}
+        />
+      )}
 
       <CCard>
         <CCardHeader>

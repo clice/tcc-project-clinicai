@@ -146,7 +146,7 @@ const ClinicForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (!form.status_id) {
+    if (isCreateMode && !form.status_id) {
       showError('Selecione o status da clínica.')
       return false
     }
@@ -240,9 +240,13 @@ const ClinicForm = ({ mode = 'create' }) => {
       neighborhood: form.neighborhood.trim() || null,
       city: form.city.trim() || null,
       state: form.state.trim().toUpperCase() || null,
-      status_id: Number(form.status_id),
-      status_name: status?.name ?? null,
-      status_display_name: status?.display_name ?? null,
+      ...(isCreateMode
+        ? {
+            status_id: Number(form.status_id),
+            status_name: status?.name ?? null,
+            status_display_name: status?.display_name ?? null,
+          }
+        : {}),
     }
   }
 
@@ -328,9 +332,9 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Status</CFormLabel>
                 <CFormSelect
                   value={form.status_id}
-                  disabled={isReadOnly}
+                  disabled={!isCreateMode}
                   onChange={(event) => updateField('status_id', event.target.value)}
-                  required
+                  required={isCreateMode}
                 >
                   <option value="">Selecione...</option>
 
