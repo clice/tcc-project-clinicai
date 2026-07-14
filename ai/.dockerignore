@@ -10,16 +10,9 @@ __pycache__
 venv
 datasets/
 models/checkpoints/
-models/exported/**/*.pt
-models/exported/**/*.pth
-models/exported/**/*.joblib
-models/exported/**/manifesto_modelos.json
+models/exported/*.pt
 training/experiments/
 reports/
-storage/
-.coverage
-coverage.xml
-htmlcov/
 .vscode
 .idea
 README.md

@@ -3,9 +3,4 @@ build
 dist
 .git
 .env
-.env.*
-!.env.example
-.vite/
-.eslintcache
-npm-debug.log*
-coverage/
+.vite/*
