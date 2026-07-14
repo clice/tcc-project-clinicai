@@ -17,6 +17,8 @@
     "check:permission-catalog": "node scripts/check-closed-permission-catalog.mjs",
     "check:navigation": "node scripts/check-navigation-access.mjs",
     "check:permissions": "node scripts/check-permissions.mjs",
+    "check:rbac-contract": "node scripts/check-rbac-contract.mjs",
+    "check:rbac": "npm run check:permissions && npm run check:permission-catalog && npm run check:configuration-catalogs && npm run check:navigation && npm run check:actions && npm run check:active-session-access && npm run check:rbac-contract",
     "lint": "eslint",
     "serve": "vite preview",
     "start": "vite"

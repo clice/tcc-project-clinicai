@@ -101,6 +101,35 @@ def test_restart_preserves_admin_customization() -> None:
     assert "exams:download" not in permission_names_for(db, doctor)
 
 
+def test_restart_preserves_simultaneous_grant_and_revocation() -> None:
+    """Cobre a matriz personalizada completa após nova execução do startup."""
+
+    db = make_session()
+    roles, permissions = add_catalog(db)
+    seed_role_permissions(db, roles, permissions)
+    clinic_staff = roles["clinic_staff"]
+    revoked = permissions["patients:update"]
+    granted = permissions["exams:read"]
+    db.query(RolePermission).filter_by(
+        role_id=clinic_staff.id,
+        permission_id=revoked.id,
+    ).delete()
+    db.add(
+        RolePermission(
+            role_id=clinic_staff.id,
+            permission_id=granted.id,
+        )
+    )
+    db.commit()
+
+    # Simula uma nova inicialização do backend.
+    assert seed_role_permissions(db, roles, permissions) == []
+    persisted = permission_names_for(db, clinic_staff)
+
+    assert "patients:update" not in persisted
+    assert "exams:read" in persisted
+
+
 def test_bootstrap_fills_only_unconfigured_role() -> None:
     db = make_session()
     roles, permissions = add_catalog(db)

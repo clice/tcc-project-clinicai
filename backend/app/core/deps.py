@@ -139,6 +139,10 @@ def require_permission(permission_name: str):
 
         return current_user
 
+    # O metadado permite auditar automaticamente todas as rotas registradas
+    # sem depender do nome interno da função closure.
+    permission_checker.required_permission_name = permission_name
+
     return permission_checker
 
 
