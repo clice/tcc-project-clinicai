@@ -11,6 +11,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session, joinedload
 
+from app.common.constants import RoleName
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.modules.role_permissions.model import RolePermission
@@ -97,6 +98,19 @@ def require_admin(
     return current_user
 
 
+def get_user_permission_names(current_user: User) -> set[str]:
+    """Retorna as permissões válidas vinculadas à role do usuário."""
+
+    if current_user.role is None:
+        return set()
+
+    return {
+        role_permission.permission.name
+        for role_permission in current_user.role.role_permissions
+        if role_permission.permission is not None
+    }
+
+
 def require_permission(permission_name: str):
     def permission_checker(
         current_user: User = Depends(get_current_user),
@@ -115,11 +129,7 @@ def require_permission(permission_name: str):
         if current_user.role.name == "admin_master":
             return current_user
 
-        user_permissions = [
-            role_permission.permission.name
-            for role_permission in current_user.role.role_permissions
-            if role_permission.permission is not None
-        ]
+        user_permissions = get_user_permission_names(current_user)
 
         if permission_name not in user_permissions:
             raise HTTPException(
@@ -130,3 +140,39 @@ def require_permission(permission_name: str):
         return current_user
 
     return permission_checker
+
+
+def require_doctor_permission(permission_name: str):
+    """Exige simultaneamente perfil médico e uma permissão explícita.
+
+    Esta dependência não aplica o bypass de ``admin_master`` usado nas ações
+    administrativas. Revisão clínica é uma atribuição profissional não
+    delegável e exige que o usuário tenha role ``doctor`` de fato.
+    """
+
+    def doctor_permission_checker(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if (
+            current_user.role is None
+            or current_user.role.name != RoleName.DOCTOR.value
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Apenas usuários com perfil médico podem revisar exames.",
+            )
+
+        if permission_name not in get_user_permission_names(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permissão '{permission_name}' necessária.",
+            )
+
+        return current_user
+
+    # Metadados simples permitem que testes de regressão inspecionem a regra
+    # registrada na rota sem depender do nome interno da função closure.
+    doctor_permission_checker.required_role_name = RoleName.DOCTOR.value
+    doctor_permission_checker.required_permission_name = permission_name
+
+    return doctor_permission_checker

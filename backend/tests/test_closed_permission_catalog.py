@@ -84,7 +84,12 @@ def test_every_backend_permission_check_exists_in_the_official_catalog() -> None
 
     for router_file in modules_directory.glob("*/router.py"):
         source = router_file.read_text(encoding="utf-8")
-        references.update(re.findall(r'require_permission\("([a-z_]+:[a-z_]+)"\)', source))
+        references.update(
+            re.findall(
+                r'require_(?:doctor_)?permission\("([a-z_]+:[a-z_]+)"\)',
+                source,
+            )
+        )
 
     assert references
     assert references <= OFFICIAL_PERMISSION_NAMES

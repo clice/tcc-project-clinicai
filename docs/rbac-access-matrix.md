@@ -82,3 +82,18 @@ documentada em `docs/api-request-validation.md`.
 
 A atualização de menus, rotas e ações quando a matriz muda durante uma sessão
 autenticada está documentada em `docs/active-session-rbac.md`.
+
+## Revisão médica não delegável
+
+A operação `PATCH /exams/{exam_id}/review` exige simultaneamente a role
+`doctor` e a permissão `exams:review`. Diferentemente das operações
+administrativas, não existe bypass para `admin_master`: a revisão encerra o
+fluxo clínico do exame e registra achados, conclusão e eventual divergência em
+relação à análise da IA, exigindo responsabilidade médica.
+
+Essa regra é aplicada em duas camadas. A dependência
+`require_doctor_permission` bloqueia a requisição antes de entrar no serviço, e
+`review_exam` mantém a validação de role como defesa em profundidade. Assim,
+inserir manualmente `exams:review` para `clinic_staff` ou `admin_master` não
+autoriza a revisão. O frontend aplica a mesma condição para a visibilidade do
+formulário, mas não é considerado uma barreira de segurança.

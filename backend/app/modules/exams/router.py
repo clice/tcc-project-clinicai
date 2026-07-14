@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_doctor_permission, require_permission
 from app.modules.ai_analysis.schema import AIAnalysisResponse
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
@@ -203,7 +203,7 @@ def review_exam_route(
     exam_id: int,
     payload: ExamMedicalReview,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:review")),
+    current_user: User = Depends(require_doctor_permission("exams:review")),
 ):
     """
     Registra a revisão médica do resultado da análise de IA.
