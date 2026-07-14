@@ -17,20 +17,6 @@ export const moduleLabels = {
   statuses: 'Status',
 }
 
-// ROLES
-
-export const roleLabels = {
-  admin_master: 'Administrador Master',
-  clinic_staff: 'Atendente da Clínica',
-  doctor: 'Médico',
-}
-
-export const roleOptions = [
-  { value: 'admin_master', label: roleLabels.admin_master },
-  { value: 'doctor', label: roleLabels.doctor },
-  { value: 'clinic_staff', label: roleLabels.clinic_staff },
-]
-
 // STATUS
 
 export const statusColors = {
@@ -55,26 +41,6 @@ export const examStatusLabels = {
   failed: 'Falha na IA',
   canceled: 'Cancelados',
 }
-
-export const statusNameOptions = [
-  { value: 'active', label: 'Ativo' },
-  { value: 'inactive', label: 'Inativo' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'canceled', label: 'Cancelado' },
-  { value: 'completed', label: 'Concluído' },
-  { value: 'completed_with_divergence', label: 'Com Divergência' },
-  { value: 'processing', label: 'Processando' },
-  { value: 'awaiting_review', label: 'Aguardando Revisão' },
-  { value: 'failed', label: 'Falhou' },
-]
-
-export const statusScopeOptions = [
-  { value: 'user', label: 'Usuário' },
-  { value: 'clinic', label: 'Clínica' },
-  { value: 'patient', label: 'Paciente' },
-  { value: 'exam', label: 'Exame' },
-  { value: 'ai_analysis', label: 'Análise de IA' },
-]
 
 // EXAMS
 

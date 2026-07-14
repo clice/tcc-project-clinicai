@@ -16,28 +16,8 @@ from app.common.services import (
 )
 from app.modules.roles.model import Role
 from app.modules.users.model import User
-from app.modules.roles.schema import RoleCreate, RoleUpdate
+from app.modules.roles.schema import RoleUpdate
 from app.modules.audit_logs.service import create_audit_log
-
-
-def check_role_duplicate(
-    db: Session,
-    name: str,
-    ignore_role_id: int | None = None,
-) -> None:
-    """
-    Verifica se já existe outro role com o mesmo name.
-    """
-    query = db.query(Role).filter(Role.name == name)
-
-    if ignore_role_id is not None:
-        query = query.filter(Role.id != ignore_role_id)
-
-    if query.first():
-        raise HTTPException(
-            status_code=400,
-            detail="Já existe um perfil com esse nome.",
-        )
 
 
 # ========================================
@@ -62,50 +42,6 @@ def list_roles(db: Session) -> list[Role]:
     Lista todos os roles cadastrados.
     """
     return db.query(Role).order_by(Role.display_name.asc()).all()
-
-
-def create_role(
-    db: Session,
-    payload: RoleCreate,
-    current_user: User,
-) -> Role:
-    """
-    Cria um novo role e registra log de auditoria.
-    """
-    name = payload.name.value
-
-    check_role_duplicate(db=db, name=name)
-
-    role = Role(
-        name=name,
-        display_name=payload.display_name,
-        description=payload.description,
-    )
-
-    db.add(role)
-    db.flush()
-
-    # Adiciona log
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
-        clinic_id=current_user.clinic_id,
-        action=AuditAction.CREATE,
-        entity=AuditEntity.ROLE,
-        entity_id=role.id,
-        description="Perfil de acesso cadastrado.",
-        new_data={
-            "id": role.id,
-            "name": role.name,
-            "display_name": role.display_name,
-            "description": role.description,
-        },
-    )
-
-    db.commit()
-    db.refresh(role)
-
-    return role
 
 
 def update_role(

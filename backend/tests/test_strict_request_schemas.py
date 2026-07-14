@@ -16,8 +16,8 @@ from app.modules.role_permissions.schema import (
     RolePermissionSyncRequest,
     RolePermissionUpdate,
 )
-from app.modules.roles.schema import RoleCreate, RoleUpdate
-from app.modules.statuses.schema import StatusCreate, StatusUpdate
+from app.modules.roles.schema import RoleUpdate
+from app.modules.statuses.schema import StatusUpdate
 from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
 
 
@@ -36,9 +36,7 @@ REQUEST_MODELS = (
     RolePermissionCreate,
     RolePermissionUpdate,
     RolePermissionSyncRequest,
-    RoleCreate,
     RoleUpdate,
-    StatusCreate,
     StatusUpdate,
     UserCreate,
     UserUpdate,

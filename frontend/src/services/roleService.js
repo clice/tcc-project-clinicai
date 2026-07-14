@@ -24,14 +24,6 @@ export const roleService = {
   },
 
   /**
-   * Cria um novo perfil.
-   */
-  create: async (payload) => {
-    const response = await api.post('/roles/', payload)
-    return response.data
-  },
-
-  /**
    * Atualiza parcialmente um perfil existente.
    */
   update: async (id, payload) => {
