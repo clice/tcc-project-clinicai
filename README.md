@@ -1,101 +1,76 @@
-# 📌 ClinicAI: Sistema Web Inteligente para Clínicas com IA Aplicada a Exames Endoscópicos
+# ClinicAI
 
-Projeto de Trabalho de Conclusão de Curso (TCC) voltado ao desenvolvimento de um sistema web para gestão clínica com módulo integrado de Inteligência Artificial para análise de exames gastrointestinais.
+Sistema web acadêmico para gestão de clínicas e apoio à análise de imagens de exames
+gastrointestinais. O projeto integra uma interface React, uma API FastAPI, PostgreSQL e um
+serviço de inteligência artificial com Ensemble Stacking e Grad-CAM.
 
----
+> **Estado:** protótipo em desenvolvimento. O sistema ainda possui pendências funcionais, de
+> segurança e de integração e não foi validado para uso clínico ou diagnóstico.
 
-## 🧠 Objetivo Geral
-
-Desenvolver um sistema web para clínicas e profissionais da saúde, integrando gestão administrativa com um módulo de análise automatizada de exames endoscópicos utilizando técnicas de Inteligência Artificial.
-
----
-
-## 🎯 Objetivos Específicos
-
-- **Desenvolver Backend:** API REST em FastAPI, com arquitetura modular.
-- **Implementar Autenticação Segura:** JWT (_access_ + _refresh token_) para controle de acesso.
-- **Gerenciar Estrutura Administrativa:** usuários, clínicas, pacientes, perfis e permissões.
-- **Organizar Dados Clínicos:** exames endoscópicos, com fluxo de status e revisão médica.
-- **Aplicar Inteligência Artificial:** classificação de imagens endoscópicas (atualmente ResNet-50,
-  com _Ensemble Stacking_ em desenvolvimento), com explicabilidade via Grad-CAM.
-- **Aplicar Boas Práticas de Engenharia de Software:** separação de camadas, Docker, migrations
-  e organização modular.
-
----
-
-## 📈 Status Atual do Projeto
-
-- **Status geral:** Em desenvolvimento — protótipo funcional
-- **Fase atual:** Correção de bugs e fechamento do fluxo de análise de exames (IA + revisão médica)
-- **Próxima etapa:** _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2) e telas de resultado de IA
-
-> Este README reflete o estado real do código. Módulos listados como "implementados" abaixo já
-> funcionam de ponta a ponta; "em desenvolvimento" indica que existe implementação parcial.
-
----
-
-## 👩‍💻 Autoria
+## Autoria
 
 | Nome | Função | Contato |
-|------|--------|---------|
-| Luana Batista da Cruz | Orientadora | luana.batista@ufca.edu.br |
+|---|---|---|
 | Clice Bezerra Brito Romão | Autora | clice.romao@aluno.ufca.edu.br |
+| Luana Batista da Cruz | Orientadora | luana.batista@ufca.edu.br |
 
----
+## Funcionalidades
 
-## 🧪 Tecnologias Utilizadas
+- autenticação JWT com tokens de acesso e renovação;
+- usuários, clínicas, pacientes, perfis e permissões;
+- controle de acesso por permissão e escopo de clínica;
+- exames, upload de imagens, fluxo de status e revisão médica;
+- logs de auditoria;
+- classificação binária de imagens gastrointestinais;
+- Ensemble Stacking com ResNet-50, EfficientNet-B4, PVTv2-B2 e regressão logística;
+- geração de Grad-CAM para apoio à explicabilidade.
 
-### 🔧 Backend
+## Tecnologias
 
-- FastAPI, SQLAlchemy, PostgreSQL, Alembic, Pydantic
-- Autenticação JWT (_access_ + _refresh token_)
+| Componente | Tecnologias principais |
+|---|---|
+| Frontend | React, Vite, CoreUI, React Router e Axios |
+| Backend | FastAPI, SQLAlchemy, Alembic, Pydantic e JWT |
+| Banco de dados | PostgreSQL 16 |
+| Inteligência artificial | PyTorch, timm, OpenCV, Pillow e scikit-learn |
+| Infraestrutura local | Docker e Docker Compose |
 
-### 💻 Frontend
-
-- React, CoreUI React Admin Template, Vite, React Router, Axios, Context API
-
-### 🧠 Inteligência Artificial
-
-- PyTorch, torchvision (ResNet-50 em produção; EfficientNet-B4 e PVTv2-B2 em desenvolvimento)
-- OpenCV (pré-processamento: ROI, remoção de reflexo especular, CLAHE)
-- Grad-CAM (explicabilidade)
-- Scikit-learn (métricas de avaliação; meta-classificador do Ensemble Stacking)
-
-### ⚙️ Infraestrutura
-
-- Docker / Docker Compose (GPU opcional via `docker-compose.gpu.yml`)
-
----
-
-## 🏗️ Arquitetura do Sistema
+## Arquitetura
 
 ```text
-Frontend (React) → API REST (FastAPI) → PostgreSQL
+Frontend (React) → Backend (FastAPI) → PostgreSQL
                           ↓
-                 Serviço de IA (FastAPI + PyTorch)
+                 Serviço de IA (FastAPI)
+                          ↓
+          Pesos + meta-classificador + Grad-CAM
 ```
 
----
+## Estrutura do repositório
 
-## 📁 Estrutura do Projeto
+```text
+tcc-project-clinicai/
+├── ai/                       # Inferência, modelos e treinamento
+├── backend/                  # API, regras de negócio e migrations
+├── frontend/                 # Interface React
+├── scripts/                  # Distribuição dos artefatos de IA
+├── tests/                    # Testes da distribuição dos modelos
+├── docker-compose.yml        # Ambiente local com CPU
+├── docker-compose.gpu.yml    # Override opcional para GPU NVIDIA
+├── .env.example              # Versão da release dos modelos
+└── README.md
+```
 
-    tcc-project-clinicai/
-    ├── backend/        -> API FastAPI e lógica de negócio
-    ├── frontend/       -> Interface web React
-    ├── ai/             -> Serviço de inferência + scripts de treino do modelo
-    ├── docs/           -> Documentação técnica
-    ├── docker-compose.yml
-    ├── docker-compose.gpu.yml  -> override opcional para GPU NVIDIA
-    └── README.md
-
----
-
-## ⚙️ Como Executar o Projeto
+## Instalação local com Docker
 
 ### 1. Pré-requisitos
 
-- Docker e Docker Compose instalados
-- (Opcional) NVIDIA Container Toolkit, só se for usar GPU no serviço de IA
+- Git;
+- Docker Engine com Docker Compose Plugin, ou Docker Desktop;
+- pelo menos 8 GB de RAM recomendados para carregar o conjunto completo em CPU;
+- acesso à internet no primeiro download dos modelos;
+- opcionalmente, NVIDIA Container Toolkit para executar a IA com GPU NVIDIA.
+
+Não é necessário instalar Python, Node.js ou PostgreSQL na máquina que executará o sistema.
 
 ### 2. Clonar o repositório
 
@@ -104,183 +79,181 @@ git clone https://github.com/clice/tcc-project-clinicai.git
 cd tcc-project-clinicai
 ```
 
-### 3. Configurar variáveis de ambiente
+### 3. Criar os arquivos de ambiente
+
+No Linux, macOS ou Git Bash:
 
 ```bash
+cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles não possuem valores padrão
-no código, então o backend não sobe sem essas variáveis definidas.
+No PowerShell:
 
-### 4. Subir os containers
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
+```
+
+Defina uma `SECRET_KEY` própria em `backend/.env`, confira se `DATABASE_URL` usa o host Docker
+`db` e confirme em `.env` a tag publicada em `MODEL_RELEASE_TAG`.
+
+### 4. Baixar e validar os modelos
+
+```bash
+docker compose --profile models run --rm model-downloader
+```
+
+O inicializador baixa `manifesto_modelos.json`, valida domínio, tag e lista de artefatos, baixa
+somente arquivos ausentes ou inválidos e verifica tamanho e SHA-256 antes de instalá-los em
+`ai/models/exported/gastrointestinal/`.
+
+Artefatos esperados:
+
+```text
+resnet50.pt
+efficientnet_b4.pt
+pvt_v2_b2.pt
+meta_classificador.joblib
+manifesto_modelos.json
+```
+
+Se a conexão cair ou um hash não corresponder, o comando termina com erro e não instala o
+arquivo parcial. Execute novamente depois de corrigir a causa; arquivos válidos são preservados.
+
+### 5. Subir o sistema
+
+Com CPU:
 
 ```bash
 docker compose up --build -d
 ```
 
-Para usar GPU NVIDIA no serviço de IA (opcional):
+Com GPU NVIDIA:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build -d
 ```
 
-### 5. Banco de dados: migrations e dados iniciais
+O backend aguarda o PostgreSQL, aplica as migrations do Alembic e executa os seeds idempotentes.
 
-**Isso acontece automaticamente.** O container do backend, ao subir, executa nesta ordem
-(veja `backend/entrypoint.sh`):
-
-1. Aguarda o PostgreSQL aceitar conexões;
-2. Aplica as migrations pendentes (`alembic upgrade head`);
-3. Roda os seeds do sistema (`python -m app.modules.seeds`): cria status, perfis, permissões
-   e usuários iniciais, caso ainda não existam.
-
-Você não precisa rodar nenhum comando manual no primeiro `docker compose up`. Se precisar
-repetir esse processo manualmente (ex: depurar um problema), pode rodar:
+### 6. Verificar a inicialização
 
 ```bash
-docker compose exec backend alembic upgrade head
-docker compose exec backend python -m app.modules.seeds
+docker compose ps
+docker compose logs -f ai backend
 ```
 
-Os seeds são idempotentes, ou seja, rodar de novo não duplica dados.
-
-### 6. Modelo de IA treinado
-
-O serviço de IA (`ai/`) espera encontrar um modelo treinado em `ai/models/exported/model.pt`.
-Esse arquivo **não vai para o Git** (é um artefato binário grande). Enquanto a distribuição
-automática não estiver pronta, copie manualmente o arquivo `.pt` treinado para essa pasta antes
-de subir o serviço de IA, sem ele, o container `ai` falha ao iniciar.
-
----
-
-## 🔑 Credenciais de acesso (ambiente de desenvolvimento)
-
-Os seeds criam os seguintes usuários de demonstração. **OBS:. troque essas senhas antes de qualquer
-uso fora do ambiente de desenvolvimento**:
-
-| Perfil | E-mail | Senha |
-|---|---|---|
-| admin_master | admin@clinicai.com | clinicai123 |
-| doctor | doctor@clinicai.com | clinicai123 |
-| doctor | doctor2@clinicai.com | clinicai123 |
-| clinic_staff | staff@clinicai.com | clinicai123 |
-| clinic_staff (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
-
----
-
-## 🌐 Acesso Local
-
-| Serviço | URL |
-|---------|-----|
+| Serviço | Endereço local |
+|---|---|
 | Frontend | http://localhost:3000 |
-| Backend | http://localhost:8000 |
-| Documentação Backend API | http://localhost:8000/docs |
-| Documentação IA API | http://localhost:8001/docs |
+| API do backend | http://localhost:8000 |
+| Swagger do backend | http://localhost:8000/docs |
+| API de IA | http://localhost:8001 |
+| Swagger da IA | http://localhost:8001/docs |
 
----
+Depois da subida, valide `GET /health` e `GET /models` no serviço de IA antes de testar
+`POST /predict` com uma imagem autorizada e anonimizada.
 
-## 🧩 Módulos do Sistema
+### 7. Encerrar o ambiente
 
-### ✔ Implementados
+```bash
+docker compose down
+```
 
-- Autenticação (JWT com access + refresh token, invalidação de sessão)
-- Usuários, Clínicas, Pacientes
-- Perfis (Roles) e Permissões, com controle de acesso por escopo de clínica
-- Status (motor de fluxo de estados por entidade)
-- Logs de Auditoria
-- Exames (upload, download, cancelamento, restauração)
-- Módulo de IA: classificação de imagens endoscópicas com ResNet-50, pré-processamento
-  (ROI, remoção de reflexo especular, CLAHE) e explicabilidade via Grad-CAM
+`docker compose down -v` também apaga os volumes e é uma ação destrutiva.
 
-### 🔄 Em desenvolvimento
+## Publicação dos modelos em uma GitHub Release
 
-- Fluxo de revisão médica do resultado da IA (status intermediário + tela dedicada)
-- Integração automática entre backend e serviço de IA (hoje a criação da análise ainda depende
-  de um payload montado externamente)
-- Ensemble Stacking (EfficientNet-B4 + ResNet-50 + PVTv2-B2), conforme Viana (2026)
-- Tela de resultado de IA no frontend (predição, confiança, Grad-CAM)
+### 1. Preparar os artefatos
 
-### 🚧 Planejados
+Coloque os arquivos finais, sem adicioná-los ao Git, em:
 
-- Dashboard clínico
-- Bloqueio automático de conta por tentativas de login inválidas
+```text
+ai/models/exported/gastrointestinal/resnet50.pt
+ai/models/exported/gastrointestinal/efficientnet_b4.pt
+ai/models/exported/gastrointestinal/pvt_v2_b2.pt
+ai/models/exported/gastrointestinal/meta_classificador.joblib
+```
 
----
+Confirme que a ordem das meta-features é ResNet-50, EfficientNet-B4 e PVTv2-B2, a mesma usada
+por `ai/app/inference/domains/gastrointestinal.py`.
 
-## 🧠 Inteligência Artificial no Projeto
+### 2. Gerar o manifesto
 
-O diferencial do ClinicAI é a integração com visão computacional para exames endoscópicos.
+```bash
+python scripts/generate_model_manifest.py \
+  --release-tag models-v0.1.0 \
+  --model-version 0.1.0
+```
 
-### Pipeline de pré-processamento
+O comando gera `manifesto_modelos.json` com tamanho e SHA-256 dos quatro arquivos.
 
-- Extração de ROI (região de interesse)
-- Remoção de reflexo especular
-- Realce de contraste (CLAHE)
-- Data augmentation (treino)
+### 3. Criar a release
 
-### Modelo
+1. Abra **Releases** no GitHub e escolha **Draft a new release**.
+2. Crie a tag `models-v0.1.0` ou a tag indicada no manifesto.
+3. Anexe os quatro modelos e `manifesto_modelos.json`.
+4. Confira os cinco nomes e publique a release.
 
-- Em produção: ResNet-50 (transfer learning)
-- Em desenvolvimento: Ensemble Stacking (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
-  meta-classificador de regressão logística), baseado em Viana (2026)
+Se qualquer peso, pré-processamento, classe ou meta-classificador mudar, publique uma nova tag.
+Cada asset precisa ter menos de 2 GiB.
 
-### Explicabilidade
+### 4. Testar a distribuição
 
-- Grad-CAM
+Atualize `.env.example` com a tag publicada e execute em uma cópia limpa:
 
-### Métricas de avaliação
+```bash
+docker compose --profile models run --rm model-downloader
+python -m unittest discover -s tests -v
+```
 
-- Accuracy, Precision, Recall, F1-Score, Matriz de Confusão
+O fluxo atual usa assets públicos. Para repositório privado, implemente download autenticado
+separadamente e nunca coloque tokens no Compose ou no README.
 
----
+## Credenciais de demonstração
 
-## 📚 Contribuição Acadêmica
+| Perfil | E-mail | Senha inicial |
+|---|---|---|
+| Administrador master | admin@clinicai.com | clinicai123 |
+| Médico | doctor@clinicai.com | clinicai123 |
+| Médico | doctor2@clinicai.com | clinicai123 |
+| Funcionário da clínica | staff@clinicai.com | clinicai123 |
+| Funcionário inativo | inactive@clinicai.com | clinicai123 |
 
-O projeto contribui com:
+Troque essas senhas antes de qualquer demonstração fora de um ambiente local controlado.
 
-- Aplicação de Engenharia de Software em sistemas reais
-- Integração entre sistemas web e Inteligência Artificial
-- Estruturação de dados clínicos com fluxo de revisão médica
-- Base para pesquisa em diagnóstico assistido por IA (CADx) em endoscopia gastrointestinal
+## Testes
 
----
+```bash
+python -m unittest discover -s tests -v
+docker compose exec backend pytest -q
+```
 
-## Bootstrap e evolução da matriz RBAC
+## Administração da matriz RBAC
 
-O executor `python -m app.modules.seeds`, chamado pelo entrypoint do backend,
-faz apenas o bootstrap inicial. O campo `roles.permissions_initialized`
-distingue uma role nunca inicializada de uma role configurada sem permissões.
-Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições
-administrativas permanecem como fonte da verdade.
+O executor `python -m app.modules.seeds` realiza apenas o bootstrap inicial. Depois disso, as
+edições administrativas permanecem como fonte da verdade. Mudanças oficiais devem ser feitas
+por migrations de dados do Alembic.
 
-Mudanças oficiais de permissões em bancos existentes são implementadas por
-migrations de dados do Alembic. A migration `b7c1d4e2f901` introduz o marcador
-de bootstrap e revoga os privilégios legados `exams:read` e
-`ai_analysis:read` de `clinic_staff`.
-
-Somente quando houver intenção de descartar customizações e restaurar toda a
-matriz padrão, execute manualmente:
+Para descartar customizações e restaurar toda a matriz padrão:
 
 ```bash
 docker compose exec backend python -m app.modules.role_permissions.reconcile \
   --confirm RECONCILE_RBAC
 ```
 
-O comando registra quantos vínculos foram adicionados e removidos por role e
-não é executado automaticamente pelo entrypoint.
+## Limitações e responsabilidade de uso
 
----
+- o projeto ainda não está pronto para implantação pública;
+- não utilize dados reais de pacientes nem imagens sem autorização e anonimização;
+- a saída da IA é experimental e não substitui avaliação médica;
+- o Compose atual é destinado ao desenvolvimento local;
+- a produção será tratada depois das correções e testes pendentes.
 
-## 📄 Observações
+## Licença
 
-Este projeto está em desenvolvimento contínuo como parte do Trabalho de Conclusão de Curso e
-será evoluído progressivamente até sua versão final. Ainda não foi validado em ambiente clínico
-real. OBS:. é um protótipo funcional para fins acadêmicos.
-
----
-
-## 📄 Licença
-
-Projeto acadêmico desenvolvido para fins educacionais.
+Projeto acadêmico desenvolvido para fins educacionais. A licença de distribuição ainda deve ser
+formalizada antes da disponibilização pública definitiva.
