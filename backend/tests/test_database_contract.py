@@ -35,7 +35,7 @@ def test_alembic_has_a_single_expected_head() -> None:
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     script = ScriptDirectory.from_config(config)
 
-    assert script.get_heads() == ["d3e5f7a9b102"]
+    assert script.get_heads() == ["e4f6a8b0c213"]
 
 
 def test_fk_cascade_policy_is_explicit() -> None:
