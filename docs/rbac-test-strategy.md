@@ -18,6 +18,9 @@ barreira equivalente no backend interrompa a integração contínua.
 | Revisão clínica delegada | `test_medical_review_authorization.py` exige role médica e `exams:review` |
 | Usuário inativo | `test_session_authorization.py` confirma HTTP 403 mesmo com JWT válido |
 | Token antigo após logout | O mesmo arquivo confirma HTTP 401 para access e refresh token com `token_version` antigo |
+| Precedência de rota estática | `test_rbac_route_matrix.py` garante que `/clinics/me` seja registrado antes de `/{clinic_id}` |
+| Matriz fixa do administrador | `test_admin_master_permission_matrix.py` bloqueia create/update/delete/sync para `admin_master` |
+| Histórico de exame | `test_exam_history_rbac.py` exige `exams:read`, resposta sanitizada e validação de escopo antes da auditoria |
 | Campo desconhecido | `test_strict_request_schemas.py` exige `extra='forbid'` e resposta HTTP 422 |
 
 Os testes utilizam SQLite em memória e valores de configuração descartáveis,
@@ -40,7 +43,16 @@ para sessões ativas, `check-rbac-contract.mjs` confronta:
 - permissões usadas pelo menu lateral;
 - permissões que habilitam botões e ações;
 - dependências `require_permission` e `require_doctor_permission` do backend;
-- módulos cuja barreira deliberada é `require_admin`.
+- módulos cuja barreira deliberada é `require_admin`;
+- histórico RF36 protegido e consumido na tela de exame;
+- matriz de `admin_master` fixa no frontend e no backend.
+
+## Dimensão da matriz atual
+
+A versão desta checagem possui 61 operações protegidas. Cada uma é executada
+contra `admin_master`, `doctor` e `clinic_staff`, totalizando 183 combinações
+rota × role. A relação completa é exportada para
+`docs/matriz-rbac-rotas.md` e `docs/matriz-rbac-rotas.csv`.
 
 ## Execução antes de commit ou implantação
 

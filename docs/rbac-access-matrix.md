@@ -27,7 +27,7 @@ repetida no backend, que permanece como fonte autoritativa da autorização.
 | `/patients/create` | `patients:create` | `POST /patients/` | `require_permission("patients:create")` + escopo |
 | `/patients/:id/edit` | `patients:update` | `PATCH /patients/{id}` | `require_permission("patients:update")` + escopo |
 | Ações de status de pacientes | Ação interna por permissão | `PATCH /patients/{id}/activate` e `/inactivate` | `require_permission("patients:change_status")` + escopo |
-| `/exams` e `/exams/:id` | `exams:read` | `GET /exams/`, `/exams/{id}` e `/exams/form-options` | `require_permission("exams:read")` + escopo |
+| `/exams` e `/exams/:id` | `exams:read` | `GET /exams/`, `/exams/{id}`, `/exams/{id}/history` e `/exams/form-options` | `require_permission("exams:read")` + escopo |
 | `/exams/create` | `exams:create` | `POST /exams/` | `require_permission("exams:create")` + escopo |
 | `/exams/:id/edit` | `exams:update` | `PATCH /exams/{id}` | `require_permission("exams:update")` + escopo |
 | Ações de exame | Permissão correspondente à ação | Cancelar/restaurar, analisar, revisar, baixar e substituir arquivo | `exams:change_status`, `ai_analysis:create`, `exams:review`, `exams:download` ou `exams:upload` + escopo |
@@ -39,6 +39,18 @@ O teste `backend/tests/test_rbac_route_matrix.py` inspeciona as dependências
 registradas nas rotas FastAPI. Ele falha se um endpoint estrutural deixar de
 usar `require_admin` ou se uma rota de perfil próprio for acidentalmente
 convertida em exclusiva do administrador.
+
+## Matriz completa por endpoint
+
+A tabela resumida acima é complementada pelos arquivos:
+
+- `docs/matriz-rbac-rotas.md`: todas as 65 operações HTTP e as rotas React;
+- `docs/matriz-rbac-rotas.csv`: versão filtrável para evidências e anexos do TCC.
+
+A matriz registra 61 operações protegidas e 183 combinações executáveis de
+rota × role. As colunas de role representam o bootstrap padrão; a decisão
+autoritativa continua sendo a dependência da rota e o escopo aplicado pelo
+serviço.
 
 ## Matriz de ações da interface
 
@@ -82,6 +94,14 @@ documentada em `docs/api-request-validation.md`.
 
 A atualização de menus, rotas e ações quando a matriz muda durante uma sessão
 autenticada está documentada em `docs/active-session-rbac.md`.
+
+## Matriz fixa do Administrador Master
+
+O `admin_master` possui bypass autoritativo para permissões granulares e acesso
+fixo aos módulos estruturais. Por isso, sua matriz é somente leitura no
+frontend e qualquer tentativa de criar, editar, apagar ou sincronizar seus
+vínculos em `/role-permissions` retorna HTTP 403 no backend. Essa regra evita
+que a interface mostre uma revogação que não produziria redução de acesso real.
 
 ## Revisão médica não delegável
 

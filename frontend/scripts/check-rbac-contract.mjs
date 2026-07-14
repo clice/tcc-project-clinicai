@@ -15,6 +15,12 @@ const permissionsSource = await readProjectFile('frontend/src/utils/permissions.
 const routesSource = await readProjectFile('frontend/src/routes.js')
 const navigationSource = await readProjectFile('frontend/src/_nav.jsx')
 const actionsSource = await readProjectFile('frontend/src/utils/actionPermissions.mjs')
+const examServiceSource = await readProjectFile('frontend/src/services/examService.js')
+const examFormSource = await readProjectFile('frontend/src/views/exams/ExamForm.jsx')
+const roleFormSource = await readProjectFile('frontend/src/views/roles/RoleForm.jsx')
+const rolePermissionServiceSource = await readProjectFile(
+  'backend/app/modules/role_permissions/service.py',
+)
 const routerDirectory = path.join(projectDirectory, 'backend', 'app', 'modules')
 
 const permissionCatalog = new Map(
@@ -81,6 +87,7 @@ const adminOnlyActions = new Set([
 ])
 const clinicsRouter = await readProjectFile('backend/app/modules/clinics/router.py')
 const usersRouter = await readProjectFile('backend/app/modules/users/router.py')
+const examsRouter = await readProjectFile('backend/app/modules/exams/router.py')
 assert.match(clinicsRouter, /Depends\(require_admin\)/)
 assert.match(usersRouter, /Depends\(require_admin\)/)
 
@@ -93,6 +100,21 @@ for (const permission of actionPermissions) {
 
 assert.match(actionsSource, /canReview:\s*'exams:review'/)
 assert.match(backendSource, /require_doctor_permission\("exams:review"\)/)
+
+// RF36: o histórico usa a mesma permissão de leitura do exame, valida o
+// escopo no backend e possui consumo explícito na tela de detalhes.
+assert.match(
+  examsRouter,
+  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*require_permission\("exams:read"\)/,
+)
+assert.match(examServiceSource, /getHistory:\s*async/)
+assert.match(examServiceSource, /`\/exams\/\$\{id\}\/history`/)
+assert.match(examFormSource, /<ExamHistoryCard examId=\{id\}/)
+
+// A matriz do admin_master é apresentada como fixa e o backend rejeita
+// alterações que não teriam efeito por causa do bypass administrativo.
+assert.match(roleFormSource, /isPermissionMatrixReadOnly = isReadOnly \|\| isAdminMasterRole/)
+assert.match(rolePermissionServiceSource, /ensure_role_permission_matrix_editable\(role\)/)
 
 console.log(
   `Contrato RBAC coerente: ${routePermissions.size} permissões de rota, ` +
