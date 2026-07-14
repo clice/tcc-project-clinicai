@@ -5,7 +5,7 @@ A tabela exams armazena exames vinculados a pacientes, clínicas e médicos,
 além dos metadados do arquivo enviado.
 """
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -41,6 +41,10 @@ class Exam(Base):
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False, index=True)
     doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False, index=True)
+
+    # Controle de concorrência da análise de IA
+    analysis_in_progress = Column(Boolean, nullable=False, default=False, server_default="false")
+    analysis_started_at = Column(DateTime(timezone=True), nullable=True)
 
     # Revisão médica do resultado da IA
     reviewed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)

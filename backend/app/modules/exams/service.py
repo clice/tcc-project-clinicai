@@ -26,11 +26,17 @@ from app.common.services import (
 from app.modules.ai_analysis.client import AIServiceError, request_prediction
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate
-from app.modules.ai_analysis.service import create_ai_analysis
+from app.modules.ai_analysis.service import build_ai_analysis_response, create_ai_analysis
 from app.modules.audit_logs.service import create_audit_log, list_entity_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate
+from app.modules.exams.state_machine import (
+    ExamTransitionAction,
+    ensure_exam_is_editable,
+    get_transition_target,
+    transition_audit_payload,
+)
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.statuses.service import (
@@ -95,6 +101,8 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "clinical_indication": exam.clinical_indication,
         "findings": exam.findings,
         "conclusion": exam.conclusion,
+        "analysis_in_progress": bool(exam.analysis_in_progress),
+        "analysis_started_at": exam.analysis_started_at,
         "reviewed_by_id": exam.reviewed_by_id,
         "reviewed_by_name": exam.reviewed_by.name if exam.reviewed_by else None,
         "reviewed_at": exam.reviewed_at,
@@ -447,6 +455,8 @@ def get_exam_model_by_id(db: Session, exam_id: int) -> Exam:
             joinedload(Exam.patient),
             joinedload(Exam.doctor),
             joinedload(Exam.status),
+            joinedload(Exam.reviewed_by),
+            joinedload(Exam.ai_analysis),
         )
         .filter(Exam.id == exam_id)
         .first()
@@ -456,6 +466,86 @@ def get_exam_model_by_id(db: Session, exam_id: int) -> Exam:
         raise HTTPException(status_code=404, detail="Exame não encontrado.")
 
     return exam
+
+
+def get_exam_model_for_update(db: Session, exam_id: int) -> Exam:
+    """Busca e bloqueia o exame durante uma transição crítica.
+
+    PostgreSQL mantém o bloqueio até o commit/rollback. No SQLite usado pelos
+    testes, ``FOR UPDATE`` é ignorado, e as operações condicionais continuam
+    garantindo a semântica exercitada pela suíte.
+    """
+
+    exam = (
+        db.query(Exam)
+        .options(
+            joinedload(Exam.clinic),
+            joinedload(Exam.patient),
+            joinedload(Exam.doctor),
+            joinedload(Exam.reviewed_by),
+            joinedload(Exam.status),
+            joinedload(Exam.ai_analysis),
+        )
+        .filter(Exam.id == exam_id)
+        .with_for_update(of=Exam)
+        .first()
+    )
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exame não encontrado.")
+    return exam
+
+
+def claim_exam_for_analysis(db: Session, exam_id: int) -> None:
+    """Adquire de forma atômica o direito de executar a inferência.
+
+    A atualização condicional impede que clique duplo, retry do navegador ou
+    duas sessões disparem o serviço de IA mais de uma vez para o mesmo exame.
+    """
+
+    processing_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.PROCESSING.value,
+        applies_to=StatusScope.EXAM.value,
+    )
+    claimed = (
+        db.query(Exam)
+        .filter(
+            Exam.id == exam_id,
+            Exam.status_id == processing_status.id,
+            Exam.analysis_in_progress.is_(False),
+        )
+        .update(
+            {
+                Exam.analysis_in_progress: True,
+                Exam.analysis_started_at: datetime.now(timezone.utc),
+            },
+            synchronize_session=False,
+        )
+    )
+    if claimed != 1:
+        db.rollback()
+        current = get_exam_model_by_id(db=db, exam_id=exam_id)
+        if current.ai_analysis:
+            return
+        if current.analysis_in_progress:
+            raise HTTPException(
+                status_code=409,
+                detail="Este exame já possui uma análise de IA em andamento.",
+            )
+        get_transition_target(
+            current.status.name if current.status else None,
+            ExamTransitionAction.ANALYSIS_SUCCEEDED,
+        )
+        raise HTTPException(status_code=409, detail="Não foi possível iniciar a análise.")
+
+    db.commit()
+
+
+def clear_exam_analysis_claim(db: Session, exam: Exam) -> None:
+    """Libera o marcador de execução atual dentro da transação aberta."""
+
+    exam.analysis_in_progress = False
+    exam.analysis_started_at = None
 
 
 def validate_exam_file(file: UploadFile) -> None:
@@ -752,32 +842,19 @@ def update_exam(
     payload: ExamUpdate,
     current_user: User,
 ) -> dict:
-    """
-    Atualiza parcialmente um exame.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    """Atualiza metadados somente antes da revisão clínica."""
 
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
-
-    if exam.status and exam.status.name == StatusName.CANCELED.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Não é possível editar um exame cancelado.",
-        )
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+    current_status = exam.status.name if exam.status else None
+    ensure_exam_is_editable(current_status)
 
     update_data = model_dump_update(payload)
-
     if not update_data:
+        db.rollback()
         return build_exam_response(exam, current_user=current_user)
 
-    validate_user_can_access_clinic(
-        current_user=current_user,
-        clinic_id=exam.clinic_id,
-    )
-
+    validate_user_can_access_clinic(current_user=current_user, clinic_id=exam.clinic_id)
     old_data = {
         "exam_type": exam.exam_type,
         "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
@@ -785,9 +862,7 @@ def update_exam(
         "description": exam.description,
         "clinical_indication": exam.clinical_indication,
     }
-
     apply_update_data(exam, update_data)
-
     audit_new_data = {
         "exam_type": exam.exam_type,
         "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
@@ -795,7 +870,6 @@ def update_exam(
         "description": exam.description,
         "clinical_indication": exam.clinical_indication,
     }
-
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -807,57 +881,40 @@ def update_exam(
         old_data=old_data,
         new_data=audit_new_data,
     )
-
     db.commit()
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
     return build_exam_response(exam, current_user=current_user)
-
 
 def cancel_exam(
     db: Session,
     exam_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Cancela logicamente um exame.
+    """Cancela pending/processing; repetição sobre canceled é idempotente."""
 
-    Regras:
-    - somente exames em PROCESSING ou PENDING podem ser cancelados;
-    - COMPLETED não pode ser cancelado;
-    - FAILED deve ser reprocessado, não cancelado.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+    current_status = exam.status.name if exam.status else None
 
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
+    if current_status == StatusName.CANCELED.value:
+        db.rollback()
+        return build_exam_response(exam, current_user=current_user)
 
-    if not exam.status or exam.status.name not in {
-        StatusName.PROCESSING.value,
-        StatusName.PENDING.value,
-    }:
-        raise HTTPException(
-            status_code=400,
-            detail="Apenas exames em processamento ou pendentes podem ser cancelados.",
-        )
-
-    canceled_status = get_status_by_name_and_applies_to(
+    target_name = get_transition_target(current_status, ExamTransitionAction.CANCEL)
+    target_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.CANCELED.value,
+        name=target_name,
         applies_to=StatusScope.EXAM.value,
     )
-
-    old_data = {
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
-    exam.status_id = canceled_status.id
-
+    old_data, new_data = transition_audit_payload(
+        old_status_id=exam.status_id,
+        old_status_name=current_status or "",
+        new_status_id=target_status.id,
+        new_status_name=target_name,
+        action=ExamTransitionAction.CANCEL,
+    )
+    exam.status_id = target_status.id
+    clear_exam_analysis_claim(db, exam)
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -867,66 +924,56 @@ def cancel_exam(
         entity_id=exam.id,
         description="Exame cancelado.",
         old_data=old_data,
-        new_data={
-            "status_id": canceled_status.id,
-            "status_name": StatusName.CANCELED.value,
-        },
+        new_data=new_data,
     )
-
     db.commit()
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
     return build_exam_response(exam, current_user=current_user)
-
 
 def restore_exam(
     db: Session,
     exam_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Reprocessa um exame cancelado ou com falha.
+    """Restaura canceled/failed para processing de forma idempotente."""
 
-    Regra:
-    - CANCELED ou FAILED volta para PROCESSING.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+    current_status = exam.status.name if exam.status else None
 
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
+    if current_status == StatusName.PROCESSING.value:
+        db.rollback()
+        return build_exam_response(exam, current_user=current_user)
 
-    if not exam.status or exam.status.name not in {
-        StatusName.CANCELED.value,
-        StatusName.FAILED.value,
-    }:
+    target_name = get_transition_target(current_status, ExamTransitionAction.RESTORE)
+    if exam.ai_analysis:
         raise HTTPException(
-            status_code=400,
-            detail="Apenas exames cancelados ou com falha podem ser reprocessados.",
+            status_code=409,
+            detail="Exame com análise concluída não pode retornar ao processamento.",
         )
-
     if not exam.file_path:
+        raise HTTPException(status_code=409, detail="Não é possível restaurar exame sem arquivo.")
+    file_path = resolve_safe_exam_file_path(exam.file_path)
+    if not file_path.exists() or not file_path.is_file():
         raise HTTPException(
-            status_code=400,
-            detail="Não é possível reprocessar exame sem arquivo vinculado.",
+            status_code=409,
+            detail="O arquivo do exame não está disponível para reprocessamento.",
         )
 
-    processing_status = get_status_by_name_and_applies_to(
+    target_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.PROCESSING.value,
+        name=target_name,
         applies_to=StatusScope.EXAM.value,
     )
-
-    old_data = {
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
-    exam.status_id = processing_status.id
-
+    old_data, new_data = transition_audit_payload(
+        old_status_id=exam.status_id,
+        old_status_name=current_status or "",
+        new_status_id=target_status.id,
+        new_status_name=target_name,
+        action=ExamTransitionAction.RESTORE,
+    )
+    exam.status_id = target_status.id
+    clear_exam_analysis_claim(db, exam)
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -934,21 +981,13 @@ def restore_exam(
         action=AuditAction.RESTORE_EXAM,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Exame enviado para reprocessamento.",
+        description="Exame restaurado para processamento.",
         old_data=old_data,
-        new_data={
-            "status_id": processing_status.id,
-            "status_name": StatusName.PROCESSING.value,
-        },
+        new_data=new_data,
     )
-
     db.commit()
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
     return build_exam_response(exam, current_user=current_user)
-
 
 def upload_exam_file(
     db: Session,
@@ -1135,35 +1174,27 @@ def mark_exam_ai_failed(
     exam_id: int,
     error_message: str | None = None,
 ) -> dict:
-    """
-    Marca exame como FAILED quando a análise da IA falhar.
+    """Registra processing -> failed sem sobrescrever transição concorrente."""
 
-    Sem current_user: esta função é acionada pelo próprio fluxo de
-    integração com o módulo de IA (falha de inferência), não por uma ação
-    direta de um usuário autenticado — por isso o log de auditoria é
-    registrado com user_id=None, identificando uma ação do sistema.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
-
-    if not exam.status or exam.status.name != StatusName.PROCESSING.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Apenas exames em processamento podem ser marcados como falha de IA.",
-        )
-
-    failed_status = get_status_by_name_and_applies_to(
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    current_status = exam.status.name if exam.status else None
+    target_name = get_transition_target(current_status, ExamTransitionAction.ANALYSIS_FAILED)
+    target_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.FAILED.value,
+        name=target_name,
         applies_to=StatusScope.EXAM.value,
     )
-
-    old_data = {
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
-    exam.status_id = failed_status.id
-
+    old_data, new_data = transition_audit_payload(
+        old_status_id=exam.status_id,
+        old_status_name=current_status or "",
+        new_status_id=target_status.id,
+        new_status_name=target_name,
+        action=ExamTransitionAction.ANALYSIS_FAILED,
+        error_recorded=bool(error_message),
+    )
+    exam.status_id = target_status.id
+    clear_exam_analysis_claim(db, exam)
+    safe_error = str(error_message)[:500] if error_message else None
     create_audit_log(
         db=db,
         user_id=None,
@@ -1171,29 +1202,13 @@ def mark_exam_ai_failed(
         action=AuditAction.AI_ANALYSIS_FAILED,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description=(
-            f"Falha na análise de IA: {error_message}"
-            if error_message
-            else "Falha na análise de IA."
-        ),
+        description=f"Falha na análise de IA: {safe_error}" if safe_error else "Falha na análise de IA.",
         old_data=old_data,
-        new_data={
-            "status_id": failed_status.id,
-            "status_name": StatusName.FAILED.value,
-        },
+        new_data=new_data,
     )
-
     db.commit()
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
-    # Sem current_user aqui (função de sistema, sem usuário autenticado no
-    # fluxo) — na prática é irrelevante: um exame que acabou de falhar
-    # nunca tem análise de IA associada, então ai_prediction_* já viria
-    # None de qualquer forma.
     return build_exam_response(exam)
-
 
 def get_exam_history(
     db: Session,
@@ -1228,70 +1243,42 @@ def review_exam(
     payload: ExamMedicalReview,
     current_user: User,
 ) -> dict:
-    """
-    Registra a revisão médica do resultado da análise de IA.
+    """Registra exatamente uma revisão médica e encerra o exame."""
 
-    Regra:
-    - o exame precisa estar em 'awaiting_review' (IA já concluiu, aguardando
-      o médico). Não é possível revisar um exame ainda em processamento,
-      cancelado, com falha ou já concluído;
-    - has_discrepancy=False -> exame vai para 'completed'
-      (médico confirma a análise da IA);
-    - has_discrepancy=True -> exame vai para 'completed_with_divergence'
-      (médico identificou um problema na análise da IA).
-    Em ambos os casos o exame é encerrado: os dois desfechos são finais,
-    e propositalmente ficam em status diferentes para não misturar, nas
-    listagens, exames concluídos normalmente com os que tiveram divergência
-    sinalizada pelo médico.
-
-    Conforme RN10, apenas usuários com perfil médico (role == doctor)
-    podem registrar a conclusão clínica — diferente do restante do
-    sistema, aqui o admin_master NÃO tem passagem livre por permissão:
-    revisar um exame exige julgamento clínico de um médico de verdade,
-    não é uma ação administrativa.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
-
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
     if not current_user.role or current_user.role.name != RoleName.DOCTOR.value:
-        raise HTTPException(
-            status_code=403,
-            detail="Apenas usuários com perfil médico podem revisar exames.",
-        )
+        raise HTTPException(status_code=403, detail="Apenas usuários com perfil médico podem revisar exames.")
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+    if not exam.ai_analysis:
+        raise HTTPException(status_code=409, detail="O exame ainda não possui análise de IA concluída.")
 
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
-
-    if not exam.status or exam.status.name != StatusName.AWAITING_REVIEW.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Apenas exames aguardando revisão médica podem ser revisados.",
-        )
-
-    target_status_name = (
-        StatusName.COMPLETED_WITH_DIVERGENCE.value
+    current_status = exam.status.name if exam.status else None
+    action = (
+        ExamTransitionAction.REVIEW_DIVERGENCE
         if payload.has_discrepancy
-        else StatusName.COMPLETED.value
+        else ExamTransitionAction.REVIEW_CONFIRM
     )
-
+    target_name = get_transition_target(current_status, action)
     target_status = get_status_by_name_and_applies_to(
         db=db,
-        name=target_status_name,
+        name=target_name,
         applies_to=StatusScope.EXAM.value,
     )
-
-    old_data = {
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
+    old_data, new_data = transition_audit_payload(
+        old_status_id=exam.status_id,
+        old_status_name=current_status or "",
+        new_status_id=target_status.id,
+        new_status_name=target_name,
+        action=action,
+        has_discrepancy=payload.has_discrepancy,
+        reviewed_by_id=current_user.id,
+    )
     exam.findings = payload.findings
     exam.conclusion = payload.conclusion
     exam.reviewed_by_id = current_user.id
     exam.reviewed_at = datetime.now(timezone.utc)
     exam.status_id = target_status.id
-
+    clear_exam_analysis_claim(db, exam)
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -1305,21 +1292,11 @@ def review_exam(
             else "Exame revisado e confirmado pelo médico."
         ),
         old_data=old_data,
-        new_data={
-            "status_id": target_status.id,
-            "status_name": target_status_name,
-            "has_discrepancy": payload.has_discrepancy,
-            "reviewed_by_id": current_user.id,
-        },
+        new_data=new_data,
     )
-
     db.commit()
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
     return build_exam_response(exam, current_user=current_user)
-
 
 def replace_exam_file(
     db: Session,
@@ -1327,59 +1304,53 @@ def replace_exam_file(
     file: UploadFile,
     current_user: User,
 ) -> dict:
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    """Substitui imagem somente em processing/failed, sem corrida com IA."""
 
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
-
-    if not exam.status or exam.status.name not in {
-        StatusName.PROCESSING.value,
-        StatusName.FAILED.value,
-    }:
-        raise HTTPException(
-            status_code=400,
-            detail="A imagem só pode ser substituída em exames em processamento ou com falha.",
-        )
-
+    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+    current_status = exam.status.name if exam.status else None
+    target_name = get_transition_target(current_status, ExamTransitionAction.REPLACE_FILE)
+    if exam.analysis_in_progress:
+        raise HTTPException(status_code=409, detail="A imagem não pode ser substituída durante a análise de IA.")
+    if exam.ai_analysis:
+        raise HTTPException(status_code=409, detail="A imagem não pode ser substituída após uma análise concluída.")
     validate_exam_file(file)
 
     old_file_path = exam.file_path
-
     patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
     file_extension = Path(file.filename or "").suffix.lower()
-
     stored_file_name = build_exam_file_name(
         exam_id=exam.id,
         patient_id=exam.patient_id,
         file_extension=file_extension,
     )
-
     stored_file_path = patient_dir / stored_file_name
-
     try:
         with stored_file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-
-        processing_status = get_status_by_name_and_applies_to(
+        target_status = get_status_by_name_and_applies_to(
             db=db,
-            name=StatusName.PROCESSING.value,
+            name=target_name,
             applies_to=StatusScope.EXAM.value,
         )
-
         old_data = {
-            "file_path": exam.file_path,
             "file_name": exam.file_name,
             "file_mime_type": exam.file_mime_type,
-            "status_name": exam.status.name if exam.status else None,
+            "status_id": exam.status_id,
+            "status_name": current_status,
         }
-
         exam.file_path = str(stored_file_path)
         exam.file_name = stored_file_name
         exam.file_mime_type = file.content_type
-        exam.status_id = processing_status.id
-
+        exam.status_id = target_status.id
+        clear_exam_analysis_claim(db, exam)
+        new_data = {
+            "file_name": exam.file_name,
+            "file_mime_type": exam.file_mime_type,
+            "status_id": target_status.id,
+            "status_name": target_name,
+            "transition_action": ExamTransitionAction.REPLACE_FILE.value,
+        }
         create_audit_log(
             db=db,
             user_id=current_user.id,
@@ -1389,88 +1360,59 @@ def replace_exam_file(
             entity_id=exam.id,
             description="Imagem do exame substituída.",
             old_data=old_data,
-            new_data={
-                "file_path": exam.file_path,
-                "file_name": exam.file_name,
-                "file_mime_type": exam.file_mime_type,
-                "status_name": StatusName.PROCESSING.value,
-            },
+            new_data=new_data,
         )
-
         db.commit()
-
+    except HTTPException:
+        db.rollback()
+        delete_exam_file_safely(str(stored_file_path))
+        raise
     except Exception as exc:
         db.rollback()
         delete_exam_file_safely(str(stored_file_path))
-
-        raise HTTPException(
-            status_code=500,
-            detail="Erro ao substituir imagem do exame.",
-        ) from exc
+        raise HTTPException(status_code=500, detail="Erro ao substituir imagem do exame.") from exc
 
     if old_file_path and old_file_path != str(stored_file_path):
         delete_exam_file_safely(old_file_path)
-
-    db.refresh(exam)
-
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
     return build_exam_response(exam, current_user=current_user)
-
 
 async def analyze_exam(
     db: Session,
     exam_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Dispara a análise de IA de um exame (RF41-48): lê o arquivo do disco,
-    chama o serviço de IA (container separado, via `ai_analysis.client`)
-    e, conforme o resultado:
-    - sucesso: cria o registro de AIAnalysis e move o exame para
-      'Aguardando Revisão Médica' (feito por `create_ai_analysis`);
-    - falha: marca o exame como 'Falhou', com log de auditoria (feito
-      por `mark_exam_ai_failed`).
+    """Executa a IA com claim atômico e resposta idempotente após sucesso."""
 
-    Só aceita exames em 'Processando' (RN21) — evita analisar duas vezes
-    o mesmo exame ou analisar um exame cancelado/já concluído.
-    """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
-
     ensure_user_can_access_exam(
         current_user=current_user,
         exam=exam,
         detail="Você não tem permissão para analisar este exame.",
     )
-
-    if not exam.status or exam.status.name != StatusName.PROCESSING.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Apenas exames em processamento podem ser enviados para análise de IA.",
-        )
-
+    if exam.ai_analysis:
+        return build_ai_analysis_response(exam.ai_analysis)
+    current_status = exam.status.name if exam.status else None
+    # Valida processing -> awaiting_review antes de iniciar a chamada externa.
+    get_transition_target(current_status, ExamTransitionAction.ANALYSIS_SUCCEEDED)
     if not exam.file_path:
-        raise HTTPException(
-            status_code=400,
-            detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
-        )
-
+        raise HTTPException(status_code=409, detail="O exame precisa ter um arquivo antes da análise de IA.")
     file_path = resolve_safe_exam_file_path(exam.file_path)
+    if not file_path.exists() or not file_path.is_file():
+        try:
+            mark_exam_ai_failed(db=db, exam_id=exam_id, error_message="Arquivo do exame não encontrado no disco.")
+        except HTTPException as conflict:
+            raise HTTPException(status_code=409, detail="O estado do exame mudou durante a análise.") from conflict
+        raise HTTPException(status_code=500, detail="Arquivo do exame não encontrado. Exame marcado como falha.")
 
-    if not file_path.exists():
-        mark_exam_ai_failed(
-            db=db,
-            exam_id=exam_id,
-            error_message="Arquivo do exame não encontrado no disco.",
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="Arquivo do exame não encontrado no disco. Exame marcado como falha.",
-        )
+    claim_exam_for_analysis(db=db, exam_id=exam_id)
+    # Um concorrente pode ter concluído entre a primeira leitura e o claim.
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    if exam.ai_analysis:
+        return build_ai_analysis_response(exam.ai_analysis)
 
     image_bytes = file_path.read_bytes()
     started_at = datetime.now(timezone.utc)
-
     try:
         prediction = await request_prediction(
             image_bytes=image_bytes,
@@ -1478,26 +1420,15 @@ async def analyze_exam(
             content_type=exam.file_mime_type or "application/octet-stream",
         )
     except AIServiceError as exc:
-        mark_exam_ai_failed(db=db, exam_id=exam_id, error_message=str(exc))
-        raise HTTPException(
-            status_code=502,
-            detail=f"Falha ao processar exame no serviço de IA: {exc}",
-        ) from exc
+        try:
+            mark_exam_ai_failed(db=db, exam_id=exam_id, error_message=str(exc))
+        except HTTPException as conflict:
+            raise HTTPException(status_code=409, detail="O estado do exame mudou durante a análise.") from conflict
+        raise HTTPException(status_code=502, detail=f"Falha ao processar exame no serviço de IA: {exc}") from exc
 
     processing_time_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
-
     label = prediction.get("label")
-
-    # O serviço de IA devolve a classe como texto ("normal"/"abnormal"),
-    # não como índice numérico — esse mapeamento precisa continuar batendo
-    # com `CLASS_LABELS` em `ai/app/config.py` (0 = normal, 1 = abnormal).
-    if label == "abnormal":
-        prediction_class = 1
-    elif label == "normal":
-        prediction_class = 0
-    else:
-        prediction_class = None
-
+    prediction_class = 1 if label == "abnormal" else 0 if label == "normal" else None
     payload = AIAnalysisCreate(
         exam_id=exam_id,
         prediction_label=label or "desconhecido",
@@ -1509,5 +1440,4 @@ async def analyze_exam(
         processing_time_ms=processing_time_ms,
         raw_response=str(prediction),
     )
-
     return create_ai_analysis(db=db, payload=payload, current_user=current_user)

@@ -103,7 +103,7 @@ class ExamMedicalReview(StrictRequestModel):
     @classmethod
     def normalize_required_fields(cls, value: str) -> str:
         return normalize_required_text(value, "Campo obrigatório.")
-
+    
 
 class ExamResponse(BaseModel):
     """
@@ -134,6 +134,9 @@ class ExamResponse(BaseModel):
     findings: str | None = None
     conclusion: str | None = None
 
+    analysis_in_progress: bool = False
+    analysis_started_at: datetime | None = None
+
     reviewed_by_id: int | None = None
     reviewed_by_name: str | None = None
     reviewed_at: datetime | None = None
@@ -152,15 +155,13 @@ class ExamResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class ExamHistoryEntryResponse(BaseModel):
-    """Evento público do histórico de um exame (RF36).
-
-    IP e user-agent permanecem disponíveis somente na área administrativa
-    de auditoria e não fazem parte desta resposta clínica.
-    """
+    """Evento público do histórico de um exame (RF36)."""
 
     id: int
     user_id: int | None = None
@@ -179,4 +180,3 @@ class ExamHistoryResponse(BaseModel):
     total: int
     limit: int
     offset: int
-
