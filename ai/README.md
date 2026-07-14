@@ -1,114 +1,70 @@
 # ClinicAI — Módulo de Inteligência Artificial
 
-Este diretório contém a estrutura inicial da parte de Inteligência Artificial do projeto **ClinicAI**.
+Este diretório contém o serviço de inferência do ClinicAI para imagens de endoscopia e
+colonoscopia. O módulo implementa pré-processamento, três modelos base, Ensemble Stacking e
+Grad-CAM. O resultado é um apoio à decisão médica e não substitui o diagnóstico profissional.
 
-O objetivo deste módulo é organizar os códigos, modelos, experimentos e futuras APIs responsáveis pela análise automatizada de imagens de exames endoscópicos e colonoscópicos.
+## Componentes atuais
 
----
+- `app/main.py`: API, health check e rota de predição;
+- `app/config.py`: caminhos, domínio clínico e modelo ativo;
+- `app/inference/domains/gastrointestinal.py`: registro dos modelos gastrointestinais;
+- `app/inference/timm_predictor.py`: inferência dos modelos base;
+- `app/inference/ensemble_stacking.py`: combinação pelo meta-classificador;
+- `app/explainability/gradcam.py`: mapa de explicabilidade;
+- `training/preprocessing/`: ROI, remoção de reflexos e CLAHE.
 
-## Objetivo da IA
+O modelo ativo do domínio gastrointestinal é `ensemble_stacking`, formado por ResNet-50,
+EfficientNet-B4 e PVTv2-B2, seguido por um meta-classificador de regressão logística.
 
-A proposta inicial da IA no ClinicAI é realizar uma classificação binária de imagens médicas, indicando se uma imagem de exame apresenta características:
+## Artefatos dos modelos
 
-- normais;
-- suspeitas ou anormais.
+Os pesos não são versionados no Git. Eles são distribuídos pela Release configurada no `.env`
+da raiz e instalados com:
 
-O resultado da IA será utilizado como ferramenta de apoio à decisão médica, não substituindo a avaliação de um profissional de saúde.
-
----
-
-## Estrutura do diretório
-
-```txt
-ai/
-├── app/
-│   ├── main.py
-│   ├── schemas.py
-│   ├── inference/
-│   │   ├── predictor.py
-│   │   ├── preprocess.py
-│   │   └── gradcam.py
-│   └── models/
-├── notebooks/
-├── training/
-├── datasets/
-├── requirements.txt
-├── Dockerfile
-└── README.md
+```bash
+docker compose --profile models run --rm model-downloader
 ```
 
-### Descrição das pastas
+O diretório final contém:
 
-#### `app/`
+```text
+ai/models/exported/gastrointestinal/
+├── resnet50.pt
+├── efficientnet_b4.pt
+├── pvt_v2_b2.pt
+├── meta_classificador.joblib
+└── manifesto_modelos.json
+```
 
-Contém a futura API de inferência da IA.
+O downloader valida tamanho e SHA-256 e só substitui a instalação depois que o conjunto
+completo é validado. A ordem dos três modelos deve permanecer igual à usada no treinamento do
+meta-classificador.
 
-Essa API será responsável por receber imagens de exames, executar o modelo treinado e retornar o resultado da análise.
+## API
 
-#### `app/inference/`
+Com o Docker Compose em execução:
 
-Contém os arquivos relacionados ao fluxo de inferência.
+- documentação: `http://localhost:8001/docs`;
+- saúde: `GET http://localhost:8001/health`;
+- modelos registrados: `GET http://localhost:8001/models`;
+- inferência: `POST http://localhost:8001/predict` com `file` e `exam_type`.
 
-- `preprocess.py`: preparação da imagem antes da predição.
-- `predictor.py`: carregamento do modelo e execução da classificação.
-- `gradcam.py`: geração futura do mapa de explicabilidade GradCAM.
+Os tipos `endoscopy` e `colonoscopy` são direcionados ao domínio `gastrointestinal`.
 
-#### `app/models/`
+## Execução isolada
 
-Diretório reservado para armazenar os modelos treinados exportados, como arquivos `.pt`, `.pth` ou formatos equivalentes.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
 
-Por segurança e organização, os modelos pesados não devem ser versionados diretamente no GitHub sem necessidade.
-
-#### `notebooks/`
-
-Contém notebooks utilizados para exploração, testes, treinamento inicial e análise dos datasets.
-
-#### `training/`
-
-Contém scripts de treinamento, avaliação e comparação entre modelos.
-
-#### `datasets/`
-
-Diretório reservado para organização local dos datasets usados nos experimentos.
-
-Os datasets não devem ser enviados ao GitHub, principalmente por tamanho, licença e privacidade.
-
----
-
-## Fluxo futuro da IA
-
-O fluxo planejado para integração da IA ao ClinicAI será:
-
-Imagem do exame
-→ Pré-processamento
-→ Modelo de classificação
-→ Resultado da predição
-→ Confiança da predição
-→ GradCAM
-→ API de IA
-→ Backend principal
-→ Banco de dados
-→ Frontend
-
----
-
-## Tecnologias previstas
-
-- Python
-- FastAPI
-- PyTorch
-- OpenCV
-- Pillow
-- NumPy
-- scikit-learn
-- Matplotlib
-- GradCAM
-
----
+Consulte `app/inference/domains/README.md` para registrar outro domínio clínico e
+`../docs/model-release-guide.md` para publicar ou atualizar os artefatos.
 
 ## Aviso importante
 
-Este módulo tem finalidade acadêmica e experimental dentro do contexto do Trabalho de Conclusão de Curso.
-
-Os resultados gerados pela IA devem ser interpretados como apoio à decisão médica e não como diagnóstico definitivo.
-
+Este módulo tem finalidade acadêmica e experimental. Não foi validado como dispositivo médico
+e não deve ser usado de forma autônoma para diagnóstico ou conduta clínica.

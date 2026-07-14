@@ -21,7 +21,9 @@ MODEL_RELEASE_MANIFEST=manifesto_modelos.json
 
 O arquivo `manifesto_modelos.json` registra a versão, o tamanho e o SHA-256 de cada artefato.
 Durante o download, `scripts/download_models.py` valida esses dados antes de instalar os
-arquivos em `ai/models/exported/gastrointestinal/`.
+arquivos em `ai/models/exported/gastrointestinal/`. O conjunto é preparado em um diretório
+temporário e só substitui a instalação atual depois que todos os artefatos passam pela
+verificação; se um download falhar, a versão anterior permanece intacta.
 
 ## 2. Release atual
 
@@ -127,7 +129,8 @@ Na raiz do projeto:
 python3 -m unittest tests.test_model_distribution
 ```
 
-Os testes confirmam o download, a validação dos hashes e a rejeição de artefatos adulterados.
+Os testes confirmam o download, a validação dos hashes, a rejeição de artefatos adulterados e a
+preservação integral da versão anterior quando a atualização falha.
 
 ## 5. Gerar o manifesto
 
@@ -239,6 +242,7 @@ docker compose logs --tail=100 backend
 ## 9. Se uma Release apresentar erro
 
 - Não substitua silenciosamente os anexos da versão publicada.
+- Confirme que o downloader manteve a versão local anterior intacta.
 - Preserve a Release anterior para reprodutibilidade.
 - Corrija e teste os artefatos localmente.
 - Gere outro manifesto com uma nova versão.

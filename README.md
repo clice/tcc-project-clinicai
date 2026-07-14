@@ -2,6 +2,10 @@
 
 Projeto de Trabalho de Conclusão de Curso (TCC) voltado ao desenvolvimento de um sistema web para gestão clínica com módulo integrado de Inteligência Artificial para análise de exames gastrointestinais.
 
+> **Escopo:** o ClinicAI é um protótipo acadêmico para execução e demonstração local. Não foi
+> validado como dispositivo médico e não deve ser utilizado para diagnóstico, conduta ou
+> atendimento clínico real.
+
 ---
 
 ## 🧠 Objetivo Geral
@@ -16,8 +20,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 - **Implementar Autenticação Segura:** JWT (_access_ + _refresh token_) para controle de acesso.
 - **Gerenciar Estrutura Administrativa:** usuários, clínicas, pacientes, perfis e permissões.
 - **Organizar Dados Clínicos:** exames endoscópicos, com fluxo de status e revisão médica.
-- **Aplicar Inteligência Artificial:** classificação de imagens endoscópicas (atualmente ResNet-50,
-  com _Ensemble Stacking_ em desenvolvimento), com explicabilidade via Grad-CAM.
+- **Aplicar Inteligência Artificial:** classificação de imagens endoscópicas com _Ensemble
+  Stacking_ (ResNet-50, EfficientNet-B4 e PVTv2-B2), meta-classificador e explicabilidade via
+  Grad-CAM.
 - **Aplicar Boas Práticas de Engenharia de Software:** separação de camadas, Docker, migrations
   e organização modular.
 
@@ -27,7 +32,7 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 - **Status geral:** Em desenvolvimento — protótipo funcional
 - **Fase atual:** Correção de bugs e fechamento do fluxo de análise de exames (IA + revisão médica)
-- **Próxima etapa:** _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2) e telas de resultado de IA
+- **Próxima etapa:** validar o fluxo integrado de análise, resultado da IA e revisão médica
 
 > Este README reflete o estado real do código. Módulos listados como "implementados" abaixo já
 > funcionam de ponta a ponta; "em desenvolvimento" indica que existe implementação parcial.
@@ -56,7 +61,7 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ### 🧠 Inteligência Artificial
 
-- PyTorch, torchvision (ResNet-50 em produção; EfficientNet-B4 e PVTv2-B2 em desenvolvimento)
+- PyTorch, torchvision e timm (ResNet-50, EfficientNet-B4 e PVTv2-B2 no _Ensemble Stacking_)
 - OpenCV (pré-processamento: ROI, remoção de _Specular Highlights_)
 - Grad-CAM (explicabilidade)
 - Scikit-learn (métricas de avaliação; meta-classificador do _Ensemble Stacking_)
@@ -114,8 +119,11 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles não possuem valores padrão
-no código, então o backend não sobe sem essas variáveis definidas.
+Os arquivos de exemplo já contêm credenciais padronizadas exclusivamente para a demonstração
+acadêmica local. Isso permite reproduzir o ambiente sem uma etapa adicional de criação de
+senhas. Dentro do Docker, o Compose monta a `DATABASE_URL` com os valores PostgreSQL da raiz;
+a URL de `backend/.env` é usada na execução local sem Docker. Troque `POSTGRES_PASSWORD` e
+`SECRET_KEY` se o sistema for exposto fora da máquina local.
 
 O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
 baixar os modelos. A tag padrão é `models-v0.1.0`.
@@ -146,7 +154,8 @@ O comando baixa e verifica os seguintes arquivos em
 - `manifesto_modelos.json`.
 
 O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
-válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
+válidos são preservados. Quando algum arquivo precisa ser atualizado, todo o novo conjunto é
+preparado e validado antes da substituição; uma falha mantém a versão anterior intacta.
 
 Ao final, a saída deve informar que os quatro artefatos foram baixados e verificados. Para
 confirmar que a instalação pode ser repetida com segurança, execute o mesmo comando novamente:
@@ -195,8 +204,9 @@ Os seeds são idempotentes, ou seja, rodar de novo não duplica dados.
 
 ## 🔑 Credenciais de Acesso
 
-Os seeds criam os seguintes usuários de demonstração. **OBS:. troque essas senhas antes de qualquer
-uso fora do ambiente de desenvolvimento**:
+Os seeds criam os usuários fictícios abaixo. As credenciais são intencionalmente padronizadas
+para facilitar os testes locais da autora, do orientador e da banca. Elas não devem ser
+reutilizadas em uma hospedagem pública nem com dados reais.
 
 | Perfil | E-mail | Senha |
 |---|---|---|
@@ -216,6 +226,8 @@ uso fora do ambiente de desenvolvimento**:
 | Backend | http://localhost:8000 |
 | Documentação Backend API | http://localhost:8000/docs |
 | Documentação IA API | http://localhost:8001/docs |
+
+No Compose de desenvolvimento, essas portas são publicadas somente em `127.0.0.1`.
 
 ---
 
@@ -259,9 +271,8 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 
 ### Modelo
 
-- Em produção: ResNet-50 (_Transfer Learning_)
-- Em desenvolvimento: _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
-  meta-classificador de _Logistic Regression_), baseado em Viana (2026)
+- Na versão demonstrativa atual: _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2
+  com meta-classificador de _Logistic Regression_), baseado em Viana (2026)
 
 ### Explicabilidade
 
@@ -389,7 +400,7 @@ não é executado automaticamente pelo entrypoint.
 
 Este projeto está em desenvolvimento contínuo como parte do Trabalho de Conclusão de Curso e
 será evoluído progressivamente até sua versão final. Ainda não foi validado em ambiente clínico
-real. OBS:. é um protótipo funcional para fins acadêmicos.
+real; é um protótipo funcional para fins acadêmicos.
 
 ---
 
