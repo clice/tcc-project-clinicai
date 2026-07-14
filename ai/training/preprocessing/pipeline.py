@@ -1,16 +1,22 @@
 """
 Pipeline de pré-processamento para imagens endoscópicas.
 
-Este módulo combina as etapas principais usadas antes do treinamento:
-- extração da região de interesse;
-- remoção de reflexos especulares;
-- melhoria de contraste.
+Fiel ao protocolo de Pedro Viana (2026), validado no notebook de treino
+do Ensemble Stacking do ClinicAI:
+1. extração da região de interesse (remove bordas escuras);
+2. remoção de reflexos especulares (máscara HSV + inpainting).
+
+Não inclui melhoria de contraste (CLAHE) — essa etapa existiu numa versão
+anterior deste módulo, mas nunca fez parte do protocolo documentado na
+monografia nem do pipeline usado para treinar os modelos atuais. Foi
+removida por fidelidade entre treino e inferência: usar um pipeline
+diferente do que gerou os pesos treinados produziria predições
+sistematicamente enviesadas, sem nenhum erro visível.
 """
 
 import cv2
 import numpy as np
 
-from training.preprocessing.enhancement import enhance_image
 from training.preprocessing.roi import extract_roi
 from training.preprocessing.specular import remove_specular_highlights
 
@@ -25,13 +31,8 @@ def preprocess_for_training(image: np.ndarray) -> np.ndarray:
     Returns:
         Imagem pré-processada no formato RGB.
     """
-
     image = extract_roi(image)
-
     image = remove_specular_highlights(image)
-
-    image = enhance_image(image)
-
     return image
 
 
@@ -45,7 +46,6 @@ def load_and_preprocess_image(image_path: str) -> np.ndarray:
     Returns:
         Imagem pré-processada no formato RGB.
     """
-
     image_bgr = cv2.imread(image_path)
 
     if image_bgr is None:

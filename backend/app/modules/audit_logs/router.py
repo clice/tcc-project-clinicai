@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_admin
 from app.modules.audit_logs.schema import AuditLogListResponse
 from app.modules.audit_logs.service import list_audit_logs
 from app.modules.users.model import User
@@ -27,13 +27,13 @@ def list_audit_logs_route(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("audit_logs:read")),
+    current_user: User = Depends(require_admin),
 ):
     """
     Lista logs de auditoria, paginado.
 
-    Apenas usuários com permissão audit_logs:read devem acessar.
-    No sistema, essa permissão deve ficar somente com admin_master.
+    O módulo é uma configuração estrutural e permanece exclusivo do
+    Administrador Master, em alinhamento com a rota e a navegação frontend.
     """
     return list_audit_logs(
         db=db,

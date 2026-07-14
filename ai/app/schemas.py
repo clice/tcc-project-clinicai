@@ -1,8 +1,8 @@
 """
 Schemas da API de Inteligência Artificial do ClinicAI.
 
-Este arquivo define os formatos de entrada e saída usados
-pelo serviço de inferência da IA.
+Este arquivo define os formatos de entrada e saída usados pelo serviço
+de inferência da IA.
 """
 
 from pydantic import BaseModel, Field
@@ -11,11 +11,8 @@ from pydantic import BaseModel, Field
 class PredictionResponse(BaseModel):
     """
     Resposta retornada pela IA após analisar uma imagem de exame.
-
-    Por enquanto, este schema ainda será usado com uma predição simulada.
-    Depois será conectado ao modelo real treinado.
     """
-    
+
     exam_domain: str = Field(
         ...,
         description="Domínio médico do modelo utilizado.",
@@ -35,30 +32,26 @@ class PredictionResponse(BaseModel):
 
     model_name: str = Field(
         ...,
-        description="Nome do modelo utilizado na inferência.",
+        description="Nome do modelo utilizado na inferência (ex: 'ensemble_stacking').",
     )
 
     model_version: str = Field(
         ...,
         description="Versão do modelo utilizado.",
     )
-    
-    model_path: str = Field(
-        ...,
-        description="Dispositivo usado durante inferência.",
-    )
 
     gradcam_available: bool = Field(
         default=False,
         description="Indica se o GradCAM foi gerado para a imagem.",
     )
-    
+
     gradcam_path: str | None = Field(
         default=None,
         description="Caminho local do GradCAM gerado.",
-    )    
-    
+    )
+
     device: str = Field(
         ...,
-        description="Caminho do modelo carregado.",
+        description="Dispositivo usado durante a inferência (ex: 'cuda' ou 'cpu').",
     )
+    

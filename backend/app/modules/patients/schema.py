@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_email,
     normalize_optional_text,
@@ -22,7 +23,7 @@ from app.common.validators import (
 PatientSex = Literal["male", "female", "other", "not_informed"]
 
 
-class PatientBase(BaseModel):
+class PatientBase(StrictRequestModel):
     """
     Campos compartilhados entre criação e resposta.
     """
@@ -103,7 +104,7 @@ class PatientCreate(PatientBase):
     pass
 
 
-class PatientUpdate(BaseModel):
+class PatientUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de paciente.
     Todos os campos são opcionais porque o endpoint usa PATCH.

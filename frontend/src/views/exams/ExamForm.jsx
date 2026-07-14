@@ -17,21 +17,24 @@ import {
   CCardHeader,
   CCol,
   CForm,
+  CFormCheck,
   CFormInput,
   CFormLabel,
   CFormSelect,
   CFormTextarea,
   CRow,
+  CSpinner,
 } from '@coreui/react'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { examService } from 'src/services/examService'
+import { aiAnalysisService } from 'src/services/aiAnalysisService'
 
 import { examTypeOptions, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
-import { getUserRole, ROLES } from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const allowedImageTypes = ['image/jpeg', 'image/png']
 
@@ -52,6 +55,10 @@ const emptyExam = {
   file_path: '',
   file_name: '',
   file_mime_type: '',
+  findings: '',
+  conclusion: '',
+  reviewed_by_name: '',
+  reviewed_at: '',
 }
 
 const formatConfidence = (value) => {
@@ -70,9 +77,18 @@ const ExamForm = ({ mode = 'create' }) => {
   const [patients, setPatients] = useState([])
   const [doctors, setDoctors] = useState([])
   const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [gradcamUrl, setGradcamUrl] = useState(null)
+  const [isGradcamLoading, setIsGradcamLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+
+  const [review, setReview] = useState({
+    findings: '',
+    conclusion: '',
+    has_discrepancy: false,
+  })
+  const [isReviewing, setIsReviewing] = useState(false)
 
   const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
@@ -81,6 +97,15 @@ const ExamForm = ({ mode = 'create' }) => {
   const roleName = getUserRole(user)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
+
+  // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
+  // revisar um exame que já está aguardando revisão médica — outros status
+  // (processando, concluído, falhou, cancelado) não admitem essa ação.
+  const canReview =
+    isDoctor &&
+    hasPermission(user, PERMISSIONS.EXAMS_REVIEW) &&
+    !isCreateMode &&
+    form.status_name === 'awaiting_review'
 
   const title = useMemo(() => {
     if (isCreateMode) return 'Cadastrar Exame'
@@ -104,8 +129,7 @@ const ExamForm = ({ mode = 'create' }) => {
 
     return patients.filter(
       (patient) =>
-        String(patient.clinic_id) === String(form.clinic_id) &&
-        patient.status_name === 'active',
+        String(patient.clinic_id) === String(form.clinic_id) && patient.status_name === 'active',
     )
   }, [patients, form.clinic_id])
 
@@ -148,6 +172,7 @@ const ExamForm = ({ mode = 'create' }) => {
           })
 
           setAiAnalysis(null)
+          setGradcamUrl(null)
           return
         }
 
@@ -175,9 +200,22 @@ const ExamForm = ({ mode = 'create' }) => {
           file_path: examData.file_path ?? '',
           file_name: examData.file_name ?? '',
           file_mime_type: examData.file_mime_type ?? '',
+          findings: examData.findings ?? '',
+          conclusion: examData.conclusion ?? '',
+          reviewed_by_name: examData.reviewed_by_name ?? '',
+          reviewed_at: examData.reviewed_at ?? '',
         })
 
-        setAiAnalysis(null)
+        // Busca a análise de IA vinculada, se existir. Um exame ainda em
+        // 'processing' (ou que falhou) legitimamente não tem análise
+        // ainda — aiAnalysisService já trata o 404 como null, não como erro.
+        const analysis = await aiAnalysisService.getByExamId(id)
+        setAiAnalysis(analysis)
+
+        // Reseta o formulário de revisão a cada carregamento, pra não
+        // arrastar texto de uma revisão anterior (ex: usuário voltou à
+        // tela depois de já ter revisado, ou trocou de exame).
+        setReview({ findings: '', conclusion: '', has_discrepancy: false })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar dados do exame.'))
       } finally {
@@ -187,6 +225,48 @@ const ExamForm = ({ mode = 'create' }) => {
 
     void loadData()
   }, [id, isCreateMode])
+
+  // Busca o Grad-CAM como imagem real (hoje o backend expõe só o caminho
+  // do arquivo em `gradcam_path`; o binário vem pelo endpoint de download
+  // dedicado, o mesmo padrão já usado para o arquivo original do exame).
+  useEffect(() => {
+    if (!aiAnalysis?.gradcam_path || isCreateMode) {
+      setGradcamUrl(null)
+      return undefined
+    }
+
+    let objectUrl = null
+    let isCancelled = false
+
+    const loadGradcam = async () => {
+      try {
+        setIsGradcamLoading(true)
+        const blob = await examService.downloadAiFile(id)
+
+        if (isCancelled) return
+
+        objectUrl = URL.createObjectURL(blob)
+        setGradcamUrl(objectUrl)
+      } catch (err) {
+        if (!isCancelled) {
+          setGradcamUrl(null)
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsGradcamLoading(false)
+        }
+      }
+    }
+
+    void loadGradcam()
+
+    return () => {
+      isCancelled = true
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [aiAnalysis?.gradcam_path, id, isCreateMode])
 
   const updateField = (field, value) => {
     setForm((current) => ({
@@ -331,6 +411,55 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }
 
+  const handleReviewFieldChange = (field) => (event) => {
+    setReview((prev) => ({ ...prev, [field]: event.target.value }))
+  }
+
+  const handleReviewSubmit = async (event) => {
+    event.preventDefault()
+
+    if (!canReview) return
+
+    showError('')
+    showSuccess('')
+
+    if (review.findings.trim().length < 3 || review.conclusion.trim().length < 3) {
+      showError('Preencha os achados e a conclusão antes de enviar a revisão.')
+      return
+    }
+
+    try {
+      setIsReviewing(true)
+
+      const updatedExam = await examService.review(id, {
+        findings: review.findings.trim(),
+        conclusion: review.conclusion.trim(),
+        has_discrepancy: review.has_discrepancy,
+      })
+
+      setForm((prev) => ({
+        ...prev,
+        status_id: updatedExam.status_id ? String(updatedExam.status_id) : prev.status_id,
+        status_name: updatedExam.status_name ?? prev.status_name,
+        status_display_name: updatedExam.status_display_name ?? prev.status_display_name,
+        findings: updatedExam.findings ?? prev.findings,
+        conclusion: updatedExam.conclusion ?? prev.conclusion,
+        reviewed_by_name: updatedExam.reviewed_by_name ?? prev.reviewed_by_name,
+        reviewed_at: updatedExam.reviewed_at ?? prev.reviewed_at,
+      }))
+
+      showSuccess(
+        review.has_discrepancy
+          ? 'Revisão registrada. Exame concluído com divergência sinalizada.'
+          : 'Revisão registrada. Exame concluído, análise da IA confirmada.',
+      )
+    } catch (err) {
+      showError(getErrorMessage(err, 'Erro ao registrar a revisão médica.'))
+    } finally {
+      setIsReviewing(false)
+    }
+  }
+
   return (
     <>
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
@@ -398,9 +527,7 @@ const ExamForm = ({ mode = 'create' }) => {
                         required
                       >
                         <option value="">
-                          {form.clinic_id
-                            ? 'Selecione...'
-                            : 'Selecione uma clínica primeiro'}
+                          {form.clinic_id ? 'Selecione...' : 'Selecione uma clínica primeiro'}
                         </option>
 
                         {availablePatients.map((patient) => (
@@ -501,9 +628,7 @@ const ExamForm = ({ mode = 'create' }) => {
                       value={form.clinical_indication}
                       disabled={isReadOnly}
                       placeholder="Ex: dor abdominal, rastreamento, refluxo persistente..."
-                      onChange={(event) =>
-                        updateField('clinical_indication', event.target.value)
-                      }
+                      onChange={(event) => updateField('clinical_indication', event.target.value)}
                     />
                   </CCol>
 
@@ -570,7 +695,9 @@ const ExamForm = ({ mode = 'create' }) => {
 
                   <div className="mb-3">
                     <div className="text-body-secondary small">Predição</div>
-                    <strong>{aiAnalysis.prediction_label}</strong>
+                    <CBadge color={aiAnalysis.prediction_class === 1 ? 'danger' : 'success'}>
+                      {aiAnalysis.prediction_label}
+                    </CBadge>
                   </div>
 
                   <div className="mb-3">
@@ -588,15 +715,33 @@ const ExamForm = ({ mode = 'create' }) => {
                   <div className="mb-3">
                     <div className="text-body-secondary small">Tempo de processamento</div>
                     <div>
-                      {aiAnalysis.processing_time_ms
-                        ? `${aiAnalysis.processing_time_ms} ms`
-                        : '-'}
+                      {aiAnalysis.processing_time_ms ? `${aiAnalysis.processing_time_ms} ms` : '-'}
                     </div>
                   </div>
 
                   <div className="mb-3">
-                    <div className="text-body-secondary small">Grad-CAM</div>
-                    <div>{aiAnalysis.gradcam_path || 'Não disponível.'}</div>
+                    <div className="text-body-secondary small mb-1">Grad-CAM</div>
+                    {isGradcamLoading ? (
+                      <div className="d-flex align-items-center gap-2 text-body-secondary">
+                        <CSpinner size="sm" />
+                        <span>Carregando mapa de ativação...</span>
+                      </div>
+                    ) : gradcamUrl ? (
+                      <a href={gradcamUrl} target="_blank" rel="noreferrer">
+                        <img
+                          src={gradcamUrl}
+                          alt="Mapa de ativação Grad-CAM destacando as regiões que mais influenciaram a predição"
+                          className="img-fluid rounded border"
+                        />
+                      </a>
+                    ) : (
+                      <div className="text-body-secondary">Não disponível.</div>
+                    )}
+                    <div className="form-text">
+                      Regiões destacadas influenciaram mais a predição. Apoio visual — não é prova
+                      causal do resultado, sobretudo combinado ao meta-classificador do Ensemble
+                      Stacking.
+                    </div>
                   </div>
 
                   <div>
@@ -611,6 +756,120 @@ const ExamForm = ({ mode = 'create' }) => {
               )}
             </CCardBody>
           </CCard>
+
+          {canReview && (
+            <CCard className="mb-4 border-warning">
+              <CCardHeader className="bg-warning-subtle">
+                <strong>Revisão Médica</strong>
+              </CCardHeader>
+
+              <CCardBody>
+                <CAlert color="warning" className="small">
+                  Este exame está aguardando sua revisão. A conclusão registrada aqui é definitiva —
+                  o exame não retorna para processamento depois (RN10).
+                </CAlert>
+
+                <CForm onSubmit={handleReviewSubmit}>
+                  <div className="mb-3">
+                    <CFormLabel htmlFor="findings">Achados *</CFormLabel>
+                    <CFormTextarea
+                      id="findings"
+                      rows={3}
+                      value={review.findings}
+                      onChange={handleReviewFieldChange('findings')}
+                      placeholder="Descreva o que foi observado na imagem, à luz do resultado sugerido pela IA."
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <CFormLabel htmlFor="conclusion">Conclusão *</CFormLabel>
+                    <CFormTextarea
+                      id="conclusion"
+                      rows={3}
+                      value={review.conclusion}
+                      onChange={handleReviewFieldChange('conclusion')}
+                      placeholder="Parecer clínico final sobre o exame."
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <CFormLabel>Em relação à classificação automatizada</CFormLabel>
+
+                    <CFormCheck
+                      type="radio"
+                      name="has_discrepancy"
+                      id="discrepancy-false"
+                      label="Confirmo o resultado sugerido pela IA"
+                      checked={!review.has_discrepancy}
+                      onChange={() => setReview((prev) => ({ ...prev, has_discrepancy: false }))}
+                    />
+                    <CFormCheck
+                      type="radio"
+                      name="has_discrepancy"
+                      id="discrepancy-true"
+                      label="Identifiquei divergência em relação ao resultado da IA"
+                      checked={review.has_discrepancy}
+                      onChange={() => setReview((prev) => ({ ...prev, has_discrepancy: true }))}
+                    />
+                  </div>
+
+                  <CButton type="submit" color="warning" disabled={isReviewing}>
+                    {isReviewing ? (
+                      <>
+                        <CSpinner size="sm" className="me-2" />
+                        Registrando revisão...
+                      </>
+                    ) : (
+                      'Concluir revisão'
+                    )}
+                  </CButton>
+                </CForm>
+              </CCardBody>
+            </CCard>
+          )}
+
+          {!canReview && (form.findings || form.conclusion) && (
+            <CCard className="mb-4">
+              <CCardHeader>
+                <strong>Resultado da Revisão Médica</strong>
+              </CCardHeader>
+
+              <CCardBody>
+                <div className="mb-3">
+                  <div className="text-body-secondary small">Achados</div>
+                  <div>{form.findings || '-'}</div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="text-body-secondary small">Conclusão</div>
+                  <div>{form.conclusion || '-'}</div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="text-body-secondary small">Desfecho</div>
+                  <CBadge
+                    color={form.status_name === 'completed_with_divergence' ? 'dark' : 'success'}
+                  >
+                    {form.status_name === 'completed_with_divergence'
+                      ? 'Concluído com divergência'
+                      : 'Concluído'}
+                  </CBadge>
+                </div>
+
+                <div>
+                  <div className="text-body-secondary small">Revisado por</div>
+                  <div>
+                    {form.reviewed_by_name || '-'}
+                    {form.reviewed_at
+                      ? ` em ${new Date(form.reviewed_at).toLocaleString('pt-BR')}`
+                      : ''}
+                  </div>
+                </div>
+              </CCardBody>
+            </CCard>
+          )}
 
           <CCard>
             <CCardHeader>

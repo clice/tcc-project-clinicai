@@ -6,8 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CAlert, CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CAlert, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -77,12 +76,12 @@ const RolesList = () => {
             Gerencie os perfis de acesso usados no sistema.
           </p>
         </div>
-
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="primary" size="lg" as={Link} to="/roles/create">
-            Cadastrar Perfil
-          </CButton>
-        </div>        
+        {/* Botão "Cadastrar Perfil" removido: os 3 perfis oficiais
+            (admin_master, doctor, clinic_staff) são um enum fechado no
+            backend e já vêm seedados — qualquer tentativa de criação
+            resultaria em duplicidade ou em um nome fora do enum. Os
+            perfis existentes continuam editáveis (nome de exibição,
+            descrição e matriz de permissões). */}
       </div>
 
       <CCard>

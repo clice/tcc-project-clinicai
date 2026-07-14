@@ -8,9 +8,11 @@ from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_doctor_permission, require_permission
+from app.modules.ai_analysis.schema import AIAnalysisResponse
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
 from app.modules.exams.service import (
+    analyze_exam,
     cancel_exam,
     create_exam,
     download_exam_file,
@@ -83,6 +85,9 @@ def list_exams_route(
     patient_id: int | None = Query(default=None),
     doctor_id: int | None = Query(default=None),
     status_id: int | None = Query(default=None),
+    ai_prediction_class: int | None = Query(
+        default=None, description="0 = normal, 1 = anormal"
+    ),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("exams:read")),
@@ -98,6 +103,7 @@ def list_exams_route(
         patient_id=patient_id,
         doctor_id=doctor_id,
         status_id=status_id,
+        ai_prediction_class=ai_prediction_class,
         include_inactive=include_inactive,
     )
 
@@ -171,12 +177,33 @@ def restore_exam_route(
     )
 
 
+@router.post("/{exam_id}/analyze", response_model=AIAnalysisResponse)
+async def analyze_exam_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("ai_analysis:create")),
+):
+    """
+    Envia o exame para análise pelo serviço de IA (RF41-48).
+
+    O exame precisa estar em 'processing' e ter um arquivo enviado. Em
+    caso de sucesso, o exame passa para 'awaiting_review'; em caso de
+    falha na comunicação com o serviço de IA, o exame é marcado como
+    'failed' (RN12 permite reenvio posterior).
+    """
+    return await analyze_exam(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.patch("/{exam_id}/review", response_model=ExamResponse)
 def review_exam_route(
     exam_id: int,
     payload: ExamMedicalReview,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:review")),
+    current_user: User = Depends(require_doctor_permission("exams:review")),
 ):
     """
     Registra a revisão médica do resultado da análise de IA.
@@ -225,5 +252,4 @@ def replace_exam_file_route(
         file=file,
         current_user=current_user,
     )
-    
     

@@ -9,13 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.modules.statuses.schema import (
-    StatusCreate,
-    StatusResponse,
-    StatusUpdate,
-)
+from app.modules.statuses.schema import StatusResponse, StatusUpdate
 from app.modules.statuses.service import (
-    create_status,
     get_status_by_id,
     list_statuses,
     update_status,
@@ -23,19 +18,6 @@ from app.modules.statuses.service import (
 
 
 router = APIRouter(prefix="/statuses", tags=["Statuses"])
-
-
-@router.post("/", response_model=StatusResponse, status_code=201)
-def create_status_route(
-    payload: StatusCreate,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
-):
-    """
-    Cria um novo status.
-    Apenas administradores devem poder criar status do sistema.
-    """
-    return create_status(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[StatusResponse])

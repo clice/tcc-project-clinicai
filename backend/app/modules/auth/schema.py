@@ -9,6 +9,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.common.schemas import StrictRequestModel
+
 
 class TokenResponse(BaseModel):
     """
@@ -19,7 +21,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class RefreshTokenRequest(BaseModel):
+class RefreshTokenRequest(StrictRequestModel):
     """
     Schema usado para solicitar um novo access token.
     """

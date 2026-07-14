@@ -9,44 +9,14 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.common.constants import StatusName, StatusScope
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_text,
     normalize_required_text,
 )
 
 
-class StatusBase(BaseModel):
-    """
-    Schema base com os campos compartilhados entre criação e resposta.
-    """
-
-    name: StatusName
-    display_name: str = Field(..., min_length=2, max_length=100)
-    applies_to: StatusScope
-    description: str | None = Field(default=None, max_length=255)
-
-    @field_validator("display_name")
-    @classmethod
-    def normalize_display_name(cls, value: str) -> str:
-        return normalize_required_text(value, "Nome de exibição é obrigatório.")
-
-    @field_validator("description")
-    @classmethod
-    def normalize_description(cls, value: str | None) -> str | None:
-        return normalize_optional_text(value)
-
-
-class StatusCreate(StatusBase):
-    """
-    Schema usado para criação de statuses.
-    Todos os campos principais são obrigatórios.
-    """
-
-    pass
-
-
-class StatusUpdate(BaseModel):
+class StatusUpdate(StrictRequestModel):
     """
     Schema usado para atualização de status.
     Todos os campos são opcionais para permitir update parcial com PATCH.
@@ -56,9 +26,8 @@ class StatusUpdate(BaseModel):
     get_current_user, que verifica status.name == "active" diretamente)
     depende desses dois campos para identificar um status específico.
     Alterá-los numa linha já existente reatribuiria silenciosamente o
-    significado daquele status para todo mundo que o usa, sem nenhuma
-    trava que impeça isso além da checagem de duplicidade. 'name' e
-    'applies_to' só são definidos na criação do status.
+    significado daquele status para todo mundo que o usa. Esses campos são
+    definidos pelo bootstrap ou por migration versionada.
     """
 
     display_name: str | None = Field(default=None, min_length=2, max_length=100)
@@ -94,4 +63,3 @@ class StatusResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
-    

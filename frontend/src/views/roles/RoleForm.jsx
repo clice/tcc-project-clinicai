@@ -2,14 +2,13 @@
  * Formulário do módulo de Roles.
  *
  * Usado para:
- * - criar perfil;
  * - visualizar perfil;
  * - editar perfil;
  * - vincular permissões ao perfil usando checkboxes.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   CButton,
   CButtonGroup,
@@ -21,7 +20,6 @@ import {
   CFormCheck,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CFormTextarea,
   CRow,
 } from '@coreui/react'
@@ -32,7 +30,7 @@ import { roleService } from 'src/services/roleService'
 import { permissionService } from 'src/services/permissionService'
 import { rolePermissionService } from 'src/services/rolePermissionService'
 
-import { moduleLabels, roleLabels, roleOptions } from 'src/utils/constants'
+import { moduleLabels } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 
 const emptyRole = {
@@ -41,9 +39,8 @@ const emptyRole = {
   description: '',
 }
 
-const RoleForm = ({ mode = 'create' }) => {
+const RoleForm = ({ mode = 'view' }) => {
   const { id } = useParams()
-  const navigate = useNavigate()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyRole)
@@ -52,14 +49,19 @@ const RoleForm = ({ mode = 'create' }) => {
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
-  const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
 
+  // O admin_master recebe bypass total na autorização do backend
+  // (require_admin/hasPermission) — desmarcar permissões dele aqui
+  // altera o banco, mas não reduz o acesso efetivo. Deixar essa matriz
+  // editável sugeria uma consequência que não existe de verdade.
+  const isAdminMasterRole = form.name === 'admin_master'
+  const isPermissionMatrixReadOnly = isReadOnly || isAdminMasterRole
+
   const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Perfil'
     if (isEditMode) return 'Editar Perfil'
     return 'Detalhes do Perfil'
-  }, [isCreateMode, isEditMode])
+  }, [isEditMode])
 
   /**
    * Agrupa permissões pelo módulo.
@@ -89,18 +91,16 @@ const RoleForm = ({ mode = 'create' }) => {
         const permissionsData = await permissionService.list()
         setPermissions(Array.isArray(permissionsData) ? permissionsData : [])
 
-        if (!isCreateMode) {
-          const roleData = await roleService.getById(id)
-          const linkedPermissions = await rolePermissionService.listByRole(id)
+        const roleData = await roleService.getById(id)
+        const linkedPermissions = await rolePermissionService.listByRole(id)
 
-          setForm({
-            name: roleData.name ?? '',
-            display_name: roleData.display_name ?? '',
-            description: roleData.description ?? '',
-          })
+        setForm({
+          name: roleData.name ?? '',
+          display_name: roleData.display_name ?? '',
+          description: roleData.description ?? '',
+        })
 
-          setSelectedPermissionIds(linkedPermissions.map((item) => Number(item.permission_id)))
-        }
+        setSelectedPermissionIds(linkedPermissions.map((item) => Number(item.permission_id)))
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar dados do perfil.'))
       } finally {
@@ -109,7 +109,7 @@ const RoleForm = ({ mode = 'create' }) => {
     }
 
     void loadPageData()
-  }, [id, isCreateMode])
+  }, [id, showError, startLoading, stopLoading])
 
   /**
    * Atualiza um campo do formulário.
@@ -137,29 +137,17 @@ const RoleForm = ({ mode = 'create' }) => {
       return [...current, numericId]
     })
   }
-  
-  /**
-   * Monta o payload enviado para a API de roles.
-   * 'name' só é enviado na criação — na edição é imutável (o backend
-   * nem aceita mais esse campo em RoleUpdate).
-   */
-  const buildPayload = () => {
-    if (isEditMode) {
-      return {
-        display_name: form.display_name.trim(),
-        description: form.description.trim() || null,
-      }
-    }
 
-    return {
-      name: form.name,
-      display_name: form.display_name.trim(),
-      description: form.description.trim() || null,
-    }
-  }
+  /**
+   * Monta o payload editável enviado para a API de roles.
+   * O nome técnico pertence ao catálogo fechado e não é enviado.
+   */
+  const buildPayload = () => ({
+    display_name: form.display_name.trim(),
+    description: form.description.trim() || null,
+  })
 
   const validateForm = () => {
-    if (!form.name) return 'Selecione o perfil.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição do perfil.'
 
     return ''
@@ -183,20 +171,13 @@ const RoleForm = ({ mode = 'create' }) => {
     }
 
     try {
-      if (isCreateMode) {
-        const createdRole = await roleService.create(buildPayload())
-
-        await rolePermissionService.syncRolePermissions(createdRole.id, selectedPermissionIds)
-
-        navigate(`/roles/${createdRole.id}`)
-        return
-      }
-
       if (isEditMode) {
         await roleService.update(id, buildPayload())
         await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
 
-        showSuccess('Perfil atualizado com sucesso.')
+        showSuccess(
+          'Perfil atualizado com sucesso. Usuários conectados terão os acessos sincronizados ao retornar à aba ou em até 60 segundos.',
+        )
       }
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar o perfil.'))
@@ -233,24 +214,10 @@ const RoleForm = ({ mode = 'create' }) => {
             <CRow className="g-3">
               <CCol md={6}>
                 <CFormLabel>Perfil</CFormLabel>
-                <CFormSelect
-                  value={form.name}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(event) => updateField('name', event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {roleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-                {isEditMode && (
-                  <div className="form-text">
-                    O perfil não pode ser alterado após a criação.
-                  </div>
-                )}
+                <CFormInput value={form.name} disabled />
+                <div className="form-text">
+                  Nome técnico definido pelo catálogo oficial do sistema.
+                </div>
               </CCol>
 
               <CCol md={6}>
@@ -280,6 +247,14 @@ const RoleForm = ({ mode = 'create' }) => {
               <CCol xs={12}>
                 <h2 className="h5 mb-3">Permissões do Perfil</h2>
 
+                {isAdminMasterRole && (
+                  <div className="alert alert-info small mb-3">
+                    Acesso total fixo — o Administrador Master tem acesso irrestrito ao sistema por
+                    padrão. Esta matriz é somente leitura porque desmarcar itens aqui não reduz o
+                    acesso efetivo desse perfil.
+                  </div>
+                )}
+
                 <CRow className="g-3">
                   {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => (
                     <CCol md={6} key={moduleName}>
@@ -295,7 +270,7 @@ const RoleForm = ({ mode = 'create' }) => {
                                 id={`permission-${permission.id}`}
                                 label={permission.display_name || permission.name}
                                 checked={selectedPermissionIds.includes(Number(permission.id))}
-                                disabled={isReadOnly}
+                                disabled={isPermissionMatrixReadOnly}
                                 onChange={() => togglePermission(permission.id)}
                               />
 

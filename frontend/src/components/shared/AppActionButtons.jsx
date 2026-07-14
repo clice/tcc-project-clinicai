@@ -45,14 +45,14 @@ const AppActionButtons = ({
   onInactivate,
   onActivate,
 
-  canView = true,
-  canEdit = true,
-  canUpload = true,
+  canView = false,
+  canEdit = false,
+  canUpload = false,
   canDownload = false,
   canCancel = false,
   canRestore = false,
-  canInactivate = true,
-  canActivate = true,
+  canInactivate = false,
+  canActivate = false,
 }) => {
   const [confirmVisible, setConfirmVisible] = useState(false)
   const [examConfirmVisible, setExamConfirmVisible] = useState(false)
@@ -130,7 +130,13 @@ const AppActionButtons = ({
     <>
       <CButtonGroup className="d-flex gap-2" size="sm" role="group">
         {showView && (
-          <CButton color="secondary" className="rounded-pill" as={Link} to={viewTo} title="Visualizar">
+          <CButton
+            color="secondary"
+            className="rounded-pill"
+            as={Link}
+            to={viewTo}
+            title="Visualizar"
+          >
             <CIcon icon={cilUser} />
           </CButton>
         )}
@@ -142,37 +148,73 @@ const AppActionButtons = ({
         )}
 
         {showUpload && !uploadTo && (
-          <CButton color="info" className="rounded-pill text-white" type="button" title="Upload" onClick={onUpload}>
+          <CButton
+            color="info"
+            className="rounded-pill text-white"
+            type="button"
+            title="Upload"
+            onClick={onUpload}
+          >
             <CIcon icon={cilCloudUpload} />
           </CButton>
         )}
 
         {showDownload && (
-          <CButton color="info" className="rounded-pill text-white" type="button" title="Download" onClick={onDownload}>
+          <CButton
+            color="info"
+            className="rounded-pill text-white"
+            type="button"
+            title="Download"
+            onClick={onDownload}
+          >
             <CIcon icon={cilCloudDownload} />
           </CButton>
         )}
 
         {showInactivate && (
-          <CButton color="warning" className="rounded-pill" type="button" title="Inativar" onClick={() => setConfirmVisible(true)}>
+          <CButton
+            color="warning"
+            className="rounded-pill"
+            type="button"
+            title="Inativar"
+            onClick={() => setConfirmVisible(true)}
+          >
             <CIcon icon={cilFolderOpen} />
           </CButton>
         )}
 
         {showActivate && (
-          <CButton color="success" className="rounded-pill" type="button" title="Ativar" onClick={() => setConfirmVisible(true)}>
+          <CButton
+            color="success"
+            className="rounded-pill"
+            type="button"
+            title="Ativar"
+            onClick={() => setConfirmVisible(true)}
+          >
             <CIcon icon={cilReload} />
           </CButton>
         )}
 
         {showCancel && (
-          <CButton color="danger" className="rounded-pill text-white" type="button" title="Cancelar exame" onClick={() => openExamConfirm('cancel')}>
+          <CButton
+            color="danger"
+            className="rounded-pill text-white"
+            type="button"
+            title="Cancelar exame"
+            onClick={() => openExamConfirm('cancel')}
+          >
             <CIcon icon={cilXCircle} />
           </CButton>
         )}
 
         {showRestore && (
-          <CButton color="success" className="rounded-pill" type="button" title="Retomar exame" onClick={() => openExamConfirm('restore')}>
+          <CButton
+            color="success"
+            className="rounded-pill"
+            type="button"
+            title="Retomar exame"
+            onClick={() => openExamConfirm('restore')}
+          >
             <CIcon icon={cilReload} />
           </CButton>
         )}
@@ -189,21 +231,32 @@ const AppActionButtons = ({
           <CModalBody>
             {actionType === 'inactivate' ? (
               <>
-                Você deseja inativar <strong>{itemLabel}</strong>? O registro será movido para a aba de inativos.
+                Você deseja inativar <strong>{itemLabel}</strong>? O registro será movido para a aba
+                de inativos.
               </>
             ) : (
               <>
-                Você deseja ativar <strong>{itemLabel}</strong>? O registro voltará para a aba de ativos.
+                Você deseja ativar <strong>{itemLabel}</strong>? O registro voltará para a aba de
+                ativos.
               </>
             )}
           </CModalBody>
 
           <CModalFooter>
-            <CButton color="secondary" variant="outline" onClick={handleCloseModal} disabled={isSubmitting}>
+            <CButton
+              color="secondary"
+              variant="outline"
+              onClick={handleCloseModal}
+              disabled={isSubmitting}
+            >
               Cancelar
             </CButton>
 
-            <CButton color={actionType === 'inactivate' ? 'warning' : 'success'} onClick={handleConfirm} disabled={isSubmitting}>
+            <CButton
+              color={actionType === 'inactivate' ? 'warning' : 'success'}
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <CSpinner size="sm" className="me-2" />
@@ -230,17 +283,24 @@ const AppActionButtons = ({
           <CModalBody>
             {examActionType === 'cancel' ? (
               <>
-                Você deseja cancelar <strong>{itemLabel}</strong>? O exame será movido para cancelados.
+                Você deseja cancelar <strong>{itemLabel}</strong>? O exame será movido para
+                cancelados.
               </>
             ) : (
               <>
-                Você deseja retomar <strong>{itemLabel}</strong>? O exame voltará para o fluxo de atendimento.
+                Você deseja retomar <strong>{itemLabel}</strong>? O exame voltará para o fluxo de
+                atendimento.
               </>
             )}
           </CModalBody>
 
           <CModalFooter>
-            <CButton color="secondary" variant="outline" onClick={handleCloseExamModal} disabled={isSubmitting}>
+            <CButton
+              color="secondary"
+              variant="outline"
+              onClick={handleCloseExamModal}
+              disabled={isSubmitting}
+            >
               Fechar
             </CButton>
 

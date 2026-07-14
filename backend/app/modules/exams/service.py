@@ -23,6 +23,10 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
+from app.modules.ai_analysis.client import AIServiceError, request_prediction
+from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analysis.schema import AIAnalysisCreate
+from app.modules.ai_analysis.service import create_ai_analysis
 from app.modules.audit_logs.service import create_audit_log, list_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -53,10 +57,26 @@ ALLOWED_EXAM_EXTENSIONS = {
 }
 
 
-def build_exam_response(exam: Exam) -> dict:
+def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
     """
     Monta a resposta incluindo dados relacionados.
+
+    Os campos de predição da IA (ai_prediction_label/ai_prediction_class)
+    só são incluídos se current_user for informado e não for
+    Funcionário da Clínica — esse perfil não tem acesso a resultados
+    diagnósticos (Art. 34 do CFM), mesmo agregados na listagem de exames.
+    Quando current_user não é informado (uso interno), os campos vêm
+    preenchidos por padrão.
     """
+    role_name = current_user.role.name if current_user and current_user.role else None
+    can_see_ai_prediction = role_name != RoleName.CLINIC_STAFF.value
+
+    ai_prediction_label = None
+    ai_prediction_class = None
+    if can_see_ai_prediction and exam.ai_analysis:
+        ai_prediction_label = exam.ai_analysis.prediction_label
+        ai_prediction_class = exam.ai_analysis.prediction_class
+
     return {
         "id": exam.id,
         "clinic_id": exam.clinic_id,
@@ -81,6 +101,8 @@ def build_exam_response(exam: Exam) -> dict:
         "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
+        "ai_prediction_label": ai_prediction_label,
+        "ai_prediction_class": ai_prediction_class,
         "created_at": exam.created_at,
         "updated_at": exam.updated_at,
     }
@@ -510,7 +532,7 @@ def get_exam_by_id(
         exam=exam,
     )
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def list_exams(
@@ -521,6 +543,7 @@ def list_exams(
     patient_id: int | None = None,
     doctor_id: int | None = None,
     status_id: int | None = None,
+    ai_prediction_class: int | None = None,
     include_inactive: bool = True,
 ) -> list[dict]:
     """
@@ -533,6 +556,7 @@ def list_exams(
             joinedload(Exam.patient),
             joinedload(Exam.doctor),
             joinedload(Exam.status),
+            joinedload(Exam.ai_analysis),
         )
         .join(Status, Exam.status_id == Status.id)
     )
@@ -582,6 +606,16 @@ def list_exams(
     if status_id:
         query = query.filter(Exam.status_id == status_id)
 
+    if ai_prediction_class is not None:
+        if role_name == RoleName.CLINIC_STAFF.value:
+            raise HTTPException(
+                status_code=403,
+                detail="Funcionário da clínica não tem permissão para filtrar por resultado da IA.",
+            )
+        query = query.join(AIAnalysis, AIAnalysis.exam_id == Exam.id).filter(
+            AIAnalysis.prediction_class == ai_prediction_class
+        )
+
     if search:
         term = f"%{search.strip()}%"
         query = query.filter(
@@ -603,7 +637,7 @@ def list_exams(
 
     exams = query.order_by(Exam.created_at.desc()).all()
 
-    return [build_exam_response(exam) for exam in exams]
+    return [build_exam_response(exam, current_user=current_user) for exam in exams]
 
 
 def create_exam(
@@ -709,7 +743,7 @@ def create_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def update_exam(
@@ -737,7 +771,7 @@ def update_exam(
     update_data = model_dump_update(payload)
 
     if not update_data:
-        return build_exam_response(exam)
+        return build_exam_response(exam, current_user=current_user)
 
     validate_user_can_access_clinic(
         current_user=current_user,
@@ -779,7 +813,7 @@ def update_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def cancel_exam(
@@ -844,7 +878,7 @@ def cancel_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def restore_exam(
@@ -913,7 +947,7 @@ def restore_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def upload_exam_file(
@@ -1040,7 +1074,7 @@ def upload_exam_file(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def download_exam_file(
@@ -1103,6 +1137,11 @@ def mark_exam_ai_failed(
 ) -> dict:
     """
     Marca exame como FAILED quando a análise da IA falhar.
+
+    Sem current_user: esta função é acionada pelo próprio fluxo de
+    integração com o módulo de IA (falha de inferência), não por uma ação
+    direta de um usuário autenticado — por isso o log de auditoria é
+    registrado com user_id=None, identificando uma ação do sistema.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -1118,13 +1157,41 @@ def mark_exam_ai_failed(
         applies_to=StatusScope.EXAM.value,
     )
 
+    old_data = {
+        "status_id": exam.status_id,
+        "status_name": exam.status.name if exam.status else None,
+    }
+
     exam.status_id = failed_status.id
+
+    create_audit_log(
+        db=db,
+        user_id=None,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.AI_ANALYSIS_FAILED,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description=(
+            f"Falha na análise de IA: {error_message}"
+            if error_message
+            else "Falha na análise de IA."
+        ),
+        old_data=old_data,
+        new_data={
+            "status_id": failed_status.id,
+            "status_name": StatusName.FAILED.value,
+        },
+    )
 
     db.commit()
     db.refresh(exam)
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
+    # Sem current_user aqui (função de sistema, sem usuário autenticado no
+    # fluxo) — na prática é irrelevante: um exame que acabou de falhar
+    # nunca tem análise de IA associada, então ai_prediction_* já viria
+    # None de qualquer forma.
     return build_exam_response(exam)
 
 
@@ -1254,7 +1321,7 @@ def review_exam(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
 
 
 def replace_exam_file(
@@ -1351,4 +1418,99 @@ def replace_exam_file(
 
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
 
-    return build_exam_response(exam)
+    return build_exam_response(exam, current_user=current_user)
+
+
+async def analyze_exam(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """
+    Dispara a análise de IA de um exame (RF41-48): lê o arquivo do disco,
+    chama o serviço de IA (container separado, via `ai_analysis.client`)
+    e, conforme o resultado:
+    - sucesso: cria o registro de AIAnalysis e move o exame para
+      'Aguardando Revisão Médica' (feito por `create_ai_analysis`);
+    - falha: marca o exame como 'Falhou', com log de auditoria (feito
+      por `mark_exam_ai_failed`).
+
+    Só aceita exames em 'Processando' (RN21) — evita analisar duas vezes
+    o mesmo exame ou analisar um exame cancelado/já concluído.
+    """
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+
+    ensure_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+        detail="Você não tem permissão para analisar este exame.",
+    )
+
+    if not exam.status or exam.status.name != StatusName.PROCESSING.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Apenas exames em processamento podem ser enviados para análise de IA.",
+        )
+
+    if not exam.file_path:
+        raise HTTPException(
+            status_code=400,
+            detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
+        )
+
+    file_path = resolve_safe_exam_file_path(exam.file_path)
+
+    if not file_path.exists():
+        mark_exam_ai_failed(
+            db=db,
+            exam_id=exam_id,
+            error_message="Arquivo do exame não encontrado no disco.",
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Arquivo do exame não encontrado no disco. Exame marcado como falha.",
+        )
+
+    image_bytes = file_path.read_bytes()
+    started_at = datetime.now(timezone.utc)
+
+    try:
+        prediction = await request_prediction(
+            image_bytes=image_bytes,
+            filename=exam.file_name or file_path.name,
+            content_type=exam.file_mime_type or "application/octet-stream",
+        )
+    except AIServiceError as exc:
+        mark_exam_ai_failed(db=db, exam_id=exam_id, error_message=str(exc))
+        raise HTTPException(
+            status_code=502,
+            detail=f"Falha ao processar exame no serviço de IA: {exc}",
+        ) from exc
+
+    processing_time_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
+
+    label = prediction.get("label")
+
+    # O serviço de IA devolve a classe como texto ("normal"/"abnormal"),
+    # não como índice numérico — esse mapeamento precisa continuar batendo
+    # com `CLASS_LABELS` em `ai/app/config.py` (0 = normal, 1 = abnormal).
+    if label == "abnormal":
+        prediction_class = 1
+    elif label == "normal":
+        prediction_class = 0
+    else:
+        prediction_class = None
+
+    payload = AIAnalysisCreate(
+        exam_id=exam_id,
+        prediction_label=label or "desconhecido",
+        prediction_class=prediction_class,
+        confidence=prediction.get("confidence", 0.0),
+        model_name=prediction.get("model_name", "desconhecido"),
+        model_version=prediction.get("model_version", "0.0.0"),
+        gradcam_path=prediction.get("gradcam_path"),
+        processing_time_ms=processing_time_ms,
+        raw_response=str(prediction),
+    )
+
+    return create_ai_analysis(db=db, payload=payload, current_user=current_user)

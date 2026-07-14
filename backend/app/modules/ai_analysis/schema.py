@@ -6,10 +6,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import normalize_optional_text, normalize_required_text
 
 
-class AIAnalysisBase(BaseModel):
+class AIAnalysisBase(StrictRequestModel):
     """
     Campos compartilhados entre criação e resposta.
     """
@@ -48,7 +49,7 @@ class AIAnalysisCreate(AIAnalysisBase):
     pass
 
 
-class AIAnalysisUpdate(BaseModel):
+class AIAnalysisUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de análise de IA.
     """
@@ -111,3 +112,61 @@ class AIAnalysisResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class AIModelUsage(BaseModel):
+    """
+    Quantidade de análises realizadas por um modelo/versão específico.
+    """
+
+    model_name: str
+    model_version: str
+    domain: str | None = None
+    count: int
+
+
+class AIRecentFailure(BaseModel):
+    """
+    Uma falha recente de análise de IA (vinda do log de auditoria).
+    """
+
+    exam_id: int | None = None
+    description: str | None = None
+    created_at: datetime
+
+
+class AIDailyVolume(BaseModel):
+    """
+    Volume de análises de IA em um dia específico (últimos 30 dias).
+    """
+
+    date: str
+    count: int
+
+
+class AIMetricsResponse(BaseModel):
+    """
+    Métricas agregadas do módulo de IA — exclusivas do Administrador
+    Master (não é exposto a nenhum outro perfil). Reúne informações de
+    governança/infraestrutura do modelo, distintas dos indicadores
+    operacionais já disponíveis a todos os perfis no Dashboard (RF54-56).
+    """
+
+    total_analyses: int
+    by_model: list[AIModelUsage]
+
+    confidence_mean: float | None = None
+    confidence_min: float | None = None
+    confidence_max: float | None = None
+    confidence_distribution: dict[str, int]
+
+    processing_time_mean_ms: float | None = None
+    processing_time_min_ms: int | None = None
+    processing_time_max_ms: int | None = None
+
+    divergence_rate: float
+
+    failure_count: int
+    recent_failures: list[AIRecentFailure]
+
+    analyses_last_30_days: list[AIDailyVolume]

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_text,
     normalize_phone,
@@ -19,7 +20,7 @@ from app.common.validators import (
 )
 
 
-class ClinicBase(BaseModel):
+class ClinicBase(StrictRequestModel):
     """
     Campos compartilhados entre criação e resposta.
     """
@@ -93,7 +94,7 @@ class ClinicCreate(ClinicBase):
     pass
 
 
-class ClinicUpdate(BaseModel):
+class ClinicUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de clínica.
     Todos os campos são opcionais porque o endpoint usa PATCH.

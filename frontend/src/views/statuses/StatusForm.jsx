@@ -2,13 +2,12 @@
  * Formulário do módulo de Status.
  *
  * Usado para:
- * - criar status;
  * - visualizar status;
  * - editar status.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   CButton,
   CButtonGroup,
@@ -19,7 +18,6 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CRow,
 } from '@coreui/react'
 
@@ -27,7 +25,6 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { statusService } from 'src/services/statusService'
 
-import { statusNameOptions, statusScopeOptions } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 
 const emptyStatus = {
@@ -37,30 +34,22 @@ const emptyStatus = {
   description: '',
 }
 
-const StatusForm = ({ mode = 'create' }) => {
+const StatusForm = ({ mode = 'view' }) => {
   const { id } = useParams()
-  const navigate = useNavigate()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyStatus)
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
-  const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
 
   const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Status'
     if (isEditMode) return 'Editar Status'
     return 'Detalhes do Status'
-  }, [isCreateMode, isEditMode])
+  }, [isEditMode])
 
   useEffect(() => {
-    if (isCreateMode) {
-      stopLoading()
-      return
-    }
-
     const loadStatus = async () => {
       try {
         startLoading()
@@ -81,8 +70,8 @@ const StatusForm = ({ mode = 'create' }) => {
       }
     }
 
-    loadStatus()
-  }, [id, isCreateMode])
+    void loadStatus()
+  }, [id, showError, startLoading, stopLoading])
 
   /**
    * Atualiza um campo do formulário.
@@ -95,33 +84,19 @@ const StatusForm = ({ mode = 'create' }) => {
   }
 
   /**
-   * Monta o payload enviado para a API.
-   * name e applies_to só são enviados na criação — são imutáveis na
-   * edição (o backend nem aceita mais esses campos em StatusUpdate).
+   * Monta o payload editável enviado para a API.
+   * Nome técnico e escopo pertencem ao catálogo fechado e não são enviados.
    */
-  const buildPayload = () => {
-    if (isEditMode) {
-      return {
-        display_name: form.display_name.trim(),
-        description: form.description.trim() || null,
-      }
-    }
-
-    return {
-      name: form.name,
-      display_name: form.display_name.trim(),
-      applies_to: form.applies_to,
-      description: form.description.trim() || null,
-    }
-  }
+  const buildPayload = () => ({
+    display_name: form.display_name.trim(),
+    description: form.description.trim() || null,
+  })
 
   /**
    * Valida os campos do formulário antes de enviar para a API.
    */
   const validateForm = () => {
-    if (!form.name) return 'Selecione o nome técnico do status.'
     if (!form.display_name.trim()) return 'Informe o nome de exibição.'
-    if (!form.applies_to) return 'Selecione onde esse status será aplicado.'
 
     return ''
   }
@@ -144,25 +119,12 @@ const StatusForm = ({ mode = 'create' }) => {
     try {
       setIsSaving(true)
 
-      if (isCreateMode) {
-        const created = await statusService.create(buildPayload())
-
-        if (created?.id) {
-          navigate(`/statuses/${created.id}/edit`)
-          showSuccess('Status cadastrado com sucesso.')
-          return
-        }
-
-        navigate('/statuses')
-        return
-      }
-
       if (isEditMode) {
         await statusService.update(id, buildPayload())
         showSuccess('Status atualizado com sucesso.')
       }
     } catch (err) {
-      showError(getErrorMessage(err, 'Erro ao salvar usuário.'))
+      showError(getErrorMessage(err, 'Erro ao salvar status.'))
     } finally {
       setIsSaving(false)
     }
@@ -174,9 +136,7 @@ const StatusForm = ({ mode = 'create' }) => {
         <div>
           <div className="text-body-secondary">Administração</div>
           <h1 className="h3 mb-0">{title}</h1>
-          <p className="text-body-secondary mb-0">
-            Status centralizados por entidade do sistema.
-          </p>
+          <p className="text-body-secondary mb-0">Status centralizados por entidade do sistema.</p>
         </div>
 
         <div className="d-flex justify-content-center mt-4">
@@ -196,19 +156,7 @@ const StatusForm = ({ mode = 'create' }) => {
             <CRow className="g-3">
               <CCol md={4}>
                 <CFormLabel>Nome Técnico</CFormLabel>
-                <CFormSelect
-                  value={form.name}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(e) => updateField('name', e.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {statusNameOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
+                <CFormInput value={form.name} disabled />
               </CCol>
 
               <CCol md={4}>
@@ -224,24 +172,10 @@ const StatusForm = ({ mode = 'create' }) => {
 
               <CCol md={4}>
                 <CFormLabel>Aplicado em</CFormLabel>
-                <CFormSelect
-                  value={form.applies_to}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(e) => updateField('applies_to', e.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {statusScopeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-                {isEditMode && (
-                  <div className="form-text">
-                    Nome técnico e escopo não podem ser alterados após a criação.
-                  </div>
-                )}
+                <CFormInput value={form.applies_to} disabled />
+                <div className="form-text">
+                  Nome técnico e escopo definidos pelo catálogo oficial do sistema.
+                </div>
               </CCol>
 
               <CCol md={12}>

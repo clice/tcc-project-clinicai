@@ -9,13 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin
-from app.modules.roles.schema import (
-    RoleCreate,
-    RoleResponse,
-    RoleUpdate,
-)
+from app.modules.roles.schema import RoleResponse, RoleUpdate
 from app.modules.roles.service import (
-    create_role,
     get_role_by_id,
     list_roles,
     update_role,
@@ -23,19 +18,6 @@ from app.modules.roles.service import (
 
 
 router = APIRouter(prefix="/roles", tags=["Roles"])
-
-
-@router.post("/", response_model=RoleResponse, status_code=201)
-def create_role_route(
-    payload: RoleCreate,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
-):
-    """
-    Cria um novo perfil de acesso.
-    Apenas administradores devem poder criar perfis do sistema.
-    """
-    return create_role(db=db, payload=payload, current_user=current_user)
 
 
 @router.get("/", response_model=list[RoleResponse])

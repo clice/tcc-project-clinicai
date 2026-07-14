@@ -24,14 +24,6 @@ export const statusService = {
   },
 
   /**
-   * Cria um novo status.
-   */
-  create: async (payload) => {
-    const response = await api.post('/statuses/', payload)
-    return response.data
-  },
-
-  /**
    * Atualiza parcialmente um status existente.
    */
   update: async (id, payload) => {

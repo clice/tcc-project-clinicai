@@ -9,8 +9,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.common.schemas import StrictRequestModel
 
-class RolePermissionBase(BaseModel):
+
+class RolePermissionBase(StrictRequestModel):
     """
     Schema base com os campos compartilhados.
     """
@@ -27,7 +29,7 @@ class RolePermissionCreate(RolePermissionBase):
     pass
 
 
-class RolePermissionUpdate(BaseModel):
+class RolePermissionUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial do vínculo.
     Embora esse tipo de vínculo normalmente seja removido e recriado,
@@ -36,6 +38,16 @@ class RolePermissionUpdate(BaseModel):
 
     role_id: int | None = Field(default=None, gt=0)
     permission_id: int | None = Field(default=None, gt=0)
+
+
+class RolePermissionSyncRequest(StrictRequestModel):
+    """
+    Schema usado para sincronizar, de uma vez só, todas as permissões de
+    uma role (substitui o padrão anterior do frontend de múltiplos
+    POST/DELETE sem transação).
+    """
+
+    permission_ids: list[int] = Field(default_factory=list)
 
 
 class RolePermissionResponse(BaseModel):

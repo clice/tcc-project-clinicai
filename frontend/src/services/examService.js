@@ -49,6 +49,8 @@ export const examService = {
         patient_id: params.patientId || undefined,
         doctor_id: params.doctorId || undefined,
         status_id: params.statusId || undefined,
+        ai_prediction_class:
+          params.aiPredictionClass === undefined ? undefined : params.aiPredictionClass,
         include_inactive: params.includeInactive ?? true,
       },
     })
@@ -108,6 +110,20 @@ export const examService = {
    */
   restore: async (id) => {
     const response = await api.patch(`/exams/${id}/restore`)
+    return response.data
+  },
+
+  /**
+   * Registra a revisão médica do resultado da análise de IA.
+   *
+   * O exame precisa estar em 'awaiting_review'. has_discrepancy=false conclui
+   * confirmando a análise da IA (status final 'completed'); has_discrepancy=true
+   * conclui sinalizando divergência (status final 'completed_with_divergence').
+   * Em ambos os casos o exame é encerrado — não é possível reprocessar a
+   * partir daqui (RN10).
+   */
+  review: async (id, payload) => {
+    const response = await api.patch(`/exams/${id}/review`, payload)
     return response.data
   },
 

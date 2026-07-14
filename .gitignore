@@ -63,37 +63,13 @@ ai/datasets/gastrointestinal/*
 # IA - MODELOS TREINADOS
 # =====================================================
 
-ai/models/exported/*.pt
-ai/models/exported/*.pth
+ai/models/exported/**/*.pt
+ai/models/exported/**/*.pth
+ai/models/exported/**/*.joblib
+!ai/models/exported/**/.gitkeep
 
 ai/models/checkpoints/*.pt
 ai/models/checkpoints/*.pth
-
-# =====================================================
-# IA - RELATÓRIOS
-# =====================================================
-
-# GradCAM
-ai/reports/gradcam/*.jpg
-ai/reports/gradcam/*.jpeg
-ai/reports/gradcam/*.png
-
-# Métricas
-ai/reports/metrics/*.csv
-ai/reports/metrics/*.json
-
-# Figuras
-ai/reports/figures/*.png
-ai/reports/figures/*.jpg
-
-# Training outputs
-ai/reports/training/*
-
-# Mantém estrutura
-!ai/reports/gradcam/.gitkeep
-!ai/reports/metrics/.gitkeep
-!ai/reports/figures/.gitkeep
-!ai/reports/training/.gitkeep
 
 # =====================================================
 # IA - OUTPUTS EXPERIMENTAIS

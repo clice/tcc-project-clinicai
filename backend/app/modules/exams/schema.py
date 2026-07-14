@@ -6,10 +6,11 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import normalize_optional_text, normalize_required_text
 
 
-class ExamBase(BaseModel):
+class ExamBase(StrictRequestModel):
     """
     Campos compartilhados entre criação e resposta.
     """
@@ -47,7 +48,7 @@ class ExamCreate(ExamBase):
     pass
 
 
-class ExamUpdate(BaseModel):
+class ExamUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de exame.
     """
@@ -80,7 +81,7 @@ class ExamUpdate(BaseModel):
         return normalize_optional_text(value)
 
 
-class ExamMedicalReview(BaseModel):
+class ExamMedicalReview(StrictRequestModel):
     """
     Schema usado quando o médico realiza a revisão do resultado da IA.
 
@@ -139,6 +140,13 @@ class ExamResponse(BaseModel):
     file_path: str | None = None
     file_name: str | None = None
     file_mime_type: str | None = None
+
+    # Preenchidos apenas se o exame tiver análise de IA concluída e o
+    # usuário tiver permissão de ver resultados diagnósticos (Funcionário
+    # da Clínica nunca recebe esses dois campos preenchidos — ver
+    # build_exam_response no service).
+    ai_prediction_label: str | None = None
+    ai_prediction_class: int | None = None
 
     created_at: datetime
     updated_at: datetime

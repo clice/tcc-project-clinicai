@@ -16,7 +16,7 @@ from app.common.services import (
 )
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
-from app.modules.statuses.schema import StatusCreate, StatusUpdate
+from app.modules.statuses.schema import StatusUpdate
 from app.modules.audit_logs.service import create_audit_log
 
 
@@ -70,30 +70,6 @@ def get_status_by_name_and_applies_to(
     return status
 
 
-def check_status_duplicate(
-    db: Session,
-    name: str,
-    applies_to: str,
-    ignore_status_id: int | None = None,
-) -> None:
-    """
-    Verifica se já existe outro status com o mesmo name e applies_to.
-    """
-    query = db.query(Status).filter(
-        Status.name == name,
-        Status.applies_to == applies_to,
-    )
-
-    if ignore_status_id is not None:
-        query = query.filter(Status.id != ignore_status_id)
-
-    if query.first():
-        raise HTTPException(
-            status_code=400,
-            detail="Já existe um status com esse nome para essa referência.",
-        )
-
-
 # ========================================
 # MAIN METHODS
 # ========================================
@@ -120,54 +96,6 @@ def list_statuses(db: Session) -> list[Status]:
         .order_by(Status.applies_to.asc(), Status.display_name.asc())
         .all()
     )
-
-
-def create_status(
-    db: Session,
-    payload: StatusCreate,
-    current_user: User,
-) -> Status:
-    """
-    Cria um novo status e registra log de auditoria.
-    """
-    check_status_duplicate(
-        db=db,
-        name=payload.name.value,
-        applies_to=payload.applies_to.value,
-    )
-
-    status = Status(
-        name=payload.name.value,
-        display_name=payload.display_name,
-        applies_to=payload.applies_to.value,
-        description=payload.description,
-    )
-
-    db.add(status)
-    db.flush()
-
-    # Adiciona log
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
-        clinic_id=current_user.clinic_id,
-        action=AuditAction.CREATE,
-        entity=AuditEntity.STATUS,
-        entity_id=status.id,
-        description="Status cadastrado.",
-        new_data={
-            "id": status.id,
-            "name": status.name,
-            "display_name": status.display_name,
-            "applies_to": status.applies_to,
-            "description": status.description,
-        },
-    )
-
-    db.commit()
-    db.refresh(status)
-
-    return status
 
 
 def update_status(

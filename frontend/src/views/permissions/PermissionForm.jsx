@@ -1,14 +1,12 @@
 /**
- * Formulário do módulo de Permission.
+ * Visualização e edição dos textos de uma permissão oficial.
  *
- * Usado para:
- * - criar permissão;
- * - visualizar permissão;
- * - editar permissão.
+ * Nome técnico, módulo e ação pertencem ao catálogo versionado e são sempre
+ * somente leitura. Novas permissões são introduzidas por código e migration.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import {
   CButton,
   CButtonGroup,
@@ -19,71 +17,51 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CRow,
 } from '@coreui/react'
 
 import { useFeedback } from 'src/hooks/useFeedback'
-
 import { permissionService } from 'src/services/permissionService'
-
-import { actionOptions, moduleOptions } from 'src/utils/constants'
+import { moduleLabels } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 
 const emptyPermission = {
+  name: '',
   module: '',
   action: '',
   display_name: '',
   description: '',
 }
 
-const splitPermissionName = (name = '') => {
-  const [module = '', action = ''] = String(name).split(':')
-  return { module, action }
-}
-
-const PermissionForm = ({ mode = 'create' }) => {
+const PermissionForm = ({ mode = 'view' }) => {
   const { id } = useParams()
-  const navigate = useNavigate()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyPermission)
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
-  const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
-
-  const permissionName = useMemo(() => {
-    if (!form.module || !form.action) return ''
-    return `${form.module}:${form.action}`
-  }, [form.module, form.action])
-
-  const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Permissão'
-    if (isEditMode) return 'Editar Permissão'
-    return 'Detalhes da Permissão'
-  }, [isCreateMode, isEditMode])
+  const title = useMemo(
+    () => (isEditMode ? 'Editar Permissão' : 'Detalhes da Permissão'),
+    [isEditMode],
+  )
 
   useEffect(() => {
-    if (isCreateMode) {
-      stopLoading()
-      return
-    }
-
     const loadPermission = async () => {
       try {
         startLoading()
         showError('')
 
-        const permissionData = await permissionService.getById(id)
-        const parsedName = splitPermissionName(permissionData.name)
+        const permission = await permissionService.getById(id)
+        const [, action = ''] = String(permission.name || '').split(':')
 
         setForm({
-          module: permissionData.module || parsedName.module || '',
-          action: parsedName.action || '',
-          display_name: permissionData.display_name ?? '',
-          description: permissionData.description ?? '',
+          name: permission.name || '',
+          module: permission.module || '',
+          action,
+          display_name: permission.display_name ?? '',
+          description: permission.description ?? '',
         })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar a permissão.'))
@@ -93,90 +71,34 @@ const PermissionForm = ({ mode = 'create' }) => {
     }
 
     void loadPermission()
-  }, [id, isCreateMode])
+  }, [id, showError, startLoading, stopLoading])
 
-  /**
-   * Atualiza um campo do formulário.
-   */
   const updateField = (field, value) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-    }))
-  }
-
-  /**
-   * Normaliza campos técnicos para o padrão usado no backend.
-   */
-  const normalizePermissionName = (value = '') => {
-    return String(value)
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, ':')
-      .replace(/\.+/g, ':')
-      .replace(/:+/g, ':')
-      .replace(/[^a-z0-9:_-]/g, '')
-  }
-
-  /**
-   * Monta o payload enviado para a API.
-   * name e module só são enviados na criação — são imutáveis na edição
-   * (o backend nem aceita mais o campo name em PermissionUpdate).
-   */
-  const buildPayload = () => {
-    if (isEditMode) {
-      return {
-        display_name: form.display_name.trim(),
-        description: form.description.trim() || null,
-      }
-    }
-
-    return {
-      name: normalizePermissionName(permissionName),
-      display_name: form.display_name.trim(),
-      description: form.description.trim() || null,
-      module: form.module.trim(),
-    }
-  }
-
-  const validateForm = () => {
-    if (!form.module) return 'Selecione o módulo da permissão.'
-    if (!form.action) return 'Selecione a ação da permissão.'
-    if (!form.display_name.trim()) return 'Informe o nome de exibição.'
-
-    return ''
+    setForm((current) => ({ ...current, [field]: value }))
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (isReadOnly) return
+    if (!isEditMode) return
 
     showError('')
     showSuccess('')
 
-    const validationError = validateForm()
-
-    if (validationError) {
-      showError(validationError)
+    if (!form.display_name.trim()) {
+      showError('Informe o nome de exibição.')
       return
     }
 
     try {
       setIsSaving(true)
-
-      if (isCreateMode) {
-        const created = await permissionService.create(buildPayload())
-        navigate(created?.id ? `/permissions/${created.id}` : '/permissions')
-        return
-      }
-
-      if (isEditMode) {
-        await permissionService.update(id, buildPayload())
-        showSuccess('Permissão atualizada com sucesso.')
-      }
+      await permissionService.update(id, {
+        display_name: form.display_name.trim(),
+        description: form.description.trim() || null,
+      })
+      showSuccess('Permissão atualizada com sucesso.')
     } catch (err) {
-      showError(getErrorMessage(err, 'Erro ao salvar a permissão.'))
+      showError(getErrorMessage(err, 'Erro ao atualizar a permissão.'))
     } finally {
       setIsSaving(false)
     }
@@ -189,7 +111,7 @@ const PermissionForm = ({ mode = 'create' }) => {
           <div className="text-body-secondary">Configurações</div>
           <h1 className="h3 mb-0">{title}</h1>
           <p className="text-body-secondary mb-0">
-            Permissões controlam o acesso às funcionalidades do sistema.
+            O catálogo técnico é versionado; apenas os textos de apresentação podem ser editados.
           </p>
         </div>
 
@@ -210,46 +132,20 @@ const PermissionForm = ({ mode = 'create' }) => {
             <CRow className="g-3">
               <CCol md={4}>
                 <CFormLabel>Módulo</CFormLabel>
-                <CFormSelect
-                  value={form.module}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(event) => updateField('module', event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {moduleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
+                <CFormInput value={moduleLabels[form.module] || form.module} disabled readOnly />
               </CCol>
 
               <CCol md={4}>
                 <CFormLabel>Ação</CFormLabel>
-                <CFormSelect
-                  value={form.action}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(event) => updateField('action', event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {actionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
+                <CFormInput value={form.action} disabled readOnly />
               </CCol>
 
               <CCol md={4}>
                 <CFormLabel>Nome técnico</CFormLabel>
-                <CFormInput value={permissionName} disabled readOnly placeholder="modulo:acao" />
-                {isEditMode && (
-                  <div className="form-text">
-                    Módulo, ação e nome técnico não podem ser alterados após a criação.
-                  </div>
-                )}
+                <CFormInput value={form.name} disabled readOnly />
+                <div className="form-text">
+                  Alterações técnicas exigem código, migration e teste de rota.
+                </div>
               </CCol>
 
               <CCol md={6}>
@@ -257,7 +153,6 @@ const PermissionForm = ({ mode = 'create' }) => {
                 <CFormInput
                   value={form.display_name}
                   disabled={isReadOnly}
-                  placeholder="Ex: Criar Usuários"
                   onChange={(event) => updateField('display_name', event.target.value)}
                   required
                 />
@@ -268,13 +163,12 @@ const PermissionForm = ({ mode = 'create' }) => {
                 <CFormInput
                   value={form.description}
                   disabled={isReadOnly}
-                  placeholder="Ex: Permite cadastrar novos usuários no sistema."
                   onChange={(event) => updateField('description', event.target.value)}
                 />
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
+            {isEditMode && (
               <CButtonGroup className="mt-4">
                 <CButton color="primary" type="submit" disabled={isSaving}>
                   {isSaving ? 'Salvando...' : 'Salvar'}

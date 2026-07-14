@@ -8,16 +8,18 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_permission
+from app.core.deps import require_admin, require_permission
 from app.modules.ai_analysis.schema import (
     AIAnalysisCreate,
     AIAnalysisResponse,
     AIAnalysisUpdate,
+    AIMetricsResponse,
 )
 from app.modules.ai_analysis.service import (
     create_ai_analysis,
     get_ai_analysis_by_exam_id,
     get_ai_analysis_by_id,
+    get_ai_metrics,
     list_ai_analysis,
     update_ai_analysis,
 )
@@ -25,6 +27,22 @@ from app.modules.users.model import User
 
 
 router = APIRouter(prefix="/ai-analysis", tags=["AI Analysis"])
+
+
+@router.get("/metrics", response_model=AIMetricsResponse)
+def get_ai_metrics_route(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """
+    Métricas agregadas do módulo de IA — exclusivas do Administrador
+    Master. Não usa `require_permission`, de propósito: mesmo que o
+    Médico tenha `ai_analysis:read` (para ver o resultado dos seus
+    próprios exames), essa rota é de governança/infraestrutura do
+    modelo, não de acompanhamento clínico, então fica restrita por
+    perfil (`require_admin`), não por permissão compartilhável.
+    """
+    return get_ai_metrics(db=db)
 
 
 @router.post("/", response_model=AIAnalysisResponse, status_code=201)
@@ -115,3 +133,4 @@ def update_ai_analysis_route(
         payload=payload,
         current_user=current_user,
     )
+    

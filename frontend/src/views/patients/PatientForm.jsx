@@ -35,13 +35,8 @@ import { clinicService } from 'src/services/clinicService'
 import { userService } from 'src/services/userService'
 
 import { getErrorMessage } from 'src/utils/errors'
-import {
-  formatCpfBR,
-  formatPhoneBR,
-  formatZipCodeBR,
-  onlyNumbers,
-} from 'src/utils/formatters'
-import { getUserRole, ROLES } from 'src/utils/permissions'
+import { formatCpfBR, formatPhoneBR, formatZipCodeBR, onlyNumbers } from 'src/utils/formatters'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const emptyPatient = {
   clinic_id: '',
@@ -84,14 +79,15 @@ const PatientForm = ({ mode = 'create' }) => {
   const isReadOnly = isViewMode || isArchiveMode
 
   const roleName = getUserRole(user)
+  const canCreateExam = hasPermission(user, PERMISSIONS.EXAMS_CREATE)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
 
   const title = useMemo(() => {
-      if (isCreateMode) return 'Cadastrar Paciente'
-      if (isEditMode) return 'Editar Paciente'
-      return 'Detalhes do Paciente'
-    }, [isCreateMode, isEditMode])
+    if (isCreateMode) return 'Cadastrar Paciente'
+    if (isEditMode) return 'Editar Paciente'
+    return 'Detalhes do Paciente'
+  }, [isCreateMode, isEditMode])
 
   const activeClinics = useMemo(() => {
     const selectedClinicId = String(form.clinic_id)
@@ -179,7 +175,7 @@ const PatientForm = ({ mode = 'create' }) => {
           clinic_id: clinicId,
           clinic_name: user?.clinic_name ?? '',
           doctor_id: isDoctor && user?.id ? String(user.id) : '',
-          doctor_name: isDoctor ? user?.name ?? '' : '',
+          doctor_name: isDoctor ? (user?.name ?? '') : '',
         })
 
         if (clinicId) {
@@ -371,24 +367,28 @@ const PatientForm = ({ mode = 'create' }) => {
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
           <h1 className="h3 mb-0">{title}</h1>
-          <p className="text-body-secondary mb-0">
-            Cadastro clínico e administrativo do paciente.
-          </p>
+          <p className="text-body-secondary mb-0">Cadastro clínico e administrativo do paciente.</p>
         </div>
 
         <div className="d-flex justify-content-center mt-4">
           <CButtonGroup>
-            {patient && (
-              <CButton color="info" size="lg" as={Link} to={`/exams/upload?patient=${id}`} className="text-white">
+            {patient && canCreateExam && (
+              <CButton
+                color="info"
+                size="lg"
+                as={Link}
+                to={`/exams/upload?patient=${id}`}
+                className="text-white"
+              >
                 Upload exame
               </CButton>
             )}
-          
+
             <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
               Voltar
             </CButton>
-        </CButtonGroup>
-        </div> 
+          </CButtonGroup>
+        </div>
       </div>
 
       <CRow className="g-4">
@@ -423,7 +423,7 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>Data nascimento</CFormLabel>
+                    <CFormLabel>Data de Nascimento</CFormLabel>
                     <CFormInput
                       type="date"
                       value={form.birth_date}
@@ -452,9 +452,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CFormInput
                       value={form.phone}
                       disabled={isReadOnly}
-                      onChange={(event) =>
-                        updateField('phone', formatPhoneBR(event.target.value))
-                      }
+                      onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                       placeholder="(88) 99999-9999"
                     />
                   </CCol>
@@ -580,7 +578,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CButton color="primary" type="submit" disabled={isSaving}>
                       {isSaving ? 'Salvando...' : 'Salvar'}
                     </CButton>
-    
+
                     <CButton color="secondary" variant="outline" as={Link} to="/patients">
                       Cancelar
                     </CButton>

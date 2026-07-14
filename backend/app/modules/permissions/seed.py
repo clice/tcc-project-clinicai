@@ -1,104 +1,58 @@
-"""
-Seed do módulo de permissions.
-
-Este arquivo cadastra apenas as permissões oficiais definidas em constants.py.
-"""
+"""Bootstrap e validação do catálogo fechado de permissões."""
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import PermissionAction, SystemModule
+from app.modules.permissions.catalog import (
+    OFFICIAL_PERMISSION_DEFINITIONS,
+    OFFICIAL_PERMISSION_NAMES,
+)
 from app.modules.permissions.model import Permission
 
 
-def build_permission_name(
-    module: SystemModule,
-    action: PermissionAction,
-) -> str:
-    return f"{module.value}:{action.value}"
+def _bootstrap_empty_catalog(db: Session) -> dict[str, Permission]:
+    """Popula o catálogo completo somente quando a tabela está vazia."""
 
-
-def get_or_create_permission(
-    db: Session,
-    module: SystemModule,
-    action: PermissionAction,
-    display_name: str,
-    description: str | None = None,
-) -> Permission:
-    name = build_permission_name(module, action)
-
-    permission = db.query(Permission).filter(Permission.name == name).first()
-
-    if permission:
-        return permission
-
-    permission = Permission(
-        name=name,
-        display_name=display_name,
-        description=description,
-        module=module.value,
-    )
-
-    db.add(permission)
+    permissions = {
+        definition.name: Permission(
+            name=definition.name,
+            display_name=definition.display_name,
+            description=definition.description,
+            module=definition.module.value,
+        )
+        for definition in OFFICIAL_PERMISSION_DEFINITIONS
+    }
+    db.add_all(permissions.values())
     db.commit()
-    db.refresh(permission)
 
-    return permission
+    for permission in permissions.values():
+        db.refresh(permission)
+
+    return permissions
 
 
 def seed_permissions(db: Session) -> dict[str, Permission]:
-    permissions_config = [
-        # Users
-        (SystemModule.USERS, PermissionAction.CREATE, "Criar Usuários", "Permite cadastrar novos usuários no sistema."),
-        (SystemModule.USERS, PermissionAction.READ, "Visualizar Usuários", "Permite visualizar usuários cadastrados."),
-        (SystemModule.USERS, PermissionAction.UPDATE, "Atualizar Usuários", "Permite editar dados de usuários."),
-        (SystemModule.USERS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Usuários", "Permite ativar, inativar ou bloquear usuários."),
-        (SystemModule.USERS, PermissionAction.READ_PROFILE, "Visualizar Próprio Perfil", "Permite visualizar os dados do próprio usuário autenticado."),
-        (SystemModule.USERS, PermissionAction.UPDATE_PROFILE, "Atualizar Próprio Perfil", "Permite editar dados do próprio usuário autenticado."),
+    """Inicializa banco vazio ou valida um catálogo existente.
 
-        # Clinics
-        (SystemModule.CLINICS, PermissionAction.CREATE, "Criar Clínicas", "Permite cadastrar novas clínicas."),
-        (SystemModule.CLINICS, PermissionAction.READ, "Visualizar Clínicas", "Permite visualizar clínicas cadastradas."),
-        (SystemModule.CLINICS, PermissionAction.UPDATE, "Atualizar Clínicas", "Permite editar dados de clínicas."),
-        (SystemModule.CLINICS, PermissionAction.CHANGE_STATUS, "Alterar Status das Clínicas", "Permite ativar, inativar ou bloquear clínicas."),
-        (SystemModule.CLINICS, PermissionAction.READ_PROFILE, "Visualizar Própria Clínica", "Permite visualizar os dados da clínica vinculada ao usuário autenticado."),
-        (SystemModule.CLINICS, PermissionAction.UPDATE_PROFILE, "Atualizar Própria Clínica", "Permite editar dados da clínica vinculada ao usuário autenticado."),
+    Uma aplicação em atualização nunca cria permissões ausentes durante o
+    startup. A ausência indica que a migration obrigatória não foi aplicada.
+    """
 
-        # Patients
-        (SystemModule.PATIENTS, PermissionAction.CREATE, "Criar Pacientes", "Permite cadastrar novos pacientes."),
-        (SystemModule.PATIENTS, PermissionAction.READ, "Visualizar Pacientes", "Permite visualizar pacientes cadastrados."),
-        (SystemModule.PATIENTS, PermissionAction.UPDATE, "Atualizar Pacientes", "Permite editar dados de pacientes."),
-        (SystemModule.PATIENTS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Pacientes", "Permite ativar ou inativar pacientes."),
+    stored_permissions = db.query(Permission).all()
 
-        # Exams
-        (SystemModule.EXAMS, PermissionAction.CREATE, "Criar Exames", "Permite cadastrar exames."),
-        (SystemModule.EXAMS, PermissionAction.READ, "Visualizar Exames", "Permite visualizar exames cadastrados."),
-        (SystemModule.EXAMS, PermissionAction.UPDATE, "Atualizar Exames", "Permite editar dados de exames."),
-        (SystemModule.EXAMS, PermissionAction.CHANGE_STATUS, "Alterar Status dos Exames", "Permite cancelar, concluir ou alterar status de exames."),
-        (SystemModule.EXAMS, PermissionAction.REVIEW, "Revisar Exames", "Permite realizar a revisão médica do resultado da análise de IA."),
-        (SystemModule.EXAMS, PermissionAction.UPLOAD, "Upload de Exames", "Permite fazer o upload dos exames."),
-        (SystemModule.EXAMS, PermissionAction.DOWNLOAD, "Baixar Exames", "Permite baixar os exames."),
+    if not stored_permissions:
+        return _bootstrap_empty_catalog(db)
 
-        # AI Analysis
-        (SystemModule.AI_ANALYSIS, PermissionAction.CREATE, "Criar Análise por IA", "Permite solicitar análise automatizada de exames por IA."),
-        (SystemModule.AI_ANALYSIS, PermissionAction.READ, "Visualizar Análise por IA", "Permite visualizar resultados de análises por IA."),
-        (SystemModule.AI_ANALYSIS, PermissionAction.UPDATE, "Atualizar Análise por IA", "Permite atualizar ou revisar análise por IA."),
-        (SystemModule.AI_ANALYSIS, PermissionAction.DOWNLOAD, "Baixar Análise por IA", "Permite baixar a análise por IA."),
+    stored_by_name = {permission.name: permission for permission in stored_permissions}
+    missing_names = sorted(OFFICIAL_PERMISSION_NAMES - stored_by_name.keys())
 
-        # Audit Logs
-        (SystemModule.AUDIT_LOGS, PermissionAction.READ, "Visualizar Logs de Auditoria", "Permite visualizar registros de auditoria do sistema."),
-    ]
-
-    created_permissions: dict[str, Permission] = {}
-
-    for module, action, display_name, description in permissions_config:
-        permission = get_or_create_permission(
-            db=db,
-            module=module,
-            action=action,
-            display_name=display_name,
-            description=description,
+    if missing_names:
+        missing_list = ", ".join(missing_names)
+        raise RuntimeError(
+            "Catálogo oficial incompleto. Crie e aplique uma migration de dados "
+            f"para as permissões ausentes: {missing_list}."
         )
 
-        created_permissions[permission.name] = permission
-
-    return created_permissions
+    return {
+        name: stored_by_name[name]
+        for name in OFFICIAL_PERMISSION_NAMES
+    }
