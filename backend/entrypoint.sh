@@ -56,7 +56,7 @@ echo "[entrypoint] Banco de dados disponível."
 echo "[entrypoint] Aplicando migrations (alembic upgrade head)..."
 alembic upgrade head
 
-echo "[entrypoint] Executando seeds no modo ${SEED_MODE:-bootstrap}..."
+echo "[entrypoint] Executando seeds no modo ${SEED_MODE:-academic_demo}..."
 python -m app.modules.seeds
 
 echo "[entrypoint] Setup concluído. Iniciando aplicação..."
