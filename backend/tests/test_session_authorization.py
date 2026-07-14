@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.deps import get_current_user
 from app.core.security import create_access_token, create_refresh_token
 from app.modules.auth.service import logout_user, refresh_user_tokens
+from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
@@ -20,6 +21,17 @@ def add_user_catalog(db: Session) -> tuple[User, Status]:
     )
     active = Status(name="active", display_name="Ativo", applies_to="user")
     inactive = Status(name="inactive", display_name="Inativo", applies_to="user")
+    active_clinic_status = Status(
+        name="active",
+        display_name="Ativa",
+        applies_to="clinic",
+    )
+    clinic = Clinic(
+        name="Clínica de Teste",
+        cnpj="12345678000195",
+        email="clinica.teste@example.com",
+        status=active_clinic_status,
+    )
     user = User(
         name="Médico de Teste",
         email="medico.teste@clinicai.local",
@@ -28,8 +40,9 @@ def add_user_catalog(db: Session) -> tuple[User, Status]:
         token_version=0,
         role=role,
         status=active,
+        clinic=clinic,
     )
-    db.add_all([role, active, inactive, user])
+    db.add_all([role, active, inactive, active_clinic_status, clinic, user])
     db.commit()
     return user, inactive
 
