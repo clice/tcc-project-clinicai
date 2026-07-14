@@ -8,6 +8,7 @@ das clínicas do sistema.
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.common.services import ensure_user_has_clinic
 from app.core.database import get_db
 from app.core.deps import require_admin, require_permission
 from app.modules.clinics.schema import (
@@ -76,7 +77,9 @@ def get_my_clinic(
     """
     Busca os dados da clínica vinculada ao usuário autenticado.
     """
-    return get_clinic_by_id(db, current_user.clinic_id)
+    clinic_id = ensure_user_has_clinic(current_user)
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+    return build_clinic_response(clinic)
 
 
 @router.patch("/me", response_model=ClinicResponse)
@@ -88,9 +91,10 @@ def update_my_clinic(
     """
     Atualiza parcialmente os dados da clínica vinculada ao usuário.
     """
+    clinic_id = ensure_user_has_clinic(current_user)
     return update_clinic(
         db=db,
-        clinic_id=current_user.clinic_id,
+        clinic_id=clinic_id,
         payload=payload,
         current_user=current_user,
     )

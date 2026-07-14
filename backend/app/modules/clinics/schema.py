@@ -11,6 +11,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.common.schemas import StrictRequestModel
 from app.common.validators import (
+    normalize_optional_email,
     normalize_optional_text,
     normalize_phone,
     normalize_required_text,
@@ -80,6 +81,11 @@ class ClinicBase(StrictRequestModel):
     def normalize_zip_code_field(cls, value: str | None) -> str | None:
         return normalize_zip_code(value)
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(str(value) if value is not None else None)
+
     @field_validator("phone", "mobile_phone")
     @classmethod
     def normalize_phone_field(cls, value: str | None) -> str | None:
@@ -114,8 +120,6 @@ class ClinicUpdate(StrictRequestModel):
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
 
-    status_id: int | None = None
-
     @field_validator("name")
     @classmethod
     def normalize_name(cls, value: str | None) -> str | None:
@@ -149,6 +153,11 @@ class ClinicUpdate(StrictRequestModel):
     @classmethod
     def normalize_zip_code_field(cls, value: str | None) -> str | None:
         return normalize_zip_code(value)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email_field(cls, value: str | None) -> str | None:
+        return normalize_optional_email(str(value) if value is not None else None)
 
     @field_validator("phone", "mobile_phone")
     @classmethod
