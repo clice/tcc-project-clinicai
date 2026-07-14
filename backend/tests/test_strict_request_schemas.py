@@ -104,3 +104,34 @@ def test_fastapi_returns_422_with_clear_error_for_unknown_field() -> None:
 
     permission_schema = app.openapi()["components"]["schemas"]["PermissionUpdate"]
     assert permission_schema["additionalProperties"] is False
+
+
+@pytest.mark.parametrize("field_name", ("findings", "conclusion"))
+def test_exam_update_rejects_medical_review_fields_with_422(
+    field_name: str,
+) -> None:
+    """Achados e conclusão pertencem exclusivamente à rota de revisão médica."""
+
+    app = FastAPI()
+
+    @app.patch("/exams/{exam_id}")
+    def update_exam_route(exam_id: int, payload: ExamUpdate) -> dict:
+        return {
+            "exam_id": exam_id,
+            **payload.model_dump(exclude_unset=True),
+        }
+
+    response = TestClient(app).patch(
+        "/exams/1",
+        json={
+            field_name: "Conteúdo clínico enviado pela rota incorreta.",
+        },
+    )
+
+    assert response.status_code == 422
+
+    error = response.json()["detail"][0]
+
+    assert error["type"] == "extra_forbidden"
+    assert error["loc"] == ["body", field_name]
+    assert error["msg"] == "Extra inputs are not permitted"

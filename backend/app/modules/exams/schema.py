@@ -60,8 +60,6 @@ class ExamUpdate(StrictRequestModel):
     title: str | None = Field(default=None, min_length=3, max_length=180)
     description: str | None = None
     clinical_indication: str | None = None
-    findings: str | None = None
-    conclusion: str | None = None
 
     @field_validator("exam_type", "title")
     @classmethod
@@ -74,8 +72,6 @@ class ExamUpdate(StrictRequestModel):
     @field_validator(
         "description",
         "clinical_indication",
-        "findings",
-        "conclusion",
     )
     @classmethod
     def normalize_optional_fields(cls, value: str | None) -> str | None:

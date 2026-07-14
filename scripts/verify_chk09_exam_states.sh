@@ -23,6 +23,66 @@ docker compose run --rm --no-deps \
   --entrypoint alembic \
   backend current
 
+TEST_DB_NAME="${CHK09_TEST_DB_NAME:-clinicai_chk09_test}"
+TEST_DATABASE_URL="postgresql+psycopg://clinicai:clinicai123@db:5432/${TEST_DB_NAME}"
+
+cleanup_chk09_test_database() {
+  set +e
+
+  echo "[CHK-09] Removendo banco temporário de concorrência..."
+
+  docker compose exec -T db \
+    psql -U clinicai -d postgres \
+    -c "SELECT pg_terminate_backend(pid)
+        FROM pg_stat_activity
+        WHERE datname = '${TEST_DB_NAME}'
+          AND pid <> pg_backend_pid();" \
+    >/dev/null 2>&1
+
+  docker compose exec -T db \
+    psql -U clinicai -d postgres \
+    -c "DROP DATABASE IF EXISTS ${TEST_DB_NAME};" \
+    >/dev/null 2>&1
+}
+
+trap cleanup_chk09_test_database EXIT
+
+echo "[CHK-09] Preparando banco PostgreSQL temporário de concorrência..."
+
+docker compose exec -T db \
+  psql -U clinicai -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -c "SELECT pg_terminate_backend(pid)
+      FROM pg_stat_activity
+      WHERE datname = '${TEST_DB_NAME}'
+        AND pid <> pg_backend_pid();"
+
+docker compose exec -T db \
+  psql -U clinicai -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -c "DROP DATABASE IF EXISTS ${TEST_DB_NAME};"
+
+docker compose exec -T db \
+  psql -U clinicai -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -c "CREATE DATABASE ${TEST_DB_NAME};"
+
+echo "[CHK-09] Aplicando migrations no banco temporário..."
+
+docker compose run --rm --no-deps \
+  -e DATABASE_URL="$TEST_DATABASE_URL" \
+  --entrypoint alembic \
+  backend upgrade head
+
+echo "[CHK-09] Executando concorrência real no PostgreSQL..."
+
+docker compose run --rm --no-deps \
+  -e DATABASE_URL="$TEST_DATABASE_URL" \
+  -e TEST_DATABASE_URL="$TEST_DATABASE_URL" \
+  --entrypoint python \
+  backend -m pytest -q \
+  tests/test_exam_state_machine_postgres.py
+
 echo "[CHK-09] Executando testes específicos de estados e histórico..."
 docker compose run --rm --no-deps \
   --entrypoint python \

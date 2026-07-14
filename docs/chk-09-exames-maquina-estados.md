@@ -157,3 +157,34 @@ A suíte completa, o build do Vite e a migration PostgreSQL devem ser validados 
 ## 12. Limitação conhecida
 
 O claim impede concorrência imediata, mas esta checagem não introduz um reconciliador periódico para processos interrompidos que deixem `analysis_in_progress=true`. Recuperação por SLA e worker de reconciliação permanecem como melhoria de confiabilidade posterior; uma falha tratada normalmente libera o claim e move o exame para `failed`.
+
+### Concorrência real em PostgreSQL
+
+Além dos testes unitários em SQLite, a CHK-09 executa dois cenários com
+sessões PostgreSQL independentes:
+
+1. duas requisições simultâneas tentando adquirir o claim de análise;
+2. duas revisões médicas simultâneas sobre o mesmo exame.
+
+O script cria o banco temporário `clinicai_chk09_test`, aplica todas as
+migrations, executa os cenários concorrentes e remove o banco ao finalizar.
+
+O resultado esperado é:
+
+```text
+2 passed
+```
+
+
+# 7. Confira os arquivos
+
+```bash
+git diff --check
+
+git diff -- \
+  backend/app/modules/exams/schema.py \
+  backend/tests/test_strict_request_schemas.py \
+  backend/tests/test_exam_state_machine_postgres.py \
+  scripts/verify_chk09_exam_states.sh \
+  docs/chk-09-exames-maquina-estados.md
+```
