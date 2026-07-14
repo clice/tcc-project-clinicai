@@ -26,7 +26,6 @@ import {
   CRow,
 } from '@coreui/react'
 
-import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { roleService } from 'src/services/roleService'
@@ -46,7 +45,6 @@ const RoleForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
-  const { refreshUser } = useAuth()
 
   const [form, setForm] = useState(emptyRole)
   const [permissions, setPermissions] = useState([])
@@ -118,7 +116,7 @@ const RoleForm = ({ mode = 'create' }) => {
     }
 
     void loadPageData()
-  }, [id, isCreateMode])
+  }, [id, isCreateMode, showError, startLoading, stopLoading])
 
   /**
    * Atualiza um campo do formulário.
@@ -146,7 +144,7 @@ const RoleForm = ({ mode = 'create' }) => {
       return [...current, numericId]
     })
   }
-  
+
   /**
    * Monta o payload enviado para a API de roles.
    * 'name' só é enviado na criação — na edição é imutável (o backend
@@ -205,15 +203,9 @@ const RoleForm = ({ mode = 'create' }) => {
         await roleService.update(id, buildPayload())
         await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
 
-        // Se o usuário logado pertencer à role que acabou de ser editada,
-        // a lista de permissões dele (recebida uma única vez em
-        // /auth/me, no login) fica desatualizada até relogar — botões e
-        // menus baseados em permissão continuariam visíveis mesmo que o
-        // backend já negasse a ação com 403. Chamar refreshUser aqui
-        // resolve isso para o próprio editor, sem esperar um novo login.
-        await refreshUser()
-
-        showSuccess('Perfil atualizado com sucesso.')
+        showSuccess(
+          'Perfil atualizado com sucesso. Usuários conectados terão os acessos sincronizados ao retornar à aba ou em até 60 segundos.',
+        )
       }
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar o perfil.'))
@@ -264,9 +256,7 @@ const RoleForm = ({ mode = 'create' }) => {
                   ))}
                 </CFormSelect>
                 {isEditMode && (
-                  <div className="form-text">
-                    O perfil não pode ser alterado após a criação.
-                  </div>
+                  <div className="form-text">O perfil não pode ser alterado após a criação.</div>
                 )}
               </CCol>
 
@@ -299,9 +289,9 @@ const RoleForm = ({ mode = 'create' }) => {
 
                 {isAdminMasterRole && (
                   <div className="alert alert-info small mb-3">
-                    Acesso total fixo — o Administrador Master tem acesso irrestrito ao sistema
-                    por padrão. Esta matriz é somente leitura porque desmarcar itens aqui não
-                    reduz o acesso efetivo desse perfil.
+                    Acesso total fixo — o Administrador Master tem acesso irrestrito ao sistema por
+                    padrão. Esta matriz é somente leitura porque desmarcar itens aqui não reduz o
+                    acesso efetivo desse perfil.
                   </div>
                 )}
 

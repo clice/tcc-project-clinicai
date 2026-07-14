@@ -12,6 +12,7 @@
   "scripts": {
     "build": "vite build",
     "check:actions": "node scripts/check-action-permissions.mjs",
+    "check:active-session-access": "node scripts/check-active-session-access.mjs",
     "check:permission-catalog": "node scripts/check-closed-permission-catalog.mjs",
     "check:navigation": "node scripts/check-navigation-access.mjs",
     "check:permissions": "node scripts/check-permissions.mjs",

@@ -79,3 +79,6 @@ estão documentados em `docs/permission-catalog.md`.
 
 A rejeição de campos desconhecidos e imutáveis nos corpos de requisição está
 documentada em `docs/api-request-validation.md`.
+
+A atualização de menus, rotas e ações quando a matriz muda durante uma sessão
+autenticada está documentada em `docs/active-session-rbac.md`.
