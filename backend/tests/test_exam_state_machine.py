@@ -203,7 +203,7 @@ def test_cancel_and_restore_are_idempotent(db_session, tmp_path, monkeypatch) ->
     image.write_bytes(b"fake-image")
     context.exam.file_path = str(image)
     db_session.commit()
-    monkeypatch.setattr("app.modules.exams.service.UPLOAD_DIR", upload_root)
+    monkeypatch.setattr("app.modules.exams.file_storage.UPLOAD_DIR", upload_root)
 
     first_cancel = cancel_exam(db_session, context.exam.id, context.doctor)
     second_cancel = cancel_exam(db_session, context.exam.id, context.doctor)
@@ -309,7 +309,7 @@ def test_status_changes_are_audited_once(db_session, tmp_path, monkeypatch) -> N
     image.write_bytes(b"fake-image")
     context.exam.file_path = str(image)
     db_session.commit()
-    monkeypatch.setattr("app.modules.exams.service.UPLOAD_DIR", upload_root)
+    monkeypatch.setattr("app.modules.exams.file_storage.UPLOAD_DIR", upload_root)
 
     cancel_exam(db_session, context.exam.id, context.doctor)
     restore_exam(db_session, context.exam.id, context.doctor)
