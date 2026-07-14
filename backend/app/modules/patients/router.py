@@ -49,17 +49,24 @@ def create_patient_route(
 @router.get("/", response_model=list[PatientResponse])
 def list_patients_route(
     include_inactive: bool = Query(default=False),
+    search: str | None = Query(default=None),
+    clinic_id: int | None = Query(default=None),
+    doctor_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("patients:read")),
 ):
     """
-    Lista pacientes cadastrados.
-    Admin master pode listar todos.
-    Usuários de clínica visualizam apenas pacientes da própria clínica.
+    Lista pacientes cadastrados com filtros que não ampliam o escopo.
+
+    Administrador vê todos; funcionário vê a própria clínica; médico vê
+    somente os pacientes sob sua responsabilidade.
     """
     return list_patients(
         db=db,
         include_inactive=include_inactive,
+        search=search,
+        clinic_id=clinic_id,
+        doctor_id=doctor_id,
         current_user=current_user,
     )
 

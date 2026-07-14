@@ -16,6 +16,7 @@ from app.common.services import (
 from app.core.security import get_password_hash, verify_password
 from app.modules.auth.service import create_user_tokens
 from app.modules.clinics.model import Clinic
+from app.modules.patients.model import Patient
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
@@ -163,6 +164,42 @@ def validate_user_role_clinic_rules(
 
     get_active_clinic_or_none(db, clinic_id)
     return role
+
+
+def ensure_doctor_has_no_active_patients(
+    db: Session,
+    user: User,
+    *,
+    changing_role_or_clinic: bool = False,
+    inactivating: bool = False,
+) -> None:
+    """Impede deixar pacientes ativos sem médico responsável válido."""
+
+    if not user.role or user.role.name != RoleName.DOCTOR.value:
+        return
+
+    if not changing_role_or_clinic and not inactivating:
+        return
+
+    active_patient = (
+        db.query(Patient.id)
+        .join(Status, Patient.status_id == Status.id)
+        .filter(
+            Patient.doctor_id == user.id,
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.PATIENT.value,
+        )
+        .first()
+    )
+
+    if active_patient:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "O médico possui pacientes ativos. Reatribua ou inative esses "
+                "pacientes antes de alterar sua role, clínica ou status."
+            ),
+        )
 
 
 def validate_user_business_rules(
@@ -463,6 +500,14 @@ def update_user(
 
     if new_role_id is None:
         raise HTTPException(status_code=400, detail="Perfil de acesso é obrigatório.")
+
+    ensure_doctor_has_no_active_patients(
+        db,
+        user,
+        changing_role_or_clinic=(
+            new_role_id != user.role_id or new_clinic_id != user.clinic_id
+        ),
+    )
     next_role = validate_user_role_clinic_rules(db, new_role_id, new_clinic_id)
     ensure_last_active_admin_is_preserved(db, user, next_role=next_role)
 
@@ -687,6 +732,8 @@ def inactivate_user(
     ensure_last_active_admin_is_preserved(db, user, inactivating=True)
     if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="Você não pode inativar o próprio usuário.")
+
+    ensure_doctor_has_no_active_patients(db, user, inactivating=True)
     inactive_status = get_status_by_name_and_applies_to(
         db=db,
         name=StatusName.INACTIVE.value,
