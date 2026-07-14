@@ -84,6 +84,7 @@ Frontend (React) → API REST (FastAPI) → PostgreSQL
     ├── frontend/       -> Interface web React
     ├── ai/             -> Serviço de inferência + scripts de treino do modelo
     ├── docs/           -> Documentação técnica
+    │   └── model-release-guide.md -> Publicação e atualização dos modelos
     ├── scripts/        -> Download e geração do manifesto dos modelos
     ├── docker-compose.yml
     ├── docker-compose.gpu.yml  -> override opcional para GPU NVIDIA
@@ -119,10 +120,17 @@ no código, então o backend não sobe sem essas variáveis definidas.
 O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
 baixar os modelos. A tag padrão é `models-v0.1.0`.
 
+```dotenv
+MODEL_RELEASE_REPOSITORY=clice/tcc-project-clinicai
+MODEL_RELEASE_TAG=models-v0.1.0
+MODEL_RELEASE_MANIFEST=manifesto_modelos.json
+```
+
 ### 4. Baixar os modelos treinados
 
 Os pesos e o meta-classificador não são armazenados diretamente no Git. Antes de subir o
-sistema pela primeira vez, baixe os artefatos da GitHub Release configurada em `.env`:
+sistema pela primeira vez, baixe os artefatos da
+[GitHub Release configurada em `.env`](https://github.com/clice/tcc-project-clinicai/releases/tag/models-v0.1.0):
 
 ```bash
 docker compose --profile models run --rm model-downloader
@@ -139,6 +147,17 @@ O comando baixa e verifica os seguintes arquivos em
 
 O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
 válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
+
+Ao final, a saída deve informar que os quatro artefatos foram baixados e verificados. Para
+confirmar que a instalação pode ser repetida com segurança, execute o mesmo comando novamente:
+
+```bash
+docker compose --profile models run --rm model-downloader
+```
+
+Na segunda execução, o serviço deve informar que cada arquivo já existe e possui o SHA-256
+esperado. Se o download falhar, confira as três variáveis do `.env`, a conexão com a internet e
+se a Release configurada está publicada.
 
 ### 5. Subir os containers
 
@@ -259,6 +278,9 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 Esta seção é destinada à manutenção dos artefatos de IA. Quem deseja apenas executar o sistema
 deve seguir a seção **Como Executar o Projeto**.
 
+O procedimento completo, incluindo versionamento, testes, checklist, validação em clone limpo e
+recuperação de erros, está em [`docs/model-release-guide.md`](docs/model-release-guide.md).
+
 ### 1. Preparar os artefatos
 
 Os quatro arquivos finais devem estar em `ai/models/exported/gastrointestinal/` com estes nomes:
@@ -305,6 +327,11 @@ manifesto_modelos.json
 ```
 
 Salve primeiro como rascunho, confira os nomes dos arquivos e somente depois publique.
+
+Depois da publicação, faça obrigatoriamente o teste em um clone novo descrito no
+[`guia de Releases`](docs/model-release-guide.md#8-validar-a-release-publicada). Esse teste confirma
+o download real, a validação do manifesto e a inicialização sem depender dos modelos presentes na
+máquina de desenvolvimento.
 
 ### 4. Versionar atualizações futuras
 
