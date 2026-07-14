@@ -46,7 +46,8 @@ export const userService = {
   },
 
   /**
-   * Atualiza parcialmente um usuário existente.
+   * Atualiza dados cadastrais, role e clínica de um usuário.
+   * Status é alterado exclusivamente por activate/inactivate.
    */
   update: async (id, payload) => {
     const response = await api.patch(`/users/${id}`, payload)

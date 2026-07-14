@@ -151,7 +151,7 @@ const UsersList = () => {
               isInactive={isInactive}
               canView={canView}
               canEdit={canEdit}
-              canInactivate={canChangeStatus && !isInactive}
+              canInactivate={canChangeStatus && !isInactive && selectedUser.id !== user?.id}
               canActivate={canChangeStatus && isInactive}
               onInactivate={() => handleChangeStatus(selectedUser)}
               onActivate={() => handleChangeStatus(selectedUser)}
@@ -160,7 +160,7 @@ const UsersList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadUsers],
+    [canView, canEdit, canChangeStatus, loadUsers, user?.id],
   )
 
   return (

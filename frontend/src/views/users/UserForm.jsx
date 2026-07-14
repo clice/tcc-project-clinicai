@@ -24,6 +24,7 @@ import {
   CRow,
 } from '@coreui/react'
 
+import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { userService } from 'src/services/userService'
@@ -49,6 +50,7 @@ const emptyUser = {
 const UserForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user: currentUser } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyUser)
@@ -60,6 +62,7 @@ const UserForm = ({ mode = 'create' }) => {
   const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
+  const isSelfRecord = !isCreateMode && String(currentUser?.id) === String(id)
 
   const selectedRole = useMemo(
     () => roles.find((role) => String(role.id) === String(form.role_id)),
@@ -192,13 +195,18 @@ const UserForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (cpfNumbers && cpfNumbers.length !== 11) {
+    if (!cpfNumbers) {
+      showError('Informe o CPF do usuário.')
+      return false
+    }
+
+    if (cpfNumbers.length !== 11) {
       showError('CPF deve conter 11 números.')
       return false
     }
 
-    if (!form.role_id || !form.status_id) {
-      showError('Preencha o perfil de acesso e o status.')
+    if (!form.role_id || (isCreateMode && !form.status_id)) {
+      showError(isCreateMode ? 'Preencha o perfil de acesso e o status.' : 'Preencha o perfil de acesso.')
       return false
     }
 
@@ -225,19 +233,29 @@ const UserForm = ({ mode = 'create' }) => {
     return true
   }
 
-  /**
-   * Monta o payload enviado para a API.
-   */
-  const buildUserPayload = () => {
-    return {
-      name: form.name.trim(),
-      email: form.email.trim().toLowerCase(),
-      cpf: onlyNumbers(form.cpf) || null,
-      phone: onlyNumbers(form.phone) || null,
-      role_id: Number(form.role_id),
-      status_id: Number(form.status_id),
-      clinic_id: requiresClinic ? Number(form.clinic_id) : null,
+  const buildProfilePayload = () => ({
+    name: form.name.trim(),
+    email: form.email.trim().toLowerCase(),
+    cpf: onlyNumbers(form.cpf) || null,
+    phone: onlyNumbers(form.phone) || null,
+  })
+
+  const buildCreatePayload = () => ({
+    ...buildProfilePayload(),
+    role_id: Number(form.role_id),
+    status_id: Number(form.status_id),
+    clinic_id: requiresClinic ? Number(form.clinic_id) : null,
+  })
+
+  const buildAdminUpdatePayload = () => {
+    const payload = buildProfilePayload()
+
+    if (!isSelfRecord) {
+      payload.role_id = Number(form.role_id)
+      payload.clinic_id = requiresClinic ? Number(form.clinic_id) : null
     }
+
+    return payload
   }
 
   const handleSubmit = async (event) => {
@@ -255,7 +273,7 @@ const UserForm = ({ mode = 'create' }) => {
 
       if (isCreateMode) {
         await userService.create({
-          ...buildUserPayload(),
+          ...buildCreatePayload(),
           password: form.password.trim(),
         })
 
@@ -265,7 +283,7 @@ const UserForm = ({ mode = 'create' }) => {
       }
 
       if (isEditMode) {
-        await userService.update(id, buildUserPayload())
+        await userService.update(id, buildAdminUpdatePayload())
 
         if (form.password.trim()) {
           await userService.updatePassword(id, form.password.trim())
@@ -297,6 +315,20 @@ const UserForm = ({ mode = 'create' }) => {
           </CButton>
         </div>
       </div>
+
+      {isEditMode && !isSelfRecord && (
+        <CAlert color="warning">
+          Alterar o perfil de acesso ou a clínica encerra as sessões ativas do usuário.
+          O status deve ser alterado somente pelos botões Ativar/Inativar da listagem.
+        </CAlert>
+      )}
+
+      {isEditMode && isSelfRecord && (
+        <CAlert color="info">
+          Role, clínica, status e senha da própria conta não podem ser alterados nesta tela.
+          Use “Meu Perfil” para atualizar seus dados ou sua senha.
+        </CAlert>
+      )}
 
       <CCard>
         <CCardHeader>
@@ -334,6 +366,7 @@ const UserForm = ({ mode = 'create' }) => {
                   disabled={isReadOnly}
                   onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
                   placeholder="000.000.000-00"
+                  required
                 />
               </CCol>
 
@@ -351,7 +384,7 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Status</CFormLabel>
                 <CFormSelect
                   value={form.status_id}
-                  disabled={isReadOnly || isCreateMode}
+                  disabled={isReadOnly || isEditMode}
                   onChange={(event) => updateField('status_id', event.target.value)}
                   required
                 >
@@ -369,7 +402,7 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Perfil de acesso</CFormLabel>
                 <CFormSelect
                   value={form.role_id}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isSelfRecord}
                   onChange={(event) => handleRoleChange(event.target.value)}
                   required
                 >
@@ -387,7 +420,7 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Clínica</CFormLabel>
                 <CFormSelect
                   value={form.clinic_id}
-                  disabled={isReadOnly || !requiresClinic}
+                  disabled={isReadOnly || isSelfRecord || !requiresClinic}
                   onChange={(event) => updateField('clinic_id', event.target.value)}
                   required={requiresClinic}
                 >
@@ -401,7 +434,7 @@ const UserForm = ({ mode = 'create' }) => {
                 </CFormSelect>
               </CCol>
 
-              {!isReadOnly && (
+              {!isReadOnly && (!isEditMode || !isSelfRecord) && (
                 <>
                   <CCol md={6}>
                     <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
