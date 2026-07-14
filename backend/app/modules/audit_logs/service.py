@@ -13,6 +13,38 @@ from app.modules.audit_logs.model import AuditLog
 from app.modules.users.model import User
 
 
+_SENSITIVE_AUDIT_KEYS = {
+    "password",
+    "password_hash",
+    "current_password",
+    "access_token",
+    "refresh_token",
+    "authorization",
+    "secret_key",
+}
+
+
+def sanitize_audit_data(value):
+    """Remove credenciais conhecidas antes de persistir dados de auditoria."""
+
+    if isinstance(value, dict):
+        sanitized = {}
+        for key, item in value.items():
+            normalized_key = str(key).strip().lower()
+            if normalized_key in _SENSITIVE_AUDIT_KEYS:
+                continue
+            sanitized[key] = sanitize_audit_data(item)
+        return sanitized
+
+    if isinstance(value, list):
+        return [sanitize_audit_data(item) for item in value]
+
+    if isinstance(value, tuple):
+        return [sanitize_audit_data(item) for item in value]
+
+    return value
+
+
 def build_audit_log_response(audit_log: AuditLog) -> dict:
     """
     Monta resposta enriquecida do log.
@@ -67,8 +99,8 @@ def create_audit_log(
         entity=enum_to_value(entity),
         entity_id=entity_id,
         description=description,
-        old_data=old_data,
-        new_data=new_data,
+        old_data=sanitize_audit_data(old_data),
+        new_data=sanitize_audit_data(new_data),
         ip_address=ip_address,
         user_agent=user_agent,
     )

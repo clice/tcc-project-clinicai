@@ -324,6 +324,18 @@ def inactivate_clinic(db: Session, clinic_id: int, current_user: User) -> dict:
 
     clinic.status_id = inactive_status.id
 
+    # Uma clínica inativa não deve recuperar sessões antigas ao ser reativada.
+    # Incrementar a versão encerra access/refresh tokens de todos os usuários
+    # vinculados sem exigir lista de revogação, adequada ao protótipo acadêmico.
+    invalidated_sessions = (
+        db.query(User)
+        .filter(User.clinic_id == clinic.id)
+        .update(
+            {User.token_version: User.token_version + 1},
+            synchronize_session=False,
+        )
+    )
+
     # Adiciona log
     create_audit_log(
         db=db,
@@ -337,6 +349,7 @@ def inactivate_clinic(db: Session, clinic_id: int, current_user: User) -> dict:
         new_data={
             "status_id": inactive_status.id,
             "status_name": StatusName.INACTIVE.value,
+            "invalidated_user_sessions": invalidated_sessions,
         },
     )
 

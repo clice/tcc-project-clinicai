@@ -52,6 +52,7 @@ def login_route(
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_token_route(
+    request: Request,
     data: RefreshTokenRequest,
     db: Session = Depends(get_db),
 ):
@@ -61,6 +62,8 @@ def refresh_token_route(
     return refresh_user_tokens(
         db=db,
         refresh_token=data.refresh_token,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )
 
 

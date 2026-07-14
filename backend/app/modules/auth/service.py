@@ -1,16 +1,11 @@
-"""
-Service do módulo de autenticação.
-
-Aqui ficam as regras de negócio relacionadas ao login,
-refresh token e usuário autenticado.
-"""
+"""Regras de negócio de autenticação e gerenciamento de sessão."""
 
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import AuditAction, AuditEntity, StatusName, StatusScope
+from app.common.constants import AuditAction, AuditEntity
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -19,14 +14,41 @@ from app.core.security import (
     verify_password,
 )
 from app.modules.audit_logs.service import create_audit_log
+from app.modules.auth.policies import validate_active_session_context
+from app.modules.clinics.model import Clinic
 from app.modules.users.model import User
 
-# Hash "isca": usado só para gastar o mesmo tempo de bcrypt quando o
-# e-mail não existe, evitando que alguém descubra e-mails cadastrados
-# medindo a diferença de tempo de resposta entre "e-mail não existe"
-# (que antes retornava na hora) e "e-mail existe, senha errada" (que
-# roda bcrypt, propositalmente lento). Gerado uma vez, no import.
+# Hash isca executado quando o e-mail não existe. Assim, os caminhos
+# "usuário inexistente" e "senha incorreta" também realizam bcrypt e não
+# expõem facilmente a existência da conta por diferença grosseira de tempo.
 _DUMMY_PASSWORD_HASH = get_password_hash("senha-isca-nao-usada-para-login-real")
+
+
+def _query_user_for_session(db: Session, user_id: int) -> User | None:
+    """Carrega os relacionamentos usados pelas políticas de sessão."""
+
+    return (
+        db.query(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.status),
+            joinedload(User.clinic).joinedload(Clinic.status),
+        )
+        .filter(User.id == user_id)
+        .first()
+    )
+
+
+def _parse_token_user_id(raw_user_id: object, *, token_name: str) -> int:
+    """Converte o ``sub`` do JWT sem transformar token malformado em erro 500."""
+
+    try:
+        return int(raw_user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"{token_name} inválido.",
+        ) from None
 
 
 def authenticate_user(
@@ -37,18 +59,22 @@ def authenticate_user(
     ip_address: str | None = None,
     user_agent: str | None = None,
 ) -> User:
-    """
-    Autentica um usuário a partir de e-mail e senha.
-    Também registra logs automáticos de sucesso e falha.
-    """
+    """Autentica e registra tentativas de login sem armazenar senhas ou tokens."""
+
     normalized_email = email.strip().lower()
 
-    user = db.query(User).filter(User.email == normalized_email).first()
+    user = (
+        db.query(User)
+        .options(
+            joinedload(User.role),
+            joinedload(User.status),
+            joinedload(User.clinic).joinedload(Clinic.status),
+        )
+        .filter(User.email == normalized_email)
+        .first()
+    )
 
-    if not user:
-        # Roda o bcrypt mesmo sem usuário encontrado, só para gastar o
-        # mesmo tempo do caminho "senha errada" — impede enumeração de
-        # e-mail por medição de tempo de resposta.
+    if user is None:
         verify_password(password, _DUMMY_PASSWORD_HASH)
 
         create_audit_log(
@@ -58,7 +84,7 @@ def authenticate_user(
             action=AuditAction.LOGIN_FAILED,
             entity=AuditEntity.AUTH,
             entity_id=None,
-            description="Tentativa de login com e-mail inexistente.",
+            description="Tentativa de login com credenciais inválidas.",
             new_data={"email": normalized_email},
             ip_address=ip_address,
             user_agent=user_agent,
@@ -78,7 +104,7 @@ def authenticate_user(
             action=AuditAction.LOGIN_FAILED,
             entity=AuditEntity.AUTH,
             entity_id=user.id,
-            description="Tentativa de login com senha inválida.",
+            description="Tentativa de login com credenciais inválidas.",
             new_data={"email": normalized_email},
             ip_address=ip_address,
             user_agent=user_agent,
@@ -90,11 +116,9 @@ def authenticate_user(
             detail="Email ou senha inválidos.",
         )
 
-    if (
-        not user.status
-        or user.status.applies_to != StatusScope.USER.value
-        or user.status.name != StatusName.ACTIVE.value
-    ):
+    try:
+        validate_active_session_context(user)
+    except HTTPException:
         create_audit_log(
             db=db,
             user_id=user.id,
@@ -102,14 +126,13 @@ def authenticate_user(
             action=AuditAction.LOGIN_FAILED,
             entity=AuditEntity.AUTH,
             entity_id=user.id,
-            description="Tentativa de login com credenciais corretas em conta inativa.",
+            description="Tentativa de login em conta ou clínica inativa.",
             new_data={"email": normalized_email},
             ip_address=ip_address,
             user_agent=user_agent,
             commit=True,
         )
-
-    validate_active_user(user)
+        raise
 
     user.last_access_at = datetime.now(timezone.utc)
 
@@ -136,24 +159,14 @@ def authenticate_user(
 
 
 def validate_active_user(user: User) -> None:
-    """
-    Valida se o usuário está ativo no sistema.
-    """
-    if (
-        not user.status
-        or user.status.applies_to != StatusScope.USER.value
-        or user.status.name != StatusName.ACTIVE.value
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Usuário inativo. Entre em contato com o administrador.",
-        )
+    """Compatibilidade interna para chamadas antigas da política de sessão."""
+
+    validate_active_session_context(user)
 
 
-def create_user_tokens(user: User) -> dict:
-    """
-    Cria access token e refresh token para o usuário autenticado.
-    """
+def create_user_tokens(user: User) -> dict[str, str]:
+    """Cria um par de access/refresh token para a versão atual da sessão."""
+
     token_data = {
         "sub": str(user.id),
         "token_version": user.token_version,
@@ -166,10 +179,15 @@ def create_user_tokens(user: User) -> dict:
     }
 
 
-def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
-    """
-    Valida o refresh token e gera novos tokens.
-    """
+def refresh_user_tokens(
+    db: Session,
+    refresh_token: str,
+    *,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> dict[str, str]:
+    """Rotaciona o refresh token e invalida o par utilizado anteriormente."""
+
     payload = decode_refresh_token(refresh_token)
 
     if payload is None:
@@ -181,15 +199,16 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
     user_id = payload.get("sub")
     token_version = payload.get("token_version")
 
-    if not user_id or token_version is None:
+    if user_id is None or token_version is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido.",
         )
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    parsed_user_id = _parse_token_user_id(user_id, token_name="Refresh token")
+    user = _query_user_for_session(db, parsed_user_id)
 
-    if not user:
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário não encontrado.",
@@ -201,24 +220,41 @@ def refresh_user_tokens(db: Session, refresh_token: str) -> dict:
             detail="Sessão expirada. Faça login novamente.",
         )
 
-    validate_active_user(user)
+    validate_active_session_context(user)
+
+    # Rotação simples e adequada ao protótipo acadêmico: a versão é alterada
+    # antes da emissão, de modo que o refresh token apresentado não possa ser
+    # reutilizado. Também invalida o access token antigo.
+    user.token_version += 1
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.REFRESH_TOKEN,
+        entity=AuditEntity.AUTH,
+        entity_id=user.id,
+        description="Tokens de sessão renovados.",
+        new_data={"token_version": user.token_version},
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+
+    db.commit()
+    db.refresh(user)
 
     return create_user_tokens(user)
-    
-    
+
+
 def logout_user(
     db: Session,
     *,
     user: User,
     ip_address: str | None = None,
     user_agent: str | None = None,
-) -> dict:
-    """
-    Invalida os tokens atuais do usuário.
+) -> dict[str, str]:
+    """Encerra a sessão ao invalidar access e refresh tokens já emitidos."""
 
-    Como o JWT é stateless, incrementamos token_version.
-    Assim, access tokens e refresh tokens antigos deixam de ser aceitos.
-    """
     user.token_version += 1
 
     create_audit_log(
@@ -240,9 +276,8 @@ def logout_user(
 
 
 def build_current_user_response(user: User) -> dict:
-    """
-    Monta a resposta da rota /auth/me com dados do usuário autenticado.
-    """
+    """Monta a resposta pública de ``/auth/me`` sem campos de credencial."""
+
     permissions = []
 
     if user.role and user.role.role_permissions:

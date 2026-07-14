@@ -17,6 +17,7 @@ class AuditAction(StrEnum):
     DELETE = "delete"
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILED = "login_failed"
+    REFRESH_TOKEN = "refresh_token"
     LOGOUT = "logout"
     CANCEL_EXAM = "cancel_exam"
     RESTORE_EXAM = "restore_exam"
