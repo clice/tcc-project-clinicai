@@ -64,6 +64,38 @@ def list_clinics_route(
     )
 
 
+# As rotas estáticas precisam ser registradas antes de /{clinic_id}.
+# Caso contrário, o Starlette considera "/clinics/me" compatível com a rota
+# dinâmica e o FastAPI tenta converter "me" para inteiro, devolvendo 422 antes
+# de alcançar o endpoint de autoatendimento.
+@router.get("/me", response_model=ClinicResponse)
+def get_my_clinic(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:read_profile")),
+):
+    """
+    Busca os dados da clínica vinculada ao usuário autenticado.
+    """
+    return get_clinic_by_id(db, current_user.clinic_id)
+
+
+@router.patch("/me", response_model=ClinicResponse)
+def update_my_clinic(
+    payload: ClinicUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:update_profile")),
+):
+    """
+    Atualiza parcialmente os dados da clínica vinculada ao usuário.
+    """
+    return update_clinic(
+        db=db,
+        clinic_id=current_user.clinic_id,
+        payload=payload,
+        current_user=current_user,
+    )
+
+
 @router.get("/{clinic_id}", response_model=ClinicResponse)
 def get_clinic_route(
     clinic_id: int,
@@ -150,33 +182,5 @@ def activate_clinic_route(
     return activate_clinic(
         db=db,
         clinic_id=clinic_id,
-        current_user=current_user,
-    )
-
-
-@router.get("/me")
-def get_my_clinic(
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:read_profile")),
-):
-    """
-    Busca dados de uma clínica para o perfil.
-    """
-    return get_clinic_by_id(db, current_user.clinic_id)
-
-
-@router.patch("/me")
-def update_my_clinic(
-    payload: ClinicUpdate,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:update_profile")),
-):
-    """
-    Atualiza parcialmente os dados do perfil da clínica.
-    """
-    return update_clinic(
-        db=db,
-        clinic_id=current_user.clinic_id,
-        payload=payload,
         current_user=current_user,
     )

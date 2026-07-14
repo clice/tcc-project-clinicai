@@ -65,3 +65,23 @@ def test_self_service_and_support_routes_are_not_admin_only() -> None:
         dependencies = {dependency.call for dependency in route.dependant.dependencies}
 
         assert require_admin not in dependencies, f"{method} {path} deve continuar delegável"
+
+
+def test_static_clinic_profile_routes_precede_dynamic_id_routes() -> None:
+    """Evita que /clinics/me seja capturada por /clinics/{clinic_id}."""
+
+    routes = [route for route in clinics_router.routes if isinstance(route, APIRoute)]
+
+    for method in ("GET", "PATCH"):
+        static_index = next(
+            index
+            for index, route in enumerate(routes)
+            if route.path == "/clinics/me" and method in route.methods
+        )
+        dynamic_index = next(
+            index
+            for index, route in enumerate(routes)
+            if route.path == "/clinics/{clinic_id}" and method in route.methods
+        )
+
+        assert static_index < dynamic_index
