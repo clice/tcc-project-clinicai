@@ -1,5 +1,5 @@
 /**
- * Formulário do módulo de Petients.
+ * Formulário do módulo de Patients.
  *
  * Usado para:
  * - criar paciente;
@@ -56,6 +56,8 @@ const emptyPatient = {
   neighborhood: '',
   city: '',
   state: '',
+  status_name: '',
+  status_display_name: '',
 }
 
 const PatientForm = ({ mode = 'create' }) => {
@@ -162,6 +164,8 @@ const PatientForm = ({ mode = 'create' }) => {
             neighborhood: patientData.neighborhood ?? '',
             city: patientData.city ?? '',
             state: patientData.state ?? '',
+            status_name: patientData.status_name ?? '',
+            status_display_name: patientData.status_display_name ?? '',
           })
 
           await loadDoctorsByClinic(patientData.clinic_id)
@@ -244,23 +248,32 @@ const PatientForm = ({ mode = 'create' }) => {
     return true
   }
 
-  const buildPayload = () => ({
-    clinic_id: Number(form.clinic_id || user?.clinic_id),
-    doctor_id: isDoctor ? Number(user.id) : Number(form.doctor_id),
-    name: form.name.trim(),
-    cpf: onlyNumbers(form.cpf),
-    birth_date: form.birth_date || null,
-    sex: form.sex || null,
-    phone: onlyNumbers(form.phone) || null,
-    email: form.email.trim() || null,
-    zip_code: onlyNumbers(form.zip_code) || null,
-    address: form.address.trim() || null,
-    number: form.number.trim() || null,
-    complement: form.complement.trim() || null,
-    neighborhood: form.neighborhood.trim() || null,
-    city: form.city.trim() || null,
-    state: form.state.trim().toUpperCase() || null,
-  })
+  const buildPayload = () => {
+    const payload = {
+      name: form.name.trim(),
+      cpf: onlyNumbers(form.cpf),
+      birth_date: form.birth_date || null,
+      sex: form.sex || null,
+      phone: onlyNumbers(form.phone) || null,
+      email: form.email.trim() || null,
+      zip_code: onlyNumbers(form.zip_code) || null,
+      address: form.address.trim() || null,
+      number: form.number.trim() || null,
+      complement: form.complement.trim() || null,
+      neighborhood: form.neighborhood.trim() || null,
+      city: form.city.trim() || null,
+      state: form.state.trim().toUpperCase() || null,
+    }
+
+    // O backend é a fonte da regra: médicos não podem transferir ou
+    // reatribuir pacientes. Na criação, os vínculos continuam obrigatórios.
+    if (isCreateMode || !isDoctor) {
+      payload.clinic_id = Number(form.clinic_id || user?.clinic_id)
+      payload.doctor_id = isDoctor ? Number(user.id) : Number(form.doctor_id)
+    }
+
+    return payload
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -524,6 +537,16 @@ const PatientForm = ({ mode = 'create' }) => {
                       </CFormSelect>
                     )}
                   </CCol>
+
+                  {!isCreateMode && (
+                    <CCol md={4}>
+                      <CFormLabel>Status</CFormLabel>
+                      <CFormInput
+                        value={form.status_display_name || form.status_name || '-'}
+                        disabled
+                      />
+                    </CCol>
+                  )}
 
                   <CCol md={4}>
                     <CFormLabel>CEP</CFormLabel>

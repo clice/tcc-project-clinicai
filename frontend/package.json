@@ -21,6 +21,7 @@
     "check:rbac": "npm run check:permissions && npm run check:permission-catalog && npm run check:configuration-catalogs && npm run check:navigation && npm run check:actions && npm run check:active-session-access && npm run check:rbac-contract",
     "check:clinics": "node scripts/check-clinic-contract.mjs",
     "check:users": "node scripts/check-user-contract.mjs",
+    "check:patients": "node scripts/check-patient-contract.mjs",
     "lint": "eslint",
     "serve": "vite preview",
     "start": "vite"

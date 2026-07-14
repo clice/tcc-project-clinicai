@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CFormInput, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -22,7 +22,7 @@ import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
-import { hasPermission } from 'src/utils/permissions'
+import { getUserRole, hasPermission, ROLES } from 'src/utils/permissions'
 
 const patientTabs = [
   { key: 'active', label: 'Ativos' },
@@ -35,8 +35,10 @@ const PatientsList = () => {
 
   const [activeTab, setActiveTab] = useState('active')
   const [patients, setPatients] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
+  const roleName = getUserRole(user)
   const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
     'patients',
     (permission) => hasPermission(user, permission),
@@ -64,8 +66,20 @@ const PatientsList = () => {
    * Separa pacientes por status para alimentar as abas.
    */
   const filteredPatients = useMemo(() => {
-    return patients.filter((patient) => patient.status_name === activeTab)
-  }, [patients, activeTab])
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR')
+
+    return patients.filter((patient) => {
+      if (patient.status_name !== activeTab) return false
+      if (!normalizedSearch) return true
+
+      return [
+        patient.name,
+        patient.cpf,
+        patient.doctor_name,
+        patient.clinic_name,
+      ].some((value) => String(value || '').toLocaleLowerCase('pt-BR').includes(normalizedSearch))
+    })
+  }, [patients, activeTab, searchTerm])
 
   /**
    * Conta registros por aba.
@@ -151,7 +165,11 @@ const PatientsList = () => {
           <div className="text-body-secondary">Registros de Saúde</div>
           <h1 className="h3 mb-0">Pacientes</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie pacientes vinculados às clínicas e aos médicos responsáveis.
+            {roleName === ROLES.DOCTOR
+              ? 'Visualize somente os pacientes sob sua responsabilidade.'
+              : roleName === ROLES.CLINIC_STAFF
+                ? 'Visualize os pacientes vinculados à sua clínica.'
+                : 'Gerencie pacientes de todas as clínicas conforme os filtros.'}
           </p>
         </div>
 
@@ -172,6 +190,14 @@ const PatientsList = () => {
             </div>
           ) : (
             <>
+              <CFormInput
+                className="mb-3"
+                type="search"
+                value={searchTerm}
+                placeholder="Buscar por paciente, CPF, médico ou clínica"
+                aria-label="Buscar pacientes"
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
               <AppTabs
                 tabs={patientTabs}
                 counts={tabCounts}

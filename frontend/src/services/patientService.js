@@ -10,10 +10,13 @@ export const patientService = {
   /**
    * Lista pacientes.
    */
-  list: async ({ includeInactive = true } = {}) => {
+  list: async ({ includeInactive = true, search, clinicId, doctorId } = {}) => {
     const response = await api.get('/patients/', {
       params: {
         include_inactive: includeInactive,
+        search: search || undefined,
+        clinic_id: clinicId || undefined,
+        doctor_id: doctorId || undefined,
       },
     })
 
