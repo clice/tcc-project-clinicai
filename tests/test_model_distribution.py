@@ -70,14 +70,57 @@ class DistribuicaoModelosTestCase(unittest.TestCase):
         for nome in download_models.ARTEFATOS_OBRIGATORIOS:
             self.assertEqual((self.destino / nome).read_bytes(), (self.release / nome).read_bytes())
 
+    def test_segunda_execucao_reaproveita_artefatos_validos(self) -> None:
+        with patch.dict(os.environ, self._ambiente(), clear=True):
+            download_models.baixar_modelos()
+
+        conteudo_inicial = {
+            nome: (self.destino / nome).read_bytes()
+            for nome in download_models.ARTEFATOS_OBRIGATORIOS
+        }
+        baixar_original = download_models._baixar
+        urls_baixadas: list[str] = []
+
+        def registrar_download(url: str, destino: Path) -> None:
+            urls_baixadas.append(url)
+            baixar_original(url, destino)
+
+        with patch.dict(os.environ, self._ambiente(), clear=True):
+            with patch.object(download_models, "_baixar", side_effect=registrar_download):
+                download_models.baixar_modelos()
+
+        self.assertEqual(len(urls_baixadas), 1)
+        self.assertTrue(urls_baixadas[0].endswith("/manifesto_modelos.json"))
+        for nome, conteudo in conteudo_inicial.items():
+            self.assertEqual((self.destino / nome).read_bytes(), conteudo)
+
     def test_rejeita_artefato_com_conteudo_adulterado(self) -> None:
+        self.destino.mkdir()
+        for nome in download_models.ARTEFATOS_OBRIGATORIOS:
+            (self.destino / nome).write_bytes(f"versao-anterior-{nome}".encode())
+        (self.destino / "manifesto_modelos.json").write_text(
+            '{"release_tag": "versao-anterior"}', encoding="utf-8"
+        )
+        conteudo_anterior = {
+            caminho.name: caminho.read_bytes()
+            for caminho in self.destino.iterdir()
+            if caminho.is_file()
+        }
+
         (self.release / "resnet50.pt").write_bytes(b"conteudo-adulterado")
         with patch.dict(os.environ, self._ambiente(), clear=True):
             with self.assertRaises(download_models.ErroDownload):
                 download_models.baixar_modelos()
-        self.assertFalse((self.destino / "resnet50.pt").exists())
+
+        conteudo_depois_da_falha = {
+            caminho.name: caminho.read_bytes()
+            for caminho in self.destino.iterdir()
+            if caminho.is_file()
+        }
+        self.assertEqual(conteudo_depois_da_falha, conteudo_anterior)
+        self.assertFalse(any(self.destino.parent.glob(".destino-staging-*")))
+        self.assertFalse(any(self.destino.parent.glob(".destino-backup-*")))
 
 
 if __name__ == "__main__":
     unittest.main()
-
