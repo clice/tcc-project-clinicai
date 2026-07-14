@@ -4,10 +4,7 @@ Service do módulo de exames.
 Concentra as regras de negócio relacionadas aos exames.
 """
 
-import shutil
 from datetime import datetime, timezone
-from pathlib import Path
-from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -30,6 +27,12 @@ from app.modules.ai_analysis.service import build_ai_analysis_response, create_a
 from app.modules.audit_logs.service import create_audit_log, list_entity_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
+from app.modules.exams.file_storage import (
+    delete_exam_file_safely,
+    resolve_safe_exam_file_path,
+    store_validated_exam_file,
+    validate_exam_file,
+)
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate
 from app.modules.exams.state_machine import (
     ExamTransitionAction,
@@ -45,22 +48,6 @@ from app.modules.statuses.service import (
 )
 from app.modules.users.model import User
 
-
-from app.core.config import settings
-
-UPLOAD_DIR = Path(settings.upload_dir) / "exams"
-MAX_FILE_SIZE = settings.max_upload_size_mb * 1024 * 1024
-
-ALLOWED_EXAM_MIME_TYPES = {
-    "image/jpeg",
-    "image/png",
-}
-
-ALLOWED_EXAM_EXTENSIONS = {
-    ".jpg",
-    ".jpeg",
-    ".png",
-}
 
 
 def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
@@ -114,50 +101,6 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "created_at": exam.created_at,
         "updated_at": exam.updated_at,
     }
-
-
-def build_exam_storage_dir(patient_id: int) -> Path:
-    """
-    Cria e retorna o diretório seguro do paciente para armazenar exames.
-    """
-    patient_dir = UPLOAD_DIR / str(patient_id)
-    patient_dir.mkdir(parents=True, exist_ok=True)
-
-    return patient_dir
-
-
-def build_exam_file_name(
-    *,
-    exam_id: int,
-    patient_id: int,
-    file_extension: str,
-) -> str:
-    """
-    Gera um nome padronizado e seguro para o arquivo do exame.
-    """
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    short_uuid = uuid4().hex[:8]
-
-    return f"exam_{exam_id}_patient_{patient_id}_{timestamp}_{short_uuid}{file_extension}"
-
-
-def resolve_safe_exam_file_path(file_path: str) -> Path:
-    """
-    Garante que o arquivo solicitado está dentro da pasta segura de uploads.
-    Evita path traversal no download.
-    """
-    base_dir = UPLOAD_DIR.resolve()
-    resolved_path = Path(file_path).resolve()
-
-    try:
-        resolved_path.relative_to(base_dir)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=403,
-            detail="Caminho de arquivo inválido.",
-        ) from exc
-
-    return resolved_path
 
 
 def validate_user_can_access_exam(
@@ -548,60 +491,6 @@ def clear_exam_analysis_claim(db: Session, exam: Exam) -> None:
     exam.analysis_started_at = None
 
 
-def validate_exam_file(file: UploadFile) -> None:
-    """
-    Valida o tipo de arquivo enviado no upload para o exame.
-    """
-    if file.content_type not in ALLOWED_EXAM_MIME_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail="Tipo de arquivo não permitido. Use JPG ou PNG.",
-        )
-
-    file_extension = Path(file.filename or "").suffix.lower()
-
-    if file_extension not in ALLOWED_EXAM_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail="Extensão de arquivo não permitida.",
-        )
-
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    file.file.seek(0)
-
-    if file_size == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Arquivo vazio não é permitido.",
-        )
-
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Arquivo muito grande. Tamanho máximo permitido: {settings.max_upload_size_mb} MB.",
-        )
-        
-
-def delete_exam_file_safely(file_path: str | None) -> None:
-    """
-    Remove com segurança um arquivo antigo de exame.
-
-    A função só remove arquivos dentro da pasta segura de uploads.
-    Se o arquivo não existir, simplesmente ignora.
-    """
-    if not file_path:
-        return
-
-    try:
-        resolved_path = resolve_safe_exam_file_path(file_path)
-    except HTTPException:
-        return
-
-    if resolved_path.exists() and resolved_path.is_file():
-        resolved_path.unlink()
-        
-        
 # ========================================
 # MAIN METHODS
 # ========================================
@@ -764,7 +653,7 @@ def create_exam(
         status_id=processing_status.id,
     )
 
-    validate_exam_file(file)
+    validated_image = validate_exam_file(file)
 
     exam = Exam(
         clinic_id=payload.clinic_id,
@@ -781,25 +670,19 @@ def create_exam(
     db.add(exam)
     db.flush()
 
-    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
-
-    file_extension = Path(file.filename or "").suffix.lower()
-
-    stored_file_name = build_exam_file_name(
-        exam_id=exam.id,
-        patient_id=exam.patient_id,
-        file_extension=file_extension,
-    )
-
-    stored_file_path = patient_dir / stored_file_name
+    stored_file_path = None
 
     try:
-        with stored_file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        stored_file_path = store_validated_exam_file(
+            validated_image,
+            clinic_id=exam.clinic_id,
+            patient_id=exam.patient_id,
+            exam_id=exam.id,
+        )
 
         exam.file_path = str(stored_file_path)
-        exam.file_name = stored_file_name
-        exam.file_mime_type = file.content_type
+        exam.file_name = stored_file_path.name
+        exam.file_mime_type = validated_image.mime_type
 
         create_audit_log(
             db=db,
@@ -816,14 +699,25 @@ def create_exam(
                 "doctor_id": exam.doctor_id,
                 "status_name": StatusName.PROCESSING.value,
                 "file_name": exam.file_name,
+                "file_mime_type": validated_image.mime_type,
+                "file_size_bytes": validated_image.size_bytes,
+                "image_width": validated_image.width,
+                "image_height": validated_image.height,
+                "sha256": validated_image.sha256,
             },
         )
 
         db.commit()
 
+    except HTTPException:
+        db.rollback()
+        if stored_file_path is not None:
+            delete_exam_file_safely(str(stored_file_path))
+        raise
     except Exception as exc:
         db.rollback()
-        delete_exam_file_safely(str(stored_file_path))
+        if stored_file_path is not None:
+            delete_exam_file_safely(str(stored_file_path))
         raise HTTPException(
             status_code=500,
             detail="Erro ao criar exame.",
@@ -989,133 +883,6 @@ def restore_exam(
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
 
-def upload_exam_file(
-    db: Session,
-    exam_id: int,
-    file: UploadFile,
-    current_user: User,
-) -> dict:
-    """
-    Faz upload físico do arquivo do exame e atualiza metadados.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
-
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
-
-    if exam.status and exam.status.name == StatusName.CANCELED.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Não é possível enviar arquivo para um exame cancelado.",
-        )
-
-    if file.content_type not in ALLOWED_EXAM_MIME_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail="Tipo de arquivo não permitido. Use PDF, JPG ou PNG.",
-        )
-
-    file_extension = Path(file.filename or "").suffix.lower()
-
-    if file_extension not in ALLOWED_EXAM_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail="Extensão de arquivo não permitida.",
-        )
-
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    file.file.seek(0)
-
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Arquivo muito grande. Tamanho máximo permitido: {settings.max_upload_size_mb} MB.",
-        )
-
-    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
-
-    stored_file_name = build_exam_file_name(
-        exam_id=exam.id,
-        patient_id=exam.patient_id,
-        file_extension=file_extension,
-    )
-
-    stored_file_path = patient_dir / stored_file_name
-
-    old_file_path = exam.file_path
-
-    old_data = {
-        "file_path": exam.file_path,
-        "file_name": exam.file_name,
-        "file_mime_type": exam.file_mime_type,
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
-    try:
-        with stored_file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail="Erro ao salvar arquivo do exame.",
-        ) from exc
-
-    processing_status = get_status_by_name_and_applies_to(
-        db=db,
-        name=StatusName.PROCESSING.value,
-        applies_to=StatusScope.EXAM.value,
-    )
-
-    exam.file_path = str(stored_file_path)
-    exam.file_name = stored_file_name
-    exam.file_mime_type = file.content_type
-    exam.status_id = processing_status.id
-
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
-        clinic_id=exam.clinic_id,
-        action=AuditAction.UPLOAD,
-        entity=AuditEntity.EXAM,
-        entity_id=exam.id,
-        description="Arquivo de exame enviado.",
-        old_data=old_data,
-        new_data={
-            "file_path": exam.file_path,
-            "file_name": exam.file_name,
-            "file_mime_type": exam.file_mime_type,
-            "status_id": exam.status_id,
-            "status_name": StatusName.PROCESSING.value,
-        },
-    )
-
-    try:
-        db.commit()
-    except Exception as exc:
-        db.rollback()
-
-        if stored_file_path.exists() and stored_file_path.is_file():
-            stored_file_path.unlink()
-
-        raise HTTPException(
-            status_code=500,
-            detail="Erro ao atualizar dados do exame.",
-        ) from exc
-
-    db.refresh(exam)
-
-    if old_file_path and old_file_path != str(stored_file_path):
-        delete_exam_file_safely(old_file_path)
-
-    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-
-    return build_exam_response(exam, current_user=current_user)
-
-
 def download_exam_file(
     db: Session,
     exam_id: int,
@@ -1139,7 +906,7 @@ def download_exam_file(
 
     file_path = resolve_safe_exam_file_path(exam.file_path)
 
-    if not file_path.exists():
+    if not file_path.exists() or not file_path.is_file():
         raise HTTPException(
             status_code=404,
             detail="Arquivo físico não encontrado no servidor.",
@@ -1314,20 +1081,17 @@ def replace_exam_file(
         raise HTTPException(status_code=409, detail="A imagem não pode ser substituída durante a análise de IA.")
     if exam.ai_analysis:
         raise HTTPException(status_code=409, detail="A imagem não pode ser substituída após uma análise concluída.")
-    validate_exam_file(file)
+    validated_image = validate_exam_file(file)
 
     old_file_path = exam.file_path
-    patient_dir = build_exam_storage_dir(patient_id=exam.patient_id)
-    file_extension = Path(file.filename or "").suffix.lower()
-    stored_file_name = build_exam_file_name(
-        exam_id=exam.id,
-        patient_id=exam.patient_id,
-        file_extension=file_extension,
-    )
-    stored_file_path = patient_dir / stored_file_name
+    stored_file_path = None
     try:
-        with stored_file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        stored_file_path = store_validated_exam_file(
+            validated_image,
+            clinic_id=exam.clinic_id,
+            patient_id=exam.patient_id,
+            exam_id=exam.id,
+        )
         target_status = get_status_by_name_and_applies_to(
             db=db,
             name=target_name,
@@ -1340,13 +1104,17 @@ def replace_exam_file(
             "status_name": current_status,
         }
         exam.file_path = str(stored_file_path)
-        exam.file_name = stored_file_name
-        exam.file_mime_type = file.content_type
+        exam.file_name = stored_file_path.name
+        exam.file_mime_type = validated_image.mime_type
         exam.status_id = target_status.id
         clear_exam_analysis_claim(db, exam)
         new_data = {
             "file_name": exam.file_name,
             "file_mime_type": exam.file_mime_type,
+            "file_size_bytes": validated_image.size_bytes,
+            "image_width": validated_image.width,
+            "image_height": validated_image.height,
+            "sha256": validated_image.sha256,
             "status_id": target_status.id,
             "status_name": target_name,
             "transition_action": ExamTransitionAction.REPLACE_FILE.value,
@@ -1365,11 +1133,13 @@ def replace_exam_file(
         db.commit()
     except HTTPException:
         db.rollback()
-        delete_exam_file_safely(str(stored_file_path))
+        if stored_file_path is not None:
+            delete_exam_file_safely(str(stored_file_path))
         raise
     except Exception as exc:
         db.rollback()
-        delete_exam_file_safely(str(stored_file_path))
+        if stored_file_path is not None:
+            delete_exam_file_safely(str(stored_file_path))
         raise HTTPException(status_code=500, detail="Erro ao substituir imagem do exame.") from exc
 
     if old_file_path and old_file_path != str(stored_file_path):

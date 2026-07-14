@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     # Uploads
     upload_dir: str = "uploads"
     max_upload_size_mb: int = 10
+    max_image_width_px: int = 12000
+    max_image_height_px: int = 12000
+    max_image_pixels: int = 40_000_000
 
     # Serviço de IA (container separado, ver docker-compose.yml)
     ai_service_url: str = "http://ai:8001"
