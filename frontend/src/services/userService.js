@@ -5,6 +5,7 @@
  */
 
 import api from 'src/services/api'
+import { setAuthTokens } from 'src/utils/token'
 
 export const userService = {
   /**
@@ -85,6 +86,12 @@ export const userService = {
       password,
       current_password: currentPassword,
     })
+
+    setAuthTokens({
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+    })
+
     return response.data
   },
 

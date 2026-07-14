@@ -14,6 +14,7 @@ from app.common.services import (
     normalize_update_data,
 )
 from app.core.security import get_password_hash, verify_password
+from app.modules.auth.service import create_user_tokens
 from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -455,6 +456,8 @@ def update_user_password(
     payload: UserPasswordUpdate,
     current_user: User,
 ) -> dict:
+    """Permite ao administrador resetar a senha de outro usuário."""
+
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
@@ -462,35 +465,21 @@ def update_user_password(
         target_user=user,
     )
 
-    if not is_admin_master(current_user) and current_user.id != user.id:
+    if not is_admin_master(current_user):
         raise HTTPException(
             status_code=403,
-            detail="Você não tem permissão para alterar a senha deste usuário.",
+            detail="Apenas o administrador master pode redefinir senhas de outros usuários.",
         )
 
-    is_self_service = current_user.id == user.id and not is_admin_master(current_user)
-
-    # Quando o próprio usuário troca a própria senha, exigimos a senha atual.
-    # Um admin_master resetando a senha de outro usuário não precisa informá-la.
-    if is_self_service:
-        if not payload.current_password:
-            raise HTTPException(
-                status_code=400,
-                detail="Informe a senha atual para definir uma nova senha.",
-            )
-
-        if not verify_password(payload.current_password, user.password_hash):
-            raise HTTPException(
-                status_code=400,
-                detail="Senha atual incorreta.",
-            )
+    if current_user.id == user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Para alterar a própria senha, utilize a rota /users/me/password.",
+        )
 
     user.password_hash = get_password_hash(payload.password)
-
-    # Invalida tokens (access e refresh) emitidos antes da troca de senha.
     user.token_version += 1
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -498,14 +487,13 @@ def update_user_password(
         action=AuditAction.UPDATE_PASSWORD,
         entity=AuditEntity.USER,
         entity_id=user.id,
-        description="Senha do usuário atualizada.",
-        old_data=None,
+        description="Senha do usuário redefinida pelo administrador.",
         new_data={
             "password_updated": True,
             "token_version": user.token_version,
         },
     )
-    
+
     db.commit()
     db.refresh(user)
 
@@ -513,6 +501,58 @@ def update_user_password(
 
     return build_user_response(user)
 
+
+def change_current_user_password(
+    db: Session,
+    payload: UserPasswordUpdate,
+    current_user: User,
+) -> dict[str, str]:
+    """Troca a senha do usuário autenticado e preserva somente esta sessão."""
+
+    user = get_user_by_id(db, current_user.id)
+
+    if not payload.current_password:
+        raise HTTPException(
+            status_code=400,
+            detail="Informe a senha atual para definir uma nova senha.",
+        )
+
+    if not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=400,
+            detail="Senha atual incorreta.",
+        )
+
+    if verify_password(payload.password, user.password_hash):
+        raise HTTPException(
+            status_code=400,
+            detail="A nova senha deve ser diferente da senha atual.",
+        )
+
+    user.password_hash = get_password_hash(payload.password)
+
+    # Encerra tokens emitidos antes da troca. Um novo par é devolvido ao
+    # navegador que comprovou a senha atual, preservando apenas esta sessão.
+    user.token_version += 1
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.UPDATE_PASSWORD,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Senha do próprio usuário atualizada.",
+        new_data={
+            "password_updated": True,
+            "token_version": user.token_version,
+        },
+    )
+
+    db.commit()
+    db.refresh(user)
+
+    return create_user_tokens(user)
 
 def inactivate_user(
     db: Session,
@@ -550,6 +590,7 @@ def inactivate_user(
     }
 
     user.status_id = inactive_status.id
+    user.token_version += 1
 
     # Adiciona log
     create_audit_log(
@@ -564,6 +605,7 @@ def inactivate_user(
         new_data={
             "status_id": inactive_status.id,
             "status_name": StatusName.INACTIVE.value,
+            "token_version": user.token_version,
         },
     )
 
