@@ -4,6 +4,15 @@
 **Escopo:** RBAC-01 a RBAC-12, matriz rota × permissão × role e confronto dos requisitos RF31, RF34 e RF36  
 **Perfil do sistema:** protótipo acadêmico e demonstrativo
 
+### Execução no Docker
+
+Na raiz do projeto:
+
+```bash
+chmod +x scripts/verify_chk05_rbac.sh
+./scripts/verify_chk05_rbac.sh
+```
+
 ## 1. Resultado executivo
 
 A autorização do ClinicAI permanece centralizada no backend. Todas as rotas não públicas declaram exatamente uma política de acesso (`get_current_user`, `require_admin`, `require_permission` ou `require_doctor_permission`), e a suíte executa as três roles contra cada rota protegida.
