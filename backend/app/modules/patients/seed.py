@@ -1,71 +1,13 @@
-"""
-Seed do módulo de pacientes.
-
-Este arquivo cadastra pacientes iniciais usados em desenvolvimento.
-"""
+"""Massa acadêmica fictícia do módulo de pacientes."""
 
 from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import RoleName, StatusName, StatusScope
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
-from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
-
-
-def get_active_patient_status(db: Session) -> Status | None:
-    """
-    Busca o status active para pacientes.
-    """
-    return (
-        db.query(Status)
-        .filter(
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.PATIENT.value,
-        )
-        .first()
-    )
-
-
-def get_first_active_clinic(db: Session) -> Clinic | None:
-    """
-    Busca uma clínica ativa para vincular pacientes de exemplo.
-    """
-    return (
-        db.query(Clinic)
-        .join(Status, Clinic.status_id == Status.id)
-        .filter(
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.CLINIC.value,
-        )
-        .order_by(Clinic.id.asc())
-        .first()
-    )
-
-
-def get_first_active_doctor_from_clinic(
-    db: Session,
-    clinic_id: int,
-) -> User | None:
-    """
-    Busca um médico ativo da clínica para vincular pacientes.
-    """
-    return (
-        db.query(User)
-        .join(Role, User.role_id == Role.id)
-        .join(Status, User.status_id == Status.id)
-        .filter(
-            User.clinic_id == clinic_id,
-            Role.name == RoleName.DOCTOR.value,
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.USER.value,
-        )
-        .order_by(User.id.asc())
-        .first()
-    )
 
 
 def get_or_create_patient(
@@ -88,9 +30,8 @@ def get_or_create_patient(
     city: str | None = None,
     state: str | None = None,
 ) -> Patient:
-    """
-    Busca um paciente existente ou cria um novo.
-    """
+    """Busca pelo identificador natural da massa demo ou cria o paciente."""
+
     patient = (
         db.query(Patient)
         .filter(
@@ -123,27 +64,31 @@ def get_or_create_patient(
     )
 
     db.add(patient)
-    db.commit()
+    db.flush()
     db.refresh(patient)
 
     return patient
 
 
-def seed_patients(db: Session) -> dict[str, Patient]:
+def seed_patients(
+    db: Session,
+    *,
+    clinics: dict[str, Clinic],
+    users: dict[str, User],
+    statuses: dict[str, Status],
+) -> dict[str, Patient]:
+    """Cria pacientes fictícios com vínculos determinísticos.
+
+    Não é feita busca pelo "primeiro" médico ou clínica do banco. Todos os
+    registros usam explicitamente a clínica e o médico do dataset acadêmico,
+    evitando que dados administrativos preexistentes mudem os vínculos demo.
     """
-    Cria pacientes iniciais para desenvolvimento.
 
-    Depende de clinics, roles, users e statuses já terem sido criados.
-    """
-    active_status = get_active_patient_status(db)
-    clinic = get_first_active_clinic(db)
+    clinic = clinics.get("clinic_primary")
+    doctor = users.get("doctor_primary")
+    active_status = statuses.get("patient_active")
 
-    if not active_status or not clinic:
-        return {}
-
-    doctor = get_first_active_doctor_from_clinic(db=db, clinic_id=clinic.id)
-
-    if not doctor:
+    if not clinic or not doctor or not active_status:
         return {}
 
     return {
@@ -208,12 +153,12 @@ def seed_patients(db: Session) -> dict[str, Patient]:
             city="Juazeiro do Norte",
             state="CE",
         ),
-        "patient_no_cpf": get_or_create_patient(
+        "patient_fictitious_cpf": get_or_create_patient(
             db,
             clinic_id=clinic.id,
             doctor_id=doctor.id,
             status_id=active_status.id,
-            name="Paciente Sem CPF",
+            name="Paciente com CPF Fictício",
             cpf="00000000000",
             birth_date=None,
             sex=None,

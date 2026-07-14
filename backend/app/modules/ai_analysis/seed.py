@@ -1,8 +1,4 @@
-"""
-Seed do módulo de análises de IA.
-
-Cria análises iniciais para testes e desenvolvimento.
-"""
+"""Massa acadêmica fictícia do módulo de análises de IA."""
 
 from sqlalchemy.orm import Session
 
@@ -47,11 +43,7 @@ def get_or_create_ai_analysis(
     """
     Busca uma análise pelo exame ou cria uma nova.
     """
-    ai_analysis = (
-        db.query(AIAnalysis)
-        .filter(AIAnalysis.exam_id == exam_id)
-        .first()
-    )
+    ai_analysis = db.query(AIAnalysis).filter(AIAnalysis.exam_id == exam_id).first()
 
     if ai_analysis:
         return ai_analysis
@@ -71,7 +63,7 @@ def get_or_create_ai_analysis(
     )
 
     db.add(ai_analysis)
-    db.commit()
+    db.flush()
     db.refresh(ai_analysis)
 
     return ai_analysis
@@ -83,7 +75,7 @@ def seed_ai_analysis(
     statuses: dict[str, Status] | None = None,
 ) -> dict[str, AIAnalysis]:
     """
-    Cria análises de IA iniciais do sistema.
+    Cria análises simuladas, sem alegação de validade clínica.
     """
     completed_exam = exams.get("exam_colonoscopy_completed")
     processing_exam = exams.get("exam_endoscopy_processing")
@@ -95,10 +87,19 @@ def seed_ai_analysis(
         completed_status = statuses.get("ai_analysis_completed")
         processing_status = statuses.get("ai_analysis_processing")
 
-    completed_status = completed_status or get_ai_analysis_status(db, StatusName.COMPLETED)
-    processing_status = processing_status or get_ai_analysis_status(db, StatusName.PROCESSING)
+    completed_status = completed_status or get_ai_analysis_status(
+        db, StatusName.COMPLETED
+    )
+    processing_status = processing_status or get_ai_analysis_status(
+        db, StatusName.PROCESSING
+    )
 
-    if not completed_exam or not processing_exam or not completed_status or not processing_status:
+    if (
+        not completed_exam
+        or not processing_exam
+        or not completed_status
+        or not processing_status
+    ):
         return {}
 
     return {
@@ -109,8 +110,8 @@ def seed_ai_analysis(
             prediction_label="normal",
             prediction_class=0,
             confidence=0.94,
-            model_name="clinicai-endoscopy-cnn",
-            model_version="0.1.0",
+            model_name="clinicai-gastrointestinal-stacking-demo",
+            model_version="demo-0.1.0",
             gradcam_path="uploads/gradcam/colonoscopy_completed_gradcam.jpg",
             processing_time_ms=1240,
             ai_notes="Análise simulada para ambiente de desenvolvimento.",
@@ -120,14 +121,14 @@ def seed_ai_analysis(
             db=db,
             exam_id=processing_exam.id,
             status_id=processing_status.id,
-            prediction_label="suspected_gastritis",
+            prediction_label="anormal",
             prediction_class=1,
             confidence=0.87,
-            model_name="clinicai-endoscopy-cnn",
-            model_version="0.1.0",
+            model_name="clinicai-gastrointestinal-stacking-demo",
+            model_version="demo-0.1.0",
             gradcam_path="uploads/gradcam/endoscopy_ai_processing_gradcam.jpg",
             processing_time_ms=1580,
-            ai_notes="Resultado preliminar gerado por modelo simulado.",
-            raw_response='{"prediction_label": "suspected_gastritis", "status": "processing", "confidence": 0.87}',
+            ai_notes="Resultado acadêmico preliminar e inteiramente simulado.",
+            raw_response='{"prediction_label": "anormal", "status": "processing", "confidence": 0.87}',
         ),
     }

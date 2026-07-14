@@ -52,7 +52,7 @@ def get_or_create_clinic(
     )
 
     db.add(clinic)
-    db.commit()
+    db.flush()
     db.refresh(clinic)
 
     return clinic

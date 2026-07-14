@@ -1,8 +1,4 @@
-"""
-Seed do módulo de usuários.
-
-Este arquivo cria usuários iniciais do sistema.
-"""
+"""Usuários fictícios e credenciais do ambiente acadêmico de demonstração."""
 
 from sqlalchemy.orm import Session
 
@@ -11,6 +7,18 @@ from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
+
+
+# Credencial intencionalmente padronizada apenas para a massa fictícia.
+# O modo ``bootstrap`` nunca cria estes usuários.
+ACADEMIC_DEMO_PASSWORD = "clinicai123"
+ACADEMIC_DEMO_EMAILS = (
+    "admin@clinicai.com",
+    "doctor@clinicai.com",
+    "doctor2@clinicai.com",
+    "staff@clinicai.com",
+    "inactive@clinicai.com",
+)
 
 
 def get_or_create_user(
@@ -41,7 +49,7 @@ def get_or_create_user(
     )
 
     db.add(user)
-    db.commit()
+    db.flush()
     db.refresh(user)
 
     return user
@@ -58,7 +66,7 @@ def seed_users(
             db=db,
             name="Administrador Master",
             email="admin@clinicai.com",
-            password="clinicai123",
+            password=ACADEMIC_DEMO_PASSWORD,
             cpf="39053344705",
             role_id=roles["admin_master"].id,
             status_id=statuses["user_active"].id,
@@ -68,7 +76,7 @@ def seed_users(
             db=db,
             name="Dr. João Silva",
             email="doctor@clinicai.com",
-            password="clinicai123",
+            password=ACADEMIC_DEMO_PASSWORD,
             cpf="11144477735",
             role_id=roles["doctor"].id,
             status_id=statuses["user_active"].id,
@@ -78,7 +86,7 @@ def seed_users(
             db=db,
             name="Dra. Maria Souza",
             email="doctor2@clinicai.com",
-            password="clinicai123",
+            password=ACADEMIC_DEMO_PASSWORD,
             cpf="52998224725",
             role_id=roles["doctor"].id,
             status_id=statuses["user_active"].id,
@@ -88,7 +96,7 @@ def seed_users(
             db=db,
             name="Recepção Clínica",
             email="staff@clinicai.com",
-            password="clinicai123",
+            password=ACADEMIC_DEMO_PASSWORD,
             cpf="15350946056",
             role_id=roles["clinic_staff"].id,
             status_id=statuses["user_active"].id,
@@ -98,7 +106,7 @@ def seed_users(
             db=db,
             name="Usuário Inativo",
             email="inactive@clinicai.com",
-            password="clinicai123",
+            password=ACADEMIC_DEMO_PASSWORD,
             cpf="98765432100",
             role_id=roles["clinic_staff"].id,
             status_id=statuses["user_inactive"].id,

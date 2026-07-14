@@ -1,8 +1,4 @@
-"""
-Seed do módulo de exames.
-
-Cria exames iniciais para testes e desenvolvimento.
-"""
+"""Massa acadêmica fictícia do módulo de exames."""
 
 from datetime import date
 
@@ -85,7 +81,7 @@ def get_or_create_exam(
     )
 
     db.add(exam)
-    db.commit()
+    db.flush()
     db.refresh(exam)
 
     return exam
@@ -99,15 +95,20 @@ def seed_exams(
     statuses: dict[str, Status],
 ) -> dict[str, Exam]:
     """
-    Cria exames iniciais do sistema.
+    Cria exames fictícios com clínica, paciente e médico coerentes.
     """
-    pending_status = statuses.get("exam_pending") or get_exam_status(db, StatusName.PENDING)
-    processing_status = statuses.get("exam_processing") or get_exam_status(db, StatusName.PROCESSING)
-    completed_status = statuses.get("exam_completed") or get_exam_status(db, StatusName.COMPLETED)
+    pending_status = statuses.get("exam_pending") or get_exam_status(
+        db, StatusName.PENDING
+    )
+    processing_status = statuses.get("exam_processing") or get_exam_status(
+        db, StatusName.PROCESSING
+    )
+    completed_status = statuses.get("exam_completed") or get_exam_status(
+        db, StatusName.COMPLETED
+    )
 
     primary_clinic = clinics.get("clinic_primary")
     doctor_primary = users.get("doctor_primary")
-    doctor_secondary = users.get("doctor_secondary") or doctor_primary
 
     patient_example_1 = patients.get("patient_example_1")
     patient_example_2 = patients.get("patient_example_2")
@@ -117,7 +118,6 @@ def seed_exams(
         [
             primary_clinic,
             doctor_primary,
-            doctor_secondary,
             patient_example_1,
             patient_example_2,
             patient_elderly,
@@ -167,7 +167,7 @@ def seed_exams(
             db=db,
             clinic_id=primary_clinic.id,
             patient_id=patient_elderly.id,
-            doctor_id=doctor_secondary.id,
+            doctor_id=doctor_primary.id,
             status_id=processing_status.id,
             exam_type="endoscopy",
             exam_date=date(2026, 5, 3),

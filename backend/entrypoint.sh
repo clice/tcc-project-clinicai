@@ -5,12 +5,14 @@
 # Executado toda vez que o container do backend sobe. Garante que:
 #   1) o banco de dados esteja de fato aceitando conexões antes de seguir;
 #   2) as migrations (Alembic) estejam aplicadas;
-#   3) os dados iniciais (seeds/bootstrap) existam.
+#   3) o bootstrap estrutural exista e, quando explicitamente configurada,
+#      a massa acadêmica fictícia seja criada.
 #
 # Tudo aqui é idempotente. Migrations aplicam evoluções oficiais de dados;
 # seeds fazem bootstrap da primeira instalação e validam dados estruturais.
-# Em banco existente, permissões oficiais ausentes exigem migration e a
-# matriz RBAC editável não é reconciliada na inicialização.
+# SEED_MODE=bootstrap é o padrão seguro. SEED_MODE=academic_demo acrescenta
+# somente dados fictícios e credenciais acadêmicas documentadas. Em banco
+# existente, a matriz RBAC editável não é reconciliada na inicialização.
 # =====================================================
 
 set -e
@@ -54,7 +56,7 @@ echo "[entrypoint] Banco de dados disponível."
 echo "[entrypoint] Aplicando migrations (alembic upgrade head)..."
 alembic upgrade head
 
-echo "[entrypoint] Executando seeds..."
+echo "[entrypoint] Executando seeds no modo ${SEED_MODE:-bootstrap}..."
 python -m app.modules.seeds
 
 echo "[entrypoint] Setup concluído. Iniciando aplicação..."

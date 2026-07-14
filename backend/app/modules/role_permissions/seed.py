@@ -134,12 +134,10 @@ def seed_role_permissions(
         role = roles.get(role_name)
         if role is None:
             continue
-        if bootstrap_permissions_for_role(
-            db, role, permissions, permission_names
-        ):
+        if bootstrap_permissions_for_role(db, role, permissions, permission_names):
             bootstrapped_roles.append(role_name)
 
-    db.commit()
+    db.flush()
     return bootstrapped_roles
 
 
@@ -153,9 +151,7 @@ def reconcile_permissions_for_role(
 
     desired = _resolve_permissions(role, permissions, permission_names)
     current_links = (
-        db.query(RolePermission)
-        .filter(RolePermission.role_id == role.id)
-        .all()
+        db.query(RolePermission).filter(RolePermission.role_id == role.id).all()
     )
     current_ids = {link.permission_id for link in current_links}
     desired_ids = {permission.id for permission in desired.values()}
@@ -194,14 +190,14 @@ def reconcile_role_permissions(
 
     results: list[ReconciliationResult] = []
     try:
-        for role_name, permission_names in build_role_permission_map(permissions).items():
+        for role_name, permission_names in build_role_permission_map(
+            permissions
+        ).items():
             role = roles.get(role_name)
             if role is None:
                 continue
             results.append(
-                reconcile_permissions_for_role(
-                    db, role, permissions, permission_names
-                )
+                reconcile_permissions_for_role(db, role, permissions, permission_names)
             )
         db.commit()
     except Exception:

@@ -5,6 +5,8 @@ Este arquivo lê as variáveis de ambiente do projeto e disponibiliza
 uma instância única de configuração para uso em todo o backend.
 """
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +24,11 @@ class Settings(BaseSettings):
 
     # URL de conexão com o banco PostgreSQL
     database_url: str
+
+    # Dados iniciais. ``bootstrap`` cria somente catálogos estruturais;
+    # ``academic_demo`` acrescenta exclusivamente registros fictícios e as
+    # credenciais acadêmicas documentadas no README.
+    seed_mode: Literal["bootstrap", "academic_demo"] = "bootstrap"
     
     # Uploads
     upload_dir: str = "uploads"

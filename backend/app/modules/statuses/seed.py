@@ -50,7 +50,7 @@ def get_or_create_status(
     )
 
     db.add(status)
-    db.commit()
+    db.flush()
     db.refresh(status)
 
     return status
@@ -77,7 +77,6 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             applies_to=StatusScope.USER,
             description="Usuário inativo no sistema.",
         ),
-
         # Clinics
         "clinic_active": get_or_create_status(
             db,
@@ -93,7 +92,6 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             applies_to=StatusScope.CLINIC,
             description="Clínica inativa no sistema.",
         ),
-
         # Patients
         "patient_active": get_or_create_status(
             db,
@@ -109,7 +107,6 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             applies_to=StatusScope.PATIENT,
             description="Paciente inativo no sistema.",
         ),
-
         # Exams
         "exam_pending": get_or_create_status(
             db,
@@ -160,7 +157,6 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             applies_to=StatusScope.EXAM,
             description="Exame com erro no processamento.",
         ),
-
         # AI Analysis
         "ai_analysis_pending": get_or_create_status(
             db,
@@ -191,4 +187,3 @@ def seed_statuses(db: Session) -> dict[str, Status]:
             description="Análise de IA com falha.",
         ),
     }
-    

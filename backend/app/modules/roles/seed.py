@@ -28,7 +28,7 @@ def get_or_create_role(
     )
 
     db.add(role)
-    db.commit()
+    db.flush()
     db.refresh(role)
 
     return role
@@ -55,4 +55,3 @@ def seed_roles(db: Session) -> dict[str, Role]:
             description="Funcionário da clínica com acesso operacional ao sistema.",
         ),
     }
-    
