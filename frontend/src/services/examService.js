@@ -122,6 +122,14 @@ export const examService = {
   },
 
   /**
+   * Dispara a análise de IA. O backend garante claim atômico e idempotência.
+   */
+  analyze: async (id) => {
+    const response = await api.post(`/exams/${id}/analyze`)
+    return response.data
+  },
+
+  /**
    * Registra a revisão médica do resultado da análise de IA.
    *
    * O exame precisa estar em 'awaiting_review'. has_discrepancy=false conclui

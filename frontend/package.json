@@ -22,6 +22,7 @@
     "check:clinics": "node scripts/check-clinic-contract.mjs",
     "check:users": "node scripts/check-user-contract.mjs",
     "check:patients": "node scripts/check-patient-contract.mjs",
+    "check:exams": "node scripts/check-exam-state-contract.mjs",
     "lint": "eslint",
     "serve": "vite preview",
     "start": "vite"

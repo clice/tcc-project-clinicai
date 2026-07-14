@@ -247,8 +247,8 @@ const ExamsList = () => {
               canEdit={canEdit && (isProcessing || isPending)}
               canUpload={false}
               canDownload={canDownload && Boolean(exam.file_name)}
-              canCancel={canChangeStatus && (isProcessing || isPending || isFailed)}
-              canRestore={canChangeStatus && isCanceled}
+              canCancel={canChangeStatus && (isProcessing || isPending)}
+              canRestore={canChangeStatus && (isCanceled || isFailed)}
               canInactivate={false}
               canActivate={false}
               onDownload={() => handleDownloadFile(exam)}

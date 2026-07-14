@@ -60,6 +60,8 @@ const emptyExam = {
   conclusion: '',
   reviewed_by_name: '',
   reviewed_at: '',
+  analysis_in_progress: false,
+  analysis_started_at: '',
 }
 
 const formatConfidence = (value) => {
@@ -90,6 +92,7 @@ const ExamForm = ({ mode = 'create' }) => {
     has_discrepancy: false,
   })
   const [isReviewing, setIsReviewing] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
@@ -102,6 +105,13 @@ const ExamForm = ({ mode = 'create' }) => {
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
   // (processando, concluído, falhou, cancelado) não admitem essa ação.
+  const canAnalyze =
+    hasPermission(user, PERMISSIONS.AI_ANALYSIS_CREATE) &&
+    !isCreateMode &&
+    form.status_name === 'processing' &&
+    !form.analysis_in_progress &&
+    !aiAnalysis
+
   const canReview =
     isDoctor &&
     hasPermission(user, PERMISSIONS.EXAMS_REVIEW) &&
@@ -205,6 +215,8 @@ const ExamForm = ({ mode = 'create' }) => {
           conclusion: examData.conclusion ?? '',
           reviewed_by_name: examData.reviewed_by_name ?? '',
           reviewed_at: examData.reviewed_at ?? '',
+          analysis_in_progress: Boolean(examData.analysis_in_progress),
+          analysis_started_at: examData.analysis_started_at ?? '',
         })
 
         // Busca a análise de IA vinculada, se existir. Um exame ainda em
@@ -378,11 +390,6 @@ const ExamForm = ({ mode = 'create' }) => {
     showError('')
     showSuccess('')
 
-    console.log('SUBMIT START')
-    console.log('MODE:', mode)
-    console.log('IS READ ONLY:', isReadOnly)
-    console.log('IS EDIT MODE:', isEditMode)
-    console.log('FORM:', form)
 
     if (!validateForm()) return
 
@@ -391,14 +398,12 @@ const ExamForm = ({ mode = 'create' }) => {
 
       if (isCreateMode) {
         const payload = buildCreatePayload()
-        console.log('CREATE PAYLOAD:', payload)
 
         await examService.create(payload)
       }
 
       if (isEditMode) {
         const payload = buildUpdatePayload()
-        console.log('UPDATE PAYLOAD:', payload)
 
         await examService.update(id, payload)
       }
@@ -409,6 +414,35 @@ const ExamForm = ({ mode = 'create' }) => {
       showError(getErrorMessage(err, 'Erro ao salvar exame.'))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleAnalyze = async () => {
+    if (!canAnalyze) return
+
+    showError('')
+    showSuccess('')
+    try {
+      setIsAnalyzing(true)
+      setForm((current) => ({ ...current, analysis_in_progress: true }))
+      const analysis = await examService.analyze(id)
+      const updatedExam = await examService.getById(id)
+      setAiAnalysis(analysis)
+      setForm((current) => ({
+        ...current,
+        status_id: updatedExam.status_id ? String(updatedExam.status_id) : current.status_id,
+        status_name: updatedExam.status_name ?? current.status_name,
+        status_display_name: updatedExam.status_display_name ?? current.status_display_name,
+        ai_analysis_status: updatedExam.status_name ?? current.ai_analysis_status,
+        analysis_in_progress: Boolean(updatedExam.analysis_in_progress),
+        analysis_started_at: updatedExam.analysis_started_at ?? '',
+      }))
+      showSuccess('Análise de IA concluída. O exame aguarda revisão médica.')
+    } catch (err) {
+      setForm((current) => ({ ...current, analysis_in_progress: false }))
+      showError(getErrorMessage(err, 'Erro ao executar a análise de IA.'))
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -669,6 +703,8 @@ const ExamForm = ({ mode = 'create' }) => {
               </CForm>
             </CCardBody>
           </CCard>
+
+          {!isCreateMode && <ExamHistoryCard examId={id} />}
         </CCol>
 
         <CCol lg={4}>
@@ -689,6 +725,26 @@ const ExamForm = ({ mode = 'create' }) => {
                 <div className="text-body-secondary small">Resumo</div>
                 <div>{form.ai_summary || 'A análise será executada após o cadastro.'}</div>
               </div>
+
+              {form.analysis_in_progress && !aiAnalysis && (
+                <CAlert color="info" className="d-flex align-items-center gap-2">
+                  <CSpinner size="sm" />
+                  Uma análise já está em andamento. Repetições são bloqueadas pelo backend.
+                </CAlert>
+              )}
+
+              {canAnalyze && (
+                <CButton color="primary" className="mb-3" onClick={handleAnalyze} disabled={isAnalyzing}>
+                  {isAnalyzing ? (
+                    <>
+                      <CSpinner size="sm" className="me-2" />
+                      Analisando...
+                    </>
+                  ) : (
+                    'Executar análise de IA'
+                  )}
+                </CButton>
+              )}
 
               {aiAnalysis ? (
                 <>
