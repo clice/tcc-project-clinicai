@@ -10,13 +10,14 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.common.constants import ALLOWED_STATUS_BY_SCOPE, StatusName, StatusScope
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_text,
     normalize_required_text,
 )
 
 
-class StatusBase(BaseModel):
+class StatusBase(StrictRequestModel):
     """
     Schema base com os campos compartilhados entre criação e resposta.
     """
@@ -62,7 +63,7 @@ class StatusCreate(StatusBase):
     pass
 
 
-class StatusUpdate(BaseModel):
+class StatusUpdate(StrictRequestModel):
     """
     Schema usado para atualização de status.
     Todos os campos são opcionais para permitir update parcial com PATCH.
@@ -110,4 +111,3 @@ class StatusResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
-    

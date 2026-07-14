@@ -6,6 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_email,
     normalize_optional_email,
@@ -16,7 +17,7 @@ from app.common.validators import (
 )
 
 
-class UserBase(BaseModel):
+class UserBase(StrictRequestModel):
     """
     Schema base com campos compartilhados.
     """
@@ -63,7 +64,7 @@ class UserCreate(UserBase):
         return validate_password_length(value)
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de usuário.
     Todos os campos são opcionais porque o endpoint usa PATCH.
@@ -104,7 +105,7 @@ class UserUpdate(BaseModel):
         return normalize_phone(value)
 
 
-class UserPasswordUpdate(BaseModel):
+class UserPasswordUpdate(StrictRequestModel):
     """
     Schema exclusivo para troca de senha.
 

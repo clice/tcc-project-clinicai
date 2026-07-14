@@ -8,13 +8,15 @@ padronizar os dados enviados nas respostas e documentar automaticamente os endpo
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
+
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_text,
     normalize_required_text,
 )
 
 
-class PermissionUpdate(BaseModel):
+class PermissionUpdate(StrictRequestModel):
     """
     Schema usado para atualização de permission.
     Todos os campos são opcionais para permitir update parcial com PATCH.

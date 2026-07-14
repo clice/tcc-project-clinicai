@@ -10,13 +10,14 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from app.common.constants import RoleName
+from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_optional_text,
     normalize_required_text,
 )
 
 
-class RoleBase(BaseModel):
+class RoleBase(StrictRequestModel):
     """
     Schema base com os campos compartilhados entre criação e resposta.
     """
@@ -45,7 +46,7 @@ class RoleCreate(RoleBase):
     pass
 
 
-class RoleUpdate(BaseModel):
+class RoleUpdate(StrictRequestModel):
     """
     Schema usado para atualização de role.
     Todos os campos são opcionais para permitir update parcial.
@@ -90,4 +91,3 @@ class RoleResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
-    

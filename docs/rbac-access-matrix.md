@@ -76,3 +76,6 @@ ligados aos booleanos específicos.
 
 O catálogo técnico e o procedimento obrigatório para incluir novas permissões
 estão documentados em `docs/permission-catalog.md`.
+
+A rejeição de campos desconhecidos e imutáveis nos corpos de requisição está
+documentada em `docs/api-request-validation.md`.

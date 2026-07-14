@@ -6,10 +6,11 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.common.schemas import StrictRequestModel
 from app.common.validators import normalize_optional_text, normalize_required_text
 
 
-class AIAnalysisBase(BaseModel):
+class AIAnalysisBase(StrictRequestModel):
     """
     Campos compartilhados entre criação e resposta.
     """
@@ -48,7 +49,7 @@ class AIAnalysisCreate(AIAnalysisBase):
     pass
 
 
-class AIAnalysisUpdate(BaseModel):
+class AIAnalysisUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de análise de IA.
     """
@@ -169,4 +170,3 @@ class AIMetricsResponse(BaseModel):
     recent_failures: list[AIRecentFailure]
 
     analyses_last_30_days: list[AIDailyVolume]
-    
