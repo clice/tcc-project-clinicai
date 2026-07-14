@@ -14,6 +14,26 @@ repetida no backend, que permanece como fonte autoritativa da autorização.
 - Uma permissão administrativa eventualmente vinculada a outra role não abre
   Clínicas, Usuários administrativos ou Logs de Auditoria.
 
+## Escopo autoritativo de pacientes
+
+A permissão `patients:read` autoriza a entrada no recurso, mas não amplia o
+conjunto de registros retornado pelo backend:
+
+- `admin_master`: consulta pacientes de todas as clínicas;
+- `clinic_staff`: consulta somente pacientes da própria clínica;
+- `doctor`: consulta somente pacientes atribuídos ao próprio médico.
+
+Filtros por clínica ou médico apenas reduzem esse conjunto. Um filtro forjado
+para outra clínica ou outro médico não amplia o escopo e pode retornar HTTP
+403. A mesma política é aplicada à consulta detalhada, edição e alteração de
+status.
+
+A reatribuição de médico é permitida ao funcionário somente dentro de sua
+clínica e ao administrador dentro do conjunto administrativo. Médicos não
+podem reatribuir pacientes. A troca de clínica ou de médico é bloqueada quando
+o paciente já possui exames, preservando a clínica e o médico herdados pelos
+exames conforme RN05 e RN06.
+
 ## Matriz única de rotas
 
 | Área e rotas frontend | Requisito no frontend | Endpoints backend relacionados | Dependência backend |
