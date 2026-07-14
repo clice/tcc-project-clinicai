@@ -66,6 +66,7 @@ ai/datasets/gastrointestinal/*
 ai/models/exported/**/*.pt
 ai/models/exported/**/*.pth
 ai/models/exported/**/*.joblib
+ai/models/exported/**/manifesto_modelos.json
 !ai/models/exported/**/.gitkeep
 
 ai/models/checkpoints/*.pt
