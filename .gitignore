@@ -14,8 +14,6 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.coverage
-coverage.xml
 
 # Virtual environments
 .venv/
@@ -33,7 +31,6 @@ venv/
 # =====================================================
 
 node_modules/
-.vite/
 
 dist/
 build/
@@ -116,11 +113,6 @@ postgres_data/
 coverage/
 htmlcov/
 
-# Bancos locais usados em desenvolvimento/testes
-*.db
-*.sqlite
-*.sqlite3
-
 # =====================================================
 # IDE / EDITOR
 # =====================================================
@@ -140,3 +132,8 @@ Thumbs.db
 # =====================================================
 
 *.log
+# =====================================================
+# RELATÓRIOS LOCAIS DE VERIFICAÇÃO
+# =====================================================
+
+reports/
