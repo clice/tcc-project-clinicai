@@ -6,11 +6,17 @@ __pycache__
 *.pyc
 *.pyo
 .pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+coverage.xml
+htmlcov/
 .venv
 venv
 uploads/
 *.db
 *.sqlite3
+*.sqlite
 .vscode
 .idea
 README.md
