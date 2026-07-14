@@ -1,6 +1,4 @@
-"""
-Schemas do módulo de usuários.
-"""
+"""Schemas do módulo de usuários."""
 
 from datetime import datetime
 
@@ -18,9 +16,7 @@ from app.common.validators import (
 
 
 class UserBase(StrictRequestModel):
-    """
-    Schema base com campos compartilhados.
-    """
+    """Campos obrigatórios usados na criação de usuários."""
 
     name: str = Field(..., min_length=2, max_length=150)
     email: EmailStr = Field(...)
@@ -43,7 +39,9 @@ class UserBase(StrictRequestModel):
     @field_validator("cpf")
     @classmethod
     def validate_cpf_field(cls, value: str) -> str:
-        return validate_cpf(value, required=True)
+        cleaned = validate_cpf(value, required=True)
+        assert cleaned is not None
+        return cleaned
 
     @field_validator("phone")
     @classmethod
@@ -52,9 +50,7 @@ class UserBase(StrictRequestModel):
 
 
 class UserCreate(UserBase):
-    """
-    Schema usado para criação de usuário.
-    """
+    """Payload administrativo para criação de usuário."""
 
     password: str = Field(..., min_length=8, max_length=128)
 
@@ -64,26 +60,19 @@ class UserCreate(UserBase):
         return validate_password_length(value)
 
 
-class UserUpdate(StrictRequestModel):
-    """
-    Schema usado para atualização parcial de usuário.
-    Todos os campos são opcionais porque o endpoint usa PATCH.
-    """
+class UserProfileUpdate(StrictRequestModel):
+    """Campos cadastrais compartilhados pelas atualizações de usuário."""
 
     name: str | None = Field(default=None, min_length=2, max_length=150)
     email: EmailStr | None = None
     cpf: str | None = Field(default=None, max_length=14)
     phone: str | None = Field(default=None, max_length=20)
-    role_id: int | None = None
-    status_id: int | None = None
-    clinic_id: int | None = None
 
     @field_validator("name")
     @classmethod
     def normalize_name(cls, value: str | None) -> str | None:
         if value is None:
             return None
-
         return normalize_required_text(value, "Nome completo é obrigatório.")
 
     @field_validator("email")
@@ -96,7 +85,6 @@ class UserUpdate(StrictRequestModel):
     def validate_cpf_field(cls, value: str | None) -> str | None:
         if value is None:
             return None
-
         return validate_cpf(value, required=True)
 
     @field_validator("phone")
@@ -105,14 +93,30 @@ class UserUpdate(StrictRequestModel):
         return normalize_phone(value)
 
 
-class UserPasswordUpdate(StrictRequestModel):
-    """
-    Schema exclusivo para troca de senha.
+class UserAdminUpdate(UserProfileUpdate):
+    """Atualização administrativa de dados, role e vínculo de clínica.
 
-    current_password é obrigatório quando o próprio usuário troca a própria
-    senha (validado no service). Não é exigido quando um admin_master
-    reseta a senha de outro usuário.
+    ``status_id`` não pertence a este payload. Ativação e inativação usam
+    endpoints dedicados para garantir auditoria e revogação de sessão.
     """
+
+    role_id: int | None = None
+    clinic_id: int | None = None
+
+
+class UserSelfUpdate(UserProfileUpdate):
+    """Autoedição limitada aos próprios dados cadastrais."""
+
+    pass
+
+
+# Alias de compatibilidade para importações anteriores. Novas rotas devem usar
+# explicitamente UserAdminUpdate ou UserSelfUpdate.
+UserUpdate = UserAdminUpdate
+
+
+class UserPasswordUpdate(StrictRequestModel):
+    """Payload exclusivo para troca ou redefinição de senha."""
 
     password: str = Field(..., min_length=8, max_length=128)
     current_password: str | None = Field(default=None, max_length=128)
@@ -124,10 +128,7 @@ class UserPasswordUpdate(StrictRequestModel):
 
 
 class UserResponse(BaseModel):
-    """
-    Schema usado para resposta da API.
-    Nunca retorna password_hash.
-    """
+    """Resposta administrativa ou do próprio usuário, sem credenciais."""
 
     id: int
     name: str
@@ -141,18 +142,21 @@ class UserResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class UserListResponse(UserResponse):
-    """
-    Schema usado na listagem.
-    """
+    """Resposta enriquecida para gestão administrativa e perfil próprio."""
 
     role_name: str | None = None
     role_display_name: str | None = None
     status_name: str | None = None
     status_display_name: str | None = None
     clinic_name: str | None = None
+
+
+class UserOptionResponse(BaseModel):
+    """Opção mínima para seletores de médico, sem CPF ou contato."""
+
+    id: int
+    name: str

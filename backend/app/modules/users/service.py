@@ -3,13 +3,13 @@ Service do módulo de usuários.
 """
 
 from fastapi import HTTPException
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.common.services import (
     apply_update_data,
-    is_admin_master, 
+    is_admin_master,
     model_dump_update,
     normalize_update_data,
 )
@@ -19,7 +19,12 @@ from app.modules.clinics.model import Clinic
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
-from app.modules.users.schema import UserCreate, UserPasswordUpdate, UserUpdate
+from app.modules.users.schema import (
+    UserAdminUpdate,
+    UserCreate,
+    UserPasswordUpdate,
+    UserSelfUpdate,
+)
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.roles.service import get_role_by_id
 from app.modules.statuses.service import (
@@ -33,7 +38,10 @@ def check_email_duplicate(
     email: str,
     ignore_user_id: int | None = None,
 ) -> None:
-    query = db.query(User).filter(User.email == email)
+    """Garante unicidade de e-mail sem diferenciar maiúsculas/minúsculas."""
+
+    normalized_email = email.strip().lower()
+    query = db.query(User).filter(func.lower(User.email) == normalized_email)
 
     if ignore_user_id is not None:
         query = query.filter(User.id != ignore_user_id)
@@ -129,20 +137,14 @@ def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | No
     return clinic
 
 
-def validate_user_business_rules(
+def validate_user_role_clinic_rules(
     db: Session,
     role_id: int,
-    status_id: int,
     clinic_id: int | None,
 ) -> Role:
+    """Valida no backend a invariável entre role e vínculo de clínica."""
+
     role = get_role_by_id(db, role_id)
-
-    get_status_by_id_and_applies_to(
-        db=db,
-        status_id=status_id,
-        applies_to=StatusScope.USER.value,
-    )
-
     role_name = role.name.strip().lower()
 
     if role_name == RoleName.ADMIN_MASTER.value:
@@ -160,8 +162,67 @@ def validate_user_business_rules(
         )
 
     get_active_clinic_or_none(db, clinic_id)
-
     return role
+
+
+def validate_user_business_rules(
+    db: Session,
+    role_id: int,
+    status_id: int,
+    clinic_id: int | None,
+) -> Role:
+    """Valida status de usuário e a invariável role/clínica na criação."""
+
+    get_status_by_id_and_applies_to(
+        db=db,
+        status_id=status_id,
+        applies_to=StatusScope.USER.value,
+    )
+    return validate_user_role_clinic_rules(db, role_id, clinic_id)
+
+
+def count_active_admin_masters(db: Session) -> int:
+    """Conta administradores master ativos."""
+
+    return (
+        db.query(User)
+        .join(Role, User.role_id == Role.id)
+        .join(Status, User.status_id == Status.id)
+        .filter(
+            Role.name == RoleName.ADMIN_MASTER.value,
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.USER.value,
+        )
+        .count()
+    )
+
+
+def ensure_last_active_admin_is_preserved(
+    db: Session,
+    user: User,
+    *,
+    next_role: Role | None = None,
+    inactivating: bool = False,
+) -> None:
+    """Impede inativação ou rebaixamento do último administrador ativo."""
+
+    is_active_admin = (
+        user.role is not None
+        and user.role.name == RoleName.ADMIN_MASTER.value
+        and user.status is not None
+        and user.status.name == StatusName.ACTIVE.value
+    )
+    if not is_active_admin:
+        return
+
+    removes_admin_access = inactivating or (
+        next_role is not None and next_role.name != RoleName.ADMIN_MASTER.value
+    )
+    if removes_admin_access and count_active_admin_masters(db) <= 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Não é permitido remover ou inativar o último administrador master ativo.",
+        )
 
 
 def build_user_response(user: User) -> dict:
@@ -228,7 +289,13 @@ def create_user(
     payload: UserCreate,
     current_user: User,
 ) -> dict:
-    email = payload.email if isinstance(payload.email, str) else str(payload.email)
+    if not is_admin_master(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas o administrador master pode cadastrar usuários.",
+        )
+
+    email = str(payload.email).strip().lower()
 
     check_email_duplicate(db, email)
     check_cpf_duplicate(db, payload.cpf)
@@ -259,7 +326,7 @@ def create_user(
 
     db.add(user)
     db.flush()
-    
+
     # Adiciona log
     create_audit_log(
         db=db,
@@ -280,7 +347,7 @@ def create_user(
             "clinic_id": user.clinic_id,
         },
     )
-    
+
     db.commit()
     db.refresh(user)
 
@@ -353,69 +420,54 @@ def list_users(
 def update_user(
     db: Session,
     user_id: int,
-    payload: UserUpdate,
+    payload: UserAdminUpdate,
     current_user: User,
 ) -> dict:
+    """Atualiza dados administráveis, role e clínica de um usuário."""
+
+    if not is_admin_master(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas o administrador master pode gerenciar usuários.",
+        )
+
     user = get_user_by_id(db, user_id)
-
-    validate_current_user_can_access_user(
-        current_user=current_user,
-        target_user=user,
-    )
-
-    update_data = model_dump_update(payload)
-    update_data = normalize_update_data(update_data)
-
+    update_data = normalize_update_data(model_dump_update(payload))
     if not update_data:
         return build_user_response(user)
 
-    # Autoedição de perfil (rota /users/me): ninguém — nem o próprio
-    # admin_master — pode alterar perfil de acesso, status ou clínica
-    # da própria conta por essa rota. Essas mudanças só acontecem via
-    # /users/{id} (gestão de outros usuários), que já exige users:update
-    # (exclusivo de admin_master).
-    is_self_edit = current_user.id == user_id
-
-    if is_self_edit and any(
-        field in update_data for field in ("role_id", "status_id", "clinic_id")
+    if current_user.id == user_id and any(
+        field in update_data for field in ("role_id", "clinic_id")
     ):
         raise HTTPException(
             status_code=403,
-            detail="Alteração de perfil de acesso, status ou clínica não é permitida na autoedição de perfil.",
+            detail="O administrador não pode alterar a própria role ou clínica.",
         )
 
+    new_name = update_data.get("name", user.name)
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
     new_role_id = update_data.get("role_id", user.role_id)
-    new_status_id = update_data.get("status_id", user.status_id)
     new_clinic_id = update_data.get("clinic_id", user.clinic_id)
 
-    if new_email is not None:
-        check_email_duplicate(db, str(new_email), ignore_user_id=user_id)
+    if new_name is None:
+        raise HTTPException(status_code=400, detail="Nome completo é obrigatório.")
+    if new_email is None:
+        raise HTTPException(status_code=400, detail="E-mail é obrigatório.")
+    normalized_email = str(new_email).strip().lower()
+    check_email_duplicate(db, normalized_email, ignore_user_id=user_id)
 
     if new_cpf is None:
-        raise HTTPException(
-            status_code=400,
-            detail="CPF é obrigatório.",
-        )
-
+        raise HTTPException(status_code=400, detail="CPF é obrigatório.")
     check_cpf_duplicate(db, new_cpf, ignore_user_id=user_id)
 
-    role = validate_user_business_rules(
-        db=db,
-        role_id=new_role_id,
-        status_id=new_status_id,
-        clinic_id=new_clinic_id,
-    )
+    if new_role_id is None:
+        raise HTTPException(status_code=400, detail="Perfil de acesso é obrigatório.")
+    next_role = validate_user_role_clinic_rules(db, new_role_id, new_clinic_id)
+    ensure_last_active_admin_is_preserved(db, user, next_role=next_role)
 
-    validate_current_user_can_manage_user_data(
-        current_user=current_user,
-        role=role,
-        clinic_id=new_clinic_id,
-    )
-
-    if "email" in update_data and update_data["email"] is not None:
-        update_data["email"] = str(update_data["email"])
+    if "email" in update_data:
+        update_data["email"] = normalized_email
 
     old_data = {
         "name": user.name,
@@ -423,13 +475,25 @@ def update_user(
         "cpf": user.cpf,
         "phone": user.phone,
         "role_id": user.role_id,
-        "status_id": user.status_id,
         "clinic_id": user.clinic_id,
     }
-    
-    apply_update_data(user, update_data)
 
-    # Adiciona log
+    security_context_changed = (
+        new_role_id != user.role_id or new_clinic_id != user.clinic_id
+    )
+    apply_update_data(user, update_data)
+    if security_context_changed:
+        user.token_version += 1
+
+    audit_new_data = dict(update_data)
+    if security_context_changed:
+        audit_new_data.update(
+            {
+                "security_context_changed": True,
+                "token_version": user.token_version,
+            }
+        )
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -439,15 +503,63 @@ def update_user(
         entity_id=user.id,
         description="Usuário atualizado.",
         old_data=old_data,
-        new_data=update_data,
+        new_data=audit_new_data,
     )
-    
+
     db.commit()
     db.refresh(user)
+    return build_user_response(get_user_by_id(db=db, user_id=user.id))
 
-    user = get_user_by_id(db=db, user_id=user.id)
 
-    return build_user_response(user)
+def update_current_user_profile(
+    db: Session,
+    payload: UserSelfUpdate,
+    current_user: User,
+) -> dict:
+    """Atualiza somente os dados cadastrais do usuário autenticado."""
+
+    user = get_user_by_id(db, current_user.id)
+    update_data = normalize_update_data(model_dump_update(payload))
+    if not update_data:
+        return build_user_response(user)
+
+    if "name" in update_data and update_data["name"] is None:
+        raise HTTPException(status_code=400, detail="Nome completo é obrigatório.")
+
+    if "email" in update_data:
+        if update_data["email"] is None:
+            raise HTTPException(status_code=400, detail="E-mail é obrigatório.")
+        update_data["email"] = str(update_data["email"]).strip().lower()
+        check_email_duplicate(db, update_data["email"], ignore_user_id=user.id)
+
+    if "cpf" in update_data:
+        if update_data["cpf"] is None:
+            raise HTTPException(status_code=400, detail="CPF é obrigatório.")
+        check_cpf_duplicate(db, update_data["cpf"], ignore_user_id=user.id)
+
+    old_data = {
+        "name": user.name,
+        "email": user.email,
+        "cpf": user.cpf,
+        "phone": user.phone,
+    }
+    apply_update_data(user, update_data)
+
+    create_audit_log(
+        db=db,
+        user_id=user.id,
+        clinic_id=user.clinic_id,
+        action=AuditAction.UPDATE,
+        entity=AuditEntity.USER,
+        entity_id=user.id,
+        description="Dados cadastrais do próprio usuário atualizados.",
+        old_data=old_data,
+        new_data=update_data,
+    )
+
+    db.commit()
+    db.refresh(user)
+    return build_user_response(get_user_by_id(db=db, user_id=user.id))
 
 
 def update_user_password(
@@ -554,30 +666,27 @@ def change_current_user_password(
 
     return create_user_tokens(user)
 
+
 def inactivate_user(
     db: Session,
     user_id: int,
     current_user: User,
 ) -> dict:
-    user = get_user_by_id(db, user_id)
+    """Inativa usuário, preservando ao menos um administrador ativo."""
 
-    validate_current_user_can_access_user(
-        current_user=current_user,
-        target_user=user,
-    )
-
-    if user.id == current_user.id:
-        raise HTTPException(
-            status_code=400,
-            detail="Você não pode inativar o próprio usuário.",
-        )
-
-    if user.role and user.role.name == RoleName.ADMIN_MASTER.value and not is_admin_master(current_user):
+    if not is_admin_master(current_user):
         raise HTTPException(
             status_code=403,
-            detail="Você não tem permissão para inativar administrador master.",
+            detail="Apenas o administrador master pode inativar usuários.",
         )
 
+    user = get_user_by_id(db, user_id)
+    if user.status and user.status.name == StatusName.INACTIVE.value:
+        return build_user_response(user)
+
+    ensure_last_active_admin_is_preserved(db, user, inactivating=True)
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Você não pode inativar o próprio usuário.")
     inactive_status = get_status_by_name_and_applies_to(
         db=db,
         name=StatusName.INACTIVE.value,
@@ -588,11 +697,9 @@ def inactivate_user(
         "status_id": user.status_id,
         "status_name": user.status.name if user.status else None,
     }
-
     user.status_id = inactive_status.id
     user.token_version += 1
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -611,10 +718,7 @@ def inactivate_user(
 
     db.commit()
     db.refresh(user)
-
-    user = get_user_by_id(db=db, user_id=user.id)
-
-    return build_user_response(user)
+    return build_user_response(get_user_by_id(db=db, user_id=user.id))
 
 
 def activate_user(
@@ -622,19 +726,19 @@ def activate_user(
     user_id: int,
     current_user: User,
 ) -> dict:
-    user = get_user_by_id(db, user_id)
+    """Ativa usuário somente quando sua invariável role/clínica é válida."""
 
-    validate_current_user_can_access_user(
-        current_user=current_user,
-        target_user=user,
-    )
-
-    if user.role and user.role.name == RoleName.ADMIN_MASTER.value and not is_admin_master(current_user):
+    if not is_admin_master(current_user):
         raise HTTPException(
             status_code=403,
-            detail="Você não tem permissão para ativar administrador master.",
+            detail="Apenas o administrador master pode ativar usuários.",
         )
 
+    user = get_user_by_id(db, user_id)
+    if user.status and user.status.name == StatusName.ACTIVE.value:
+        return build_user_response(user)
+
+    validate_user_role_clinic_rules(db, user.role_id, user.clinic_id)
     active_status = get_status_by_name_and_applies_to(
         db=db,
         name=StatusName.ACTIVE.value,
@@ -645,10 +749,8 @@ def activate_user(
         "status_id": user.status_id,
         "status_name": user.status.name if user.status else None,
     }
-
     user.status_id = active_status.id
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -666,7 +768,4 @@ def activate_user(
 
     db.commit()
     db.refresh(user)
-
-    user = get_user_by_id(db=db, user_id=user.id)
-
-    return build_user_response(user)
+    return build_user_response(get_user_by_id(db=db, user_id=user.id))

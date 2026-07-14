@@ -7,11 +7,12 @@ from app.core.database import get_db
 from app.core.deps import require_admin, require_permission
 from app.modules.auth.schema import TokenResponse
 from app.modules.users.schema import (
+    UserAdminUpdate,
     UserCreate,
     UserListResponse,
+    UserOptionResponse,
     UserPasswordUpdate,
-    UserResponse,
-    UserUpdate,
+    UserSelfUpdate,
 )
 from app.modules.users.service import (
     activate_user,
@@ -20,6 +21,7 @@ from app.modules.users.service import (
     get_user_response,
     inactivate_user,
     list_users,
+    update_current_user_profile,
     update_user,
     update_user_password,
 )
@@ -27,7 +29,7 @@ from app.modules.users.service import (
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@router.post("/", response_model=UserResponse, status_code=201)
+@router.post("/", response_model=UserListResponse, status_code=201)
 def create_user_route(
     payload: UserCreate,
     db: Session = Depends(get_db),
@@ -61,7 +63,7 @@ def list_users_route(
 
 # Rotas estáticas devem vir antes de /{user_id}. Caso contrário, "me" e
 # "doctors" podem ser interpretados como o parâmetro dinâmico e retornar 422.
-@router.get("/doctors", response_model=list[UserListResponse])
+@router.get("/doctors", response_model=list[UserOptionResponse])
 def list_doctors_route(
     clinic_id: int = Query(...),
     db: Session = Depends(get_db),
@@ -92,17 +94,16 @@ def get_my_profile(
     )
 
 
-@router.patch("/me", response_model=UserResponse)
+@router.patch("/me", response_model=UserListResponse)
 def update_my_profile(
-    payload: UserUpdate,
+    payload: UserSelfUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(require_permission("users:update_profile")),
 ):
     """Atualiza os dados cadastrais permitidos do próprio usuário."""
 
-    return update_user(
+    return update_current_user_profile(
         db=db,
-        user_id=current_user.id,
         payload=payload,
         current_user=current_user,
     )
@@ -134,10 +135,10 @@ def get_user_route(
     return get_user_response(db=db, user_id=user_id, current_user=current_user)
 
 
-@router.patch("/{user_id}", response_model=UserResponse)
+@router.patch("/{user_id}", response_model=UserListResponse)
 def update_user_route(
     user_id: int,
-    payload: UserUpdate,
+    payload: UserAdminUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(require_admin),
 ):
@@ -146,7 +147,7 @@ def update_user_route(
     return update_user(db=db, user_id=user_id, payload=payload, current_user=current_user)
 
 
-@router.patch("/{user_id}/password", response_model=UserResponse)
+@router.patch("/{user_id}/password", response_model=UserListResponse)
 def update_user_password_route(
     user_id: int,
     payload: UserPasswordUpdate,
@@ -163,7 +164,7 @@ def update_user_password_route(
     )
 
 
-@router.patch("/{user_id}/inactivate", response_model=UserResponse)
+@router.patch("/{user_id}/inactivate", response_model=UserListResponse)
 def inactivate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
@@ -174,7 +175,7 @@ def inactivate_user_route(
     return inactivate_user(db=db, user_id=user_id, current_user=current_user)
 
 
-@router.patch("/{user_id}/activate", response_model=UserResponse)
+@router.patch("/{user_id}/activate", response_model=UserListResponse)
 def activate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
