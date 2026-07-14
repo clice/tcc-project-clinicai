@@ -67,6 +67,14 @@ export const examService = {
   },
 
   /**
+   * Consulta os eventos e alterações de status do exame (RF36).
+   */
+  getHistory: async (id) => {
+    const response = await api.get(`/exams/${id}/history`)
+    return response.data
+  },
+
+  /**
    * Cria um novo exame.
    */
   create: async (payload) => {

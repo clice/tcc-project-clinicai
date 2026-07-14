@@ -114,32 +114,19 @@ def create_audit_log(
     return audit_log
 
 
-def list_audit_logs(
+def _query_audit_logs(
     db: Session,
     *,
-    current_user: User,
     clinic_id: int | None = None,
     user_id: int | None = None,
     entity: str | None = None,
+    entity_id: int | None = None,
     action: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> dict:
-    """
-    Lista logs de auditoria com filtros opcionais e paginação.
+    """Executa a consulta comum depois que o chamador validou o acesso."""
 
-    Regra:
-    - admin_master visualiza todos;
-    - outros usuários não devem visualizar logs.
-    """
-    if not is_admin_master(current_user):
-        raise HTTPException(
-            status_code=403,
-            detail="Apenas administrador master pode visualizar logs de auditoria.",
-        )
-
-    # Trava os limites pra evitar respostas gigantes (ex: alguém passando
-    # limit=999999) e pra sempre ter um valor sensato por padrão.
     limit = max(1, min(limit, 200))
     offset = max(0, offset)
 
@@ -151,16 +138,19 @@ def list_audit_logs(
         )
     )
 
-    if clinic_id:
+    if clinic_id is not None:
         query = query.filter(AuditLog.clinic_id == clinic_id)
 
-    if user_id:
+    if user_id is not None:
         query = query.filter(AuditLog.user_id == user_id)
 
-    if entity:
+    if entity is not None:
         query = query.filter(AuditLog.entity == entity)
 
-    if action:
+    if entity_id is not None:
+        query = query.filter(AuditLog.entity_id == entity_id)
+
+    if action is not None:
         query = query.filter(AuditLog.action == action)
 
     total = query.count()
@@ -178,3 +168,57 @@ def list_audit_logs(
         "limit": limit,
         "offset": offset,
     }
+
+
+def list_audit_logs(
+    db: Session,
+    *,
+    current_user: User,
+    clinic_id: int | None = None,
+    user_id: int | None = None,
+    entity: str | None = None,
+    action: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    """Lista global de auditoria, exclusiva do Administrador Master."""
+
+    if not is_admin_master(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Apenas administrador master pode visualizar logs de auditoria.",
+        )
+
+    return _query_audit_logs(
+        db,
+        clinic_id=clinic_id,
+        user_id=user_id,
+        entity=entity,
+        action=action,
+        limit=limit,
+        offset=offset,
+    )
+
+
+def list_entity_audit_logs(
+    db: Session,
+    *,
+    entity: str,
+    entity_id: int,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    """Lista o histórico de uma entidade após validação de escopo externa.
+
+    Esta função não substitui a rota administrativa de auditoria. Ela existe
+    para recursos como o histórico de um exame (RF36), cuja autorização é
+    validada pelo próprio módulo antes da consulta.
+    """
+
+    return _query_audit_logs(
+        db,
+        entity=entity,
+        entity_id=entity_id,
+        limit=limit,
+        offset=offset,
+    )

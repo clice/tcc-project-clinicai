@@ -3,6 +3,7 @@ Schemas do módulo de exames.
 """
 
 from datetime import date, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -102,7 +103,7 @@ class ExamMedicalReview(StrictRequestModel):
     @classmethod
     def normalize_required_fields(cls, value: str) -> str:
         return normalize_required_text(value, "Campo obrigatório.")
-    
+
 
 class ExamResponse(BaseModel):
     """
@@ -151,6 +152,31 @@ class ExamResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
+
+
+class ExamHistoryEntryResponse(BaseModel):
+    """Evento público do histórico de um exame (RF36).
+
+    IP e user-agent permanecem disponíveis somente na área administrativa
+    de auditoria e não fazem parte desta resposta clínica.
+    """
+
+    id: int
+    user_id: int | None = None
+    user_name: str | None = None
+    action: str
+    description: str | None = None
+    old_data: Any | None = None
+    new_data: Any | None = None
+    created_at: datetime
+
+
+class ExamHistoryResponse(BaseModel):
+    """Lista paginada de eventos vinculados a um exame."""
+
+    items: list[ExamHistoryEntryResponse]
+    total: int
+    limit: int
+    offset: int
+

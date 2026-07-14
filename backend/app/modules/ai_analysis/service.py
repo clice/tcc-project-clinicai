@@ -334,6 +334,25 @@ def create_ai_analysis(
         },
     )
 
+    # RF36 consulta eventos pelo próprio exame. O registro da análise continua
+    # existindo como entidade AI_ANALYSIS, enquanto este segundo evento torna a
+    # mudança de estado do exame visível em seu histórico autorizado.
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.RUN_AI_ANALYSIS,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Análise de IA concluída. Exame movido para aguardando revisão médica.",
+        old_data=old_exam_status,
+        new_data={
+            "status_id": awaiting_review_exam_status.id,
+            "status_name": StatusName.AWAITING_REVIEW.value,
+            "ai_analysis_id": ai_analysis.id,
+        },
+    )
+
     db.commit()
     db.refresh(ai_analysis)
 

@@ -27,7 +27,7 @@ from app.modules.ai_analysis.client import AIServiceError, request_prediction
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate
 from app.modules.ai_analysis.service import create_ai_analysis
-from app.modules.audit_logs.service import create_audit_log, list_audit_logs
+from app.modules.audit_logs.service import create_audit_log, list_entity_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate
@@ -1203,10 +1203,9 @@ def get_exam_history(
     """
     Retorna o histórico de eventos/alterações de status de um exame (RF36).
 
-    Regra: quem pode ver o exame (mesma clínica, ou admin_master) pode ver
-    seu histórico — não é preciso ter a permissão audit_logs:read
-    (que é exclusiva de admin_master) para consultar o histórico do
-    próprio exame.
+    Regra: quem passa pela mesma validação de escopo usada nos detalhes do
+    exame pode ver seu histórico. Não é preciso ter `audit_logs:read`, que
+    permanece exclusiva da área administrativa global.
     """
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
 
@@ -1215,13 +1214,11 @@ def get_exam_history(
         exam=exam,
     )
 
-    return list_audit_logs(
+    return list_entity_audit_logs(
         db=db,
-        current_user=current_user,
         entity=AuditEntity.EXAM.value,
         entity_id=exam_id,
         limit=200,
-        skip_permission_check=True,
     )
 
 

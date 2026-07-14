@@ -10,13 +10,20 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import require_doctor_permission, require_permission
 from app.modules.ai_analysis.schema import AIAnalysisResponse
-from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
+from app.modules.exams.schema import (
+    ExamCreate,
+    ExamHistoryResponse,
+    ExamMedicalReview,
+    ExamResponse,
+    ExamUpdate,
+)
 from app.modules.exams.service import (
     analyze_exam,
     cancel_exam,
     create_exam,
     download_exam_file,
     get_exam_by_id,
+    get_exam_history,
     list_exam_form_options,
     list_exams,
     replace_exam_file,
@@ -118,6 +125,21 @@ def get_exam_route(
     Busca um exame específico pelo ID.
     """
     return get_exam_by_id(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get("/{exam_id}/history", response_model=ExamHistoryResponse)
+def get_exam_history_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("exams:read")),
+):
+    """Retorna os eventos do ciclo de vida do exame (RF36)."""
+
+    return get_exam_history(
         db=db,
         exam_id=exam_id,
         current_user=current_user,

@@ -31,6 +31,7 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { examService } from 'src/services/examService'
 import { aiAnalysisService } from 'src/services/aiAnalysisService'
+import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
 
 import { examTypeOptions, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
@@ -893,6 +894,8 @@ const ExamForm = ({ mode = 'create' }) => {
               </div>
             </CCardBody>
           </CCard>
+
+          {!isCreateMode && <ExamHistoryCard examId={id} />}
         </CCol>
       </CRow>
     </>
