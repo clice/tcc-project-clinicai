@@ -6,7 +6,7 @@ A clínica representa uma unidade cadastrada no sistema e poderá ter usuários,
 pacientes e exames vinculados futuramente.
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -45,7 +45,12 @@ class Clinic(Base):
     state = Column(String(2), nullable=True)
 
     # Relacionamento principal
-    status_id = Column(Integer, ForeignKey("statuses.id"), nullable=False)
+    status_id = Column(
+        Integer,
+        ForeignKey("statuses.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Datas de auditoria
     created_at = Column(
@@ -67,7 +72,6 @@ class Clinic(Base):
     audit_logs = relationship("AuditLog", back_populates="clinic")
     patients = relationship("Patient", back_populates="clinic")
     exams = relationship("Exam", back_populates="clinic")
-
 
     def __repr__(self):
         return f"<Clinic(id={self.id}, name='{self.name}', cnpj='{self.cnpj}')>"
