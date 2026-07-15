@@ -438,11 +438,16 @@ def get_exam_model_for_update(db: Session, exam_id: int) -> Exam:
     return exam
 
 
-def claim_exam_for_analysis(db: Session, exam_id: int) -> None:
-    """Adquire de forma atômica o direito de executar a inferência.
+def claim_exam_for_analysis(
+    db: Session,
+    exam_id: int,
+    current_user: User | None = None,
+) -> None:
+    """Adquire e audita, de forma atômica, o direito de executar a inferência.
 
     A atualização condicional impede que clique duplo, retry do navegador ou
     duas sessões disparem o serviço de IA mais de uma vez para o mesmo exame.
+    O marcador e o evento de início são confirmados no mesmo commit.
     """
 
     processing_status = get_status_by_name_and_applies_to(
@@ -450,6 +455,7 @@ def claim_exam_for_analysis(db: Session, exam_id: int) -> None:
         name=StatusName.PROCESSING.value,
         applies_to=StatusScope.EXAM.value,
     )
+    started_at = datetime.now(timezone.utc)
     claimed = (
         db.query(Exam)
         .filter(
@@ -460,7 +466,7 @@ def claim_exam_for_analysis(db: Session, exam_id: int) -> None:
         .update(
             {
                 Exam.analysis_in_progress: True,
-                Exam.analysis_started_at: datetime.now(timezone.utc),
+                Exam.analysis_started_at: started_at,
             },
             synchronize_session=False,
         )
@@ -481,7 +487,31 @@ def claim_exam_for_analysis(db: Session, exam_id: int) -> None:
         )
         raise HTTPException(status_code=409, detail="Não foi possível iniciar a análise.")
 
-    db.commit()
+    try:
+        clinic_id = (
+            db.query(Exam.clinic_id)
+            .filter(Exam.id == exam_id)
+            .scalar()
+        )
+        create_audit_log(
+            db=db,
+            user_id=current_user.id if current_user else None,
+            clinic_id=clinic_id,
+            action=AuditAction.RUN_AI_ANALYSIS,
+            entity=AuditEntity.EXAM,
+            entity_id=exam_id,
+            description="Execução da análise de IA iniciada.",
+            new_data={
+                "phase": "started",
+                "status_name": StatusName.PROCESSING.value,
+                "analysis_in_progress": True,
+                "analysis_started_at": started_at.isoformat(),
+            },
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
 
 def clear_exam_analysis_claim(db: Session, exam: Exam) -> None:
@@ -691,13 +721,27 @@ def create_exam(
             action=AuditAction.CREATE,
             entity=AuditEntity.EXAM,
             entity_id=exam.id,
-            description="Exame cadastrado com imagem obrigatória.",
+            description="Exame cadastrado.",
             new_data={
                 "id": exam.id,
                 "clinic_id": exam.clinic_id,
                 "patient_id": exam.patient_id,
                 "doctor_id": exam.doctor_id,
                 "status_name": StatusName.PROCESSING.value,
+                "exam_type": exam.exam_type,
+                "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
+                "title": exam.title,
+            },
+        )
+        create_audit_log(
+            db=db,
+            user_id=current_user.id,
+            clinic_id=exam.clinic_id,
+            action=AuditAction.UPLOAD,
+            entity=AuditEntity.EXAM,
+            entity_id=exam.id,
+            description="Imagem inicial do exame armazenada.",
+            new_data={
                 "file_name": exam.file_name,
                 "file_mime_type": validated_image.mime_type,
                 "file_size_bytes": validated_image.size_bytes,
@@ -779,6 +823,7 @@ def update_exam(
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
 
+
 def cancel_exam(
     db: Session,
     exam_id: int,
@@ -823,6 +868,7 @@ def cancel_exam(
     db.commit()
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
+
 
 def restore_exam(
     db: Session,
@@ -883,6 +929,7 @@ def restore_exam(
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
 
+
 def download_exam_file(
     db: Session,
     exam_id: int,
@@ -919,9 +966,8 @@ def download_exam_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Arquivo de exame baixado.",
+        description="Download autorizado e resposta de arquivo preparada.",
         new_data={
-            "file_path": exam.file_path,
             "file_name": exam.file_name,
             "file_mime_type": exam.file_mime_type,
         },
@@ -976,6 +1022,7 @@ def mark_exam_ai_failed(
     db.commit()
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam)
+
 
 def get_exam_history(
     db: Session,
@@ -1040,10 +1087,27 @@ def review_exam(
         has_discrepancy=payload.has_discrepancy,
         reviewed_by_id=current_user.id,
     )
+    reviewed_at = datetime.now(timezone.utc)
+    old_data.update(
+        {
+            "findings": exam.findings,
+            "conclusion": exam.conclusion,
+            "reviewed_by_id": exam.reviewed_by_id,
+            "reviewed_at": exam.reviewed_at.isoformat() if exam.reviewed_at else None,
+        }
+    )
+    new_data.update(
+        {
+            "findings": payload.findings,
+            "conclusion": payload.conclusion,
+            "reviewed_by_id": current_user.id,
+            "reviewed_at": reviewed_at.isoformat(),
+        }
+    )
     exam.findings = payload.findings
     exam.conclusion = payload.conclusion
     exam.reviewed_by_id = current_user.id
-    exam.reviewed_at = datetime.now(timezone.utc)
+    exam.reviewed_at = reviewed_at
     exam.status_id = target_status.id
     clear_exam_analysis_claim(db, exam)
     create_audit_log(
@@ -1064,6 +1128,7 @@ def review_exam(
     db.commit()
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
+
 
 def replace_exam_file(
     db: Session,
@@ -1147,6 +1212,7 @@ def replace_exam_file(
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
 
+
 async def analyze_exam(
     db: Session,
     exam_id: int,
@@ -1175,7 +1241,11 @@ async def analyze_exam(
             raise HTTPException(status_code=409, detail="O estado do exame mudou durante a análise.") from conflict
         raise HTTPException(status_code=500, detail="Arquivo do exame não encontrado. Exame marcado como falha.")
 
-    claim_exam_for_analysis(db=db, exam_id=exam_id)
+    claim_exam_for_analysis(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
     # Um concorrente pode ter concluído entre a primeira leitura e o claim.
     exam = get_exam_model_by_id(db=db, exam_id=exam_id)
     if exam.ai_analysis:

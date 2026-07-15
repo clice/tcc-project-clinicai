@@ -4,6 +4,8 @@ Service do módulo de audit logs.
 Contém as regras de negócio relacionadas aos logs de auditoria.
 """
 
+import re
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -17,21 +19,90 @@ _SENSITIVE_AUDIT_KEYS = {
     "password",
     "password_hash",
     "current_password",
+    "new_password",
+    "confirm_password",
+    "password_confirmation",
     "access_token",
     "refresh_token",
+    "id_token",
+    "token",
     "authorization",
+    "authorization_header",
+    "cookie",
+    "set_cookie",
+    "secret",
     "secret_key",
+    "api_key",
+    "client_secret",
+    "image",
+    "image_data",
+    "image_data_url",
+    "image_bytes",
+    "image_base64",
+    "image_content",
+    "file_bytes",
+    "file_content",
+    "binary_data",
+    "binary_content",
+    "gradcam_image",
+    "gradcam_base64",
+    "raw_response",
+    "file_path",
+    "gradcam_path",
 }
+
+_SENSITIVE_AUDIT_KEY_SUFFIXES = (
+    "_password",
+    "_password_hash",
+    "_token",
+    "_secret",
+    "_api_key",
+    "_base64",
+    "_bytes",
+)
+
+_BEARER_TOKEN_PATTERN = re.compile(
+    r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+"
+)
+_CREDENTIAL_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)\b(password|passwd|pwd|access[_-]?token|refresh[_-]?token|"
+    r"id[_-]?token|api[_-]?key|client[_-]?secret|secret[_-]?key|"
+    r"authorization)\b\s*[:=]\s*(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)"
+)
+_IMAGE_DATA_URI_PATTERN = re.compile(
+    r"(?i)data:image/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]+"
+)
+_LONG_BASE64_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{256,}={0,2}(?![A-Za-z0-9+/])"
+)
+
+
+def _is_sensitive_audit_key(key: object) -> bool:
+    normalized_key = str(key).strip().lower().replace("-", "_")
+    if normalized_key in _SENSITIVE_AUDIT_KEYS:
+        return True
+    return normalized_key.endswith(_SENSITIVE_AUDIT_KEY_SUFFIXES)
+
+
+def sanitize_audit_text(value: str) -> str:
+    """Redige segredos e conteúdo binário que apareçam em texto livre."""
+
+    sanitized = _IMAGE_DATA_URI_PATTERN.sub("[REDACTED_IMAGE_DATA]", value)
+    sanitized = _BEARER_TOKEN_PATTERN.sub("Bearer [REDACTED]", sanitized)
+    sanitized = _CREDENTIAL_ASSIGNMENT_PATTERN.sub(
+        lambda match: f"{match.group(1)}=[REDACTED]",
+        sanitized,
+    )
+    return _LONG_BASE64_PATTERN.sub("[REDACTED_BINARY_DATA]", sanitized)
 
 
 def sanitize_audit_data(value):
-    """Remove credenciais conhecidas antes de persistir dados de auditoria."""
+    """Remove credenciais, caminhos e imagens antes de persistir auditoria."""
 
     if isinstance(value, dict):
         sanitized = {}
         for key, item in value.items():
-            normalized_key = str(key).strip().lower()
-            if normalized_key in _SENSITIVE_AUDIT_KEYS:
+            if _is_sensitive_audit_key(key):
                 continue
             sanitized[key] = sanitize_audit_data(item)
         return sanitized
@@ -41,6 +112,9 @@ def sanitize_audit_data(value):
 
     if isinstance(value, tuple):
         return [sanitize_audit_data(item) for item in value]
+
+    if isinstance(value, str):
+        return sanitize_audit_text(value)
 
     return value
 
@@ -98,11 +172,11 @@ def create_audit_log(
         action=enum_to_value(action),
         entity=enum_to_value(entity),
         entity_id=entity_id,
-        description=description,
+        description=sanitize_audit_data(description),
         old_data=sanitize_audit_data(old_data),
         new_data=sanitize_audit_data(new_data),
         ip_address=ip_address,
-        user_agent=user_agent,
+        user_agent=sanitize_audit_data(user_agent),
     )
 
     db.add(audit_log)

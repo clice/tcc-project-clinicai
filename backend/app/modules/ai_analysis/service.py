@@ -94,6 +94,7 @@ def validate_exam_exists(
     validate_user_can_access_exam(current_user=current_user, exam=exam)
     return exam
 
+
 def validate_exam_can_receive_ai_analysis(exam: Exam) -> None:
     """Exige a transição processing -> awaiting_review e um arquivo."""
 
@@ -104,6 +105,7 @@ def validate_exam_can_receive_ai_analysis(exam: Exam) -> None:
             status_code=409,
             detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
         )
+
 
 def get_ai_analysis_model_by_id(
     db: Session,
@@ -315,7 +317,7 @@ def create_ai_analysis(
             "confidence": ai_analysis.confidence,
             "model_name": ai_analysis.model_name,
             "model_version": ai_analysis.model_version,
-            "gradcam_path": ai_analysis.gradcam_path,
+            "gradcam_available": bool(ai_analysis.gradcam_path),
             "processing_time_ms": ai_analysis.processing_time_ms,
         },
     )
@@ -333,6 +335,7 @@ def create_ai_analysis(
     db.commit()
     ai_analysis = get_ai_analysis_model_by_id(db=db, ai_analysis_id=ai_analysis.id)
     return build_ai_analysis_response(ai_analysis)
+
 
 def get_ai_metrics(db: Session) -> dict:
     """
@@ -500,13 +503,23 @@ def update_ai_analysis(
         "confidence": ai_analysis.confidence,
         "model_name": ai_analysis.model_name,
         "model_version": ai_analysis.model_version,
-        "gradcam_path": ai_analysis.gradcam_path,
+        "gradcam_available": bool(ai_analysis.gradcam_path),
         "processing_time_ms": ai_analysis.processing_time_ms,
         "ai_notes": ai_analysis.ai_notes,
-        "raw_response": ai_analysis.raw_response,
+        "raw_response_available": bool(ai_analysis.raw_response),
     }
 
     apply_update_data(ai_analysis, update_data)
+
+    audit_new_data = dict(update_data)
+    if "gradcam_path" in audit_new_data:
+        gradcam_value = audit_new_data.pop("gradcam_path")
+        audit_new_data["gradcam_updated"] = True
+        audit_new_data["gradcam_available"] = bool(gradcam_value)
+    if "raw_response" in audit_new_data:
+        raw_response_value = audit_new_data.pop("raw_response")
+        audit_new_data["raw_response_updated"] = True
+        audit_new_data["raw_response_available"] = bool(raw_response_value)
 
     create_audit_log(
         db=db,
@@ -517,7 +530,7 @@ def update_ai_analysis(
         entity_id=ai_analysis.id,
         description="Análise de IA atualizada.",
         old_data=old_data,
-        new_data=update_data,
+        new_data=audit_new_data,
     )
 
     db.commit()
