@@ -374,7 +374,14 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
         staff,
     )
 
-    new_file = resolve_safe_exam_file_path(result["file_path"])
+    # O caminho físico permanece apenas no modelo interno e não deve fazer
+    # parte da resposta pública devolvida pelo service.
+    assert "file_path" not in result
+    assert result["file_name"]
+
+    db_session.refresh(exam)
+    assert exam.file_path
+    new_file = resolve_safe_exam_file_path(exam.file_path)
     assert new_file.exists()
     assert new_file != old_file
     assert not old_file.exists(), "Substituição confirmada deve remover a versão anterior."

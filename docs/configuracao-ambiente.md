@@ -75,7 +75,7 @@ docker compose ps
 |---|---:|---|
 | PostgreSQL | 5432 | `postgres_data` |
 | Backend | 8000 | `uploads_data` |
-| Serviço de IA | 8001 | `torch_cache` |
+| Serviço de IA | 8001 | `torch_cache`, `ai_storage` |
 | Frontend | 3000 | — |
 
 O código-fonte é montado nos containers para recarga automática em desenvolvimento. A

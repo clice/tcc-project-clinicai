@@ -21,6 +21,7 @@ from app.modules.exams.service import (
     analyze_exam,
     cancel_exam,
     create_exam,
+    download_exam_ai_file,
     download_exam_file,
     get_exam_by_id,
     get_exam_history,
@@ -252,6 +253,21 @@ def download_exam_file_route(
     Retorna informações do arquivo vinculado ao exame.
     """
     return download_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get("/{exam_id}/ai-file/download")
+def download_exam_ai_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_permission("ai_analysis:read")),
+):
+    """Retorna o mapa Grad-CAM sem expor o caminho físico armazenado."""
+
+    return download_exam_ai_file(
         db=db,
         exam_id=exam_id,
         current_user=current_user,

@@ -348,7 +348,7 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
         blob = _audit_blob(log)
         assert "data:image" not in blob
         assert "image_base64" not in blob
-        assert created["file_path"].lower() not in blob
+        assert str(response.path).lower() not in blob
 
 
 def test_analysis_claim_and_its_log_rollback_together(

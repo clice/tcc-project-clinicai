@@ -100,11 +100,10 @@ class AIAnalysisResponse(BaseModel):
     model_name: str
     model_version: str
 
-    gradcam_path: str | None = None
+    gradcam_available: bool = False
     processing_time_ms: int | None = None
 
     ai_notes: str | None = None
-    raw_response: str | None = None
 
     created_at: datetime
     updated_at: datetime

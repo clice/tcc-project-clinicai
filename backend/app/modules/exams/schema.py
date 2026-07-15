@@ -137,7 +137,6 @@ class ExamResponse(BaseModel):
     reviewed_by_name: str | None = None
     reviewed_at: datetime | None = None
 
-    file_path: str | None = None
     file_name: str | None = None
     file_mime_type: str | None = None
 

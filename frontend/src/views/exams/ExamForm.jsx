@@ -53,7 +53,6 @@ const emptyExam = {
   status_display_name: '',
   ai_analysis_status: 'processing',
   ai_summary: '',
-  file_path: '',
   file_name: '',
   file_mime_type: '',
   findings: '',
@@ -101,6 +100,9 @@ const ExamForm = ({ mode = 'create' }) => {
   const roleName = getUserRole(user)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
+  const canViewAiAnalysis =
+    roleName !== ROLES.CLINIC_STAFF &&
+    hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
@@ -208,7 +210,6 @@ const ExamForm = ({ mode = 'create' }) => {
           ai_analysis_status: examData.status_name || 'processing',
           ai_summary: examData.ai_summary ?? '',
 
-          file_path: examData.file_path ?? '',
           file_name: examData.file_name ?? '',
           file_mime_type: examData.file_mime_type ?? '',
           findings: examData.findings ?? '',
@@ -219,10 +220,11 @@ const ExamForm = ({ mode = 'create' }) => {
           analysis_started_at: examData.analysis_started_at ?? '',
         })
 
-        // Busca a análise de IA vinculada, se existir. Um exame ainda em
-        // 'processing' (ou que falhou) legitimamente não tem análise
-        // ainda — aiAnalysisService já trata o 404 como null, não como erro.
-        const analysis = await aiAnalysisService.getByExamId(id)
+        // A análise só é consultada por perfis autorizados. A ausência de
+        // análise (404) continua sendo tratada como um estado normal.
+        const analysis = canViewAiAnalysis
+          ? await aiAnalysisService.getByExamId(id)
+          : null
         setAiAnalysis(analysis)
 
         // Reseta o formulário de revisão a cada carregamento, pra não
@@ -237,13 +239,12 @@ const ExamForm = ({ mode = 'create' }) => {
     }
 
     void loadData()
-  }, [id, isCreateMode])
+  }, [canViewAiAnalysis, id, isCreateMode])
 
-  // Busca o Grad-CAM como imagem real (hoje o backend expõe só o caminho
-  // do arquivo em `gradcam_path`; o binário vem pelo endpoint de download
-  // dedicado, o mesmo padrão já usado para o arquivo original do exame).
+  // O backend expõe apenas a disponibilidade do Grad-CAM. O binário é
+  // obtido por uma rota autenticada, sem revelar o caminho físico.
   useEffect(() => {
-    if (!aiAnalysis?.gradcam_path || isCreateMode) {
+    if (!aiAnalysis?.gradcam_available || isCreateMode) {
       setGradcamUrl(null)
       return undefined
     }
@@ -279,7 +280,7 @@ const ExamForm = ({ mode = 'create' }) => {
         URL.revokeObjectURL(objectUrl)
       }
     }
-  }, [aiAnalysis?.gradcam_path, id, isCreateMode])
+  }, [aiAnalysis?.gradcam_available, id, isCreateMode])
 
   const updateField = (field, value) => {
     setForm((current) => ({
@@ -943,15 +944,9 @@ const ExamForm = ({ mode = 'create' }) => {
                 <div className="text-body-secondary small">Tipo</div>
                 <div>{form.file_mime_type || '-'}</div>
               </div>
-
-              <div>
-                <div className="text-body-secondary small">Caminho</div>
-                <div className="text-break">{form.file_path || '-'}</div>
-              </div>
             </CCardBody>
           </CCard>
 
-          {!isCreateMode && <ExamHistoryCard examId={id} />}
         </CCol>
       </CRow>
     </>

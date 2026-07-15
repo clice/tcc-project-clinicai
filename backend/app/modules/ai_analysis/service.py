@@ -42,10 +42,9 @@ def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
         "confidence": ai_analysis.confidence,
         "model_name": ai_analysis.model_name,
         "model_version": ai_analysis.model_version,
-        "gradcam_path": ai_analysis.gradcam_path,
+        "gradcam_available": bool(ai_analysis.gradcam_path),
         "processing_time_ms": ai_analysis.processing_time_ms,
         "ai_notes": ai_analysis.ai_notes,
-        "raw_response": ai_analysis.raw_response,
         "created_at": ai_analysis.created_at,
         "updated_at": ai_analysis.updated_at,
     }

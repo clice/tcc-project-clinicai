@@ -21,6 +21,7 @@ from app.common.services import (
     model_dump_update,
 )
 from app.modules.ai_analysis.client import AIServiceError, request_prediction
+from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate
 from app.modules.ai_analysis.service import build_ai_analysis_response, create_ai_analysis
@@ -93,7 +94,6 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "reviewed_by_id": exam.reviewed_by_id,
         "reviewed_by_name": exam.reviewed_by.name if exam.reviewed_by else None,
         "reviewed_at": exam.reviewed_at,
-        "file_path": exam.file_path,
         "file_name": exam.file_name,
         "file_mime_type": exam.file_mime_type,
         "ai_prediction_label": ai_prediction_label,
@@ -979,6 +979,55 @@ def download_exam_file(
         path=file_path,
         filename=exam.file_name,
         media_type=exam.file_mime_type,
+    )
+
+
+def download_exam_ai_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Retorna o Grad-CAM após validar perfil, escopo e caminho físico."""
+
+    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
+
+    role_name = current_user.role.name if current_user.role else None
+    if role_name not in {RoleName.ADMIN_MASTER.value, RoleName.DOCTOR.value}:
+        raise HTTPException(
+            status_code=403,
+            detail="Somente médicos e o administrador podem acessar o resultado visual da IA.",
+        )
+
+    analysis = exam.ai_analysis
+    if not analysis or not analysis.gradcam_path:
+        raise HTTPException(
+            status_code=404,
+            detail="Este exame não possui mapa Grad-CAM disponível.",
+        )
+
+    file_path = resolve_safe_gradcam_path(analysis.gradcam_path)
+    media_type = "image/png" if file_path.suffix.lower() == ".png" else "image/jpeg"
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.DOWNLOAD,
+        entity=AuditEntity.AI_ANALYSIS,
+        entity_id=analysis.id,
+        description="Visualização autenticada do mapa Grad-CAM preparada.",
+        new_data={
+            "artifact_type": "gradcam",
+            "media_type": media_type,
+        },
+    )
+    db.commit()
+
+    return FileResponse(
+        path=file_path,
+        filename=f"gradcam-exame-{exam.id}{file_path.suffix.lower()}",
+        media_type=media_type,
     )
 
 

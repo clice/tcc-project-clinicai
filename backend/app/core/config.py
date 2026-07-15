@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # Serviço de IA (container separado, ver docker-compose.yml)
     ai_service_url: str = "http://ai:8001"
     ai_service_timeout_seconds: int = 120
+    ai_storage_dir: str = "/app/storage"
 
     # Configurações de autenticação JWT
     secret_key: str

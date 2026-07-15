@@ -35,6 +35,7 @@ services:
     volumes:
       - ./backend:/app
       - uploads_data:/app/uploads
+      - ai_storage:/app/storage:ro
     ports:
       - "8000:8000"
     depends_on:
@@ -50,6 +51,7 @@ services:
     volumes:
       - ./ai:/app
       - ./ai/models:/app/models
+      - ai_storage:/app/storage
       - torch_cache:/root/.cache/torch
     ports:
       - "8001:8001"
@@ -78,4 +80,5 @@ volumes:
   postgres_data:
   uploads_data:
   ai_models:
+  ai_storage:
   torch_cache:
