@@ -6,7 +6,7 @@
 #   1) o banco de dados esteja de fato aceitando conexões antes de seguir;
 #   2) as migrations (Alembic) estejam aplicadas;
 #   3) o bootstrap estrutural exista e, quando explicitamente configurada,
-#      a massa acadêmica fictícia seja criada.
+#      a massa acadêmica de demonstração seja criada.
 #
 # Tudo aqui é idempotente. Migrations aplicam evoluções oficiais de dados;
 # seeds fazem bootstrap da primeira instalação e validam dados estruturais.

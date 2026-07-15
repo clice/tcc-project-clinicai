@@ -87,6 +87,17 @@ não publicado diretamente.
 
 O entrypoint aplica migrations e executa seeds conforme `SEED_MODE`. O modo `bootstrap`
 cria os catálogos estruturais e um único Administrador Master inicial; `academic_demo`
-executa esse bootstrap e acrescenta dados inteiramente fictícios para a demonstração local.
-Os seeds são idempotentes e não devem sobrescrever usuários ou customizações administrativas
-existentes. Alterar o modo não remove dados já persistidos.
+executa esse bootstrap e acrescenta dados acadêmicos para a demonstração local.
+
+Em um banco novo, a massa final contém 8 clínicas, 5 usuários, 8 pacientes, 7 exames e
+4 análises. Os exames cobrem `processing`, `awaiting_review` com predição normal e abnormal,
+`completed`, `completed_with_divergence`, `failed` e `canceled`. Os ativos versionados ficam
+em `backend/demo_assets/`; origem, licença, hashes e predições estão em `manifest.json`.
+
+As imagens de exame são copiadas para `uploads_data`. Os Grad-CAMs acadêmicos permanecem
+no diretório versionado do backend e continuam sujeitos à autenticação, ao escopo de clínica
+e à resolução segura de caminhos.
+
+Os seeds são idempotentes e não devem sobrescrever usuários, registros existentes ou
+customizações administrativas. Alterar o modo não remove dados já persistidos; a validação
+das contagens finais deve usar um banco novo.

@@ -1,4 +1,4 @@
-"""Verificador executável do CHK-03 para PostgreSQL.
+"""Verificador executável do contrato do banco para PostgreSQL.
 
 Este módulo não altera o schema. Ele inspeciona a revisão Alembic ativa,
 restrições, FKs, ações referenciais, índices e dados semânticos. Também produz
@@ -135,8 +135,8 @@ EXPECTED_DEMO_COUNTS = {
     "clinics": 8,
     "users": 5,
     "patients": 8,
-    "exams": 3,
-    "ai_analysis": 2,
+    "exams": 7,
+    "ai_analysis": 4,
     "audit_logs": 0,
 }
 
@@ -235,7 +235,7 @@ def assert_empty_database() -> None:
             "O banco não está vazio antes do alembic upgrade head: "
             + ", ".join(sorted(forbidden))
         )
-    print("CHK-03: banco público vazio antes das migrations.")
+    print("Contrato do banco: banco público vazio antes das migrations.")
 
 
 def verify_schema(output: str | None = None) -> None:
@@ -305,7 +305,7 @@ def verify_schema(output: str | None = None) -> None:
         }
 
     _write_json(output, inventory)
-    print("CHK-03: schema, uniques, FKs, cascatas e índices aprovados.")
+    print("Contrato do banco: schema, uniques, FKs, cascatas e índices aprovados.")
 
 
 def table_counts(db: Session) -> dict[str, int]:
@@ -364,12 +364,18 @@ def assert_no_demo_data() -> None:
     finally:
         db.close()
 
-    print("CHK-03: bootstrap com Administrador Master e sem dados de demonstração.")
+    print("Contrato do banco: bootstrap com Administrador Master e sem dados de demonstração.")
 
 
 def assert_demo_data() -> None:
+    from collections import Counter
+
     from app.core.config import settings
     from app.core.security import verify_password
+    from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
+    from app.modules.ai_analysis.model import AIAnalysis
+    from app.modules.exams.file_storage import resolve_safe_exam_file_path
+    from app.modules.exams.model import Exam
     from app.modules.users.seed import (
         ACADEMIC_DEMO_EMAILS,
         ACADEMIC_DEMO_PASSWORD,
@@ -456,13 +462,96 @@ def assert_demo_data() -> None:
             raise AssertionError(
                 f"Exames demo com vínculos cruzados: {inconsistent_exams}"
             )
+
+        exams = db.query(Exam).all()
+        exam_status_counts = Counter(exam.status.name for exam in exams)
+        expected_exam_status_counts = {
+            "processing": 1,
+            "awaiting_review": 2,
+            "completed": 1,
+            "completed_with_divergence": 1,
+            "failed": 1,
+            "canceled": 1,
+        }
+        if dict(exam_status_counts) != expected_exam_status_counts:
+            raise AssertionError(
+                "Distribuição de estados dos exames divergente: "
+                f"{dict(exam_status_counts)} != {expected_exam_status_counts}."
+            )
+
+        for exam in exams:
+            if not exam.file_path:
+                raise AssertionError(f"Exame demo sem arquivo físico: {exam.title}.")
+            physical_file = resolve_safe_exam_file_path(exam.file_path)
+            if not physical_file.is_file():
+                raise AssertionError(
+                    f"Arquivo físico do exame demo não encontrado: {physical_file}."
+                )
+            if exam.analysis_in_progress or exam.analysis_started_at is not None:
+                raise AssertionError(
+                    f"Exame demo deixou claim de análise ativo: {exam.title}."
+                )
+
+            reviewed = exam.status.name in {
+                "completed",
+                "completed_with_divergence",
+            }
+            if reviewed and (
+                exam.reviewed_by_id is None
+                or exam.reviewed_at is None
+                or not exam.findings
+                or not exam.conclusion
+            ):
+                raise AssertionError(
+                    f"Revisão médica incompleta no exame demo: {exam.title}."
+                )
+
+        analyses = db.query(AIAnalysis).all()
+        label_counts = Counter(item.prediction_label for item in analyses)
+        if dict(label_counts) != {"normal": 2, "abnormal": 2}:
+            raise AssertionError(
+                f"Distribuição de predições divergente: {dict(label_counts)}."
+            )
+
+        analysis_exam_status_counts = Counter(
+            item.exam.status.name for item in analyses
+        )
+        expected_analysis_exam_status_counts = {
+            "awaiting_review": 2,
+            "completed": 1,
+            "completed_with_divergence": 1,
+        }
+        if dict(analysis_exam_status_counts) != expected_analysis_exam_status_counts:
+            raise AssertionError(
+                "Estados dos exames com análise divergentes: "
+                f"{dict(analysis_exam_status_counts)}."
+            )
+
+        for analysis in analyses:
+            if analysis.status.name != "completed":
+                raise AssertionError(
+                    f"Análise acadêmica não concluída: {analysis.id}."
+                )
+            if (
+                analysis.model_name != "ensemble_stacking"
+                or analysis.model_version != "0.1.0"
+            ):
+                raise AssertionError(
+                    "Modelo acadêmico divergente: "
+                    f"{analysis.model_name} {analysis.model_version}."
+                )
+            if analysis.raw_response is not None:
+                raise AssertionError(
+                    f"Análise acadêmica expôs raw_response: {analysis.id}."
+                )
+            resolve_safe_gradcam_path(analysis.gradcam_path)
     finally:
         db.close()
-    print("CHK-03: massa acadêmica fictícia, credenciais e vínculos aprovados.")
+    print("Contrato do banco: massa acadêmica, credenciais e vínculos aprovados.")
 
 
 def apply_test_customization() -> None:
-    """Aplica mudanças administrativas no banco descartável do CHK-03."""
+    """Aplica mudanças administrativas no banco descartável de validação."""
 
     db = SessionLocal()
     try:
@@ -479,7 +568,7 @@ def apply_test_customization() -> None:
         db.execute(
             sa.text("UPDATE roles SET display_name = :value WHERE id = :role_id"),
             {
-                "value": "Médico — configuração preservada CHK-03",
+                "value": "Médico — configuração preservada",
                 "role_id": doctor_id,
             },
         )
@@ -491,7 +580,7 @@ def apply_test_customization() -> None:
                 WHERE name = 'pending' AND applies_to = 'exam'
                 """
             ),
-            {"value": "Pendente — configuração preservada CHK-03"},
+            {"value": "Pendente — configuração preservada"},
         )
         db.execute(
             sa.text(
@@ -521,7 +610,7 @@ def apply_test_customization() -> None:
         raise
     finally:
         db.close()
-    print("CHK-03: customização administrativa de teste aplicada.")
+    print("Contrato do banco: customização administrativa de teste aplicada.")
 
 
 def _rows(db: Session, query: str) -> list[dict[str, Any]]:
@@ -646,7 +735,7 @@ def semantic_snapshot() -> dict[str, Any]:
 
 def write_snapshot(output: str) -> None:
     _write_json(output, semantic_snapshot())
-    print(f"CHK-03: snapshot semântico salvo em {output}.")
+    print(f"Contrato do banco: snapshot semântico salvo em {output}.")
 
 
 def compare_snapshots(expected_path: str, actual_path: str) -> None:
@@ -663,7 +752,7 @@ def compare_snapshots(expected_path: str, actual_path: str) -> None:
             )
         )
         raise AssertionError("Snapshots divergentes:\n" + diff)
-    print(f"CHK-03: snapshots idênticos: {expected_path} == {actual_path}.")
+    print(f"Contrato do banco: snapshots idênticos: {expected_path} == {actual_path}.")
 
 
 def assert_index(table: str, columns: Iterable[str], present: bool) -> None:
@@ -675,11 +764,11 @@ def assert_index(table: str, columns: Iterable[str], present: bool) -> None:
         raise AssertionError(
             f"Índice {table}{wanted} deveria estar {expectation}; índices: {sorted(actual)}"
         )
-    print(f"CHK-03: índice {table}{wanted} no estado esperado ({present=}).")
+    print(f"Contrato do banco: índice {table}{wanted} no estado esperado ({present=}).")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Verificações do CHK-03.")
+    parser = argparse.ArgumentParser(description="Verificações do contrato do banco.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("assert-empty")

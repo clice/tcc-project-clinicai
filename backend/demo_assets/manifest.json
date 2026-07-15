@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "purpose": "academic_demo",
+  "dataset": {
+    "name": "Kvasir Dataset",
+    "distribution": "meetnagadia/kvasir-dataset",
+    "source": "https://www.kaggle.com/datasets/meetnagadia/kvasir-dataset",
+    "license": "ODbL-1.0",
+    "selection_date": "2026-07-15"
+  },
+  "model": {
+    "name": "ensemble_stacking",
+    "version": "0.1.0",
+    "release": "models-v0.1.0"
+  },
+  "assets": {
+    "normal_image": {
+      "path": "exams/demo_kvasir_normal.jpg",
+      "filename": "demo_kvasir_normal.jpg",
+      "kind": "exam_image",
+      "mime_type": "image/jpeg",
+      "source_class": "normal-cecum",
+      "source_filename": "00b99f19-2c31-4c7c-931a-4c3b38d70d1a.jpg",
+      "prediction": {
+        "label": "normal",
+        "class": 0,
+        "confidence": 0.9773
+      },
+      "sha256": "3c043975469f515b6b44b181be8c7428e97b6698a795bbaa6c6b6bb21500f5ed",
+      "size_bytes": 193251
+    },
+    "abnormal_image": {
+      "path": "exams/demo_kvasir_abnormal.jpg",
+      "filename": "demo_kvasir_abnormal.jpg",
+      "kind": "exam_image",
+      "mime_type": "image/jpeg",
+      "source_class": "dyed-lifted-polyps",
+      "source_filename": "0053d7cd-549c-48cd-b370-b4ad64a8098a.jpg",
+      "prediction": {
+        "label": "abnormal",
+        "class": 1,
+        "confidence": 0.9903
+      },
+      "sha256": "5ce5ae4ec6a5a91097ba2b900015cfa251f3aee2aab2f1e1720c10310e00a5a8",
+      "size_bytes": 158539
+    },
+    "normal_gradcam": {
+      "path": "gradcam/demo_kvasir_normal_gradcam.jpg",
+      "filename": "demo_kvasir_normal_gradcam.jpg",
+      "kind": "gradcam",
+      "mime_type": "image/jpeg",
+      "generated_from": "normal_image",
+      "sha256": "8a974c2509da72f94158647f66fae70474ca7b7bf1d1b5e290e3108db59d0c61",
+      "size_bytes": 18161
+    },
+    "abnormal_gradcam": {
+      "path": "gradcam/demo_kvasir_abnormal_gradcam.jpg",
+      "filename": "demo_kvasir_abnormal_gradcam.jpg",
+      "kind": "gradcam",
+      "mime_type": "image/jpeg",
+      "generated_from": "abnormal_image",
+      "sha256": "d520ce7e6bc003cbd8901e2c6375bedbf20979f850b9cf2ec00d3cc9a2e0dd6f",
+      "size_bytes": 16646
+    }
+  }
+}

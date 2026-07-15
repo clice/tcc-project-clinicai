@@ -233,9 +233,12 @@ Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
 ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
 um usuário que já exista.
 
-Os exemplos finais de exames, análises e Grad-CAM do `academic_demo` serão
-consolidados após a estabilização completa do fluxo, usando somente imagens
-fictícias ou acadêmicas com procedência e licença registradas.
+O `academic_demo` consolidado cria sete exames que representam `processing`,
+duas variações de `awaiting_review`, `completed`, `completed_with_divergence`,
+`failed` e `canceled`, além de quatro análises concluídas do `ensemble_stacking`
+versão `0.1.0`. Os dois ativos acadêmicos de imagem e seus Grad-CAMs têm
+procedência, licença, hashes e predições registrados em
+`backend/demo_assets/manifest.json`.
 
 ---
 
@@ -264,12 +267,11 @@ fictícias ou acadêmicas com procedência e licença registradas.
 - Classificação binária pelo _Ensemble Stacking_ com ResNet-50, EfficientNet-B4 e PVTv2-B2
 - Revisão médica com confirmação ou divergência e histórico auditável
 - Disponibilização autenticada do mapa Grad-CAM
+- Massa `academic_demo` reproduzível com sete estados de exames e quatro análises coerentes
 
 ### 🔄 Em validação e finalização
 
 - Verificação manual do percurso completo do médico pela interface
-- Consolidação da massa fictícia `academic_demo` com exemplos coerentes
-- Testes finais de falha, restauração e reprocessamento
 - Fechamento da documentação técnica e da monografia
 
 ### 🚧 Planejados

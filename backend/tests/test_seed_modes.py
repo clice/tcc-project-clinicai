@@ -1,4 +1,6 @@
-"""Testes do bootstrap estrutural e da massa acadêmica do CHK-03."""
+"""Testes do bootstrap estrutural e da massa acadêmica."""
+
+from collections import Counter
 
 import pytest
 from sqlalchemy import func
@@ -6,8 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import verify_password
+from app.modules import academic_demo_assets
+from app.modules.academic_demo_assets import verify_bundled_demo_assets
+from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.clinics.model import Clinic
+from app.modules.exams import file_storage as exam_file_storage
+from app.modules.exams.file_storage import resolve_safe_exam_file_path
 from app.modules.exams.model import Exam
 from app.modules.patients.model import Patient
 from app.modules.permissions.model import Permission
@@ -19,6 +26,16 @@ from app.modules.users.seed import ACADEMIC_DEMO_EMAILS
 
 def count(db: Session, model: type) -> int:
     return int(db.query(func.count(model.id)).scalar())
+
+
+@pytest.fixture
+def isolated_demo_uploads(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    upload_root = tmp_path / "uploads" / "exams"
+    monkeypatch.setattr(exam_file_storage, "UPLOAD_DIR", upload_root)
+    return upload_root
 
 
 def test_bootstrap_creates_only_initial_admin_and_no_demo_records(
@@ -94,7 +111,12 @@ def test_three_bootstraps_preserve_existing_configuration(
     assert "audit_logs:read" in permission_names
 
 
-def test_academic_demo_is_predictable_and_idempotent(db_session: Session) -> None:
+def test_academic_demo_is_predictable_and_idempotent(
+    db_session: Session,
+    isolated_demo_uploads,
+) -> None:
+    assert len(verify_bundled_demo_assets()) == 4
+
     bootstrap = bootstrap_reference_data(db_session)
     db_session.commit()
 
@@ -104,8 +126,9 @@ def test_academic_demo_is_predictable_and_idempotent(db_session: Session) -> Non
     assert len(demo.clinics) == 8
     assert len(demo.users) == 5
     assert len(demo.patients) == 8
-    assert len(demo.exams) == 3
-    assert len(demo.ai_analyses) == 2
+    assert len(demo.exams) == 7
+    assert len(demo.ai_analyses) == 4
+
     expected_emails = set(ACADEMIC_DEMO_EMAILS) | {
         settings.bootstrap_admin_email
     }
@@ -124,9 +147,54 @@ def test_academic_demo_is_predictable_and_idempotent(db_session: Session) -> Non
     assert all(exam.doctor_id == primary_doctor.id for exam in demo.exams.values())
     assert all(exam.patient.clinic_id == exam.clinic_id for exam in demo.exams.values())
 
-    # Alterações administrativas em registros demo também não são reconciliadas.
+    status_counts = Counter(exam.status.name for exam in demo.exams.values())
+    assert dict(status_counts) == {
+        "processing": 1,
+        "awaiting_review": 2,
+        "completed": 1,
+        "completed_with_divergence": 1,
+        "failed": 1,
+        "canceled": 1,
+    }
+
+    for exam in demo.exams.values():
+        assert exam.file_path
+        assert resolve_safe_exam_file_path(exam.file_path).is_file()
+        assert exam.file_name.endswith(".jpg")
+        assert exam.file_mime_type == "image/jpeg"
+        assert exam.analysis_in_progress is False
+        assert exam.analysis_started_at is None
+
+    for exam in (
+        demo.exams["exam_completed_confirmed"],
+        demo.exams["exam_completed_with_divergence"],
+    ):
+        assert exam.reviewed_by_id == primary_doctor.id
+        assert exam.reviewed_at is not None
+        assert exam.findings
+        assert exam.conclusion
+
+    label_counts = Counter(
+        analysis.prediction_label for analysis in demo.ai_analyses.values()
+    )
+    assert dict(label_counts) == {"normal": 2, "abnormal": 2}
+
+    for analysis in demo.ai_analyses.values():
+        assert analysis.status.name == "completed"
+        assert analysis.model_name == "ensemble_stacking"
+        assert analysis.model_version == "0.1.0"
+        assert analysis.gradcam_path
+        assert resolve_safe_gradcam_path(analysis.gradcam_path).is_file()
+        assert analysis.raw_response is None
+
+    assert demo.exams["exam_processing"].ai_analysis is None
+    assert demo.exams["exam_failed"].ai_analysis is None
+    assert demo.exams["exam_canceled"].ai_analysis is None
+
     original_hash = primary_doctor.password_hash
     primary_clinic.name = "Clínica Primária Personalizada"
+    processing_exam = demo.exams["exam_processing"]
+    processing_exam.description = "Descrição acadêmica personalizada"
     db_session.commit()
 
     for _ in range(3):
@@ -137,12 +205,15 @@ def test_academic_demo_is_predictable_and_idempotent(db_session: Session) -> Non
     assert count(db_session, Clinic) == 8
     assert count(db_session, User) == 5
     assert count(db_session, Patient) == 8
-    assert count(db_session, Exam) == 3
-    assert count(db_session, AIAnalysis) == 2
+    assert count(db_session, Exam) == 7
+    assert count(db_session, AIAnalysis) == 4
+
     db_session.refresh(primary_clinic)
     db_session.refresh(primary_doctor)
+    db_session.refresh(processing_exam)
     assert primary_clinic.name == "Clínica Primária Personalizada"
     assert primary_doctor.password_hash == original_hash
+    assert processing_exam.description == "Descrição acadêmica personalizada"
 
 
 def test_demo_phase_can_be_rolled_back_without_partial_clinics(
@@ -158,7 +229,6 @@ def test_demo_phase_can_be_rolled_back_without_partial_clinics(
         raise RuntimeError("falha simulada na massa demo")
 
     monkeypatch.setattr(seeds_module, "seed_users", fail_users)
-
     with pytest.raises(RuntimeError, match="falha simulada"):
         seed_academic_demo(db_session, bootstrap)
     db_session.rollback()

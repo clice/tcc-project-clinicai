@@ -137,3 +137,6 @@ Thumbs.db
 # =====================================================
 
 reports/
+
+# Dataset completo usado apenas para seleção local de ativos acadêmicos
+/kvasir-dataset/

@@ -185,7 +185,7 @@ def run_seed(mode: SeedMode | None = None) -> None:
                 raise
 
             print(
-                "[seed] Massa acadêmica fictícia pronta: "
+                "[seed] Massa acadêmica demonstrativa pronta: "
                 f"{len(demo.clinics)} clínicas, "
                 f"{len(demo.users)} usuários, "
                 f"{len(demo.patients)} pacientes, "
