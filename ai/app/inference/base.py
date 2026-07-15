@@ -1,44 +1,32 @@
-"""
-Interface comum a qualquer modelo preditivo do ClinicAI.
-
-Qualquer arquitetura nova (CNN, Transformer, ensemble, ou algo totalmente
-diferente no futuro) implementa esta interface e se registra em
-`registry.py` — o resto do sistema (`predictor.py`, `main.py`) não precisa
-saber nada sobre a arquitetura específica por trás de cada nome.
-"""
+"""Interface comum aos preditores registrados no serviço de IA."""
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import numpy as np
 
 
 class BasePredictor(ABC):
-    """
-    Contrato mínimo que todo modelo preditivo do ClinicAI deve cumprir.
-    """
+    """Contrato mínimo de inferência e carregamento observável."""
 
-    #: Nome curto e estável do modelo (usado como chave no registro e
-    #: retornado na resposta da API — ex: "resnet50", "ensemble_stacking").
     name: str
-
-    #: Domínio clínico ao qual este modelo se aplica (ex: "gastrointestinal",
-    #: "head_ct", "mammography"). Usado para rotear a predição certa
-    #: conforme o tipo de exame — ver `app.inference.domain_registry`.
     domain: str
 
     @abstractmethod
     def predict_proba(self, image_tensor) -> np.ndarray:
-        """
-        Executa a inferência sobre uma imagem já pré-processada.
-
-        Args:
-            image_tensor: Tensor de entrada, já no formato esperado pelo
-                modelo (normalizado, com dimensão de batch).
-
-        Returns:
-            Array numpy com as probabilidades por classe, na ordem
-            definida em `app.config.CLASS_LABELS` (índice 0 = normal,
-            índice 1 = anormal). Ex: `np.array([0.12, 0.88])`.
-        """
+        """Retorna as probabilidades na ordem das classes do domínio."""
         raise NotImplementedError
-    
+
+    def ensure_loaded(self):
+        """Carrega os artefatos necessários e mantém o preditor em memória."""
+        return None
+
+    @property
+    def is_loaded(self) -> bool:
+        """Indica se todos os artefatos necessários já foram carregados."""
+        return False
+
+    @property
+    def artifact_paths(self) -> tuple[Path, ...]:
+        """Lista os artefatos físicos necessários por este preditor."""
+        return ()

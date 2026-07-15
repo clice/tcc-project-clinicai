@@ -1258,6 +1258,7 @@ async def analyze_exam(
             image_bytes=image_bytes,
             filename=exam.file_name or file_path.name,
             content_type=exam.file_mime_type or "application/octet-stream",
+            exam_type=exam.exam_type,
         )
     except AIServiceError as exc:
         try:
@@ -1267,16 +1268,18 @@ async def analyze_exam(
         raise HTTPException(status_code=502, detail=f"Falha ao processar exame no serviço de IA: {exc}") from exc
 
     processing_time_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
-    label = prediction.get("label")
-    prediction_class = 1 if label == "abnormal" else 0 if label == "normal" else None
     payload = AIAnalysisCreate(
         exam_id=exam_id,
-        prediction_label=label or "desconhecido",
-        prediction_class=prediction_class,
-        confidence=prediction.get("confidence", 0.0),
-        model_name=prediction.get("model_name", "desconhecido"),
-        model_version=prediction.get("model_version", "0.0.0"),
-        gradcam_path=prediction.get("gradcam_path"),
+        prediction_label=prediction["label"],
+        prediction_class=prediction["prediction_class"],
+        confidence=prediction["confidence"],
+        model_name=prediction["model_name"],
+        model_version=prediction["model_version"],
+        gradcam_path=(
+            prediction["gradcam_path"]
+            if prediction["gradcam_available"]
+            else None
+        ),
         processing_time_ms=processing_time_ms,
         raw_response=str(prediction),
     )

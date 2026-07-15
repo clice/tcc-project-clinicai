@@ -1,83 +1,89 @@
-"""
-Registro central de modelos preditivos disponíveis no ClinicAI.
-
-Indexado por (domínio, nome) — não só por nome — porque dois domínios
-clínicos diferentes podem ter um modelo com o mesmo nome (ex: uma
-ResNet-50 para gastrointestinal e outra para tomografia de cabeça). Sem
-esse namespace, registrar o segundo domínio sobrescreveria o primeiro
-silenciosamente, sem nenhum erro.
-
-Para adicionar um modelo novo: implemente `BasePredictor` (em geral,
-`TimmCNNPredictor` já serve para qualquer arquitetura da biblioteca
-`timm`), garanta que `predictor.domain` e `predictor.name` estejam
-preenchidos, e registre com `register(predictor)` em
-`app/inference/domains/<seu_dominio>.py`. Ver `domains/README.md`.
-"""
+"""Registro central e roteamento explícito dos modelos do ClinicAI."""
 
 from app.inference.base import BasePredictor
 
 _REGISTRY: dict[tuple[str, str], BasePredictor] = {}
 
 
+class UnsupportedExamTypeError(ValueError):
+    """O tipo de exame não foi informado ou não possui domínio configurado."""
+
+
+class ModelConfigurationError(RuntimeError):
+    """A configuração aponta para um domínio/modelo não registrado."""
+
+
 def register(predictor: BasePredictor) -> None:
-    """Registra um modelo preditivo pela chave (domain, name)."""
     _REGISTRY[(predictor.domain, predictor.name)] = predictor
 
 
 def get_predictor(domain: str, name: str) -> BasePredictor:
-    """
-    Busca um modelo preditivo registrado por domínio + nome.
-
-    Levanta KeyError com a lista de modelos disponíveis naquele domínio
-    se a combinação não existir — evita uma mensagem genérica quando
-    alguém digitar o nome errado em `ACTIVE_MODEL_BY_DOMAIN`.
-    """
     key = (domain, name)
     if key not in _REGISTRY:
-        disponiveis = [n for d, n in _REGISTRY if d == domain]
-        disponiveis_str = ", ".join(sorted(disponiveis)) or "(nenhum modelo registrado para este domínio)"
-        raise KeyError(
+        available = [model for registered_domain, model in _REGISTRY if registered_domain == domain]
+        raise ModelConfigurationError(
             f"Modelo '{name}' não registrado para o domínio '{domain}'. "
-            f"Disponíveis nesse domínio: {disponiveis_str}"
+            f"Disponíveis: {', '.join(sorted(available)) or '(nenhum)'}."
         )
     return _REGISTRY[key]
 
 
 def available_domains() -> list[str]:
-    """Lista os domínios clínicos que têm ao menos um modelo registrado."""
     return sorted({domain for domain, _ in _REGISTRY})
 
 
 def available_models(domain: str | None = None) -> list[str]:
-    """
-    Lista os modelos registrados. Se `domain` for informado, restringe a
-    esse domínio; senão, lista todos como "domínio.nome".
-    """
     if domain is not None:
-        return sorted(name for d, name in _REGISTRY if d == domain)
-    return sorted(f"{d}.{name}" for d, name in _REGISTRY)
+        return sorted(name for registered_domain, name in _REGISTRY if registered_domain == domain)
+    return sorted(f"{domain}.{name}" for domain, name in _REGISTRY)
+
+
+def registered_predictors(domain: str | None = None) -> list[BasePredictor]:
+    predictors = [
+        predictor
+        for (registered_domain, _), predictor in _REGISTRY.items()
+        if domain is None or registered_domain == domain
+    ]
+    return sorted(predictors, key=lambda item: (item.domain, item.name))
+
+
+def normalize_exam_type(exam_type: str | None) -> str:
+    normalized = (exam_type or "").strip().lower()
+    if not normalized:
+        raise UnsupportedExamTypeError("exam_type é obrigatório para selecionar o domínio clínico.")
+    return normalized
+
+
+def resolve_exam_domain(exam_type: str | None) -> str:
+    from app.config import EXAM_TYPE_TO_DOMAIN
+
+    normalized = normalize_exam_type(exam_type)
+    domain = EXAM_TYPE_TO_DOMAIN.get(normalized)
+    if domain is None:
+        supported = ", ".join(sorted(EXAM_TYPE_TO_DOMAIN))
+        raise UnsupportedExamTypeError(
+            f"Tipo de exame '{normalized}' não suportado. Tipos aceitos: {supported}."
+        )
+    return domain
+
+
+def exam_types_for_domain(domain: str) -> list[str]:
+    from app.config import EXAM_TYPE_TO_DOMAIN
+
+    return sorted(
+        exam_type
+        for exam_type, mapped_domain in EXAM_TYPE_TO_DOMAIN.items()
+        if mapped_domain == domain
+    )
 
 
 def resolve_active_predictor(exam_type: str | None) -> BasePredictor:
-    """
-    Resolve, a partir do tipo de exame (campo `exam_type` vindo do
-    backend), qual modelo preditivo deve ser usado.
+    from app.config import ACTIVE_MODEL_BY_DOMAIN
 
-    Fluxo: exam_type -> domínio clínico (`EXAM_TYPE_TO_DOMAIN`) -> nome
-    do modelo ativo naquele domínio (`ACTIVE_MODEL_BY_DOMAIN`) -> modelo
-    registrado. Se `exam_type` for None ou não estiver mapeado, usa
-    `DEFAULT_DOMAIN`.
-    """
-    from app.config import ACTIVE_MODEL_BY_DOMAIN, DEFAULT_DOMAIN, EXAM_TYPE_TO_DOMAIN
-
-    domain = EXAM_TYPE_TO_DOMAIN.get(exam_type, DEFAULT_DOMAIN) if exam_type else DEFAULT_DOMAIN
-
-    if domain not in ACTIVE_MODEL_BY_DOMAIN:
-        raise KeyError(
-            f"Domínio '{domain}' não tem modelo ativo configurado em "
-            f"ACTIVE_MODEL_BY_DOMAIN. Domínios com modelo ativo: "
-            f"{', '.join(sorted(ACTIVE_MODEL_BY_DOMAIN)) or '(nenhum)'}"
+    domain = resolve_exam_domain(exam_type)
+    model_name = ACTIVE_MODEL_BY_DOMAIN.get(domain)
+    if model_name is None:
+        raise ModelConfigurationError(
+            f"Domínio '{domain}' não possui modelo ativo configurado."
         )
-
-    model_name = ACTIVE_MODEL_BY_DOMAIN[domain]
     return get_predictor(domain, model_name)

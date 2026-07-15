@@ -1,10 +1,7 @@
-"""
-Preditor do Ensemble Stacking: combina as probabilidades de múltiplos
-modelos base através de um meta-classificador (Regressão Logística),
-exatamente como validado no notebook de treino do ClinicAI.
-"""
+"""Preditor do Ensemble Stacking do ClinicAI."""
 
 from pathlib import Path
+from threading import Lock
 
 import joblib
 import numpy as np
@@ -13,15 +10,7 @@ from app.inference.base import BasePredictor
 
 
 class EnsembleStackingPredictor(BasePredictor):
-    """
-    IMPORTANTE — ordem dos modelos base:
-    A ordem em que `base_predictors` é passada precisa ser EXATAMENTE a
-    mesma ordem usada para treinar o meta-classificador (ver
-    `manifesto_inferencia.json`, gerado pelo notebook de treino, campo
-    `ordem_dos_modelos`). Trocar a ordem aqui produz predições erradas
-    sem nenhum erro visível — o meta-classificador simplesmente aprende a
-    associar cada posição do vetor a um modelo específico.
-    """
+    """Combina três modelos base com um meta-classificador."""
 
     def __init__(
         self,
@@ -35,28 +24,47 @@ class EnsembleStackingPredictor(BasePredictor):
         self.base_predictors = base_predictors
         self.meta_classifier_path = Path(meta_classifier_path)
         self._meta_classifier = None
+        self._load_lock = Lock()
 
-    def _ensure_loaded(self):
+    def ensure_loaded(self):
+        for predictor in self.base_predictors:
+            predictor.ensure_loaded()
+
         if self._meta_classifier is None:
-            if not self.meta_classifier_path.exists():
-                raise FileNotFoundError(
-                    f"Meta-classificador não encontrado em: {self.meta_classifier_path}"
-                )
-            self._meta_classifier = joblib.load(self.meta_classifier_path)
-            print(f"[{self.name}] meta-classificador carregado ({self.meta_classifier_path})")
+            with self._load_lock:
+                if self._meta_classifier is None:
+                    if not self.meta_classifier_path.is_file():
+                        raise FileNotFoundError(
+                            f"Meta-classificador não encontrado em: {self.meta_classifier_path}"
+                        )
+                    self._meta_classifier = joblib.load(self.meta_classifier_path)
+                    print(
+                        f"[{self.domain}.{self.name}] meta-classificador carregado "
+                        f"({self.meta_classifier_path})"
+                    )
         return self._meta_classifier
 
-    def predict_proba(self, image_tensor) -> np.ndarray:
-        meta_classifier = self._ensure_loaded()
+    def _ensure_loaded(self):
+        return self.ensure_loaded()
 
-        # Uma predição por modelo base, na ordem em que foram registrados.
-        probabilidades_por_modelo = [
+    @property
+    def is_loaded(self) -> bool:
+        return self._meta_classifier is not None and all(
+            predictor.is_loaded for predictor in self.base_predictors
+        )
+
+    @property
+    def artifact_paths(self) -> tuple[Path, ...]:
+        paths: list[Path] = []
+        for predictor in self.base_predictors:
+            paths.extend(predictor.artifact_paths)
+        paths.append(self.meta_classifier_path)
+        return tuple(paths)
+
+    def predict_proba(self, image_tensor) -> np.ndarray:
+        meta_classifier = self.ensure_loaded()
+        probabilities = [
             predictor.predict_proba(image_tensor) for predictor in self.base_predictors
         ]
-
-        # Concatena em um único vetor de meta-atributos (6 valores, no
-        # caso de 3 modelos binários) — mesma lógica do notebook de treino.
-        meta_features = np.concatenate(probabilidades_por_modelo).reshape(1, -1)
-
+        meta_features = np.concatenate(probabilities).reshape(1, -1)
         return meta_classifier.predict_proba(meta_features)[0]
-    

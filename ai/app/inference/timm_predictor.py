@@ -1,14 +1,7 @@
-"""
-Preditor genérico para qualquer arquitetura disponível na biblioteca
-`timm` (CNNs e Vision Transformers).
-
-Cobre hoje ResNet-50, EfficientNet-B4 e PVTv2-B2 (domínio gastrointestinal)
-— mas serve para qualquer outro modelo do `timm`, de qualquer domínio,
-sem precisar de código novo: basta instanciar com o nome do modelo e o
-caminho dos pesos treinados (ver `app/inference/domains/`).
-"""
+"""Preditor genérico para arquiteturas da biblioteca timm."""
 
 from pathlib import Path
+from threading import Lock
 
 import numpy as np
 import timm
@@ -19,10 +12,7 @@ from app.inference.model_loader import DEVICE, load_torch_state_dict
 
 
 class TimmCNNPredictor(BasePredictor):
-    """
-    Carrega um modelo `timm` sob demanda (lazy loading — só na primeira
-    predição, não na importação do módulo) e mantém em memória depois.
-    """
+    """Carrega uma arquitetura e seu state_dict uma única vez."""
 
     def __init__(
         self,
@@ -38,36 +28,45 @@ class TimmCNNPredictor(BasePredictor):
         self.weights_path = Path(weights_path)
         self.num_classes = num_classes
         self._model: torch.nn.Module | None = None
+        self._load_lock = Lock()
 
-    def _ensure_loaded(self) -> torch.nn.Module:
+    def ensure_loaded(self) -> torch.nn.Module:
         if self._model is None:
-            model = timm.create_model(
-                self.timm_model_name,
-                pretrained=False,
-                num_classes=self.num_classes,
-            )
-            state_dict = load_torch_state_dict(self.weights_path)
-            model.load_state_dict(state_dict)
-            model.to(DEVICE)
-            model.eval()
-            self._model = model
-            print(f"[{self.name}] modelo carregado em {DEVICE} ({self.weights_path})")
+            with self._load_lock:
+                if self._model is None:
+                    model = timm.create_model(
+                        self.timm_model_name,
+                        pretrained=False,
+                        num_classes=self.num_classes,
+                    )
+                    state_dict = load_torch_state_dict(self.weights_path)
+                    model.load_state_dict(state_dict)
+                    model.to(DEVICE)
+                    model.eval()
+                    self._model = model
+                    print(f"[{self.domain}.{self.name}] carregado em {DEVICE}")
         return self._model
+
+    # Compatibilidade com chamadas internas anteriores.
+    def _ensure_loaded(self) -> torch.nn.Module:
+        return self.ensure_loaded()
+
+    @property
+    def is_loaded(self) -> bool:
+        return self._model is not None
+
+    @property
+    def artifact_paths(self) -> tuple[Path, ...]:
+        return (self.weights_path,)
 
     @property
     def torch_model(self) -> torch.nn.Module:
-        """Acesso ao modelo PyTorch subjacente — usado pelo Grad-CAM, que
-        precisa de uma camada específica do modelo, não só das
-        probabilidades finais."""
-        return self._ensure_loaded()
+        return self.ensure_loaded()
 
     def predict_proba(self, image_tensor) -> np.ndarray:
-        model = self._ensure_loaded()
-
+        model = self.ensure_loaded()
         with torch.no_grad():
             outputs = model(image_tensor.to(DEVICE))
             logits = outputs.logits if hasattr(outputs, "logits") else outputs
             probabilities = torch.softmax(logits, dim=1)
-
         return probabilities.cpu().numpy()[0]
-    
