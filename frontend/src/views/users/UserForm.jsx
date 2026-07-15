@@ -325,7 +325,7 @@ const UserForm = ({ mode = 'create' }) => {
 
       {isEditMode && isSelfRecord && (
         <CAlert color="info">
-          Role, clínica, status e senha da própria conta não podem ser alterados nesta tela.
+          Perfil, clínica, status e senha da própria conta não podem ser alterados nesta tela.
           Use “Meu Perfil” para atualizar seus dados ou sua senha.
         </CAlert>
       )}
