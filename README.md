@@ -259,17 +259,18 @@ fictícias ou acadêmicas com procedência e licença registradas.
 - Perfis (Roles) e Permissões, com controle de acesso por escopo de clínica
 - Status (motor de fluxo de estados por entidade)
 - Logs de Auditoria
-- Exames (upload, download, cancelamento, restauração)
-- Módulo de IA: classificação de imagens endoscópicas com ResNet-50, pré-processamento
-  (ROI, remoção de _Specular Highlights_) e explicabilidade via Grad-CAM
+- Exames: upload, download, análise por IA, revisão médica, cancelamento e restauração
+- Integração automática entre backend e serviço de IA
+- Classificação binária pelo _Ensemble Stacking_ com ResNet-50, EfficientNet-B4 e PVTv2-B2
+- Revisão médica com confirmação ou divergência e histórico auditável
+- Disponibilização autenticada do mapa Grad-CAM
 
-### 🔄 Em desenvolvimento
+### 🔄 Em validação e finalização
 
-- Fluxo de revisão médica do resultado da IA (status intermediário + tela dedicada)
-- Integração automática entre backend e serviço de IA (hoje a criação da análise ainda depende
-  de um payload montado externamente)
-- _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2), conforme Viana (2026)
-- Tela de resultado de IA no frontend (predição, confiança, Grad-CAM)
+- Verificação manual do percurso completo do médico pela interface
+- Consolidação da massa fictícia `academic_demo` com exemplos coerentes
+- Testes finais de falha, restauração e reprocessamento
+- Fechamento da documentação técnica e da monografia
 
 ### 🚧 Planejados
 
@@ -290,9 +291,10 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 
 ### Modelo
 
-- Em produção: ResNet-50 (_Transfer Learning_)
-- Em desenvolvimento: _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
-  meta-classificador de _Logistic Regression_), baseado em Viana (2026)
+- _Ensemble Stacking_ operacional, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2
+- Meta-classificador de regressão logística, baseado na reprodução operacional adaptada
+  do método de Viana
+- Artefatos distribuídos pela GitHub Release `models-v0.1.0`
 
 ### Explicabilidade
 
