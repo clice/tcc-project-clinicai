@@ -1,6 +1,6 @@
 # Configuração de Ambiente do ClinicAI
 
-Este documento registra a configuração reproduzível do ambiente local revisada na CHK-01. O
+Este documento registra a configuração reproduzível do ambiente local do ClinicAI. O
 `docker-compose.yml` é voltado ao desenvolvimento e publica portas somente em `127.0.0.1`.
 O ClinicAI é um protótipo acadêmico: esta é sua configuração oficial de demonstração local,
 não uma configuração para uso clínico ou hospedagem pública.
@@ -85,7 +85,7 @@ não publicado diretamente.
 
 ## Dados de demonstração
 
-O entrypoint aplica migrations e executa seeds em cada inicialização. Nesta versão, os seeds
-incluem usuários acadêmicos fictícios com credenciais conhecidas. A CHK-03 verificará a
-idempotência e a separação lógica entre dados estruturais e dados de demonstração, sem tornar
-as credenciais padronizadas um bloqueador da execução local.
+O entrypoint aplica migrations e executa seeds conforme `SEED_MODE`. O modo `bootstrap`
+cria somente os catálogos estruturais; `academic_demo` acrescenta dados inteiramente fictícios
+para a demonstração local. Os seeds devem ser idempotentes e não devem sobrescrever
+customizações administrativas existentes.

@@ -140,20 +140,14 @@ O comando baixa e verifica os seguintes arquivos em
 O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
 válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
 
-### 5. Validar dependências reproduzíveis (recomendado)
+### 5. Validar dependências e configuração
 
-No Terminal Ubuntu, antes do primeiro build ou após qualquer alteração em `package.json`/`requirements.txt`:
+Antes do primeiro build ou após alterar arquivos de dependências:
 
 ```bash
 python3 scripts/check_dependency_locks.py
-chmod +x scripts/verify_reproducible_builds.sh
-./scripts/verify_reproducible_builds.sh
+docker compose config --quiet
 ```
-
-O script Bash é o procedimento oficial do projeto para o CHK-02.
-
-Os relatórios são gravados em `reports/chk-02/`. O procedimento detalhado está em
-[`docs/chk-02-build-reproducibility.md`](docs/chk-02-build-reproducibility.md).
 
 ### 6. Subir os containers
 
@@ -198,21 +192,12 @@ docker compose exec backend python -m app.modules.seeds --mode academic_demo
 Os seeds não atualizam registros existentes e não reconciliam customizações administrativas.
 As fases de bootstrap e demonstração possuem transações separadas para impedir dados parciais.
 
-A verificação completa do CHK-03 usa um PostgreSQL descartável e não toca no volume de
-desenvolvimento:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\verify_chk03_database.ps1
-```
-
-ou:
+A integridade das migrations, dos seeds e dos contratos do banco é protegida pela suíte
+automatizada do backend. Para executá-la:
 
 ```bash
-sh scripts/verify_chk03_database.sh
+docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
 ```
-
-O procedimento e as evidências são descritos em
-[`docs/chk-03-database-migrations-seeds.md`](docs/chk-03-database-migrations-seeds.md).
 
 ---
 
