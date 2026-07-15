@@ -86,6 +86,7 @@ não publicado diretamente.
 ## Dados de demonstração
 
 O entrypoint aplica migrations e executa seeds conforme `SEED_MODE`. O modo `bootstrap`
-cria somente os catálogos estruturais; `academic_demo` acrescenta dados inteiramente fictícios
-para a demonstração local. Os seeds devem ser idempotentes e não devem sobrescrever
-customizações administrativas existentes.
+cria os catálogos estruturais e um único Administrador Master inicial; `academic_demo`
+executa esse bootstrap e acrescenta dados inteiramente fictícios para a demonstração local.
+Os seeds são idempotentes e não devem sobrescrever usuários ou customizações administrativas
+existentes. Alterar o modo não remove dados já persistidos.

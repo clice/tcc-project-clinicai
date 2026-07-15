@@ -4,6 +4,8 @@ import pytest
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
+from app.core.security import verify_password
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -19,7 +21,9 @@ def count(db: Session, model: type) -> int:
     return int(db.query(func.count(model.id)).scalar())
 
 
-def test_bootstrap_does_not_create_demo_records(db_session: Session) -> None:
+def test_bootstrap_creates_only_initial_admin_and_no_demo_records(
+    db_session: Session,
+) -> None:
     bootstrap = bootstrap_reference_data(db_session)
     db_session.commit()
 
@@ -27,13 +31,24 @@ def test_bootstrap_does_not_create_demo_records(db_session: Session) -> None:
     assert len(bootstrap.roles) == 3
     assert count(db_session, Permission) == len(bootstrap.permissions)
     assert count(db_session, Clinic) == 0
-    assert count(db_session, User) == 0
+    assert count(db_session, User) == 1
     assert count(db_session, Patient) == 0
     assert count(db_session, Exam) == 0
     assert count(db_session, AIAnalysis) == 0
 
+    admin = bootstrap.admin_user
+    assert admin.email == settings.bootstrap_admin_email
+    assert admin.name == settings.bootstrap_admin_name
+    assert admin.cpf == settings.bootstrap_admin_cpf
+    assert admin.clinic_id is None
+    assert admin.role.name == "admin_master"
+    assert admin.status.name == "active"
+    assert verify_password(settings.bootstrap_admin_password, admin.password_hash)
 
-def test_three_bootstraps_preserve_admin_configuration(db_session: Session) -> None:
+
+def test_three_bootstraps_preserve_existing_configuration(
+    db_session: Session,
+) -> None:
     bootstrap = bootstrap_reference_data(db_session)
     db_session.commit()
 
@@ -41,9 +56,12 @@ def test_three_bootstraps_preserve_admin_configuration(db_session: Session) -> N
     exam_pending = bootstrap.statuses["exam_pending"]
     download = bootstrap.permissions["exams:download"]
     audit_read = bootstrap.permissions["audit_logs:read"]
+    admin = bootstrap.admin_user
+    original_admin_hash = admin.password_hash
 
     doctor.display_name = "Médico personalizado"
     exam_pending.display_name = "Fila personalizada"
+    admin.name = "Administrador personalizado"
     db_session.query(RolePermission).filter_by(
         role_id=doctor.id,
         permission_id=download.id,
@@ -57,6 +75,7 @@ def test_three_bootstraps_preserve_admin_configuration(db_session: Session) -> N
 
     db_session.refresh(doctor)
     db_session.refresh(exam_pending)
+    db_session.refresh(admin)
     permission_names = {
         name
         for (name,) in (
@@ -69,6 +88,8 @@ def test_three_bootstraps_preserve_admin_configuration(db_session: Session) -> N
 
     assert doctor.display_name == "Médico personalizado"
     assert exam_pending.display_name == "Fila personalizada"
+    assert admin.name == "Administrador personalizado"
+    assert admin.password_hash == original_admin_hash
     assert "exams:download" not in permission_names
     assert "audit_logs:read" in permission_names
 
@@ -85,7 +106,11 @@ def test_academic_demo_is_predictable_and_idempotent(db_session: Session) -> Non
     assert len(demo.patients) == 8
     assert len(demo.exams) == 3
     assert len(demo.ai_analyses) == 2
-    assert {user.email for user in demo.users.values()} == set(ACADEMIC_DEMO_EMAILS)
+    expected_emails = set(ACADEMIC_DEMO_EMAILS) | {
+        settings.bootstrap_admin_email
+    }
+    assert {user.email for user in demo.users.values()} == expected_emails
+    assert demo.users["admin_master"].id == bootstrap.admin_user.id
 
     primary_clinic = demo.clinics["clinic_primary"]
     primary_doctor = demo.users["doctor_primary"]
@@ -139,4 +164,4 @@ def test_demo_phase_can_be_rolled_back_without_partial_clinics(
     db_session.rollback()
 
     assert count(db_session, Clinic) == 0
-    assert count(db_session, User) == 0
+    assert count(db_session, User) == 1

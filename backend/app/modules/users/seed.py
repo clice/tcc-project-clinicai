@@ -1,4 +1,4 @@
-"""Usuários fictícios e credenciais do ambiente acadêmico de demonstração."""
+"""Administrador inicial do bootstrap e usuários fictícios da demonstração."""
 
 from sqlalchemy.orm import Session
 
@@ -9,11 +9,11 @@ from app.modules.statuses.model import Status
 from app.modules.users.model import User
 
 
-# Credencial intencionalmente padronizada apenas para a massa fictícia.
-# O modo ``bootstrap`` nunca cria estes usuários.
+# Credencial padronizada apenas para as contas adicionais da massa fictícia.
+# O Administrador Master pertence ao bootstrap e usa as variáveis
+# BOOTSTRAP_ADMIN_* da configuração.
 ACADEMIC_DEMO_PASSWORD = "clinicai123"
 ACADEMIC_DEMO_EMAILS = (
-    "admin@clinicai.com",
     "doctor@clinicai.com",
     "doctor2@clinicai.com",
     "staff@clinicai.com",
@@ -55,23 +55,46 @@ def get_or_create_user(
     return user
 
 
+
+
+def seed_bootstrap_admin(
+    db: Session,
+    roles: dict[str, Role],
+    statuses: dict[str, Status],
+    *,
+    name: str,
+    email: str,
+    cpf: str,
+    password: str,
+) -> User:
+    """Cria o único usuário inicial do modo bootstrap.
+
+    A busca é feita pelo e-mail configurado. Quando o usuário já existe, seus
+    dados e sua senha são preservados para que reinícios não sobrescrevam
+    alterações administrativas.
+    """
+
+    return get_or_create_user(
+        db=db,
+        name=name,
+        email=email,
+        password=password,
+        cpf=cpf,
+        role_id=roles["admin_master"].id,
+        status_id=statuses["user_active"].id,
+        clinic_id=None,
+    )
+
 def seed_users(
     db: Session,
     roles: dict[str, Role],
     statuses: dict[str, Status],
     clinics: dict[str, Clinic],
+    *,
+    admin_master: User,
 ) -> dict[str, User]:
     return {
-        "admin_master": get_or_create_user(
-            db=db,
-            name="Administrador Master",
-            email="admin@clinicai.com",
-            password=ACADEMIC_DEMO_PASSWORD,
-            cpf="39053344705",
-            role_id=roles["admin_master"].id,
-            status_id=statuses["user_active"].id,
-            clinic_id=None,
-        ),
+        "admin_master": admin_master,
         "doctor_primary": get_or_create_user(
             db=db,
             name="Dr. João Silva",

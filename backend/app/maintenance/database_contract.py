@@ -29,7 +29,7 @@ from app.modules.role_permissions.seed import (
 )
 
 APP_TABLES = tuple(sorted(Base.metadata.tables))
-DEMO_TABLES = ("clinics", "users", "patients", "exams", "ai_analysis")
+DEMO_TABLES = ("clinics", "patients", "exams", "ai_analysis")
 
 EXPECTED_UNIQUES: dict[str, set[tuple[str, ...]]] = {
     "statuses": {("name", "applies_to")},
@@ -127,6 +127,7 @@ EXPECTED_BOOTSTRAP_COUNTS = {
         + len(DOCTOR_PERMISSIONS)
         + len(CLINIC_STAFF_PERMISSIONS)
     ),
+    "users": 1,
 }
 
 EXPECTED_DEMO_COUNTS = {
@@ -317,6 +318,10 @@ def table_counts(db: Session) -> dict[str, int]:
 
 
 def assert_no_demo_data() -> None:
+    from app.core.config import settings
+    from app.core.security import verify_password
+    from app.modules.users.model import User
+
     db = SessionLocal()
     try:
         counts = table_counts(db)
@@ -325,15 +330,45 @@ def assert_no_demo_data() -> None:
                 raise AssertionError(
                     f"Contagem bootstrap de {table}: {counts[table]} != {expected}."
                 )
+
         unexpected = {table: counts[table] for table in DEMO_TABLES if counts[table]}
         if unexpected:
             raise AssertionError(f"O modo bootstrap criou dados demo: {unexpected}")
+
+        admin = db.query(User).one()
+        expected_admin = {
+            "name": settings.bootstrap_admin_name,
+            "email": settings.bootstrap_admin_email,
+            "cpf": settings.bootstrap_admin_cpf,
+            "role": "admin_master",
+            "status": "active",
+            "clinic_id": None,
+        }
+        actual_admin = {
+            "name": admin.name,
+            "email": admin.email,
+            "cpf": admin.cpf,
+            "role": admin.role.name,
+            "status": admin.status.name,
+            "clinic_id": admin.clinic_id,
+        }
+        if actual_admin != expected_admin:
+            raise AssertionError(
+                f"Administrador inicial divergente: {actual_admin} != {expected_admin}."
+            )
+        if not verify_password(
+            settings.bootstrap_admin_password,
+            admin.password_hash,
+        ):
+            raise AssertionError("Senha inesperada para o Administrador Master inicial.")
     finally:
         db.close()
-    print("CHK-03: bootstrap estrutural sem dados de demonstração.")
+
+    print("CHK-03: bootstrap com Administrador Master e sem dados de demonstração.")
 
 
 def assert_demo_data() -> None:
+    from app.core.config import settings
     from app.core.security import verify_password
     from app.modules.users.seed import (
         ACADEMIC_DEMO_EMAILS,
@@ -353,17 +388,32 @@ def assert_demo_data() -> None:
 
         from app.modules.users.model import User
 
+        expected_emails = set(ACADEMIC_DEMO_EMAILS) | {
+            settings.bootstrap_admin_email
+        }
         rows = (
             db.query(User)
-            .filter(User.email.in_(ACADEMIC_DEMO_EMAILS))
+            .filter(User.email.in_(expected_emails))
             .order_by(User.email)
             .all()
         )
-        if {row.email for row in rows} != set(ACADEMIC_DEMO_EMAILS):
+        if {row.email for row in rows} != expected_emails:
             raise AssertionError(
-                "As cinco contas acadêmicas esperadas não foram criadas."
+                "As cinco contas esperadas não foram criadas."
             )
+
+        admin = next(
+            row for row in rows if row.email == settings.bootstrap_admin_email
+        )
+        if not verify_password(
+            settings.bootstrap_admin_password,
+            admin.password_hash,
+        ):
+            raise AssertionError("Senha inesperada para o Administrador Master.")
+
         for row in rows:
+            if row.id == admin.id:
+                continue
             if not verify_password(ACADEMIC_DEMO_PASSWORD, row.password_hash):
                 raise AssertionError(f"Senha acadêmica inesperada para {row.email}.")
 

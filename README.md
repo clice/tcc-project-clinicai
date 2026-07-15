@@ -16,8 +16,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 - **Implementar Autenticação Segura:** JWT (_access_ + _refresh token_) para controle de acesso.
 - **Gerenciar Estrutura Administrativa:** usuários, clínicas, pacientes, perfis e permissões.
 - **Organizar Dados Clínicos:** exames endoscópicos, com fluxo de status e revisão médica.
-- **Aplicar Inteligência Artificial:** classificação de imagens endoscópicas (atualmente ResNet-50,
-  com _Ensemble Stacking_ em desenvolvimento), com explicabilidade via Grad-CAM.
+- **Aplicar Inteligência Artificial:** classificação binária de imagens endoscópicas por
+  _Ensemble Stacking_, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2, com explicabilidade
+  visual post-hoc por Grad-CAM.
 - **Aplicar Boas Práticas de Engenharia de Software:** separação de camadas, Docker, migrations
   e organização modular.
 
@@ -25,9 +26,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ## 📈 Status Atual do Projeto
 
-- **Status geral:** Em desenvolvimento — protótipo funcional
-- **Fase atual:** Correção de bugs e fechamento do fluxo de análise de exames (IA + revisão médica)
-- **Próxima etapa:** _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2) e telas de resultado de IA
+- **Status geral:** Protótipo acadêmico funcional em fase de finalização
+- **Fase atual:** Validação final do fluxo de exames, segurança, massa de demonstração e documentação
+- **Próxima etapa:** Testes de falha e reprocessamento, consolidação da demonstração e conclusão da monografia
 
 > Este README reflete o estado real do código. Módulos listados como "implementados" abaixo já
 > funcionam de ponta a ponta; "em desenvolvimento" indica que existe implementação parcial.
@@ -56,10 +57,10 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ### 🧠 Inteligência Artificial
 
-- PyTorch, torchvision (ResNet-50 em produção; EfficientNet-B4 e PVTv2-B2 em desenvolvimento)
-- OpenCV (pré-processamento: ROI, remoção de _Specular Highlights_)
-- Grad-CAM (explicabilidade)
-- Scikit-learn (métricas de avaliação; meta-classificador do _Ensemble Stacking_)
+- PyTorch e torchvision (ResNet-50, EfficientNet-B4 e PVTv2-B2 integrados ao serviço de inferência)
+- OpenCV (pré-processamento: ROI e remoção de _Specular Highlights_)
+- Grad-CAM (explicabilidade visual post-hoc)
+- Scikit-learn (meta-classificador de regressão logística do _Ensemble Stacking_)
 
 ### ⚙️ Infraestrutura
 
@@ -174,12 +175,21 @@ Os modos são separados:
 
 | `SEED_MODE` | Resultado |
 |---|---|
-| `bootstrap` | cria somente statuses, roles, permissions e a matriz inicial de role-permissions |
-| `academic_demo` | executa o bootstrap e acrescenta apenas dados fictícios de demonstração |
+| `bootstrap` | cria statuses, roles, permissions, a matriz inicial de role-permissions e um único Administrador Master |
+| `academic_demo` | executa o bootstrap e acrescenta somente clínicas, profissionais, pacientes, exames e análises fictícios |
 
 O padrão seguro do backend é `bootstrap`. O `backend/.env.example` usa
 `academic_demo` porque o Compose principal é destinado ao desenvolvimento acadêmico local.
 Nunca habilite esse modo em um banco com dados reais.
+
+No modo `bootstrap`, o primeiro acesso utiliza as variáveis
+`BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_CPF` e
+`BOOTSTRAP_ADMIN_PASSWORD`. Os valores do `.env.example` são destinados somente
+ao ambiente acadêmico e devem ser alterados em qualquer outro ambiente.
+
+Os seeds são idempotentes e não apagam registros existentes. Alterar
+`SEED_MODE` de `academic_demo` para `bootstrap` não remove dados de demonstração
+já persistidos; uma validação realmente limpa deve usar um banco novo.
 
 Comandos manuais equivalentes:
 
@@ -201,22 +211,31 @@ docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
 
 ---
 
-## 🔑 Credenciais acadêmicas de demonstração
+## 🔑 Credenciais iniciais e acadêmicas
 
-As contas abaixo só são criadas com `SEED_MODE=academic_demo`. Elas existem para
-reprodutibilidade acadêmica, usam exclusivamente registros fictícios e não podem ser
-reutilizadas em qualquer ambiente real:
+O Administrador Master é criado pelo modo `bootstrap` e também é reutilizado pelo
+`academic_demo`. No arquivo `backend/.env.example`, os valores acadêmicos locais são:
+
+| Perfil | E-mail padrão | Senha padrão |
+|---|---|---|
+| Administrador _Master_ | valor de `BOOTSTRAP_ADMIN_EMAIL` (`admin@clinicai.com`) | valor de `BOOTSTRAP_ADMIN_PASSWORD` (`clinicai123`) |
+
+O modo `academic_demo` acrescenta as contas fictícias abaixo:
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Administrador _Master_ | admin@clinicai.com | clinicai123 |
 | Médico | doctor@clinicai.com | clinicai123 |
 | Médico | doctor2@clinicai.com | clinicai123 |
 | Funcionário da Clínica | staff@clinicai.com | clinicai123 |
 | Funcionário da Clínica (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
 
-Em outro ambiente, mantenha `SEED_MODE=bootstrap` e provisione credenciais próprias por um
-procedimento administrativo separado.
+Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
+ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
+um usuário que já exista.
+
+Os exemplos finais de exames, análises e Grad-CAM do `academic_demo` serão
+consolidados após a estabilização completa do fluxo, usando somente imagens
+fictícias ou acadêmicas com procedência e licença registradas.
 
 ---
 
@@ -366,7 +385,8 @@ O projeto contribui com:
 ## Bootstrap e evolução da matriz RBAC
 
 No modo `bootstrap`, o executor `python -m app.modules.seeds`, chamado pelo
-entrypoint do backend, faz apenas o bootstrap estrutural. O campo
+entrypoint do backend, cria o bootstrap estrutural e garante um único
+Administrador Master inicial. O campo
 `roles.permissions_initialized`
 distingue uma role nunca inicializada de uma role configurada sem permissões.
 Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições

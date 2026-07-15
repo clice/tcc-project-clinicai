@@ -1,9 +1,9 @@
 """Bootstrap estrutural e massa acadêmica opcional do ClinicAI.
 
 O startup sempre pode executar este módulo com segurança. O modo ``bootstrap``
-cria apenas os catálogos indispensáveis ao funcionamento da aplicação:
-statuses, roles, permissions e a matriz inicial de role-permissions. O modo
-``academic_demo`` executa o mesmo bootstrap e, em uma transação separada,
+cria os catálogos indispensáveis e um único Administrador Master inicial:
+statuses, roles, permissions, matriz de role-permissions e usuário administrativo.
+O modo ``academic_demo`` executa o mesmo bootstrap e, em uma transação separada,
 acrescenta somente clínicas, usuários, pacientes, exames e análises fictícios.
 
 Evoluções oficiais de bancos já existentes pertencem a migrations Alembic. Os
@@ -40,7 +40,7 @@ from app.modules.roles.seed import seed_roles
 from app.modules.statuses.model import Status
 from app.modules.statuses.seed import seed_statuses
 from app.modules.users.model import User
-from app.modules.users.seed import seed_users
+from app.modules.users.seed import seed_bootstrap_admin, seed_users
 
 SeedMode = Literal["bootstrap", "academic_demo"]
 
@@ -53,6 +53,7 @@ class BootstrapResult:
     roles: dict[str, Role]
     permissions: dict[str, Permission]
     bootstrapped_roles: tuple[str, ...]
+    admin_user: User
 
 
 @dataclass(frozen=True)
@@ -77,12 +78,22 @@ def bootstrap_reference_data(db: Session) -> BootstrapResult:
     roles = seed_roles(db)
     permissions = seed_permissions(db)
     bootstrapped_roles = tuple(seed_role_permissions(db, roles, permissions))
+    admin_user = seed_bootstrap_admin(
+        db,
+        roles,
+        statuses,
+        name=settings.bootstrap_admin_name,
+        email=settings.bootstrap_admin_email,
+        cpf=settings.bootstrap_admin_cpf,
+        password=settings.bootstrap_admin_password,
+    )
 
     return BootstrapResult(
         statuses=statuses,
         roles=roles,
         permissions=permissions,
         bootstrapped_roles=bootstrapped_roles,
+        admin_user=admin_user,
     )
 
 
@@ -98,7 +109,13 @@ def seed_academic_demo(
     """
 
     clinics = seed_clinics(db, bootstrap.statuses)
-    users = seed_users(db, bootstrap.roles, bootstrap.statuses, clinics)
+    users = seed_users(
+        db,
+        bootstrap.roles,
+        bootstrap.statuses,
+        clinics,
+        admin_master=bootstrap.admin_user,
+    )
     patients = seed_patients(
         db,
         clinics=clinics,
@@ -154,7 +171,10 @@ def run_seed(mode: SeedMode | None = None) -> None:
                 "[seed] Role permissions já configuradas; "
                 "customizações administrativas preservadas."
             )
-        print("[seed] Bootstrap estrutural concluído.")
+        print(
+            "[seed] Bootstrap concluído com Administrador Master disponível em "
+            f"{bootstrap.admin_user.email}."
+        )
 
         if selected_mode == "academic_demo":
             try:

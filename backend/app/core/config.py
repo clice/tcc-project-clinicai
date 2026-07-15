@@ -25,10 +25,14 @@ class Settings(BaseSettings):
     # URL de conexão com o banco PostgreSQL
     database_url: str
 
-    # Dados iniciais. ``bootstrap`` cria somente catálogos estruturais;
-    # ``academic_demo`` acrescenta exclusivamente registros fictícios e as
-    # credenciais acadêmicas documentadas no README.
+    # Dados iniciais. ``bootstrap`` cria os catálogos estruturais e um
+    # Administrador Master inicial. ``academic_demo`` acrescenta somente
+    # registros fictícios para a demonstração acadêmica.
     seed_mode: Literal["bootstrap", "academic_demo"] = "bootstrap"
+    bootstrap_admin_name: str = "Administrador Master"
+    bootstrap_admin_email: str = "admin@clinicai.com"
+    bootstrap_admin_cpf: str = "39053344705"
+    bootstrap_admin_password: str = "clinicai123"
     
     # Uploads
     upload_dir: str = "uploads"
