@@ -1,6 +1,6 @@
 /**
  * Funções utilitárias de formatação.
- * 
+ *
  * Usadas para:
  * - limpar máscaras antes de enviar dados ao backend;
  * - exibir CNPJ, telefone e CEP no padrão brasileiro;
@@ -12,7 +12,6 @@
  */
 export const onlyNumbers = (value = '') => {
   return String(value).replace(/\D/g, '')
-  
 }
 
 /**
@@ -60,6 +59,20 @@ export const formatDateTimeBR = (value) => {
 }
 
 /**
+ * Formata uma data civil sem convertê-la em instante nem aplicar fuso.
+ * YYYY-MM-DD -> DD/MM/YYYY
+ */
+export const formatDateBR = (value) => {
+  if (!value) return '-'
+
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return '-'
+
+  const [, year, month, day] = match
+  return `${day}/${month}/${year}`
+}
+
+/**
  * Formata telefone fixo ou celular:
  * 88999998888 -> (88) 99999-8888
  * 8833334444  -> (88) 3333-4444
@@ -68,14 +81,10 @@ export const formatPhoneBR = (value = '') => {
   const numbers = onlyNumbers(value).slice(0, 11)
 
   if (numbers.length <= 10) {
-    return numbers
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
+    return numbers.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
   }
 
-  return numbers
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2')
+  return numbers.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
 }
 
 /**

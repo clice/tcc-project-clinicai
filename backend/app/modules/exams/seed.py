@@ -105,7 +105,7 @@ def seed_exams(
     doctor_primary = users.get("doctor_primary")
 
     required_patients = {
-        "processing": patients.get("patient_example_1"),
+        "pending": patients.get("patient_example_1"),
         "awaiting_normal": patients.get("patient_example_2"),
         "awaiting_abnormal": patients.get("patient_elderly"),
         "completed": patients.get("patient_young"),
@@ -115,8 +115,8 @@ def seed_exams(
     }
 
     required_statuses = {
-        "processing": statuses.get("exam_processing")
-        or get_exam_status(db, StatusName.PROCESSING),
+        "pending": statuses.get("exam_pending")
+        or get_exam_status(db, StatusName.PENDING),
         "awaiting_review": statuses.get("exam_awaiting_review")
         or get_exam_status(db, StatusName.AWAITING_REVIEW),
         "completed": statuses.get("exam_completed")
@@ -155,14 +155,14 @@ def seed_exams(
     )
 
     definitions = {
-        "exam_processing": {
-            "patient": required_patients["processing"],
-            "status": required_statuses["processing"],
+        "exam_pending": {
+            "patient": required_patients["pending"],
+            "status": required_statuses["pending"],
             "asset_key": "normal_image",
             "exam_date": date(2026, 7, 6),
             "title": "Demo — colonoscopia pronta para análise",
             "description": "Registro acadêmico aguardando execução do modelo.",
-            "clinical_indication": "Demonstração técnica do estado processing.",
+            "clinical_indication": "Demonstração técnica do estado pending.",
         },
         "exam_awaiting_review_normal": {
             "patient": required_patients["awaiting_normal"],

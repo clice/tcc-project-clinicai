@@ -29,21 +29,21 @@ class ExamTransitionAction(StrEnum):
 
 # (estado atual, ação) -> próximo estado. ``None`` representa um exame ainda
 # inexistente. Auto-transições aparecem somente quando a ação tem efeito real
-# no recurso (por exemplo, substituir a imagem mantém o estado processing).
+# no recurso (por exemplo, substituir a imagem mantém o estado pending).
 EXAM_TRANSITION_TABLE: dict[tuple[str | None, ExamTransitionAction], str] = {
-    (None, ExamTransitionAction.CREATE): StatusName.PROCESSING.value,
+    (None, ExamTransitionAction.CREATE): StatusName.PENDING.value,
     (StatusName.PENDING.value, ExamTransitionAction.START_PROCESSING): StatusName.PROCESSING.value,
     (StatusName.PENDING.value, ExamTransitionAction.CANCEL): StatusName.CANCELED.value,
+    (StatusName.PENDING.value, ExamTransitionAction.REPLACE_FILE): StatusName.PENDING.value,
     (StatusName.PROCESSING.value, ExamTransitionAction.CANCEL): StatusName.CANCELED.value,
     (
         StatusName.PROCESSING.value,
         ExamTransitionAction.ANALYSIS_SUCCEEDED,
     ): StatusName.AWAITING_REVIEW.value,
     (StatusName.PROCESSING.value, ExamTransitionAction.ANALYSIS_FAILED): StatusName.FAILED.value,
-    (StatusName.PROCESSING.value, ExamTransitionAction.REPLACE_FILE): StatusName.PROCESSING.value,
-    (StatusName.FAILED.value, ExamTransitionAction.RESTORE): StatusName.PROCESSING.value,
-    (StatusName.FAILED.value, ExamTransitionAction.REPLACE_FILE): StatusName.PROCESSING.value,
-    (StatusName.CANCELED.value, ExamTransitionAction.RESTORE): StatusName.PROCESSING.value,
+    (StatusName.FAILED.value, ExamTransitionAction.RESTORE): StatusName.PENDING.value,
+    (StatusName.FAILED.value, ExamTransitionAction.REPLACE_FILE): StatusName.PENDING.value,
+    (StatusName.CANCELED.value, ExamTransitionAction.RESTORE): StatusName.PENDING.value,
     (
         StatusName.AWAITING_REVIEW.value,
         ExamTransitionAction.REVIEW_CONFIRM,
@@ -76,7 +76,6 @@ FINAL_EXAM_STATUSES = frozenset(
 EDITABLE_EXAM_STATUSES = frozenset(
     {
         StatusName.PENDING.value,
-        StatusName.PROCESSING.value,
         StatusName.FAILED.value,
     }
 )
@@ -103,7 +102,7 @@ def get_transition_target(
 
 
 def ensure_exam_is_editable(current_status: str | None) -> None:
-    """Impede edição de metadados após o início da revisão clínica."""
+    """Permite edição somente antes da análise ou depois de uma falha."""
 
     if current_status not in EDITABLE_EXAM_STATUSES:
         raise HTTPException(

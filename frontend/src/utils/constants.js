@@ -42,6 +42,16 @@ export const examStatusLabels = {
   canceled: 'Cancelados',
 }
 
+export const examStatusDisplayLabels = {
+  pending: 'Pendente',
+  processing: 'Processando',
+  awaiting_review: 'Aguardando revisão',
+  completed: 'Concluído',
+  completed_with_divergence: 'Concluído com divergência',
+  failed: 'Falha na IA',
+  canceled: 'Cancelado',
+}
+
 // EXAMS
 
 export const examTypeLabels = {
@@ -62,7 +72,12 @@ export const aiStatusLabels = {
   completed: 'Concluída',
   failed: 'Falhou',
   canceled: 'Cancelada',
-  not_processed: 'Não processado',
+  not_processed: 'Não processada',
+}
+
+export const predictionLabels = {
+  normal: 'Normal',
+  abnormal: 'Anormal',
 }
 
 export const aiStatusColors = {

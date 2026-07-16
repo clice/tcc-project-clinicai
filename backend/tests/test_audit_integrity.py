@@ -107,6 +107,9 @@ def _seed_context(
         ("processing", "exam"): Status(
             name="processing", display_name="Processando", applies_to="exam"
         ),
+        ("pending", "exam"): Status(
+            name="pending", display_name="Pendente", applies_to="exam"
+        ),
         ("failed", "exam"): Status(
             name="failed", display_name="Falhou", applies_to="exam"
         ),
@@ -324,7 +327,7 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
         .all()
     )
     assert [log.action for log in logs] == ["create", "upload"]
-    assert logs[0].new_data["status_name"] == "processing"
+    assert logs[0].new_data["status_name"] == "pending"
     assert logs[1].new_data["file_mime_type"] == "image/png"
     assert logs[1].new_data["image_width"] == 3
     assert logs[1].new_data["image_height"] == 4
@@ -355,7 +358,7 @@ def test_analysis_claim_and_its_log_rollback_together(
     db_session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    context = _seed_context(db_session)
+    context = _seed_context(db_session, exam_status_name="pending")
     exam_id = context["exam"].id
 
     from app.modules.exams import service as exams_service
@@ -375,6 +378,7 @@ def test_analysis_claim_and_its_log_rollback_together(
     db_session.expire_all()
     exam = db_session.get(Exam, exam_id)
     assert exam is not None
+    assert exam.status.name == "pending"
     assert exam.analysis_in_progress is False
     assert exam.analysis_started_at is None
     assert (
@@ -395,6 +399,7 @@ def test_analysis_claim_and_its_log_rollback_together(
     )
     db_session.expire_all()
     exam = db_session.get(Exam, exam_id)
+    assert exam.status.name == "processing"
     assert exam.analysis_in_progress is True
     claim_log = (
         db_session.query(AuditLog)

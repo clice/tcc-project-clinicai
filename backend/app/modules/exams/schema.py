@@ -132,6 +132,7 @@ class ExamResponse(BaseModel):
 
     analysis_in_progress: bool = False
     analysis_started_at: datetime | None = None
+    ai_analysis_status: str | None = None
 
     reviewed_by_id: int | None = None
     reviewed_by_name: str | None = None

@@ -466,7 +466,7 @@ def assert_demo_data() -> None:
         exams = db.query(Exam).all()
         exam_status_counts = Counter(exam.status.name for exam in exams)
         expected_exam_status_counts = {
-            "processing": 1,
+            "pending": 1,
             "awaiting_review": 2,
             "completed": 1,
             "completed_with_divergence": 1,

@@ -65,6 +65,14 @@ const _nav = [
     items: [
       {
         component: CNavItem,
+        name: 'Pendentes',
+        to: '/exams?status=pending',
+        badgeKey: 'pending',
+        roles: ['admin_master', 'doctor'],
+        permission: PERMISSIONS.EXAMS_READ,
+      },
+      {
+        component: CNavItem,
         name: 'Processando',
         to: '/exams?status=processing',
         badgeKey: 'processing',
@@ -110,16 +118,6 @@ const _nav = [
         badgeKey: 'canceled',
         roles: ['admin_master', 'doctor'],
         permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Pendentes',
-        to: '/exams?status=pending',
-        badgeKey: 'pending',
-        // Reservado — hoje nenhum exame chega a esse status (upload é
-        // obrigatório no cadastro). Visível só para o Administrador Master
-        // enquanto isso não se tornar um estado alcançável de verdade.
-        roles: ['admin_master'],
       },
     ],
   },

@@ -209,6 +209,24 @@ automatizada do backend. Para executá-la:
 docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
 ```
 
+Para validar todo o Bloco 1 em uma única execução — migration, backend,
+contratos do frontend, navegação e build — use o script correspondente ao
+seu sistema operacional a partir da raiz do projeto:
+
+```bash
+# Linux, macOS, Git Bash ou WSL
+./scripts/test-bloco-1.sh
+```
+
+```powershell
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File .\scripts\test-bloco-1.ps1
+```
+
+Os scripts iniciam apenas o banco de dados e criam contêineres temporários
+para os testes. Ao final, exibem claramente a primeira etapa que falhar ou a
+mensagem de sucesso do bloco completo.
+
 ---
 
 ## 🔑 Credenciais iniciais e acadêmicas
@@ -233,7 +251,7 @@ Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
 ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
 um usuário que já exista.
 
-O `academic_demo` consolidado cria sete exames que representam `processing`,
+O `academic_demo` consolidado cria sete exames que representam `pending`,
 duas variações de `awaiting_review`, `completed`, `completed_with_divergence`,
 `failed` e `canceled`, além de quatro análises concluídas do `ensemble_stacking`
 versão `0.1.0`. Os dois ativos acadêmicos de imagem e seus Grad-CAMs têm

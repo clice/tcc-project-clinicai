@@ -255,7 +255,7 @@ def _seed_download_context(db_session, physical_file: Path):
     active_user = Status(name="active", display_name="Ativo", applies_to="user")
     active_clinic = Status(name="active", display_name="Ativa", applies_to="clinic")
     active_patient = Status(name="active", display_name="Ativo", applies_to="patient")
-    processing = Status(name="processing", display_name="Processando", applies_to="exam")
+    pending = Status(name="pending", display_name="Pendente", applies_to="exam")
     canceled = Status(name="canceled", display_name="Cancelado", applies_to="exam")
     staff_role = Role(name="clinic_staff", display_name="Funcionário", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
@@ -299,7 +299,7 @@ def _seed_download_context(db_session, physical_file: Path):
         clinic=clinic_a,
         patient=patient,
         doctor=doctor_a,
-        status=processing,
+        status=pending,
         exam_type="colonoscopy",
         title="Exame protegido",
         file_path=str(physical_file),
@@ -311,7 +311,7 @@ def _seed_download_context(db_session, physical_file: Path):
             active_user,
             active_clinic,
             active_patient,
-            processing,
+            pending,
             canceled,
             staff_role,
             doctor_role,
@@ -361,10 +361,10 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
     cancel_exam(db_session, exam.id, staff)
     assert old_file.exists(), "Cancelamento é lógico e deve reter o arquivo."
 
-    # Retoma diretamente para processing para isolar a política física de troca.
+    # Retoma diretamente para pending para isolar a política física de troca.
     db_session.refresh(exam)
-    processing = db_session.query(Status).filter_by(name="processing", applies_to="exam").one()
-    exam.status_id = processing.id
+    pending = db_session.query(Status).filter_by(name="pending", applies_to="exam").one()
+    exam.status_id = pending.id
     db_session.commit()
 
     result = replace_exam_file(

@@ -149,7 +149,7 @@ def test_academic_demo_is_predictable_and_idempotent(
 
     status_counts = Counter(exam.status.name for exam in demo.exams.values())
     assert dict(status_counts) == {
-        "processing": 1,
+        "pending": 1,
         "awaiting_review": 2,
         "completed": 1,
         "completed_with_divergence": 1,
@@ -187,14 +187,14 @@ def test_academic_demo_is_predictable_and_idempotent(
         assert resolve_safe_gradcam_path(analysis.gradcam_path).is_file()
         assert analysis.raw_response is None
 
-    assert demo.exams["exam_processing"].ai_analysis is None
+    assert demo.exams["exam_pending"].ai_analysis is None
     assert demo.exams["exam_failed"].ai_analysis is None
     assert demo.exams["exam_canceled"].ai_analysis is None
 
     original_hash = primary_doctor.password_hash
     primary_clinic.name = "Clínica Primária Personalizada"
-    processing_exam = demo.exams["exam_processing"]
-    processing_exam.description = "Descrição acadêmica personalizada"
+    pending_exam = demo.exams["exam_pending"]
+    pending_exam.description = "Descrição acadêmica personalizada"
     db_session.commit()
 
     for _ in range(3):
@@ -210,10 +210,10 @@ def test_academic_demo_is_predictable_and_idempotent(
 
     db_session.refresh(primary_clinic)
     db_session.refresh(primary_doctor)
-    db_session.refresh(processing_exam)
+    db_session.refresh(pending_exam)
     assert primary_clinic.name == "Clínica Primária Personalizada"
     assert primary_doctor.password_hash == original_hash
-    assert processing_exam.description == "Descrição acadêmica personalizada"
+    assert pending_exam.description == "Descrição acadêmica personalizada"
 
 
 def test_demo_phase_can_be_rolled_back_without_partial_clinics(

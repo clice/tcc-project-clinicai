@@ -38,26 +38,23 @@ import {
   examTypeLabels,
   statusColors,
   examStatusLabels,
+  examStatusDisplayLabels,
   aiStatusLabels,
   aiStatusColors,
 } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
-import { formatDateTimeBR } from 'src/utils/formatters'
+import { formatDateBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
 import { hasPermission } from 'src/utils/permissions'
 
-// Os três estados mais relevantes do dia a dia — os cards de resumo focam
-// neles; os demais (falha, cancelado, pendente) ficam só no submenu
-// lateral, disponíveis mas sem disputar espaço visual no topo da página.
-const summaryCardStatuses = ['processing', 'awaiting_review', 'completed']
+// Os quatro estados principais formam o fluxo operacional exibido no topo.
+// Falha, divergência e cancelamento continuam disponíveis no submenu lateral.
+const summaryCardStatuses = ['pending', 'processing', 'awaiting_review', 'completed']
 
 const getAiStatusFromExam = (exam) => {
-  if (exam.status_name === 'processing') return 'processing'
-  if (exam.status_name === 'awaiting_review') return 'completed'
-  if (exam.status_name === 'completed') return 'completed'
-  if (exam.status_name === 'completed_with_divergence') return 'completed'
+  if (exam.ai_analysis_status) return exam.ai_analysis_status
+  if (exam.status_name === 'processing' && exam.analysis_in_progress) return 'processing'
   if (exam.status_name === 'failed') return 'failed'
-  if (exam.status_name === 'canceled') return 'canceled'
 
   return 'not_processed'
 }
@@ -190,7 +187,7 @@ const ExamsList = () => {
       {
         accessorKey: 'exam_date',
         header: 'Data',
-        cell: ({ getValue }) => formatDateTimeBR(getValue()),
+        cell: ({ getValue }) => formatDateBR(getValue()),
       },
       {
         accessorKey: 'patient_name',
@@ -205,9 +202,12 @@ const ExamsList = () => {
       {
         accessorKey: 'status_display_name',
         header: 'Status',
-        cell: ({ row, getValue }) => (
+        cell: ({ row }) => (
           <CBadge color={statusColors[row.original.status_name] || 'secondary'}>
-            {getValue() || row.original.status_name || '-'}
+            {examStatusDisplayLabels[row.original.status_name] ||
+              row.original.status_display_name ||
+              row.original.status_name ||
+              '-'}
           </CBadge>
         ),
       },
@@ -244,7 +244,7 @@ const ExamsList = () => {
               editTo={`/exams/${exam.id}/edit`}
               isInactive={isCanceled}
               canView={canView}
-              canEdit={canEdit && (isProcessing || isPending)}
+              canEdit={canEdit && (isPending || isFailed)}
               canUpload={false}
               canDownload={canDownload && Boolean(exam.file_name)}
               canCancel={canChangeStatus && (isProcessing || isPending)}
@@ -294,7 +294,7 @@ const ExamsList = () => {
 
       <CRow className="mb-4">
         {summaryCardStatuses.map((status) => (
-          <CCol sm={4} key={status}>
+          <CCol sm={6} xl={3} key={status}>
             <CCard
               role="button"
               className={statusFilter === status ? 'border-primary' : ''}

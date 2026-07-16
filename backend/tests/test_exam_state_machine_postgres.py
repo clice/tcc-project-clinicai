@@ -136,6 +136,11 @@ def _seed_exam(
             applies_to="patient",
         )
 
+        pending = _get_or_create_status(
+            db,
+            name="pending",
+            applies_to="exam",
+        )
         processing = _get_or_create_status(
             db,
             name="processing",
@@ -166,6 +171,7 @@ def _seed_exam(
         doctor_role = _get_or_create_doctor_role(db)
 
         exam_statuses = {
+            "pending": pending,
             "processing": processing,
             "awaiting_review": awaiting_review,
         }
@@ -235,7 +241,7 @@ def test_only_one_postgresql_session_claims_analysis(
 
     exam_id, _ = _seed_exam(
         pg_session_factory,
-        status_name="processing",
+        status_name="pending",
     )
 
     barrier = Barrier(2)
@@ -261,6 +267,7 @@ def test_only_one_postgresql_session_claims_analysis(
         exam = db.get(Exam, exam_id)
 
         assert exam is not None
+        assert exam.status.name == "processing"
         assert exam.analysis_in_progress is True
         assert exam.analysis_started_at is not None
 

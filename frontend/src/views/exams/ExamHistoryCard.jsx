@@ -1,6 +1,6 @@
 /** Histórico de eventos e alterações de status de um exame (RF36). */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CAlert, CBadge, CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react'
 
 import { examService } from 'src/services/examService'
@@ -42,30 +42,35 @@ const formatStatusChange = (entry) => {
   return statusLabels[status] || status
 }
 
-const ExamHistoryCard = ({ examId }) => {
+const ExamHistoryCard = ({ examId, refreshKey = 0 }) => {
   const [entries, setEntries] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const hasLoadedOnce = useRef(false)
 
   useEffect(() => {
     let isCancelled = false
 
     const loadHistory = async () => {
+      const isInitialLoad = !hasLoadedOnce.current
+
       try {
-        setIsLoading(true)
+        if (isInitialLoad) setIsLoading(true)
         setError('')
+
         const history = await examService.getHistory(examId)
 
         if (!isCancelled) {
           setEntries(Array.isArray(history?.items) ? history.items : [])
         }
       } catch (err) {
-        if (!isCancelled) {
+        if (!isCancelled && isInitialLoad) {
           setError(getErrorMessage(err, 'Não foi possível carregar o histórico do exame.'))
         }
       } finally {
         if (!isCancelled) {
-          setIsLoading(false)
+          hasLoadedOnce.current = true
+          if (isInitialLoad) setIsLoading(false)
         }
       }
     }
@@ -75,7 +80,7 @@ const ExamHistoryCard = ({ examId }) => {
     return () => {
       isCancelled = true
     }
-  }, [examId])
+  }, [examId, refreshKey])
 
   return (
     <CCard className="mt-4">
@@ -106,9 +111,7 @@ const ExamHistoryCard = ({ examId }) => {
                   className={index === entries.length - 1 ? '' : 'border-bottom pb-3'}
                 >
                   <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                    <CBadge color="secondary">
-                      {actionLabels[entry.action] || entry.action}
-                    </CBadge>
+                    <CBadge color="secondary">{actionLabels[entry.action] || entry.action}</CBadge>
                     {statusChange && <CBadge color="info">{statusChange}</CBadge>}
                   </div>
 

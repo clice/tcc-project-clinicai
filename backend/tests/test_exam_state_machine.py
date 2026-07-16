@@ -38,16 +38,16 @@ from app.modules.users.model import User
 
 
 EXPECTED_TRANSITIONS = {
-    (None, "create", "processing"),
+    (None, "create", "pending"),
     ("pending", "start_processing", "processing"),
     ("pending", "cancel", "canceled"),
+    ("pending", "replace_file", "pending"),
     ("processing", "cancel", "canceled"),
     ("processing", "analysis_succeeded", "awaiting_review"),
     ("processing", "analysis_failed", "failed"),
-    ("processing", "replace_file", "processing"),
-    ("failed", "restore", "processing"),
-    ("failed", "replace_file", "processing"),
-    ("canceled", "restore", "processing"),
+    ("failed", "restore", "pending"),
+    ("failed", "replace_file", "pending"),
+    ("canceled", "restore", "pending"),
     ("awaiting_review", "review_confirm", "completed"),
     ("awaiting_review", "review_divergence", "completed_with_divergence"),
 }
@@ -75,7 +75,7 @@ RN07_RN25_COVERAGE = {
 }
 
 
-def _seed_exam_context(db_session, *, status_name: str = "processing"):
+def _seed_exam_context(db_session, *, status_name: str = "pending"):
     status_names = [
         "pending",
         "processing",
@@ -212,12 +212,12 @@ def test_cancel_and_restore_are_idempotent(db_session, tmp_path, monkeypatch) ->
 
     first_restore = restore_exam(db_session, context.exam.id, context.doctor)
     second_restore = restore_exam(db_session, context.exam.id, context.doctor)
-    assert first_restore["status_name"] == second_restore["status_name"] == "processing"
+    assert first_restore["status_name"] == second_restore["status_name"] == "pending"
     assert db_session.query(AuditLog).filter(AuditLog.action == "restore_exam").count() == 1
 
 
 def test_ai_success_is_atomic_and_idempotent(db_session) -> None:
-    context = _seed_exam_context(db_session)
+    context = _seed_exam_context(db_session, status_name="processing")
     context.exam.analysis_in_progress = True
     context.exam.analysis_started_at = datetime.now(timezone.utc)
     db_session.commit()
@@ -247,7 +247,7 @@ def test_ai_success_is_atomic_and_idempotent(db_session) -> None:
 
 
 def test_cancel_wins_over_late_ai_result(db_session) -> None:
-    context = _seed_exam_context(db_session)
+    context = _seed_exam_context(db_session, status_name="processing")
     cancel_exam(db_session, context.exam.id, context.doctor)
     payload = AIAnalysisCreate(
         exam_id=context.exam.id,
@@ -324,3 +324,37 @@ def test_status_changes_are_audited_once(db_session, tmp_path, monkeypatch) -> N
         assert event.old_data["status_name"]
         assert event.new_data["status_name"]
         assert event.new_data["transition_action"]
+
+
+def test_processing_exam_metadata_cannot_be_edited(db_session) -> None:
+    context = _seed_exam_context(db_session, status_name="processing")
+    context.exam.analysis_in_progress = True
+    context.exam.analysis_started_at = datetime.now(timezone.utc)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as error:
+        update_exam(
+            db_session,
+            context.exam.id,
+            ExamUpdate(title="Tentativa durante processamento"),
+            context.doctor,
+        )
+
+    assert error.value.status_code == 409
+
+
+@pytest.mark.parametrize("status_name", ["pending", "failed"])
+def test_pre_analysis_or_failed_exam_metadata_can_be_edited(
+    db_session,
+    status_name: str,
+) -> None:
+    context = _seed_exam_context(db_session, status_name=status_name)
+
+    result = update_exam(
+        db_session,
+        context.exam.id,
+        ExamUpdate(title=f"Exame editado em {status_name}"),
+        context.doctor,
+    )
+
+    assert result["title"] == f"Exame editado em {status_name}"

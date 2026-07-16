@@ -33,11 +33,20 @@ import { examService } from 'src/services/examService'
 import { aiAnalysisService } from 'src/services/aiAnalysisService'
 import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
 
-import { examTypeOptions, aiStatusLabels, aiStatusColors } from 'src/utils/constants'
+import {
+  aiStatusColors,
+  aiStatusLabels,
+  examStatusDisplayLabels,
+  examTypeOptions,
+  predictionLabels,
+} from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
+import { formatDateBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const allowedImageTypes = ['image/jpeg', 'image/png']
+const analysisPollingIntervalMs = 2000
+const maxConsecutivePollingErrors = 5
 
 const emptyExam = {
   clinic_id: '',
@@ -51,7 +60,7 @@ const emptyExam = {
   status_id: '',
   status_name: '',
   status_display_name: '',
-  ai_analysis_status: 'processing',
+  ai_analysis_status: 'not_processed',
   ai_summary: '',
   file_name: '',
   file_mime_type: '',
@@ -66,6 +75,38 @@ const emptyExam = {
 const formatConfidence = (value) => {
   if (value === undefined || value === null) return '-'
   return `${Math.round(value * 100)}%`
+}
+
+const mergeExamSnapshot = (current, examData) => ({
+  ...current,
+  clinic_id: examData.clinic_id ? String(examData.clinic_id) : '',
+  patient_id: examData.patient_id ? String(examData.patient_id) : '',
+  doctor_id: examData.doctor_id ? String(examData.doctor_id) : '',
+  exam_type: examData.exam_type ?? '',
+  exam_date: examData.exam_date ?? '',
+  title: examData.title ?? '',
+  description: examData.description ?? '',
+  clinical_indication: examData.clinical_indication ?? '',
+  status_id: examData.status_id ? String(examData.status_id) : '',
+  status_name: examData.status_name ?? '',
+  status_display_name: examData.status_display_name ?? '',
+  file_name: examData.file_name ?? '',
+  file_mime_type: examData.file_mime_type ?? '',
+  findings: examData.findings ?? '',
+  conclusion: examData.conclusion ?? '',
+  reviewed_by_name: examData.reviewed_by_name ?? '',
+  reviewed_at: examData.reviewed_at ?? '',
+  analysis_in_progress: Boolean(examData.analysis_in_progress),
+  analysis_started_at: examData.analysis_started_at ?? '',
+  ai_analysis_status: examData.ai_analysis_status ?? 'not_processed',
+})
+
+const resolveAiStatus = (form, analysis) => {
+  if (analysis?.status_name) return analysis.status_name
+  if (form.ai_analysis_status !== 'not_processed') return form.ai_analysis_status
+  if (form.status_name === 'processing' && form.analysis_in_progress) return 'processing'
+  if (form.status_name === 'failed') return 'failed'
+  return 'not_processed'
 }
 
 const ExamForm = ({ mode = 'create' }) => {
@@ -84,6 +125,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
 
   const [review, setReview] = useState({
     findings: '',
@@ -101,8 +143,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
   const canViewAiAnalysis =
-    roleName !== ROLES.CLINIC_STAFF &&
-    hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
+    roleName !== ROLES.CLINIC_STAFF && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
@@ -110,7 +151,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const canAnalyze =
     hasPermission(user, PERMISSIONS.AI_ANALYSIS_CREATE) &&
     !isCreateMode &&
-    form.status_name === 'processing' &&
+    form.status_name === 'pending' &&
     !form.analysis_in_progress &&
     !aiAnalysis
 
@@ -119,6 +160,8 @@ const ExamForm = ({ mode = 'create' }) => {
     hasPermission(user, PERMISSIONS.EXAMS_REVIEW) &&
     !isCreateMode &&
     form.status_name === 'awaiting_review'
+
+  const aiStatus = resolveAiStatus(form, aiAnalysis)
 
   const title = useMemo(() => {
     if (isCreateMode) return 'Cadastrar Exame'
@@ -191,40 +234,11 @@ const ExamForm = ({ mode = 'create' }) => {
 
         const examData = await examService.getById(id)
 
-        setForm({
-          clinic_id: examData.clinic_id ? String(examData.clinic_id) : '',
-          patient_id: examData.patient_id ? String(examData.patient_id) : '',
-          doctor_id: examData.doctor_id ? String(examData.doctor_id) : '',
-
-          exam_type: examData.exam_type ?? '',
-          exam_date: examData.exam_date ?? '',
-
-          title: examData.title ?? '',
-          description: examData.description ?? '',
-          clinical_indication: examData.clinical_indication ?? '',
-
-          status_id: examData.status_id ? String(examData.status_id) : '',
-          status_name: examData.status_name ?? '',
-          status_display_name: examData.status_display_name ?? '',
-
-          ai_analysis_status: examData.status_name || 'processing',
-          ai_summary: examData.ai_summary ?? '',
-
-          file_name: examData.file_name ?? '',
-          file_mime_type: examData.file_mime_type ?? '',
-          findings: examData.findings ?? '',
-          conclusion: examData.conclusion ?? '',
-          reviewed_by_name: examData.reviewed_by_name ?? '',
-          reviewed_at: examData.reviewed_at ?? '',
-          analysis_in_progress: Boolean(examData.analysis_in_progress),
-          analysis_started_at: examData.analysis_started_at ?? '',
-        })
+        setForm((current) => mergeExamSnapshot(current, examData))
 
         // A análise só é consultada por perfis autorizados. A ausência de
         // análise (404) continua sendo tratada como um estado normal.
-        const analysis = canViewAiAnalysis
-          ? await aiAnalysisService.getByExamId(id)
-          : null
+        const analysis = canViewAiAnalysis ? await aiAnalysisService.getByExamId(id) : null
         setAiAnalysis(analysis)
 
         // Reseta o formulário de revisão a cada carregamento, pra não
@@ -240,6 +254,57 @@ const ExamForm = ({ mode = 'create' }) => {
 
     void loadData()
   }, [canViewAiAnalysis, id, isCreateMode])
+
+  const isAnalysisActive =
+    !isCreateMode && form.status_name === 'processing' && form.analysis_in_progress && !aiAnalysis
+
+  useEffect(() => {
+    if (!isAnalysisActive) return undefined
+
+    let isCancelled = false
+    let timerId = null
+    let consecutiveErrors = 0
+
+    const scheduleNextPoll = () => {
+      timerId = window.setTimeout(pollAnalysis, analysisPollingIntervalMs)
+    }
+
+    const pollAnalysis = async () => {
+      try {
+        const examData = await examService.getById(id)
+        const analysis = canViewAiAnalysis ? await aiAnalysisService.getByExamId(id) : null
+
+        if (isCancelled) return
+
+        consecutiveErrors = 0
+        setForm((current) => mergeExamSnapshot(current, examData))
+        setAiAnalysis(analysis)
+        setHistoryRefreshKey((current) => current + 1)
+
+        const remainsActive =
+          examData.status_name === 'processing' &&
+          Boolean(examData.analysis_in_progress) &&
+          !analysis
+
+        if (remainsActive) {
+          scheduleNextPoll()
+        }
+      } catch {
+        consecutiveErrors += 1
+
+        if (!isCancelled && consecutiveErrors < maxConsecutivePollingErrors) {
+          scheduleNextPoll()
+        }
+      }
+    }
+
+    scheduleNextPoll()
+
+    return () => {
+      isCancelled = true
+      if (timerId !== null) window.clearTimeout(timerId)
+    }
+  }, [canViewAiAnalysis, id, isAnalysisActive])
 
   // O backend expõe apenas a disponibilidade do Grad-CAM. O binário é
   // obtido por uma rota autenticada, sem revelar o caminho físico.
@@ -391,7 +456,6 @@ const ExamForm = ({ mode = 'create' }) => {
     showError('')
     showSuccess('')
 
-
     if (!validateForm()) return
 
     try {
@@ -399,8 +463,10 @@ const ExamForm = ({ mode = 'create' }) => {
 
       if (isCreateMode) {
         const payload = buildCreatePayload()
-
-        await examService.create(payload)
+        const createdExam = await examService.create(payload)
+        showSuccess('Exame salvo com sucesso.')
+        navigate(`/exams/${createdExam.id}`)
+        return
       }
 
       if (isEditMode) {
@@ -410,7 +476,7 @@ const ExamForm = ({ mode = 'create' }) => {
       }
 
       showSuccess('Exame salvo com sucesso.')
-      navigate('/exams')
+      navigate(`/exams/${id}`)
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar exame.'))
     } finally {
@@ -425,22 +491,26 @@ const ExamForm = ({ mode = 'create' }) => {
     showSuccess('')
     try {
       setIsAnalyzing(true)
-      setForm((current) => ({ ...current, analysis_in_progress: true }))
+      setForm((current) => ({
+        ...current,
+        status_name: 'processing',
+        status_display_name: examStatusDisplayLabels.processing,
+        analysis_in_progress: true,
+      }))
       const analysis = await examService.analyze(id)
       const updatedExam = await examService.getById(id)
       setAiAnalysis(analysis)
-      setForm((current) => ({
-        ...current,
-        status_id: updatedExam.status_id ? String(updatedExam.status_id) : current.status_id,
-        status_name: updatedExam.status_name ?? current.status_name,
-        status_display_name: updatedExam.status_display_name ?? current.status_display_name,
-        ai_analysis_status: updatedExam.status_name ?? current.ai_analysis_status,
-        analysis_in_progress: Boolean(updatedExam.analysis_in_progress),
-        analysis_started_at: updatedExam.analysis_started_at ?? '',
-      }))
+      setForm((current) => mergeExamSnapshot(current, updatedExam))
+      setHistoryRefreshKey((current) => current + 1)
       showSuccess('Análise de IA concluída. O exame aguarda revisão médica.')
     } catch (err) {
-      setForm((current) => ({ ...current, analysis_in_progress: false }))
+      try {
+        const updatedExam = await examService.getById(id)
+        setForm((current) => mergeExamSnapshot(current, updatedExam))
+        setHistoryRefreshKey((current) => current + 1)
+      } catch {
+        setForm((current) => ({ ...current, analysis_in_progress: false }))
+      }
       showError(getErrorMessage(err, 'Erro ao executar a análise de IA.'))
     } finally {
       setIsAnalyzing(false)
@@ -483,6 +553,7 @@ const ExamForm = ({ mode = 'create' }) => {
         reviewed_by_name: updatedExam.reviewed_by_name ?? prev.reviewed_by_name,
         reviewed_at: updatedExam.reviewed_at ?? prev.reviewed_at,
       }))
+      setHistoryRefreshKey((current) => current + 1)
 
       showSuccess(
         review.has_discrepancy
@@ -596,8 +667,9 @@ const ExamForm = ({ mode = 'create' }) => {
                     <CFormLabel>Status</CFormLabel>
                     <CFormInput
                       value={
+                        examStatusDisplayLabels[form.status_name] ||
                         form.status_display_name ||
-                        (isCreateMode ? 'Processando após o cadastro' : '-')
+                        (isCreateMode ? 'Pendente após o cadastro' : '-')
                       }
                       disabled
                     />
@@ -627,12 +699,15 @@ const ExamForm = ({ mode = 'create' }) => {
 
                   <CCol md={6}>
                     <CFormLabel>Data do exame</CFormLabel>
-                    <CFormInput
-                      type="date"
-                      value={form.exam_date}
-                      disabled={isReadOnly}
-                      onChange={(event) => updateField('exam_date', event.target.value)}
-                    />
+                    {isReadOnly ? (
+                      <CFormInput value={formatDateBR(form.exam_date)} disabled />
+                    ) : (
+                      <CFormInput
+                        type="date"
+                        value={form.exam_date}
+                        onChange={(event) => updateField('exam_date', event.target.value)}
+                      />
+                    )}
                   </CCol>
 
                   <CCol md={12}>
@@ -705,7 +780,7 @@ const ExamForm = ({ mode = 'create' }) => {
             </CCardBody>
           </CCard>
 
-          {!isCreateMode && <ExamHistoryCard examId={id} />}
+          {!isCreateMode && <ExamHistoryCard examId={id} refreshKey={historyRefreshKey} />}
         </CCol>
 
         <CCol lg={4}>
@@ -717,14 +792,22 @@ const ExamForm = ({ mode = 'create' }) => {
             <CCardBody>
               <div className="mb-3">
                 <div className="text-body-secondary small">Status da análise</div>
-                <CBadge color={aiStatusColors[form.ai_analysis_status] || 'secondary'}>
-                  {aiStatusLabels[form.ai_analysis_status] || form.ai_analysis_status}
+                <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>
+                  {aiStatusLabels[aiStatus] || aiStatus}
                 </CBadge>
               </div>
 
               <div className="mb-3">
                 <div className="text-body-secondary small">Resumo</div>
-                <div>{form.ai_summary || 'A análise será executada após o cadastro.'}</div>
+                <div>
+                  {aiStatus === 'processing'
+                    ? 'A análise está sendo executada.'
+                    : aiStatus === 'completed'
+                      ? 'A análise foi concluída e está disponível abaixo.'
+                      : aiStatus === 'failed'
+                        ? 'A análise falhou. Restaure o exame antes de tentar novamente.'
+                        : 'A análise ainda não foi executada.'}
+                </div>
               </div>
 
               {form.analysis_in_progress && !aiAnalysis && (
@@ -735,7 +818,12 @@ const ExamForm = ({ mode = 'create' }) => {
               )}
 
               {canAnalyze && (
-                <CButton color="primary" className="mb-3" onClick={handleAnalyze} disabled={isAnalyzing}>
+                <CButton
+                  color="primary"
+                  className="mb-3"
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
+                >
                   {isAnalyzing ? (
                     <>
                       <CSpinner size="sm" className="me-2" />
@@ -754,7 +842,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   <div className="mb-3">
                     <div className="text-body-secondary small">Predição</div>
                     <CBadge color={aiAnalysis.prediction_class === 1 ? 'danger' : 'success'}>
-                      {aiAnalysis.prediction_label}
+                      {predictionLabels[aiAnalysis.prediction_label] || aiAnalysis.prediction_label}
                     </CBadge>
                   </div>
 
@@ -807,11 +895,11 @@ const ExamForm = ({ mode = 'create' }) => {
                     <div>{aiAnalysis.ai_notes || '-'}</div>
                   </div>
                 </>
-              ) : (
+              ) : aiStatus !== 'processing' ? (
                 <CAlert color="secondary" className="mb-0">
                   Este exame ainda não possui análise de IA vinculada.
                 </CAlert>
-              )}
+              ) : null}
             </CCardBody>
           </CCard>
 
@@ -920,9 +1008,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   <div className="text-body-secondary small">Revisado por</div>
                   <div>
                     {form.reviewed_by_name || '-'}
-                    {form.reviewed_at
-                      ? ` em ${new Date(form.reviewed_at).toLocaleString('pt-BR')}`
-                      : ''}
+                    {form.reviewed_at ? ` em ${formatDateTimeBR(form.reviewed_at)}` : ''}
                   </div>
                 </div>
               </CCardBody>
@@ -946,7 +1032,6 @@ const ExamForm = ({ mode = 'create' }) => {
               </div>
             </CCardBody>
           </CCard>
-
         </CCol>
       </CRow>
     </>

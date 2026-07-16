@@ -188,10 +188,10 @@ def restore_exam_route(
     current_user: User = Depends(require_permission("exams:change_status")),
 ):
     """
-    Restaura um exame cancelado ou com falha para processing.
+    Restaura um exame cancelado ou com falha para pending.
 
     A operação exige que o arquivo físico continue disponível. Repetir a
-    requisição depois de atingir processing é idempotente.
+    requisição depois de atingir pending é idempotente.
     """
     return restore_exam(
         db=db,
@@ -209,8 +209,8 @@ async def analyze_exam_route(
     """
     Envia o exame para análise pelo serviço de IA (RF41-48).
 
-    O exame precisa estar em 'processing' e ter um arquivo enviado. Um
-    claim atômico impede inferências concorrentes. Em sucesso, o exame passa
+    O exame precisa estar em 'pending' e ter um arquivo enviado. Um claim
+    atômico realiza pending -> processing e impede inferências concorrentes. Em sucesso, o exame passa
     para 'awaiting_review'; em falha, passa para 'failed'.
     """
     return await analyze_exam(
