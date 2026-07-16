@@ -144,7 +144,7 @@ export const examService = {
   },
 
   /**
-   * 
+   *
    */
   getFormOptions: async () => {
     const response = await api.get('/exams/form-options')
@@ -168,18 +168,41 @@ export const examService = {
   downloadFile: async (id) => {
     const response = await api.get(`/exams/${id}/download`, {
       responseType: 'blob',
+      params: {
+        download_request: Date.now(),
+      },
     })
 
     return response.data
   },
 
   /**
-   * Permite fazer o download dos arquivos.
+   * Carrega o mapa Grad-CAM para visualização autenticada.
+   */
+  previewAiFile: async (id) => {
+    const response = await api.get(
+      `/exams/${id}/ai-file/preview`,
+      {
+        responseType: 'blob',
+      },
+    )
+
+    return response.data
+  },
+
+  /**
+   * Baixa explicitamente o mapa Grad-CAM.
    */
   downloadAiFile: async (id) => {
-    const response = await api.get(`/exams/${id}/ai-file/download`, {
-      responseType: 'blob',
-    })
+    const response = await api.get(
+      `/exams/${id}/ai-file/download`,
+      {
+        responseType: 'blob',
+        params: {
+          download_request: Date.now(),
+        },
+      },
+    )
 
     return response.data
   },

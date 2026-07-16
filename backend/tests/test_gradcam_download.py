@@ -12,7 +12,10 @@ from app.modules.audit_logs.model import AuditLog
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamResponse
-from app.modules.exams.service import download_exam_ai_file
+from app.modules.exams.service import (
+    download_exam_ai_file,
+    preview_exam_ai_file,
+)
 from app.modules.patients.model import Patient
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -143,24 +146,101 @@ def seed_context(db_session, gradcam_path: Path):
     return exam, analysis, doctor_a, doctor_b, staff_a
 
 
-def test_gradcam_download_is_scoped_private_and_audited(
+def test_gradcam_preview_and_download_are_scoped_private_and_audited(
     db_session,
     isolated_ai_storage: Path,
 ) -> None:
-    gradcam = isolated_ai_storage / "gradcam" / "mapa.jpg"
+    gradcam = (
+        isolated_ai_storage
+        / "gradcam"
+        / "mapa.jpg"
+    )
     gradcam.parent.mkdir(parents=True)
     gradcam.write_bytes(b"gradcam-academico")
 
-    exam, analysis, doctor_a, doctor_b, staff_a = seed_context(db_session, gradcam)
+    (
+        exam,
+        analysis,
+        doctor_a,
+        doctor_b,
+        staff_a,
+    ) = seed_context(
+        db_session,
+        gradcam,
+    )
 
-    assert_http_error(403, lambda: download_exam_ai_file(db_session, exam.id, doctor_b))
-    assert_http_error(403, lambda: download_exam_ai_file(db_session, exam.id, staff_a))
-    assert db_session.query(AuditLog).filter(AuditLog.action == "download").count() == 0
+    assert_http_error(
+        403,
+        lambda: preview_exam_ai_file(
+            db_session,
+            exam.id,
+            doctor_b,
+        ),
+    )
 
-    response = download_exam_ai_file(db_session, exam.id, doctor_a)
+    assert_http_error(
+        403,
+        lambda: download_exam_ai_file(
+            db_session,
+            exam.id,
+            staff_a,
+        ),
+    )
+
+    assert (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "download")
+        .count()
+        == 0
+    )
+
+    preview_response = preview_exam_ai_file(
+        db_session,
+        exam.id,
+        doctor_a,
+    )
+
+    assert Path(preview_response.path) == gradcam
+    assert preview_response.media_type == "image/jpeg"
+
+    preview_disposition = preview_response.headers[
+        "content-disposition"
+    ]
+
+    assert preview_disposition.startswith("inline;")
+    assert (
+        preview_response.headers["cache-control"]
+        == "private, no-store"
+    )
+
+    assert (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "download")
+        .count()
+        == 0
+    )
+
+    response = download_exam_ai_file(
+        db_session,
+        exam.id,
+        doctor_a,
+    )
 
     assert Path(response.path) == gradcam
     assert response.media_type == "image/jpeg"
+
+    disposition = response.headers[
+        "content-disposition"
+    ]
+
+    expected_name = (
+        f"gradcam-exame-{exam.id}-"
+        "paciente-grad-cam-sem-data.jpg"
+    )
+
+    assert disposition.startswith("attachment;")
+    assert response.headers["cache-control"] == "no-store"
+    assert expected_name in disposition
 
     logs = (
         db_session.query(AuditLog)
@@ -171,8 +251,17 @@ def test_gradcam_download_is_scoped_private_and_audited(
         )
         .all()
     )
+
     assert len(logs) == 1
     assert "gradcam_path" not in str(logs[0].new_data)
+    assert (
+        logs[0].new_data["download_name"]
+        == expected_name
+    )
+    assert (
+        logs[0].new_data["delivery_mode"]
+        == "attachment"
+    )
 
 
 def test_gradcam_path_outside_shared_storage_is_rejected(

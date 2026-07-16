@@ -1065,6 +1065,9 @@ def preview_exam_file(
         ),
         media_type=exam.file_mime_type,
         content_disposition_type="inline",
+        headers={
+            "Cache-Control": "private, no-store",
+        },
     )
 
 
@@ -1109,6 +1112,138 @@ def download_exam_file(
         filename=download_name,
         media_type=exam.file_mime_type,
         content_disposition_type="attachment",
+        headers={
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+def get_authorized_gradcam_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Resolve o Grad-CAM após validar perfil, escopo e caminho."""
+
+    exam = get_exam_model_by_id(
+        db=db,
+        exam_id=exam_id,
+    )
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    role_name = (
+        current_user.role.name
+        if current_user.role
+        else None
+    )
+
+    if role_name not in {
+        RoleName.ADMIN_MASTER.value,
+        RoleName.DOCTOR.value,
+    }:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Somente médicos e o administrador podem "
+                "acessar o resultado visual da IA."
+            ),
+        )
+
+    analysis = exam.ai_analysis
+
+    if not analysis or not analysis.gradcam_path:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Este exame não possui mapa Grad-CAM "
+                "disponível."
+            ),
+        )
+
+    file_path = resolve_safe_gradcam_path(
+        analysis.gradcam_path
+    )
+
+    media_type = (
+        "image/png"
+        if file_path.suffix.lower() == ".png"
+        else "image/jpeg"
+    )
+
+    return exam, analysis, file_path, media_type
+
+
+def build_gradcam_download_filename(
+    exam: Exam,
+    file_path,
+) -> str:
+    """Gera nome público amigável para o mapa Grad-CAM."""
+
+    patient_name = (
+        exam.patient.name
+        if exam.patient
+        else None
+    )
+
+    patient_slug = slugify_exam_download_component(
+        patient_name,
+        fallback="paciente",
+    )
+
+    date_part = (
+        exam.exam_date.isoformat()
+        if exam.exam_date
+        else "sem-data"
+    )
+
+    extension = (
+        ".png"
+        if file_path.suffix.lower() == ".png"
+        else ".jpg"
+    )
+
+    return (
+        f"gradcam-exame-{exam.id}-"
+        f"{patient_slug}-"
+        f"{date_part}"
+        f"{extension}"
+    )
+
+
+def preview_exam_ai_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """
+    Retorna o Grad-CAM para visualização inline.
+
+    A prévia automática não registra download manual.
+    """
+
+    exam, _, file_path, media_type = (
+        get_authorized_gradcam_file(
+            db=db,
+            exam_id=exam_id,
+            current_user=current_user,
+        )
+    )
+
+    return FileResponse(
+        path=file_path,
+        filename=build_gradcam_download_filename(
+            exam,
+            file_path,
+        ),
+        media_type=media_type,
+        content_disposition_type="inline",
+        headers={
+            "Cache-Control": "private, no-store",
+        },
     )
 
 
@@ -1117,27 +1252,20 @@ def download_exam_ai_file(
     exam_id: int,
     current_user: User,
 ):
-    """Retorna o Grad-CAM após validar perfil, escopo e caminho físico."""
+    """Retorna o Grad-CAM como download explicitamente solicitado."""
 
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
-    validate_user_can_access_exam(current_user=current_user, exam=exam)
-
-    role_name = current_user.role.name if current_user.role else None
-    if role_name not in {RoleName.ADMIN_MASTER.value, RoleName.DOCTOR.value}:
-        raise HTTPException(
-            status_code=403,
-            detail="Somente médicos e o administrador podem acessar o resultado visual da IA.",
+    exam, analysis, file_path, media_type = (
+        get_authorized_gradcam_file(
+            db=db,
+            exam_id=exam_id,
+            current_user=current_user,
         )
+    )
 
-    analysis = exam.ai_analysis
-    if not analysis or not analysis.gradcam_path:
-        raise HTTPException(
-            status_code=404,
-            detail="Este exame não possui mapa Grad-CAM disponível.",
-        )
-
-    file_path = resolve_safe_gradcam_path(analysis.gradcam_path)
-    media_type = "image/png" if file_path.suffix.lower() == ".png" else "image/jpeg"
+    download_name = build_gradcam_download_filename(
+        exam,
+        file_path,
+    )
 
     create_audit_log(
         db=db,
@@ -1146,18 +1274,25 @@ def download_exam_ai_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.AI_ANALYSIS,
         entity_id=analysis.id,
-        description="Visualização autenticada do mapa Grad-CAM preparada.",
+        description="Download do mapa Grad-CAM autorizado.",
         new_data={
             "artifact_type": "gradcam",
             "media_type": media_type,
+            "download_name": download_name,
+            "delivery_mode": "attachment",
         },
     )
+
     db.commit()
 
     return FileResponse(
         path=file_path,
-        filename=f"gradcam-exame-{exam.id}{file_path.suffix.lower()}",
+        filename=download_name,
         media_type=media_type,
+        content_disposition_type="attachment",
+        headers={
+            "Cache-Control": "no-store",
+        },
     )
 
 

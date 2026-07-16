@@ -359,6 +359,10 @@ def test_download_is_scoped_to_clinic_and_audited(
     assert preview_response.headers[
         "content-disposition"
     ].startswith("inline;")
+    assert (
+        preview_response.headers["cache-control"]
+        == "private, no-store"
+    )
 
     assert (
         db_session.query(AuditLog)
@@ -381,6 +385,7 @@ def test_download_is_scoped_to_clinic_and_audited(
     ]
 
     assert disposition.startswith("attachment;")
+    assert response.headers["cache-control"] == "no-store"
     assert (
         f'exame-{exam.id}-paciente-a-sem-data.png'
         in disposition

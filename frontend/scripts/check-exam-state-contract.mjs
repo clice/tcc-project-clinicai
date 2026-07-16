@@ -11,6 +11,9 @@ const form = read('frontend/src/views/exams/ExamForm.jsx')
 const patientForm = read('frontend/src/views/patients/PatientForm.jsx')
 const list = read('frontend/src/views/exams/ExamsList.jsx')
 const history = read('frontend/src/views/exams/ExamHistoryCard.jsx')
+const aiResultCard = read(
+  'frontend/src/views/exams/ExamAiResultCard.jsx',
+)
 const navigation = read('frontend/src/_nav.jsx')
 const service = read('frontend/src/services/examService.js')
 const stateMachine = read('backend/app/modules/exams/state_machine.py')
@@ -129,6 +132,35 @@ if (
   )
 }
 if (
+  !form.includes(
+    'const authenticatedDoctorId = useMemo(() => {',
+  ) ||
+  !form.includes(
+    'String(patient.doctor_id) ===',
+  ) ||
+  !form.includes('authenticatedDoctorId') ||
+  !form.includes('const defaultClinicId =') ||
+  !form.includes('const defaultDoctorId =') ||
+  !form.includes(': defaultClinicId,') ||
+  !form.includes(': defaultDoctorId,') ||
+  !form.includes('if (!isAdminMaster) return') ||
+  !form.includes(
+    '{isCreateMode && isAdminMaster ? (',
+  ) ||
+  !form.includes('doctor_id: isDoctor') ||
+  !form.includes(
+    'Clínica vinculada ao usuário autenticado.',
+  ) ||
+  !form.includes(
+    'Médico autenticado responsável pelo exame.',
+  )
+) {
+  throw new Error(
+    'O cadastro do exame deve fixar clínica e médico e filtrar os pacientes do médico autenticado.',
+  )
+}
+
+if (
   !patientForm.includes('if (isCreateMode || !patient) return payload') ||
   !patientForm.includes('const originalPayload = {') ||
   !patientForm.includes('Object.fromEntries(') ||
@@ -169,10 +201,13 @@ if (
   !form.includes('const blob = await examService.previewFile(id)') ||
   !form.includes('const blob = await examService.downloadFile(id)') ||
   !form.includes('buildOriginalDownloadName({') ||
-  !form.includes('alt="Imagem original do exame"') ||
-  !form.includes('Abrir em tamanho maior') ||
-  !form.includes('Baixar imagem original') ||
-  !form.includes('Imagem original enviada no cadastro') ||
+  !aiResultCard.includes(
+    'alt="Imagem original do exame"',
+  ) ||
+  !aiResultCard.includes(
+    'Abrir imagem original em tamanho maior',
+  ) ||
+  !aiResultCard.includes('Baixar imagem original') ||
   form.includes(
     "<CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />",
   ) ||
@@ -198,6 +233,48 @@ if (
 ) {
   throw new Error(
     'A prévia automática deve ser separada do download manual auditado.',
+  )
+}
+
+if (
+  !service.includes('previewAiFile: async (id) =>') ||
+  !service.includes(
+    '`/exams/${id}/ai-file/preview`',
+  ) ||
+  !service.includes('downloadAiFile: async (id) =>') ||
+  !examRouter.includes(
+    '@router.get("/{exam_id}/ai-file/preview")',
+  ) ||
+  !examRouter.includes('return preview_exam_ai_file(') ||
+  !examRouter.includes(
+    '@router.get("/{exam_id}/ai-file/download")',
+  ) ||
+  !examService.includes('def get_authorized_gradcam_file(') ||
+  !examService.includes('def preview_exam_ai_file(') ||
+  !examService.includes(
+    'def build_gradcam_download_filename(',
+  ) ||
+  !examService.includes(
+    'description="Download do mapa Grad-CAM autorizado."',
+  ) ||
+  !examService.includes(
+    '"delivery_mode": "attachment"',
+  )
+) {
+  throw new Error(
+    'A prévia do Grad-CAM deve ser separada do download manual auditado.',
+  )
+}
+
+if (
+  (
+    service.match(
+      /download_request: Date\.now\(\)/g,
+    ) || []
+  ).length !== 2
+) {
+  throw new Error(
+    'Os downloads explícitos devem impedir respostas reutilizadas do cache do navegador.',
   )
 }
 
@@ -246,15 +323,200 @@ if (
   )
 }
 
-const createSidebarGuardPattern =
-  /\{!isCreateMode && \(\s*<CCol lg=\{4\}>[\s\S]*?<strong>Análise por IA<\/strong>[\s\S]*?<strong>Arquivo<\/strong>[\s\S]*?<\/CCol>\s*\)\}/
+const detailLayoutStart = form.indexOf(
+  '{!isCreateMode ? (',
+)
+const detailLayout = form.slice(detailLayoutStart)
+
+const reviewIndex = detailLayout.indexOf(
+  'id="revisao-medica"',
+)
+const aiResultIndex = detailLayout.indexOf(
+  '<ExamAiResultCard',
+)
+const dataCardIndex = detailLayout.indexOf(
+  '{examDataCard}',
+)
+const historyIndex = detailLayout.indexOf(
+  '<ExamHistoryCard',
+)
 
 if (
-  !form.includes('<CCol lg={isCreateMode ? 12 : 8}>') ||
-  !createSidebarGuardPattern.test(form)
+  detailLayoutStart < 0 ||
+  reviewIndex < 0 ||
+  aiResultIndex <= reviewIndex ||
+  dataCardIndex <= aiResultIndex ||
+  historyIndex <= dataCardIndex
 ) {
   throw new Error(
-    'O cadastro deve ocupar toda a largura e ocultar os cards Análise por IA e Arquivo.',
+    'O detalhe deve priorizar revisão, resultado da IA, dados e histórico nesta ordem.',
+  )
+}
+
+if (
+  !form.includes(
+    'const [isExamDataOpen, setIsExamDataOpen] = useState(',
+  ) ||
+  !form.includes('aria-expanded={isExamDataOpen}') ||
+  !form.includes(
+    '{(!isReadOnly || isExamDataOpen) && (',
+  ) ||
+  !form.includes('<CCol xs={12}>') ||
+  !form.includes('collapsible={isReadOnly}') ||
+  !form.includes('defaultOpen={!isReadOnly}') ||
+  !history.includes('collapsible = false') ||
+  !history.includes('defaultOpen = true') ||
+  !history.includes(
+    'const isContentOpen = !collapsible || isOpen',
+  ) ||
+  !history.includes('aria-expanded={isOpen}') ||
+  !history.includes('{isContentOpen && (') ||
+  !history.includes('className="mt-4 mb-4"')
+) {
+  throw new Error(
+    'Revisão deve ocupar toda a largura e dados e histórico devem ser recolhíveis na consulta.',
+  )
+}
+
+if (
+  !form.includes(
+    "{isCreateMode ? title : form.title || title}",
+  ) ||
+  !form.includes('{selectedPatientName}') ||
+  !form.includes('{formatDateBR(form.exam_date)}') ||
+  !form.includes(
+    'examTypeLabels[form.exam_type]',
+  ) ||
+  !form.includes(
+    'statusColors[form.status_name]',
+  )
+) {
+  throw new Error(
+    'O cabeçalho do detalhe deve resumir título, paciente, data, tipo e status.',
+  )
+}
+
+if (
+  !form.includes(
+    "import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'",
+  ) ||
+  !form.includes('<ExamAiResultCard') ||
+  !aiResultCard.includes(
+    '<strong>Resultado da IA</strong>',
+  ) ||
+  !aiResultCard.includes('color="info"') ||
+  !aiResultCard.includes('Uso do resultado:') ||
+  !aiResultCard.includes('Sobre o mapa atual:') ||
+  !aiResultCard.includes('Ensemble Stacking') ||
+  !aiResultCard.includes('ResNet-50') ||
+  !aiResultCard.includes('decisão completa do ensemble') ||
+  !aiResultCard.includes('risco, gravidade') ||
+  !aiResultCard.includes('Status da análise') ||
+  !aiResultCard.includes('Predição') ||
+  !aiResultCard.includes('Confiança') ||
+  !aiResultCard.includes('Modelo utilizado') ||
+  !aiResultCard.includes('Versão') ||
+  !aiResultCard.includes('Tempo de processamento') ||
+  !aiResultCard.includes(
+    "'ClinicAI Gastrointestinal — Ensemble Stacking'",
+  ) ||
+  !aiResultCard.includes('model_version') ||
+  !aiResultCard.includes(
+    '<hr className="my-4" />',
+  ) ||
+  !aiResultCard.includes('Imagem original') ||
+  !aiResultCard.includes('Mapa Grad-CAM') ||
+  !aiResultCard.includes(
+    'Abrir imagem original em tamanho maior',
+  ) ||
+  !aiResultCard.includes(
+    'Abrir mapa em tamanho maior',
+  ) ||
+  !aiResultCard.includes('Baixar imagem original') ||
+  !aiResultCard.includes('Baixar mapa Grad-CAM') ||
+  !aiResultCard.includes(
+    'Intensidade de contribuição relativa',
+  ) ||
+  !aiResultCard.includes('Menor contribuição') ||
+  !aiResultCard.includes('Maior contribuição') ||
+  !aiResultCard.includes('linear-gradient(90deg') ||
+  !aiResultCard.includes('ai_notes?.trim()') ||
+  !aiResultCard.includes("height: '360px'") ||
+  aiResultCard.includes(
+    'Mapa produzido pela ResNet-50, componente',
+  ) ||
+  aiResultCard.includes('console.log(')
+) {
+  throw new Error(
+    'O componente de resultado da IA deve reunir orientação, métricas, imagens, escala e ações de arquivo.',
+  )
+}
+
+
+const contributionScaleIndex =
+  aiResultCard.indexOf(
+    'Intensidade de contribuição relativa',
+  )
+
+const originalImageSectionIndex =
+  aiResultCard.indexOf(
+    'id="original-image-title"',
+  )
+
+const gradcamImageSectionIndex =
+  aiResultCard.indexOf(
+    'id="gradcam-image-title"',
+  )
+
+if (
+  contributionScaleIndex < 0 ||
+  originalImageSectionIndex <= contributionScaleIndex ||
+  gradcamImageSectionIndex <= contributionScaleIndex ||
+  !aiResultCard.includes(
+    'className="g-4 align-items-stretch"',
+  ) ||
+  (
+    aiResultCard.match(
+      /className="h-100 d-flex flex-column"/g,
+    ) || []
+  ).length !== 2 ||
+  (
+    aiResultCard.match(
+      /className="d-grid gap-2 mt-auto"/g,
+    ) || []
+  ).length !== 2
+) {
+  throw new Error(
+    'A escala deve anteceder as imagens e as duas colunas devem permanecer visualmente equilibradas.',
+  )
+}
+
+if (
+  !form.includes(
+    'Dados clínicos e administrativos',
+  ) ||
+  !form.includes('Observações') ||
+  !form.includes(
+    'Achados da revisão médica *',
+  ) ||
+  !form.includes('Conclusão médica *')
+) {
+  throw new Error(
+    'Os dados do cadastro e da revisão médica devem permanecer semanticamente separados.',
+  )
+}
+
+if (
+  form.includes('<strong>Arquivo</strong>') ||
+  form.includes(
+    '<div className="text-body-secondary small">Resumo</div>',
+  ) ||
+  form.includes(
+    '<div>{aiAnalysis.ai_notes || \'-\'}</div>',
+  )
+) {
+  throw new Error(
+    'A tela ainda contém a organização lateral ou textos artificiais antigos.',
   )
 }
 

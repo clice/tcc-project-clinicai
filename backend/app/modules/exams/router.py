@@ -27,6 +27,7 @@ from app.modules.exams.service import (
     get_exam_history,
     list_exam_form_options,
     list_exams,
+    preview_exam_ai_file,
     preview_exam_file,
     replace_exam_file,
     restore_exam,
@@ -180,8 +181,8 @@ def cancel_exam_route(
         exam_id=exam_id,
         current_user=current_user,
     )
-    
-    
+
+
 @router.patch("/{exam_id}/restore", response_model=ExamResponse)
 def restore_exam_route(
     exam_id: int,
@@ -275,6 +276,27 @@ def download_exam_file_route(
     Retorna informações do arquivo vinculado ao exame.
     """
     return download_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get("/{exam_id}/ai-file/preview")
+def preview_exam_ai_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("ai_analysis:read")
+    ),
+):
+    """
+    Retorna o mapa Grad-CAM para visualização autenticada.
+
+    A abertura automática não é registrada como download manual.
+    """
+
+    return preview_exam_ai_file(
         db=db,
         exam_id=exam_id,
         current_user=current_user,

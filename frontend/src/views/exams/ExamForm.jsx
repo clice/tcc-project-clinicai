@@ -31,14 +31,14 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { examService } from 'src/services/examService'
 import { aiAnalysisService } from 'src/services/aiAnalysisService'
+import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'
 import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
 
 import {
-  aiStatusColors,
-  aiStatusLabels,
   examStatusDisplayLabels,
+  examTypeLabels,
   examTypeOptions,
-  predictionLabels,
+  statusColors,
 } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateBR, formatDateTimeBR } from 'src/utils/formatters'
@@ -72,11 +72,6 @@ const emptyExam = {
   analysis_started_at: '',
 }
 
-const formatConfidence = (value) => {
-  if (value === undefined || value === null) return '-'
-  return `${Math.round(value * 100)}%`
-}
-
 const normalizeDownloadPart = (value, fallback) => {
   const normalized = String(value || '')
     .normalize('NFD')
@@ -101,6 +96,26 @@ const buildOriginalDownloadName = ({
   const extension = mimeType === 'image/png' ? 'png' : 'jpg'
 
   return `exame-${examId}-${patientPart}-${datePart}.${extension}`
+}
+
+const buildGradcamDownloadName = ({
+  examId,
+  patientName,
+  examDate,
+  mimeType,
+}) => {
+  const patientPart = normalizeDownloadPart(
+    patientName,
+    'paciente',
+  )
+  const datePart = examDate || 'sem-data'
+  const extension =
+    mimeType === 'image/png' ? 'png' : 'jpg'
+
+  return (
+    `gradcam-exame-${examId}-` +
+    `${patientPart}-${datePart}.${extension}`
+  )
 }
 
 const mergeExamSnapshot = (current, examData) => ({
@@ -149,7 +164,11 @@ const ExamForm = ({ mode = 'create' }) => {
   const [doctors, setDoctors] = useState([])
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [gradcamUrl, setGradcamUrl] = useState(null)
-  const [isGradcamLoading, setIsGradcamLoading] = useState(false)
+  const [gradcamError, setGradcamError] = useState('')
+  const [isGradcamLoading, setIsGradcamLoading] =
+    useState(false)
+  const [isGradcamDownloading, setIsGradcamDownloading] =
+    useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(null)
   const [originalImageError, setOriginalImageError] = useState('')
   const [isOriginalImageLoading, setIsOriginalImageLoading] = useState(false)
@@ -158,6 +177,9 @@ const ExamForm = ({ mode = 'create' }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
+  const [isExamDataOpen, setIsExamDataOpen] = useState(
+    mode !== 'view',
+  )
 
   const [review, setReview] = useState({
     findings: '',
@@ -215,14 +237,34 @@ const ExamForm = ({ mode = 'create' }) => {
     })
   }, [clinics, form.clinic_id])
 
+  const authenticatedDoctorId = useMemo(() => {
+    if (!isDoctor || doctors.length !== 1) return ''
+
+    const [doctor] = doctors
+
+    return doctor.status_name === 'active'
+      ? String(doctor.id)
+      : ''
+  }, [doctors, isDoctor])
+
   const availablePatients = useMemo(() => {
     if (!form.clinic_id) return []
 
     return patients.filter(
       (patient) =>
-        String(patient.clinic_id) === String(form.clinic_id) && patient.status_name === 'active',
+        String(patient.clinic_id) ===
+          String(form.clinic_id) &&
+        patient.status_name === 'active' &&
+        (!isDoctor ||
+          String(patient.doctor_id) ===
+            authenticatedDoctorId),
     )
-  }, [patients, form.clinic_id])
+  }, [
+    authenticatedDoctorId,
+    form.clinic_id,
+    isDoctor,
+    patients,
+  ])
 
   const selectedClinicName = useMemo(() => {
     const clinic = clinics.find((item) => String(item.id) === String(form.clinic_id))
@@ -251,6 +293,19 @@ const ExamForm = ({ mode = 'create' }) => {
         const loadedClinics = options.clinics || []
         const loadedPatients = options.patients || []
         const loadedDoctors = options.doctors || []
+
+        const defaultClinicId =
+          loadedClinics.length === 1 &&
+          loadedClinics[0].status_name === 'active'
+            ? String(loadedClinics[0].id)
+            : ''
+
+        const defaultDoctorId =
+          isDoctor &&
+          loadedDoctors.length === 1 &&
+          loadedDoctors[0].status_name === 'active'
+            ? String(loadedDoctors[0].id)
+            : ''
 
         setClinics(loadedClinics)
         setPatients(loadedPatients)
@@ -296,15 +351,13 @@ const ExamForm = ({ mode = 'create' }) => {
             ...emptyExam,
             clinic_id: canPreselectRequestedPatient
               ? String(requestedClinic.id)
-              : loadedClinics.length === 1
-                ? String(loadedClinics[0].id)
-                : '',
+              : defaultClinicId,
             patient_id: canPreselectRequestedPatient
               ? String(requestedPatient.id)
               : '',
             doctor_id: canPreselectRequestedPatient
               ? String(requestedDoctor.id)
-              : '',
+              : defaultDoctorId,
           })
 
           setAiAnalysis(null)
@@ -333,7 +386,13 @@ const ExamForm = ({ mode = 'create' }) => {
     }
 
     void loadData()
-  }, [canViewAiAnalysis, id, isCreateMode, requestedPatientId])
+  }, [
+    canViewAiAnalysis,
+    id,
+    isCreateMode,
+    isDoctor,
+    requestedPatientId,
+  ])
 
   const isAnalysisActive =
     !isCreateMode && form.status_name === 'processing' && form.analysis_in_progress && !aiAnalysis
@@ -386,11 +445,12 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [canViewAiAnalysis, id, isAnalysisActive])
 
-  // O backend expõe apenas a disponibilidade do Grad-CAM. O binário é
-  // obtido por uma rota autenticada, sem revelar o caminho físico.
+  // O mapa Grad-CAM é carregado por uma rota de prévia.
+  // Somente o clique explícito em download gera auditoria.
   useEffect(() => {
     if (!aiAnalysis?.gradcam_available || isCreateMode) {
       setGradcamUrl(null)
+      setGradcamError('')
       return undefined
     }
 
@@ -400,7 +460,10 @@ const ExamForm = ({ mode = 'create' }) => {
     const loadGradcam = async () => {
       try {
         setIsGradcamLoading(true)
-        const blob = await examService.downloadAiFile(id)
+        setGradcamError('')
+        setGradcamUrl(null)
+
+        const blob = await examService.previewAiFile(id)
 
         if (isCancelled) return
 
@@ -409,6 +472,12 @@ const ExamForm = ({ mode = 'create' }) => {
       } catch (err) {
         if (!isCancelled) {
           setGradcamUrl(null)
+          setGradcamError(
+            getErrorMessage(
+              err,
+              'Não foi possível carregar o mapa Grad-CAM.',
+            ),
+          )
         }
       } finally {
         if (!isCancelled) {
@@ -421,6 +490,7 @@ const ExamForm = ({ mode = 'create' }) => {
 
     return () => {
       isCancelled = true
+
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl)
       }
@@ -485,6 +555,8 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const handleClinicChange = (clinicId) => {
+    if (!isAdminMaster) return
+
     setForm((current) => ({
       ...current,
       clinic_id: clinicId,
@@ -499,7 +571,11 @@ const ExamForm = ({ mode = 'create' }) => {
     setForm((current) => ({
       ...current,
       patient_id: patientId,
-      doctor_id: patient?.doctor_id ? String(patient.doctor_id) : '',
+      doctor_id: isDoctor
+        ? authenticatedDoctorId
+        : patient?.doctor_id
+          ? String(patient.doctor_id)
+          : '',
     }))
   }
 
@@ -551,6 +627,47 @@ const ExamForm = ({ mode = 'create' }) => {
       )
     } finally {
       setIsOriginalDownloading(false)
+    }
+  }
+
+  const handleGradcamDownload = async () => {
+    if (!canViewAiAnalysis || !aiAnalysis?.gradcam_available) {
+      return
+    }
+
+    showError('')
+
+    try {
+      setIsGradcamDownloading(true)
+
+      const blob = await examService.downloadAiFile(id)
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+
+      anchor.href = objectUrl
+      anchor.download = buildGradcamDownloadName({
+        examId: id,
+        patientName: selectedPatientName,
+        examDate: form.exam_date,
+        mimeType: blob.type,
+      })
+
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl)
+      }, 1000)
+    } catch (err) {
+      showError(
+        getErrorMessage(
+          err,
+          'Não foi possível baixar o mapa Grad-CAM.',
+        ),
+      )
+    } finally {
+      setIsGradcamDownloading(false)
     }
   }
 
@@ -736,524 +853,599 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }
 
+  const examDataCard = (
+    <CCard>
+      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
+        <strong>
+          {isCreateMode
+            ? 'Dados para cadastro'
+            : 'Dados clínicos e administrativos'}
+        </strong>
+
+        {isReadOnly && (
+          <CButton
+            color="secondary"
+            variant="outline"
+            size="sm"
+            type="button"
+            aria-expanded={isExamDataOpen}
+            onClick={() =>
+              setIsExamDataOpen((current) => !current)
+            }
+          >
+            {isExamDataOpen ? 'Recolher' : 'Expandir'}
+          </CButton>
+        )}
+      </CCardHeader>
+
+      {(!isReadOnly || isExamDataOpen) && (
+        <CCardBody>
+        <CForm onSubmit={handleSubmit}>
+          <CRow className="g-3">
+            <CCol md={6}>
+              <CFormLabel>Clínica</CFormLabel>
+
+              {isCreateMode && isAdminMaster ? (
+                <CFormSelect
+                  value={form.clinic_id}
+                  onChange={(event) =>
+                    handleClinicChange(event.target.value)
+                  }
+                  required
+                >
+                  <option value="">Selecione...</option>
+
+                  {activeClinics.map((clinic) => (
+                    <option
+                      key={clinic.id}
+                      value={clinic.id}
+                    >
+                      {clinic.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              ) : (
+                <CFormInput
+                  value={selectedClinicName}
+                  disabled
+                />
+              )}
+
+              {isCreateMode && !isAdminMaster && (
+                <div className="text-body-secondary small mt-1">
+                  Clínica vinculada ao usuário autenticado.
+                </div>
+              )}
+
+              {!isCreateMode && (
+                <div className="text-body-secondary small mt-1">
+                  A clínica não pode ser alterada após o
+                  cadastro do exame.
+                </div>
+              )}
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Paciente</CFormLabel>
+
+              {isCreateMode ? (
+                <CFormSelect
+                  value={form.patient_id}
+                  disabled={!form.clinic_id}
+                  onChange={(event) =>
+                    handlePatientChange(event.target.value)
+                  }
+                  required
+                >
+                  <option value="">
+                    {form.clinic_id
+                      ? 'Selecione...'
+                      : 'Selecione uma clínica primeiro'}
+                  </option>
+
+                  {availablePatients.map((patient) => (
+                    <option
+                      key={patient.id}
+                      value={patient.id}
+                    >
+                      {patient.name}
+                    </option>
+                  ))}
+                </CFormSelect>
+              ) : (
+                <CFormInput
+                  value={selectedPatientName}
+                  disabled
+                />
+              )}
+
+              {!isCreateMode && (
+                <div className="text-body-secondary small mt-1">
+                  O paciente não pode ser alterado após o
+                  cadastro do exame.
+                </div>
+              )}
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Médico responsável</CFormLabel>
+              <CFormInput
+                value={selectedDoctorName}
+                disabled
+              />
+              <div className="text-body-secondary small mt-1">
+                {isCreateMode && isDoctor
+                  ? 'Médico autenticado responsável pelo exame.'
+                  : 'O médico é definido automaticamente pelo paciente selecionado.'}
+              </div>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Status</CFormLabel>
+              <CFormInput
+                value={
+                  examStatusDisplayLabels[form.status_name] ||
+                  form.status_display_name ||
+                  (isCreateMode
+                    ? 'Pendente após o cadastro'
+                    : '-')
+                }
+                disabled
+              />
+              <div className="text-body-secondary small mt-1">
+                O status é controlado automaticamente pelo fluxo
+                do sistema.
+              </div>
+            </CCol>
+
+            <CCol md={12}>
+              <CFormLabel>Título</CFormLabel>
+              <CFormInput
+                value={form.title}
+                disabled={isReadOnly}
+                placeholder="Identificador do exame. Ex: Colonoscopia - rastreamento"
+                onChange={(event) =>
+                  updateField('title', event.target.value)
+                }
+                required
+              />
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Tipo de exame</CFormLabel>
+              <CFormSelect
+                value={form.exam_type}
+                disabled={isReadOnly}
+                onChange={(event) =>
+                  updateField('exam_type', event.target.value)
+                }
+                required
+              >
+                <option value="">Selecione...</option>
+
+                {examTypeOptions.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Data do exame</CFormLabel>
+
+              {isReadOnly ? (
+                <CFormInput
+                  value={formatDateBR(form.exam_date)}
+                  disabled
+                />
+              ) : (
+                <CFormInput
+                  type="date"
+                  value={form.exam_date}
+                  onChange={(event) =>
+                    updateField('exam_date', event.target.value)
+                  }
+                />
+              )}
+            </CCol>
+
+            <CCol md={12}>
+              <CFormLabel>Indicação clínica</CFormLabel>
+              <CFormTextarea
+                rows={2}
+                value={form.clinical_indication}
+                disabled={isReadOnly}
+                placeholder="Motivo pelo qual o exame foi solicitado ou realizado. Ex: dor abdominal, rastreamento, refluxo persistente..."
+                onChange={(event) =>
+                  updateField(
+                    'clinical_indication',
+                    event.target.value,
+                  )
+                }
+              />
+            </CCol>
+
+            <CCol md={12}>
+              <CFormLabel>Observações</CFormLabel>
+              <CFormTextarea
+                rows={2}
+                value={form.description}
+                disabled={isReadOnly}
+                placeholder="Informações adicionais relacionadas ao cadastro do exame. Este campo não substitui os achados nem a conclusão médica."
+                onChange={(event) =>
+                  updateField('description', event.target.value)
+                }
+              />
+            </CCol>
+
+            {isCreateMode && (
+              <CCol md={12}>
+                <CFormLabel>Imagem do exame</CFormLabel>
+                <CFormInput
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={handleFileChange}
+                  required
+                />
+                <div className="text-body-secondary small mt-2">
+                  Envie uma imagem em formato JPG, JPEG ou PNG.
+                </div>
+              </CCol>
+            )}
+          </CRow>
+
+          {!isReadOnly && (
+            <CButtonGroup className="mt-4">
+              <CButton
+                color="primary"
+                type="submit"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
+
+              <CButton
+                color="secondary"
+                variant="outline"
+                as={Link}
+                to="/exams"
+              >
+                Cancelar
+              </CButton>
+            </CButtonGroup>
+          )}
+        </CForm>
+        </CCardBody>
+      )}
+    </CCard>
+  )
+
   return (
     <>
-      <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+      <div className="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-4">
         <div>
-          <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">{title}</h1>
-          <p className="text-body-secondary mb-0">
-            Cadastro inicial do exame com imagem obrigatória para análise por IA.
-          </p>
+          <div className="text-body-secondary">
+            Registros de Saúde
+          </div>
+
+          <h1 className="h3 mb-0">
+            {isCreateMode ? title : form.title || title}
+          </h1>
+
+          {isCreateMode ? (
+            <p className="text-body-secondary mb-0">
+              Cadastre os dados e a imagem que serão vinculados
+              ao exame.
+            </p>
+          ) : (
+            <div className="d-flex flex-wrap align-items-center gap-2 mt-2">
+              <span>{selectedPatientName}</span>
+              <span
+                className="text-body-secondary"
+                aria-hidden="true"
+              >
+                •
+              </span>
+              <span>{formatDateBR(form.exam_date)}</span>
+              <span
+                className="text-body-secondary"
+                aria-hidden="true"
+              >
+                •
+              </span>
+              <span>
+                {examTypeLabels[form.exam_type] ||
+                  form.exam_type ||
+                  '-'}
+              </span>
+              <CBadge
+                color={
+                  statusColors[form.status_name] ||
+                  'secondary'
+                }
+              >
+                {examStatusDisplayLabels[form.status_name] ||
+                  form.status_display_name ||
+                  '-'}
+              </CBadge>
+            </div>
+          )}
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/exams">
+        <div className="d-flex flex-wrap align-items-center gap-2">
+          {(canAnalyze || isAnalyzing) && (
+            <CButton
+              color="primary"
+              size="lg"
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <CSpinner
+                    size="sm"
+                    className="me-2"
+                  />
+                  Analisando...
+                </>
+              ) : (
+                'Executar análise de IA'
+              )}
+            </CButton>
+          )}
+
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            as={Link}
+            to="/exams"
+          >
             Voltar
           </CButton>
         </div>
       </div>
 
-      <CRow className="g-4">
-        <CCol lg={isCreateMode ? 12 : 8}>
-          <CCard>
-            <CCardHeader>
-              <strong>Dados iniciais do exame</strong>
-            </CCardHeader>
+      {!isCreateMode ? (
+        <>
+          <CRow className="g-4">
+            {(canReview ||
+              form.findings ||
+              form.conclusion) && (
+              <CCol xs={12}>
+                <div id="revisao-medica">
+                    {canReview ? (
+                      <CCard className="border-warning">
+                        <CCardHeader className="bg-warning-subtle">
+                          <strong>Revisão médica</strong>
+                        </CCardHeader>
 
-            <CCardBody>
-              <CForm onSubmit={handleSubmit}>
-                <CRow className="g-3">
-                  <CCol md={6}>
-                    <CFormLabel>Clínica</CFormLabel>
+                        <CCardBody>
+                          <CAlert
+                            color="warning"
+                            className="small"
+                          >
+                            Antes de concluir, compare a imagem
+                            original, o mapa Grad-CAM e o resultado
+                            automatizado apresentados abaixo. Os
+                            achados e a conclusão encerram o exame.
+                          </CAlert>
 
-                    {isCreateMode ? (
-                      <CFormSelect
-                        value={form.clinic_id}
-                        onChange={(event) => handleClinicChange(event.target.value)}
-                        required
+                          <CForm
+                            onSubmit={handleReviewSubmit}
+                          >
+                            <div className="mb-3">
+                              <CFormLabel htmlFor="findings">
+                                Achados da revisão médica *
+                              </CFormLabel>
+                              <CFormTextarea
+                                id="findings"
+                                rows={4}
+                                value={review.findings}
+                                onChange={handleReviewFieldChange(
+                                  'findings',
+                                )}
+                                placeholder="Descreva os achados observados ao interpretar a imagem e o resultado automatizado."
+                                required
+                              />
+                            </div>
+
+                            <div className="mb-3">
+                              <CFormLabel htmlFor="conclusion">
+                                Conclusão médica *
+                              </CFormLabel>
+                              <CFormTextarea
+                                id="conclusion"
+                                rows={4}
+                                value={review.conclusion}
+                                onChange={handleReviewFieldChange(
+                                  'conclusion',
+                                )}
+                                placeholder="Registre o parecer final sobre o exame."
+                                required
+                              />
+                            </div>
+
+                            <div className="mb-3">
+                              <CFormLabel>
+                                Em relação à classificação
+                                automatizada
+                              </CFormLabel>
+
+                              <CFormCheck
+                                type="radio"
+                                name="has_discrepancy"
+                                id="discrepancy-false"
+                                label="Confirmo o resultado sugerido pela IA"
+                                checked={
+                                  !review.has_discrepancy
+                                }
+                                onChange={() =>
+                                  setReview((current) => ({
+                                    ...current,
+                                    has_discrepancy: false,
+                                  }))
+                                }
+                              />
+
+                              <CFormCheck
+                                type="radio"
+                                name="has_discrepancy"
+                                id="discrepancy-true"
+                                label="Identifiquei divergência em relação ao resultado da IA"
+                                checked={
+                                  review.has_discrepancy
+                                }
+                                onChange={() =>
+                                  setReview((current) => ({
+                                    ...current,
+                                    has_discrepancy: true,
+                                  }))
+                                }
+                              />
+                            </div>
+
+                            <CButton
+                              type="submit"
+                              color="warning"
+                              disabled={isReviewing}
+                            >
+                              {isReviewing ? (
+                                <>
+                                  <CSpinner
+                                    size="sm"
+                                    className="me-2"
+                                  />
+                                  Registrando revisão...
+                                </>
+                              ) : (
+                                'Concluir revisão'
+                              )}
+                            </CButton>
+                          </CForm>
+                        </CCardBody>
+                      </CCard>
+                    ) : (
+                      <CCard
+                        className={
+                          form.status_name ===
+                          'completed_with_divergence'
+                            ? 'border-dark'
+                            : 'border-success'
+                        }
                       >
-                        <option value="">Selecione...</option>
+                        <CCardHeader>
+                          <strong>
+                            Resultado da revisão médica
+                          </strong>
+                        </CCardHeader>
 
-                        {activeClinics.map((clinic) => (
-                          <option key={clinic.id} value={clinic.id}>
-                            {clinic.name}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    ) : (
-                      <CFormInput value={selectedClinicName} disabled />
+                        <CCardBody>
+                          <div className="mb-3">
+                            <div className="text-body-secondary small">
+                              Achados da revisão médica
+                            </div>
+                            <div>{form.findings || '-'}</div>
+                          </div>
+
+                          <div className="mb-3">
+                            <div className="text-body-secondary small">
+                              Conclusão médica
+                            </div>
+                            <div>{form.conclusion || '-'}</div>
+                          </div>
+
+                          <div className="mb-3">
+                            <div className="text-body-secondary small">
+                              Desfecho
+                            </div>
+                            <CBadge
+                              color={
+                                form.status_name ===
+                                'completed_with_divergence'
+                                  ? 'dark'
+                                  : 'success'
+                              }
+                            >
+                              {form.status_name ===
+                              'completed_with_divergence'
+                                ? 'Concluído com divergência'
+                                : 'Concluído'}
+                            </CBadge>
+                          </div>
+
+                          <div>
+                            <div className="text-body-secondary small">
+                              Revisado por
+                            </div>
+                            <div>
+                              {form.reviewed_by_name || '-'}
+                              {form.reviewed_at
+                                ? ` em ${formatDateTimeBR(
+                                    form.reviewed_at,
+                                  )}`
+                                : ''}
+                            </div>
+                          </div>
+                        </CCardBody>
+                      </CCard>
                     )}
-
-                    {!isCreateMode && (
-                      <div className="text-body-secondary small mt-1">
-                        A clínica não pode ser alterada após o cadastro do exame.
-                      </div>
-                    )}
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Paciente</CFormLabel>
-
-                    {isCreateMode ? (
-                      <CFormSelect
-                        value={form.patient_id}
-                        disabled={!form.clinic_id}
-                        onChange={(event) => handlePatientChange(event.target.value)}
-                        required
-                      >
-                        <option value="">
-                          {form.clinic_id ? 'Selecione...' : 'Selecione uma clínica primeiro'}
-                        </option>
-
-                        {availablePatients.map((patient) => (
-                          <option key={patient.id} value={patient.id}>
-                            {patient.name}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    ) : (
-                      <CFormInput value={selectedPatientName} disabled />
-                    )}
-
-                    {!isCreateMode && (
-                      <div className="text-body-secondary small mt-1">
-                        O paciente não pode ser alterado após o cadastro do exame.
-                      </div>
-                    )}
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Médico responsável</CFormLabel>
-                    <CFormInput value={selectedDoctorName} disabled />
-
-                    <div className="text-body-secondary small mt-1">
-                      O médico é definido automaticamente pelo paciente selecionado.
-                    </div>
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Status</CFormLabel>
-                    <CFormInput
-                      value={
-                        examStatusDisplayLabels[form.status_name] ||
-                        form.status_display_name ||
-                        (isCreateMode ? 'Pendente após o cadastro' : '-')
-                      }
-                      disabled
-                    />
-
-                    <div className="text-body-secondary small mt-1">
-                      O status é controlado automaticamente pelo fluxo do sistema.
-                    </div>
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Tipo de exame</CFormLabel>
-                    <CFormSelect
-                      value={form.exam_type}
-                      disabled={isReadOnly}
-                      onChange={(event) => updateField('exam_type', event.target.value)}
-                      required
-                    >
-                      <option value="">Selecione...</option>
-
-                      {examTypeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </CFormSelect>
-                  </CCol>
-
-                  <CCol md={6}>
-                    <CFormLabel>Data do exame</CFormLabel>
-                    {isReadOnly ? (
-                      <CFormInput value={formatDateBR(form.exam_date)} disabled />
-                    ) : (
-                      <CFormInput
-                        type="date"
-                        value={form.exam_date}
-                        onChange={(event) => updateField('exam_date', event.target.value)}
-                      />
-                    )}
-                  </CCol>
-
-                  <CCol md={12}>
-                    <CFormLabel>Título</CFormLabel>
-                    <CFormInput
-                      value={form.title}
-                      disabled={isReadOnly}
-                      placeholder="Ex: Colonoscopia - rastreamento"
-                      onChange={(event) => updateField('title', event.target.value)}
-                      required
-                    />
-                  </CCol>
-
-                  <CCol md={12}>
-                    <CFormLabel>Descrição</CFormLabel>
-                    <CFormTextarea
-                      rows={2}
-                      value={form.description}
-                      disabled={isReadOnly}
-                      placeholder="Descrição breve do exame, se necessário."
-                      onChange={(event) => updateField('description', event.target.value)}
-                    />
-                  </CCol>
-
-                  <CCol md={12}>
-                    <CFormLabel>Indicação clínica</CFormLabel>
-                    <CFormTextarea
-                      rows={2}
-                      value={form.clinical_indication}
-                      disabled={isReadOnly}
-                      placeholder="Ex: dor abdominal, rastreamento, refluxo persistente..."
-                      onChange={(event) => updateField('clinical_indication', event.target.value)}
-                    />
-                  </CCol>
-
-                  {isCreateMode && (
-                    <CCol md={12}>
-                      <CFormLabel>Imagem do exame</CFormLabel>
-
-                      <CFormInput
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        onChange={handleFileChange}
-                        required
-                      />
-
-                      <div className="text-body-secondary small mt-2">
-                        Envie uma imagem em formato JPG, JPEG ou PNG.
-                      </div>
-                    </CCol>
-                  )}
-                </CRow>
-
-                {!isReadOnly && (
-                  <CButtonGroup className="mt-4">
-                    <CButton color="primary" type="submit" disabled={isSaving}>
-                      {isSaving ? 'Salvando...' : 'Salvar'}
-                    </CButton>
-
-                    <CButton color="secondary" variant="outline" as={Link} to="/exams">
-                      Cancelar
-                    </CButton>
-                  </CButtonGroup>
+                  </div>
+              </CCol>
                 )}
-              </CForm>
-            </CCardBody>
-          </CCard>
 
-          {!isCreateMode && <ExamHistoryCard examId={id} refreshKey={historyRefreshKey} />}
-        </CCol>
+            <CCol xs={12}>
+              <ExamAiResultCard
+                aiStatus={aiStatus}
+                aiAnalysis={aiAnalysis}
+                canViewAiAnalysis={canViewAiAnalysis}
+                canDownloadExamFile={canDownloadExamFile}
+                originalImageUrl={originalImageUrl}
+                originalImageError={originalImageError}
+                isOriginalImageLoading={
+                  isOriginalImageLoading
+                }
+                isOriginalDownloading={
+                  isOriginalDownloading
+                }
+                onOriginalDownload={
+                  handleOriginalDownload
+                }
+                gradcamUrl={gradcamUrl}
+                gradcamError={gradcamError}
+                isGradcamLoading={isGradcamLoading}
+                isGradcamDownloading={
+                  isGradcamDownloading
+                }
+                onGradcamDownload={
+                  handleGradcamDownload
+                }
+              />
+            </CCol>
+          </CRow>
 
-        {!isCreateMode && (
-          <CCol lg={4}>
-          <CCard className="mb-4">
-            <CCardHeader>
-              <strong>Análise por IA</strong>
-            </CCardHeader>
+          <div className="mt-4">
+            {examDataCard}
+          </div>
 
-            <CCardBody>
-              <div className="mb-3">
-                <div className="text-body-secondary small">Status da análise</div>
-                <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>
-                  {aiStatusLabels[aiStatus] || aiStatus}
-                </CBadge>
-              </div>
-
-              <div className="mb-3">
-                <div className="text-body-secondary small">Resumo</div>
-                <div>
-                  {aiStatus === 'processing'
-                    ? 'A análise está sendo executada.'
-                    : aiStatus === 'completed'
-                      ? 'A análise foi concluída e está disponível abaixo.'
-                      : aiStatus === 'failed'
-                        ? 'A análise falhou. Restaure o exame antes de tentar novamente.'
-                        : 'A análise ainda não foi executada.'}
-                </div>
-              </div>
-
-              {form.analysis_in_progress && !aiAnalysis && (
-                <CAlert color="info" className="d-flex align-items-center gap-2">
-                  <CSpinner size="sm" />
-                  Uma análise já está em andamento. Repetições são bloqueadas pelo backend.
-                </CAlert>
-              )}
-
-              {canAnalyze && (
-                <CButton
-                  color="primary"
-                  className="mb-3"
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing}
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <CSpinner size="sm" className="me-2" />
-                      Analisando...
-                    </>
-                  ) : (
-                    'Executar análise de IA'
-                  )}
-                </CButton>
-              )}
-
-              {aiAnalysis ? (
-                <>
-                  <hr />
-
-                  <div className="mb-3">
-                    <div className="text-body-secondary small">Predição</div>
-                    <CBadge color={aiAnalysis.prediction_class === 1 ? 'danger' : 'success'}>
-                      {predictionLabels[aiAnalysis.prediction_label] || aiAnalysis.prediction_label}
-                    </CBadge>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="text-body-secondary small">Confiança</div>
-                    <strong>{formatConfidence(aiAnalysis.confidence)}</strong>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="text-body-secondary small">Modelo</div>
-                    <div>
-                      {aiAnalysis.model_name} v{aiAnalysis.model_version}
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="text-body-secondary small">Tempo de processamento</div>
-                    <div>
-                      {aiAnalysis.processing_time_ms ? `${aiAnalysis.processing_time_ms} ms` : '-'}
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="text-body-secondary small mb-1">Grad-CAM</div>
-                    {isGradcamLoading ? (
-                      <div className="d-flex align-items-center gap-2 text-body-secondary">
-                        <CSpinner size="sm" />
-                        <span>Carregando mapa de ativação...</span>
-                      </div>
-                    ) : gradcamUrl ? (
-                      <a href={gradcamUrl} target="_blank" rel="noreferrer">
-                        <img
-                          src={gradcamUrl}
-                          alt="Mapa de ativação Grad-CAM destacando as regiões que mais influenciaram a predição"
-                          className="img-fluid rounded border"
-                        />
-                      </a>
-                    ) : (
-                      <div className="text-body-secondary">Não disponível.</div>
-                    )}
-                    <div className="form-text">
-                      Regiões destacadas influenciaram mais a predição. Apoio visual — não é prova
-                      causal do resultado, sobretudo combinado ao meta-classificador do Ensemble
-                      Stacking.
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-body-secondary small">Observações da IA</div>
-                    <div>{aiAnalysis.ai_notes || '-'}</div>
-                  </div>
-                </>
-              ) : aiStatus !== 'processing' ? (
-                <CAlert color="secondary" className="mb-0">
-                  Este exame ainda não possui análise de IA vinculada.
-                </CAlert>
-              ) : null}
-            </CCardBody>
-          </CCard>
-
-          {canReview && (
-            <CCard className="mb-4 border-warning">
-              <CCardHeader className="bg-warning-subtle">
-                <strong>Revisão Médica</strong>
-              </CCardHeader>
-
-              <CCardBody>
-                <CAlert color="warning" className="small">
-                  Este exame está aguardando sua revisão. A conclusão registrada aqui é definitiva —
-                  o exame não retorna para processamento depois (RN10).
-                </CAlert>
-
-                <CForm onSubmit={handleReviewSubmit}>
-                  <div className="mb-3">
-                    <CFormLabel htmlFor="findings">Achados *</CFormLabel>
-                    <CFormTextarea
-                      id="findings"
-                      rows={3}
-                      value={review.findings}
-                      onChange={handleReviewFieldChange('findings')}
-                      placeholder="Descreva o que foi observado na imagem, à luz do resultado sugerido pela IA."
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <CFormLabel htmlFor="conclusion">Conclusão *</CFormLabel>
-                    <CFormTextarea
-                      id="conclusion"
-                      rows={3}
-                      value={review.conclusion}
-                      onChange={handleReviewFieldChange('conclusion')}
-                      placeholder="Parecer clínico final sobre o exame."
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <CFormLabel>Em relação à classificação automatizada</CFormLabel>
-
-                    <CFormCheck
-                      type="radio"
-                      name="has_discrepancy"
-                      id="discrepancy-false"
-                      label="Confirmo o resultado sugerido pela IA"
-                      checked={!review.has_discrepancy}
-                      onChange={() => setReview((prev) => ({ ...prev, has_discrepancy: false }))}
-                    />
-                    <CFormCheck
-                      type="radio"
-                      name="has_discrepancy"
-                      id="discrepancy-true"
-                      label="Identifiquei divergência em relação ao resultado da IA"
-                      checked={review.has_discrepancy}
-                      onChange={() => setReview((prev) => ({ ...prev, has_discrepancy: true }))}
-                    />
-                  </div>
-
-                  <CButton type="submit" color="warning" disabled={isReviewing}>
-                    {isReviewing ? (
-                      <>
-                        <CSpinner size="sm" className="me-2" />
-                        Registrando revisão...
-                      </>
-                    ) : (
-                      'Concluir revisão'
-                    )}
-                  </CButton>
-                </CForm>
-              </CCardBody>
-            </CCard>
-          )}
-
-          {!canReview && (form.findings || form.conclusion) && (
-            <CCard className="mb-4">
-              <CCardHeader>
-                <strong>Resultado da Revisão Médica</strong>
-              </CCardHeader>
-
-              <CCardBody>
-                <div className="mb-3">
-                  <div className="text-body-secondary small">Achados</div>
-                  <div>{form.findings || '-'}</div>
-                </div>
-
-                <div className="mb-3">
-                  <div className="text-body-secondary small">Conclusão</div>
-                  <div>{form.conclusion || '-'}</div>
-                </div>
-
-                <div className="mb-3">
-                  <div className="text-body-secondary small">Desfecho</div>
-                  <CBadge
-                    color={form.status_name === 'completed_with_divergence' ? 'dark' : 'success'}
-                  >
-                    {form.status_name === 'completed_with_divergence'
-                      ? 'Concluído com divergência'
-                      : 'Concluído'}
-                  </CBadge>
-                </div>
-
-                <div>
-                  <div className="text-body-secondary small">Revisado por</div>
-                  <div>
-                    {form.reviewed_by_name || '-'}
-                    {form.reviewed_at ? ` em ${formatDateTimeBR(form.reviewed_at)}` : ''}
-                  </div>
-                </div>
-              </CCardBody>
-            </CCard>
-          )}
-
-          <CCard>
-            <CCardHeader>
-              <strong>Arquivo</strong>
-            </CCardHeader>
-
-            <CCardBody>
-              {!canDownloadExamFile ? (
-                <CAlert color="secondary" className="mb-0">
-                  Você não possui permissão para acessar a imagem original.
-                </CAlert>
-              ) : isOriginalImageLoading ? (
-                <div className="d-flex align-items-center gap-2 text-body-secondary">
-                  <CSpinner size="sm" />
-                  <span>Carregando imagem original...</span>
-                </div>
-              ) : originalImageUrl ? (
-                <>
-                  <a
-                    href={originalImageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="d-block mb-3"
-                  >
-                    <img
-                      src={originalImageUrl}
-                      alt="Imagem original do exame"
-                      className="img-fluid rounded border"
-                    />
-                  </a>
-
-                  <div className="text-body-secondary small mb-3">
-                    Imagem original enviada no cadastro. O mapa Grad-CAM,
-                    quando disponível, permanece separado na área de análise
-                    por IA.
-                  </div>
-
-                  <div className="d-grid gap-2">
-                    <CButton
-                      color="secondary"
-                      variant="outline"
-                      href={originalImageUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Abrir em tamanho maior
-                    </CButton>
-
-                    <CButton
-                      color="primary"
-                      onClick={handleOriginalDownload}
-                      disabled={isOriginalDownloading}
-                    >
-                      {isOriginalDownloading ? (
-                        <>
-                          <CSpinner size="sm" className="me-2" />
-                          Baixando...
-                        </>
-                      ) : (
-                        'Baixar imagem original'
-                      )}
-                    </CButton>
-                  </div>
-                </>
-              ) : (
-                <CAlert color="warning" className="mb-0">
-                  {originalImageError || 'Imagem original não disponível.'}
-                </CAlert>
-              )}
-            </CCardBody>
-          </CCard>
+          <ExamHistoryCard
+            examId={id}
+            refreshKey={historyRefreshKey}
+            collapsible={isReadOnly}
+            defaultOpen={!isReadOnly}
+          />
+        </>
+      ) : (
+        <CRow className="g-4">
+          <CCol lg={12}>
+            {examDataCard}
           </CCol>
-        )}
-      </CRow>
+        </CRow>
+      )}
     </>
   )
 }

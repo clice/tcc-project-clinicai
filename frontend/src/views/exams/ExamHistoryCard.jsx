@@ -1,7 +1,15 @@
 /** Histórico de eventos e alterações de status de um exame (RF36). */
 
 import React, { useEffect, useRef, useState } from 'react'
-import { CAlert, CBadge, CCard, CCardBody, CCardHeader, CSpinner } from '@coreui/react'
+import {
+  CAlert,
+  CBadge,
+  CButton,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CSpinner,
+} from '@coreui/react'
 
 import { examService } from 'src/services/examService'
 import { getErrorMessage } from 'src/utils/errors'
@@ -42,13 +50,22 @@ const formatStatusChange = (entry) => {
   return statusLabels[status] || status
 }
 
-const ExamHistoryCard = ({ examId, refreshKey = 0 }) => {
+const ExamHistoryCard = ({
+  examId,
+  refreshKey = 0,
+  collapsible = false,
+  defaultOpen = true,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
   const [entries, setEntries] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const hasLoadedOnce = useRef(false)
+  const isContentOpen = !collapsible || isOpen
 
   useEffect(() => {
+    if (!isContentOpen) return undefined
+
     let isCancelled = false
 
     const loadHistory = async () => {
@@ -80,15 +97,31 @@ const ExamHistoryCard = ({ examId, refreshKey = 0 }) => {
     return () => {
       isCancelled = true
     }
-  }, [examId, refreshKey])
+  }, [examId, isContentOpen, refreshKey])
 
   return (
-    <CCard className="mt-4">
-      <CCardHeader>
+    <CCard className="mt-4 mb-4">
+      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <strong>Histórico do Exame</strong>
+
+        {collapsible && (
+          <CButton
+            color="secondary"
+            variant="outline"
+            size="sm"
+            type="button"
+            aria-expanded={isOpen}
+            onClick={() =>
+              setIsOpen((current) => !current)
+            }
+          >
+            {isOpen ? 'Recolher' : 'Expandir'}
+          </CButton>
+        )}
       </CCardHeader>
 
-      <CCardBody>
+      {isContentOpen && (
+        <CCardBody>
         {isLoading ? (
           <div className="d-flex align-items-center gap-2 text-body-secondary">
             <CSpinner size="sm" />
@@ -125,7 +158,8 @@ const ExamHistoryCard = ({ examId, refreshKey = 0 }) => {
             })}
           </div>
         )}
-      </CCardBody>
+        </CCardBody>
+      )}
     </CCard>
   )
 }
