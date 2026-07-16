@@ -201,6 +201,51 @@ if (
   )
 }
 
+const patientHistoryGuardPattern =
+  /\{!isCreateMode && hasPatientExams && \(\s*<CCol lg=\{4\}>[\s\S]*?<strong>Histórico de Exames<\/strong>[\s\S]*?<\/CCol>\s*\)\}/
+
+if (
+  !patientForm.includes(
+    '<CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>',
+  ) ||
+  !patientHistoryGuardPattern.test(patientForm)
+) {
+  throw new Error(
+    'O histórico só deve aparecer quando o paciente possuir exames.',
+  )
+}
+
+if (
+  !patientForm.includes(
+    "import { examService } from 'src/services/examService'",
+  ) ||
+  !patientForm.includes('const [patientExams, setPatientExams]') ||
+  !patientForm.includes(
+    'const hasPatientExams = patientExams.length > 0',
+  ) ||
+  !patientForm.includes('const canReadExams = hasPermission(') ||
+  !patientForm.includes('const data = await examService.list({') ||
+  !patientForm.includes('patientId: id') ||
+  !patientForm.includes('includeInactive: true') ||
+  !patientForm.includes('patientExams.map((exam) =>') ||
+  !patientForm.includes('examStatusDisplayLabels[') ||
+  !patientForm.includes('examTypeLabels[exam.exam_type]') ||
+  !patientForm.includes('formatDateBR(exam.exam_date)') ||
+  !patientForm.includes('to={`/exams/${exam.id}`}') ||
+  !patientForm.includes('Abrir exame') ||
+  !patientForm.includes(
+    '{!isCreateMode && hasPatientExams && (',
+  ) ||
+  patientForm.includes(
+    'Nenhum exame registrado para este paciente.',
+  ) ||
+  patientForm.includes('Área preparada para o módulo Exams.')
+) {
+  throw new Error(
+    'O paciente existente deve exibir seu histórico real de exames.',
+  )
+}
+
 const createSidebarGuardPattern =
   /\{!isCreateMode && \(\s*<CCol lg=\{4\}>[\s\S]*?<strong>Análise por IA<\/strong>[\s\S]*?<strong>Arquivo<\/strong>[\s\S]*?<\/CCol>\s*\)\}/
 

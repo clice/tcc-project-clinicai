@@ -10,6 +10,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
+  CBadge,
   CButton,
   CButtonGroup,
   CCard,
@@ -23,20 +24,36 @@ import {
   CListGroup,
   CListGroupItem,
   CRow,
-  CSpinner,
 } from '@coreui/react'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { addressService } from 'src/services/addressService'
+import { examService } from 'src/services/examService'
 import { patientService } from 'src/services/patientService'
 import { clinicService } from 'src/services/clinicService'
 import { userService } from 'src/services/userService'
 
+import {
+  examStatusDisplayLabels,
+  examTypeLabels,
+  statusColors,
+} from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
-import { formatCpfBR, formatPhoneBR, formatZipCodeBR, onlyNumbers } from 'src/utils/formatters'
-import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
+import {
+  formatCpfBR,
+  formatDateBR,
+  formatPhoneBR,
+  formatZipCodeBR,
+  onlyNumbers,
+} from 'src/utils/formatters'
+import {
+  getUserRole,
+  hasPermission,
+  PERMISSIONS,
+  ROLES,
+} from 'src/utils/permissions'
 
 const emptyPatient = {
   clinic_id: '',
@@ -73,6 +90,7 @@ const PatientForm = ({ mode = 'create' }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false)
   const [isLoadingAddress, setIsLoadingAddress] = useState(false)
+  const [patientExams, setPatientExams] = useState([])
 
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
@@ -81,9 +99,17 @@ const PatientForm = ({ mode = 'create' }) => {
   const isReadOnly = isViewMode || isArchiveMode
 
   const roleName = getUserRole(user)
-  const canCreateExam = hasPermission(user, PERMISSIONS.EXAMS_CREATE)
+  const canCreateExam = hasPermission(
+    user,
+    PERMISSIONS.EXAMS_CREATE,
+  )
+  const canReadExams = hasPermission(
+    user,
+    PERMISSIONS.EXAMS_READ,
+  )
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
+  const hasPatientExams = patientExams.length > 0
 
   const title = useMemo(() => {
     if (isCreateMode) return 'Cadastrar Paciente'
@@ -204,6 +230,69 @@ const PatientForm = ({ mode = 'create' }) => {
     user?.name,
     loadDoctorsByClinic,
   ])
+
+  useEffect(() => {
+    if (isCreateMode || !id || !canReadExams) {
+      setPatientExams([])
+      return undefined
+    }
+
+    let isCancelled = false
+
+    const loadPatientExams = async () => {
+      try {
+        const data = await examService.list({
+          patientId: id,
+          includeInactive: true,
+        })
+
+        if (isCancelled) return
+
+        const exams = Array.isArray(data)
+          ? [...data]
+          : []
+
+        exams.sort((firstExam, secondExam) => {
+          const firstDate =
+            firstExam.exam_date ||
+            firstExam.created_at ||
+            ''
+
+          const secondDate =
+            secondExam.exam_date ||
+            secondExam.created_at ||
+            ''
+
+          const dateComparison =
+            secondDate.localeCompare(firstDate)
+
+          if (dateComparison !== 0) {
+            return dateComparison
+          }
+
+          return Number(secondExam.id) - Number(firstExam.id)
+        })
+
+        setPatientExams(exams)
+      } catch (err) {
+        if (!isCancelled) {
+          setPatientExams([])
+          showError(
+            getErrorMessage(
+              err,
+              'Não foi possível carregar os exames do paciente.',
+            ),
+          )
+        }
+      }
+    }
+
+    void loadPatientExams()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [canReadExams, id, isCreateMode])
 
   const validateForm = () => {
     const cpf = onlyNumbers(form.cpf)
@@ -450,7 +539,7 @@ const PatientForm = ({ mode = 'create' }) => {
       </div>
 
       <CRow className="g-4">
-        <CCol lg={8}>
+        <CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>
           <CCard>
             <CCardHeader>
               <strong>Dados do paciente</strong>
@@ -657,24 +746,67 @@ const PatientForm = ({ mode = 'create' }) => {
           </CCard>
         </CCol>
 
-        <CCol lg={4}>
-          <CCard>
-            <CCardHeader>
-              <strong>Histórico de Exames</strong>
-            </CCardHeader>
+        {!isCreateMode && hasPatientExams && (
+          <CCol lg={4}>
+            <CCard>
+              <CCardHeader>
+                <strong>Histórico de Exames</strong>
+              </CCardHeader>
 
-            <CCardBody>
-              <CListGroup flush>
-                <CListGroupItem>
-                  Nenhum exame registrado ainda.
-                  <small className="d-block text-body-secondary mt-1">
-                    Área preparada para o módulo Exams.
-                  </small>
-                </CListGroupItem>
-              </CListGroup>
-            </CCardBody>
-          </CCard>
-        </CCol>
+              <CCardBody>
+                <CListGroup flush>
+                  {patientExams.map((exam) => (
+                    <CListGroupItem
+                      key={exam.id}
+                      className="px-0"
+                    >
+                      <div className="d-flex justify-content-between align-items-start gap-2">
+                        <div className="fw-semibold">
+                          {exam.title || `Exame #${exam.id}`}
+                        </div>
+
+                        <CBadge
+                          color={
+                            statusColors[
+                              exam.status_name
+                            ] || 'secondary'
+                          }
+                        >
+                          {examStatusDisplayLabels[
+                            exam.status_name
+                          ] ||
+                            exam.status_display_name ||
+                            'Status não informado'}
+                        </CBadge>
+                      </div>
+
+                      <div className="text-body-secondary small mt-2">
+                        {examTypeLabels[exam.exam_type] ||
+                          exam.exam_type ||
+                          'Tipo não informado'}
+                      </div>
+
+                      <div className="text-body-secondary small">
+                        Data do exame: {formatDateBR(exam.exam_date)}
+                      </div>
+
+                      <CButton
+                        color="primary"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        as={Link}
+                        to={`/exams/${exam.id}`}
+                      >
+                        Abrir exame
+                      </CButton>
+                    </CListGroupItem>
+                  ))}
+                </CListGroup>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        )}
       </CRow>
     </>
   )
