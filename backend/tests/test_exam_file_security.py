@@ -25,7 +25,12 @@ from app.modules.exams.file_storage import (
     validate_exam_file,
 )
 from app.modules.exams.model import Exam
-from app.modules.exams.service import cancel_exam, download_exam_file, replace_exam_file
+from app.modules.exams.service import (
+    cancel_exam,
+    download_exam_file,
+    preview_exam_file,
+    replace_exam_file,
+)
 from app.modules.patients.model import Patient
 from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
@@ -343,10 +348,56 @@ def test_download_is_scoped_to_clinic_and_audited(
     )
     assert db_session.query(AuditLog).filter(AuditLog.action == "download").count() == 0
 
-    response = download_exam_file(db_session, exam.id, staff_a)
+    preview_response = preview_exam_file(
+        db_session,
+        exam.id,
+        staff_a,
+    )
+
+    assert Path(preview_response.path) == physical_file
+    assert preview_response.media_type == "image/png"
+    assert preview_response.headers[
+        "content-disposition"
+    ].startswith("inline;")
+
+    assert (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "download")
+        .count()
+        == 0
+    )
+
+    response = download_exam_file(
+        db_session,
+        exam.id,
+        staff_a,
+    )
+
     assert Path(response.path) == physical_file
     assert response.media_type == "image/png"
-    assert db_session.query(AuditLog).filter(AuditLog.action == "download").count() == 1
+
+    disposition = response.headers[
+        "content-disposition"
+    ]
+
+    assert disposition.startswith("attachment;")
+    assert (
+        f'exame-{exam.id}-paciente-a-sem-data.png'
+        in disposition
+    )
+
+    logs = (
+        db_session.query(AuditLog)
+        .filter(AuditLog.action == "download")
+        .all()
+    )
+
+    assert len(logs) == 1
+    assert (
+        logs[0].new_data["download_name"]
+        == f"exame-{exam.id}-paciente-a-sem-data.png"
+    )
+    assert logs[0].new_data["delivery_mode"] == "attachment"
 
 
 def test_cancel_retains_file_and_replace_deletes_only_old_file(

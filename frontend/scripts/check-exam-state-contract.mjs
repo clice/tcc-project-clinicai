@@ -15,6 +15,7 @@ const navigation = read('frontend/src/_nav.jsx')
 const service = read('frontend/src/services/examService.js')
 const stateMachine = read('backend/app/modules/exams/state_machine.py')
 const examService = read('backend/app/modules/exams/service.py')
+const examRouter = read('backend/app/modules/exams/router.py')
 
 const requiredStatuses = [
   'pending',
@@ -161,6 +162,57 @@ if (
 ) {
   throw new Error('O histórico não preserva a exibição durante atualizações silenciosas.')
 }
+if (
+  !form.includes('const [originalImageUrl, setOriginalImageUrl]') ||
+  !form.includes('const handleOriginalDownload = async () =>') ||
+  !service.includes('previewFile: async (id) =>') ||
+  !form.includes('const blob = await examService.previewFile(id)') ||
+  !form.includes('const blob = await examService.downloadFile(id)') ||
+  !form.includes('buildOriginalDownloadName({') ||
+  !form.includes('alt="Imagem original do exame"') ||
+  !form.includes('Abrir em tamanho maior') ||
+  !form.includes('Baixar imagem original') ||
+  !form.includes('Imagem original enviada no cadastro') ||
+  form.includes(
+    "<CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />",
+  ) ||
+  form.includes("<div>{form.file_name || '-'}</div>") ||
+  form.includes("<div>{form.file_mime_type || '-'}</div>")
+) {
+  throw new Error(
+    'O detalhe do exame deve exibir e baixar a imagem original sem expor nome físico ou MIME.',
+  )
+}
+
+if (
+  !examRouter.includes('@router.get("/{exam_id}/preview")') ||
+  !examRouter.includes('return preview_exam_file(') ||
+  !examService.includes('def preview_exam_file(') ||
+  !examService.includes('def build_exam_download_filename(') ||
+  !examService.includes(
+    'content_disposition_type="inline"',
+  ) ||
+  !examService.includes(
+    'content_disposition_type="attachment"',
+  )
+) {
+  throw new Error(
+    'A prévia automática deve ser separada do download manual auditado.',
+  )
+}
+
+const createSidebarGuardPattern =
+  /\{!isCreateMode && \(\s*<CCol lg=\{4\}>[\s\S]*?<strong>Análise por IA<\/strong>[\s\S]*?<strong>Arquivo<\/strong>[\s\S]*?<\/CCol>\s*\)\}/
+
+if (
+  !form.includes('<CCol lg={isCreateMode ? 12 : 8}>') ||
+  !createSidebarGuardPattern.test(form)
+) {
+  throw new Error(
+    'O cadastro deve ocupar toda a largura e ocultar os cards Análise por IA e Arquivo.',
+  )
+}
+
 if (form.includes('console.log(')) {
   throw new Error('ExamForm ainda contém logs de depuração.')
 }

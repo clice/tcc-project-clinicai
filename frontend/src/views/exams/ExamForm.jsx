@@ -77,6 +77,32 @@ const formatConfidence = (value) => {
   return `${Math.round(value * 100)}%`
 }
 
+const normalizeDownloadPart = (value, fallback) => {
+  const normalized = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+    .slice(0, 60)
+    .replace(/-+$/g, '')
+
+  return normalized || fallback
+}
+
+const buildOriginalDownloadName = ({
+  examId,
+  patientName,
+  examDate,
+  mimeType,
+}) => {
+  const patientPart = normalizeDownloadPart(patientName, 'paciente')
+  const datePart = examDate || 'sem-data'
+  const extension = mimeType === 'image/png' ? 'png' : 'jpg'
+
+  return `exame-${examId}-${patientPart}-${datePart}.${extension}`
+}
+
 const mergeExamSnapshot = (current, examData) => ({
   ...current,
   clinic_id: examData.clinic_id ? String(examData.clinic_id) : '',
@@ -124,6 +150,10 @@ const ExamForm = ({ mode = 'create' }) => {
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [gradcamUrl, setGradcamUrl] = useState(null)
   const [isGradcamLoading, setIsGradcamLoading] = useState(false)
+  const [originalImageUrl, setOriginalImageUrl] = useState(null)
+  const [originalImageError, setOriginalImageError] = useState('')
+  const [isOriginalImageLoading, setIsOriginalImageLoading] = useState(false)
+  const [isOriginalDownloading, setIsOriginalDownloading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -146,6 +176,9 @@ const ExamForm = ({ mode = 'create' }) => {
   const isDoctor = roleName === ROLES.DOCTOR
   const canViewAiAnalysis =
     roleName !== ROLES.CLINIC_STAFF && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
+
+  const canDownloadExamFile =
+    !isCreateMode && hasPermission(user, PERMISSIONS.EXAMS_DOWNLOAD)
 
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
@@ -394,6 +427,56 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [aiAnalysis?.gradcam_available, id, isCreateMode])
 
+  useEffect(() => {
+    if (!canDownloadExamFile || !id) {
+      setOriginalImageUrl(null)
+      setOriginalImageError('')
+      return undefined
+    }
+
+    let objectUrl = null
+    let isCancelled = false
+
+    const loadOriginalImage = async () => {
+      try {
+        setIsOriginalImageLoading(true)
+        setOriginalImageError('')
+        setOriginalImageUrl(null)
+
+        const blob = await examService.previewFile(id)
+
+        if (isCancelled) return
+
+        objectUrl = URL.createObjectURL(blob)
+        setOriginalImageUrl(objectUrl)
+      } catch (err) {
+        if (!isCancelled) {
+          setOriginalImageUrl(null)
+          setOriginalImageError(
+            getErrorMessage(
+              err,
+              'Não foi possível carregar a imagem original.',
+            ),
+          )
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsOriginalImageLoading(false)
+        }
+      }
+    }
+
+    void loadOriginalImage()
+
+    return () => {
+      isCancelled = true
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+  }, [canDownloadExamFile, id])
+
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -430,6 +513,45 @@ const ExamForm = ({ mode = 'create' }) => {
       file_name: file?.name || '',
       file_mime_type: file?.type || '',
     }))
+  }
+
+  const handleOriginalDownload = async () => {
+    if (!canDownloadExamFile) return
+
+    showError('')
+
+    try {
+      setIsOriginalDownloading(true)
+
+      const blob = await examService.downloadFile(id)
+      const objectUrl = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+
+      anchor.href = objectUrl
+      anchor.download = buildOriginalDownloadName({
+        examId: id,
+        patientName: selectedPatientName,
+        examDate: form.exam_date,
+        mimeType: blob.type || form.file_mime_type,
+      })
+
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl)
+      }, 1000)
+    } catch (err) {
+      showError(
+        getErrorMessage(
+          err,
+          'Não foi possível baixar a imagem original.',
+        ),
+      )
+    } finally {
+      setIsOriginalDownloading(false)
+    }
   }
 
   const validateForm = () => {
@@ -633,7 +755,7 @@ const ExamForm = ({ mode = 'create' }) => {
       </div>
 
       <CRow className="g-4">
-        <CCol lg={8}>
+        <CCol lg={isCreateMode ? 12 : 8}>
           <CCard>
             <CCardHeader>
               <strong>Dados iniciais do exame</strong>
@@ -790,26 +912,22 @@ const ExamForm = ({ mode = 'create' }) => {
                     />
                   </CCol>
 
-                  <CCol md={12}>
-                    <CFormLabel>Imagem do exame</CFormLabel>
+                  {isCreateMode && (
+                    <CCol md={12}>
+                      <CFormLabel>Imagem do exame</CFormLabel>
 
-                    {isCreateMode ? (
                       <CFormInput
                         type="file"
                         accept="image/jpeg,image/png"
                         onChange={handleFileChange}
                         required
                       />
-                    ) : (
-                      <CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />
-                    )}
 
-                    <div className="text-body-secondary small mt-2">
-                      {isCreateMode
-                        ? 'Envie uma imagem em formato JPG, JPEG ou PNG.'
-                        : 'A imagem original não pode ser alterada nesta tela.'}
-                    </div>
-                  </CCol>
+                      <div className="text-body-secondary small mt-2">
+                        Envie uma imagem em formato JPG, JPEG ou PNG.
+                      </div>
+                    </CCol>
+                  )}
                 </CRow>
 
                 {!isReadOnly && (
@@ -830,7 +948,8 @@ const ExamForm = ({ mode = 'create' }) => {
           {!isCreateMode && <ExamHistoryCard examId={id} refreshKey={historyRefreshKey} />}
         </CCol>
 
-        <CCol lg={4}>
+        {!isCreateMode && (
+          <CCol lg={4}>
           <CCard className="mb-4">
             <CCardHeader>
               <strong>Análise por IA</strong>
@@ -1068,18 +1187,72 @@ const ExamForm = ({ mode = 'create' }) => {
             </CCardHeader>
 
             <CCardBody>
-              <div className="mb-2">
-                <div className="text-body-secondary small">Nome</div>
-                <div>{form.file_name || '-'}</div>
-              </div>
+              {!canDownloadExamFile ? (
+                <CAlert color="secondary" className="mb-0">
+                  Você não possui permissão para acessar a imagem original.
+                </CAlert>
+              ) : isOriginalImageLoading ? (
+                <div className="d-flex align-items-center gap-2 text-body-secondary">
+                  <CSpinner size="sm" />
+                  <span>Carregando imagem original...</span>
+                </div>
+              ) : originalImageUrl ? (
+                <>
+                  <a
+                    href={originalImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="d-block mb-3"
+                  >
+                    <img
+                      src={originalImageUrl}
+                      alt="Imagem original do exame"
+                      className="img-fluid rounded border"
+                    />
+                  </a>
 
-              <div className="mb-2">
-                <div className="text-body-secondary small">Tipo</div>
-                <div>{form.file_mime_type || '-'}</div>
-              </div>
+                  <div className="text-body-secondary small mb-3">
+                    Imagem original enviada no cadastro. O mapa Grad-CAM,
+                    quando disponível, permanece separado na área de análise
+                    por IA.
+                  </div>
+
+                  <div className="d-grid gap-2">
+                    <CButton
+                      color="secondary"
+                      variant="outline"
+                      href={originalImageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Abrir em tamanho maior
+                    </CButton>
+
+                    <CButton
+                      color="primary"
+                      onClick={handleOriginalDownload}
+                      disabled={isOriginalDownloading}
+                    >
+                      {isOriginalDownloading ? (
+                        <>
+                          <CSpinner size="sm" className="me-2" />
+                          Baixando...
+                        </>
+                      ) : (
+                        'Baixar imagem original'
+                      )}
+                    </CButton>
+                  </div>
+                </>
+              ) : (
+                <CAlert color="warning" className="mb-0">
+                  {originalImageError || 'Imagem original não disponível.'}
+                </CAlert>
+              )}
             </CCardBody>
           </CCard>
-        </CCol>
+          </CCol>
+        )}
       </CRow>
     </>
   )

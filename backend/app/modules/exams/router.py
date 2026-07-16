@@ -27,6 +27,7 @@ from app.modules.exams.service import (
     get_exam_history,
     list_exam_form_options,
     list_exams,
+    preview_exam_file,
     replace_exam_file,
     restore_exam,
     review_exam,
@@ -243,6 +244,27 @@ def review_exam_route(
     )
 
 
+@router.get("/{exam_id}/preview")
+def preview_exam_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:download")
+    ),
+):
+    """
+    Retorna a imagem original para visualização autenticada.
+
+    Esta rota não registra download manual no histórico.
+    """
+
+    return preview_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.get("/{exam_id}/download")
 def download_exam_file_route(
     exam_id: int,
@@ -289,4 +311,3 @@ def replace_exam_file_route(
         file=file,
         current_user=current_user,
     )
-    

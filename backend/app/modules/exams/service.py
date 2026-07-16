@@ -4,6 +4,8 @@ Service do módulo de exames.
 Concentra as regras de negócio relacionadas aos exames.
 """
 
+import re
+import unicodedata
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, UploadFile
@@ -955,15 +957,64 @@ def restore_exam(
     return build_exam_response(exam, current_user=current_user)
 
 
-def download_exam_file(
+def slugify_exam_download_component(
+    value: str | None,
+    *,
+    fallback: str,
+    max_length: int = 60,
+) -> str:
+    """Normaliza componentes do nome público do arquivo."""
+
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_value = normalized.encode("ascii", "ignore").decode("ascii")
+
+    slug = re.sub(
+        r"[^a-zA-Z0-9]+",
+        "-",
+        ascii_value,
+    ).strip("-").lower()
+
+    return slug[:max_length].strip("-") or fallback
+
+
+def build_exam_download_filename(exam: Exam, file_path) -> str:
+    """Gera nome amigável sem revelar o UUID físico armazenado."""
+
+    patient_name = exam.patient.name if exam.patient else None
+
+    patient_slug = slugify_exam_download_component(
+        patient_name,
+        fallback="paciente",
+    )
+
+    date_part = exam.exam_date.isoformat() if exam.exam_date else "sem-data"
+
+    extension = (
+        ".png"
+        if exam.file_mime_type == "image/png"
+        or file_path.suffix.lower() == ".png"
+        else ".jpg"
+    )
+
+    return (
+        f"exame-{exam.id}-"
+        f"{patient_slug}-"
+        f"{date_part}"
+        f"{extension}"
+    )
+
+
+def get_authorized_exam_file(
     db: Session,
     exam_id: int,
     current_user: User,
 ):
-    """
-    Retorna o arquivo físico vinculado ao exame.
-    """
-    exam = get_exam_model_by_id(db=db, exam_id=exam_id)
+    """Resolve a imagem original após validar usuário, escopo e caminho."""
+
+    exam = get_exam_model_by_id(
+        db=db,
+        exam_id=exam_id,
+    )
 
     validate_user_can_access_exam(
         current_user=current_user,
@@ -976,13 +1027,64 @@ def download_exam_file(
             detail="Este exame não possui arquivo vinculado.",
         )
 
-    file_path = resolve_safe_exam_file_path(exam.file_path)
+    file_path = resolve_safe_exam_file_path(
+        exam.file_path,
+    )
 
     if not file_path.exists() or not file_path.is_file():
         raise HTTPException(
             status_code=404,
             detail="Arquivo físico não encontrado no servidor.",
         )
+
+    return exam, file_path
+
+
+def preview_exam_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """
+    Retorna a imagem original para visualização autenticada.
+
+    A abertura automática da tela não é registrada como download manual.
+    """
+
+    exam, file_path = get_authorized_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    return FileResponse(
+        path=file_path,
+        filename=build_exam_download_filename(
+            exam,
+            file_path,
+        ),
+        media_type=exam.file_mime_type,
+        content_disposition_type="inline",
+    )
+
+
+def download_exam_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Retorna a imagem original como download explicitamente solicitado."""
+
+    exam, file_path = get_authorized_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    download_name = build_exam_download_filename(
+        exam,
+        file_path,
+    )
 
     create_audit_log(
         db=db,
@@ -991,10 +1093,12 @@ def download_exam_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.EXAM,
         entity_id=exam.id,
-        description="Download autorizado e resposta de arquivo preparada.",
+        description="Download da imagem original autorizado.",
         new_data={
             "file_name": exam.file_name,
             "file_mime_type": exam.file_mime_type,
+            "download_name": download_name,
+            "delivery_mode": "attachment",
         },
     )
 
@@ -1002,8 +1106,9 @@ def download_exam_file(
 
     return FileResponse(
         path=file_path,
-        filename=exam.file_name,
+        filename=download_name,
         media_type=exam.file_mime_type,
+        content_disposition_type="attachment",
     )
 
 

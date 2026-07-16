@@ -152,7 +152,18 @@ export const examService = {
   },
 
   /**
-   * Permite o download do arquivo de exame.
+   * Carrega a imagem original para visualização autenticada.
+   */
+  previewFile: async (id) => {
+    const response = await api.get(`/exams/${id}/preview`, {
+      responseType: 'blob',
+    })
+
+    return response.data
+  },
+
+  /**
+   * Permite o download explícito do arquivo de exame.
    */
   downloadFile: async (id) => {
     const response = await api.get(`/exams/${id}/download`, {
