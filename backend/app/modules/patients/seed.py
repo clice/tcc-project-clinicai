@@ -18,6 +18,7 @@ def get_or_create_patient(
     status_id: int,
     name: str,
     cpf: str,
+    legacy_cpfs: tuple[str, ...] = (),
     birth_date: date | None = None,
     sex: str | None = None,
     email: str | None = None,
@@ -32,16 +33,31 @@ def get_or_create_patient(
 ) -> Patient:
     """Busca pelo identificador natural da massa demo ou cria o paciente."""
 
-    patient = (
+    candidate_cpfs = (cpf, *legacy_cpfs)
+
+    matching_patients = (
         db.query(Patient)
         .filter(
             Patient.clinic_id == clinic_id,
-            Patient.cpf == cpf,
+            Patient.cpf.in_(candidate_cpfs),
         )
-        .first()
+        .order_by(Patient.id.asc())
+        .all()
     )
 
+    if len(matching_patients) > 1:
+        raise RuntimeError(
+            f"Mais de um paciente acadêmico encontrado para {name!r}: "
+            f"{candidate_cpfs!r}."
+        )
+
+    patient = matching_patients[0] if matching_patients else None
+
     if patient:
+        if patient.cpf != cpf:
+            patient.cpf = cpf
+            db.flush()
+
         return patient
 
     patient = Patient(
@@ -146,7 +162,8 @@ def seed_patients(
             doctor_id=doctor.id,
             status_id=active_status.id,
             name="Ana Clara Souza",
-            cpf="22233344450",
+            cpf="22233344405",
+            legacy_cpfs=("22233344450",),
             birth_date=date(2005, 7, 2),
             sex="female",
             email="ana.clara@example.com",
@@ -159,7 +176,8 @@ def seed_patients(
             doctor_id=doctor.id,
             status_id=active_status.id,
             name="Paciente com CPF Fictício",
-            cpf="00000000000",
+            cpf="00000000191",
+            legacy_cpfs=("00000000000",),
             birth_date=None,
             sex=None,
         ),
@@ -196,7 +214,8 @@ def seed_patients(
             doctor_id=doctor.id,
             status_id=active_status.id,
             name="Dona Francisca Alves",
-            cpf="32165498700",
+            cpf="32165498791",
+            legacy_cpfs=("32165498700",),
             birth_date=date(1952, 11, 8),
             sex="female",
             phone="88966665555",

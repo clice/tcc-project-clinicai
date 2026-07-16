@@ -8,6 +8,7 @@ const read = (relativePath) => fs.readFileSync(path.join(repositoryRoot, relativ
 
 const constants = read('frontend/src/utils/constants.js')
 const form = read('frontend/src/views/exams/ExamForm.jsx')
+const patientForm = read('frontend/src/views/patients/PatientForm.jsx')
 const list = read('frontend/src/views/exams/ExamsList.jsx')
 const history = read('frontend/src/views/exams/ExamHistoryCard.jsx')
 const navigation = read('frontend/src/_nav.jsx')
@@ -104,6 +105,41 @@ if (
 if (!form.includes('navigate(`/exams/${createdExam.id}`)')) {
   throw new Error('O cadastro não redireciona para o exame recém-criado.')
 }
+if (
+  !patientForm.includes("patient?.status_name === 'active'") ||
+  !patientForm.includes('to={`/exams/create?patient=${id}`}') ||
+  !patientForm.includes('Cadastrar exame')
+) {
+  throw new Error(
+    'O paciente ativo não oferece corretamente o cadastro de exame pela rota existente.',
+  )
+}
+if (
+  !form.includes('useSearchParams') ||
+  !form.includes("const requestedPatientId = searchParams.get('patient')") ||
+  !form.includes('const canPreselectRequestedPatient = Boolean(') ||
+  !form.includes("clinic.status_name === 'active'") ||
+  !form.includes("doctor.status_name === 'active'") ||
+  !form.includes('patient_id: canPreselectRequestedPatient') ||
+  !form.includes('doctor_id: canPreselectRequestedPatient')
+) {
+  throw new Error(
+    'O cadastro de exame não valida e pré-seleciona paciente, clínica e médico a partir da URL.',
+  )
+}
+if (
+  !patientForm.includes('if (isCreateMode || !patient) return payload') ||
+  !patientForm.includes('const originalPayload = {') ||
+  !patientForm.includes('Object.fromEntries(') ||
+  !patientForm.includes('value !== originalPayload[field]') ||
+  !patientForm.includes('Object.keys(payload).length === 0') ||
+  !patientForm.includes('setPatient(updatedPatient)')
+) {
+  throw new Error(
+    'A edição do paciente deve enviar somente os campos efetivamente alterados.',
+  )
+}
+
 if (
   !list.includes(
     "const summaryCardStatuses = ['pending', 'processing', 'awaiting_review', 'completed']",

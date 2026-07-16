@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.common.validators import is_valid_cpf
 from app.core.security import verify_password
 from app.modules import academic_demo_assets
 from app.modules.academic_demo_assets import verify_bundled_demo_assets
@@ -143,6 +144,14 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert all(
         patient.doctor_id == primary_doctor.id for patient in demo.patients.values()
     )
+
+    invalid_demo_cpfs = {
+        patient.name: patient.cpf
+        for patient in demo.patients.values()
+        if not is_valid_cpf(patient.cpf)
+    }
+    assert invalid_demo_cpfs == {}
+
     assert all(exam.clinic_id == primary_clinic.id for exam in demo.exams.values())
     assert all(exam.doctor_id == primary_doctor.id for exam in demo.exams.values())
     assert all(exam.patient.clinic_id == exam.clinic_id for exam in demo.exams.values())
@@ -214,6 +223,50 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert primary_clinic.name == "Clínica Primária Personalizada"
     assert primary_doctor.password_hash == original_hash
     assert pending_exam.description == "Descrição acadêmica personalizada"
+
+
+def test_academic_demo_reconciles_legacy_patient_cpfs(
+    db_session: Session,
+    isolated_demo_uploads,
+) -> None:
+    bootstrap = bootstrap_reference_data(db_session)
+    db_session.commit()
+
+    demo = seed_academic_demo(db_session, bootstrap)
+    db_session.commit()
+
+    legacy_cpfs = {
+        "patient_young": "22233344450",
+        "patient_fictitious_cpf": "00000000000",
+        "patient_female_elderly": "32165498700",
+    }
+    expected_cpfs = {
+        "patient_young": "22233344405",
+        "patient_fictitious_cpf": "00000000191",
+        "patient_female_elderly": "32165498791",
+    }
+
+    original_ids = {
+        key: demo.patients[key].id
+        for key in legacy_cpfs
+    }
+
+    for key, legacy_cpf in legacy_cpfs.items():
+        demo.patients[key].cpf = legacy_cpf
+
+    db_session.commit()
+
+    bootstrap = bootstrap_reference_data(db_session)
+    reconciled = seed_academic_demo(db_session, bootstrap)
+    db_session.commit()
+
+    assert count(db_session, Patient) == 8
+
+    for key, expected_cpf in expected_cpfs.items():
+        patient = reconciled.patients[key]
+        assert patient.id == original_ids[key]
+        assert patient.cpf == expected_cpf
+        assert is_valid_cpf(patient.cpf)
 
 
 def test_demo_phase_can_be_rolled_back_without_partial_clinics(

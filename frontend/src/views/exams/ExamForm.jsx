@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CAlert,
   CBadge,
@@ -112,6 +112,8 @@ const resolveAiStatus = (form, analysis) => {
 const ExamForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedPatientId = searchParams.get('patient')
   const { user } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
@@ -222,9 +224,54 @@ const ExamForm = ({ mode = 'create' }) => {
         setDoctors(loadedDoctors)
 
         if (isCreateMode) {
+          const requestedPatient = requestedPatientId
+            ? loadedPatients.find(
+                (patient) =>
+                  String(patient.id) === requestedPatientId &&
+                  patient.status_name === 'active',
+              )
+            : null
+
+          const requestedClinic = requestedPatient
+            ? loadedClinics.find(
+                (clinic) =>
+                  String(clinic.id) === String(requestedPatient.clinic_id) &&
+                  clinic.status_name === 'active',
+              )
+            : null
+
+          const requestedDoctor = requestedPatient
+            ? loadedDoctors.find(
+                (doctor) =>
+                  String(doctor.id) === String(requestedPatient.doctor_id) &&
+                  String(doctor.clinic_id) === String(requestedPatient.clinic_id) &&
+                  doctor.status_name === 'active',
+              )
+            : null
+
+          const canPreselectRequestedPatient = Boolean(
+            requestedPatient && requestedClinic && requestedDoctor,
+          )
+
+          if (requestedPatientId && !canPreselectRequestedPatient) {
+            showError(
+              'O paciente, a clínica ou o médico responsável não está ativo ou disponível para este usuário.',
+            )
+          }
+
           setForm({
             ...emptyExam,
-            clinic_id: loadedClinics.length === 1 ? String(loadedClinics[0].id) : '',
+            clinic_id: canPreselectRequestedPatient
+              ? String(requestedClinic.id)
+              : loadedClinics.length === 1
+                ? String(loadedClinics[0].id)
+                : '',
+            patient_id: canPreselectRequestedPatient
+              ? String(requestedPatient.id)
+              : '',
+            doctor_id: canPreselectRequestedPatient
+              ? String(requestedDoctor.id)
+              : '',
           })
 
           setAiAnalysis(null)
@@ -253,7 +300,7 @@ const ExamForm = ({ mode = 'create' }) => {
     }
 
     void loadData()
-  }, [canViewAiAnalysis, id, isCreateMode])
+  }, [canViewAiAnalysis, id, isCreateMode, requestedPatientId])
 
   const isAnalysisActive =
     !isCreateMode && form.status_name === 'processing' && form.analysis_in_progress && !aiAnalysis

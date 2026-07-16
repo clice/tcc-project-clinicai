@@ -272,7 +272,34 @@ const PatientForm = ({ mode = 'create' }) => {
       payload.doctor_id = isDoctor ? Number(user.id) : Number(form.doctor_id)
     }
 
-    return payload
+    if (isCreateMode || !patient) return payload
+
+    const originalPayload = {
+      name: String(patient.name ?? '').trim(),
+      cpf: onlyNumbers(patient.cpf ?? ''),
+      birth_date: patient.birth_date || null,
+      sex: patient.sex || null,
+      phone: onlyNumbers(patient.phone ?? '') || null,
+      email: String(patient.email ?? '').trim() || null,
+      zip_code: onlyNumbers(patient.zip_code ?? '') || null,
+      address: String(patient.address ?? '').trim() || null,
+      number: String(patient.number ?? '').trim() || null,
+      complement: String(patient.complement ?? '').trim() || null,
+      neighborhood: String(patient.neighborhood ?? '').trim() || null,
+      city: String(patient.city ?? '').trim() || null,
+      state: String(patient.state ?? '').trim().toUpperCase() || null,
+    }
+
+    if (!isDoctor) {
+      originalPayload.clinic_id = Number(patient.clinic_id)
+      originalPayload.doctor_id = Number(patient.doctor_id)
+    }
+
+    return Object.fromEntries(
+      Object.entries(payload).filter(
+        ([field, value]) => value !== originalPayload[field],
+      ),
+    )
   }
 
   const handleSubmit = async (event) => {
@@ -295,7 +322,25 @@ const PatientForm = ({ mode = 'create' }) => {
       }
 
       if (isEditMode) {
-        await patientService.update(id, buildPayload())
+        const payload = buildPayload()
+
+        if (Object.keys(payload).length === 0) {
+          showSuccess('Nenhuma alteração para salvar.')
+          return
+        }
+
+        const updatedPatient = await patientService.update(id, payload)
+
+        setPatient(updatedPatient)
+        setForm((current) => ({
+          ...current,
+          cpf: formatCpfBR(updatedPatient.cpf ?? ''),
+          phone: formatPhoneBR(updatedPatient.phone ?? ''),
+          email: updatedPatient.email ?? '',
+          zip_code: formatZipCodeBR(updatedPatient.zip_code ?? ''),
+          state: updatedPatient.state ?? '',
+        }))
+
         showSuccess('Paciente atualizado com sucesso.')
       }
     } catch (err) {
@@ -385,15 +430,15 @@ const PatientForm = ({ mode = 'create' }) => {
 
         <div className="d-flex justify-content-center mt-4">
           <CButtonGroup>
-            {patient && canCreateExam && (
+            {patient?.status_name === 'active' && canCreateExam && (
               <CButton
                 color="info"
                 size="lg"
                 as={Link}
-                to={`/exams/upload?patient=${id}`}
+                to={`/exams/create?patient=${id}`}
                 className="text-white"
               >
-                Upload exame
+                Cadastrar exame
               </CButton>
             )}
 
