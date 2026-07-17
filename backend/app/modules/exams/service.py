@@ -8,6 +8,7 @@ import json
 import re
 import unicodedata
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -24,7 +25,10 @@ from app.common.services import (
     model_dump_update,
 )
 from app.modules.ai_analysis.client import AIServiceError, request_prediction
-from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
+from app.modules.ai_analysis.file_storage import (
+    resolve_safe_gradcam_path,
+    serialize_gradcam_path,
+)
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate
 from app.modules.ai_analysis.service import build_ai_analysis_response, create_ai_analysis
@@ -34,6 +38,7 @@ from app.modules.exams.model import Exam
 from app.modules.exams.file_storage import (
     delete_exam_file_safely,
     resolve_safe_exam_file_path,
+    serialize_exam_file_path,
     store_validated_exam_file,
     validate_exam_file,
 )
@@ -737,7 +742,12 @@ def create_exam(
             exam_id=exam.id,
         )
 
-        exam.file_path = str(stored_file_path)
+        stored_file_reference = (
+            serialize_exam_file_path(
+                stored_file_path
+            )
+        )
+        exam.file_path = stored_file_reference
         exam.file_name = stored_file_path.name
         exam.file_mime_type = validated_image.mime_type
 
@@ -1483,7 +1493,12 @@ def replace_exam_file(
             "status_id": exam.status_id,
             "status_name": current_status,
         }
-        exam.file_path = str(stored_file_path)
+        stored_file_reference = (
+            serialize_exam_file_path(
+                stored_file_path
+            )
+        )
+        exam.file_path = stored_file_reference
         exam.file_name = stored_file_path.name
         exam.file_mime_type = validated_image.mime_type
         exam.status_id = target_status.id
@@ -1522,7 +1537,11 @@ def replace_exam_file(
             delete_exam_file_safely(str(stored_file_path))
         raise HTTPException(status_code=500, detail="Erro ao substituir imagem do exame.") from exc
 
-    if old_file_path and old_file_path != str(stored_file_path):
+    if (
+        old_file_path
+        and old_file_path
+        != stored_file_reference
+    ):
         delete_exam_file_safely(old_file_path)
     exam = get_exam_model_by_id(db=db, exam_id=exam.id)
     return build_exam_response(exam, current_user=current_user)
@@ -1597,8 +1616,21 @@ async def analyze_exam(
         model_name=prediction["model_name"],
         model_version=prediction["model_version"],
         gradcam_path=(
-            prediction["gradcam_path"]
-            if prediction["gradcam_available"]
+            serialize_gradcam_path(
+                Path(
+                    prediction[
+                        "gradcam_path"
+                    ]
+                )
+            )
+            if (
+                prediction[
+                    "gradcam_available"
+                ]
+                and prediction[
+                    "gradcam_path"
+                ]
+            )
             else None
         ),
         processing_time_ms=processing_time_ms,

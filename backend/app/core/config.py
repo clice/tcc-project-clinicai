@@ -34,8 +34,13 @@ class Settings(BaseSettings):
     bootstrap_admin_cpf: str = "39053344705"
     bootstrap_admin_password: str = "clinicai123"
     
-    # Uploads
+    # Raiz única dos dados operacionais.
+    # Será montada como /app/data nos containers.
+    clinicai_data_dir: str = "/app/data"
+
+    # Caminho legado dos uploads, preservado durante a migração.
     upload_dir: str = "uploads"
+
     max_upload_size_mb: int = 10
     max_image_width_px: int = 12000
     max_image_height_px: int = 12000

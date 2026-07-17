@@ -19,7 +19,26 @@ from fastapi import HTTPException, UploadFile
 from app.core.config import settings
 
 
-UPLOAD_DIR = Path(settings.upload_dir) / "exams"
+CONFIGURED_DATA_DIR = os.getenv("CLINICAI_DATA_DIR")
+DATA_DIR = Path(
+    CONFIGURED_DATA_DIR
+    or settings.clinicai_data_dir
+)
+NEW_UPLOAD_DIR = DATA_DIR / "exams"
+LEGACY_UPLOAD_DIR = Path(settings.upload_dir) / "exams"
+
+# A raiz nova só se torna ativa quando a variável existe no processo.
+# Assim, containers antigos continuam gravando no volume legado até a
+# recriação controlada prevista para a etapa de migração.
+NEW_STORAGE_ENABLED = bool(
+    CONFIGURED_DATA_DIR
+)
+UPLOAD_DIR = (
+    NEW_UPLOAD_DIR
+    if NEW_STORAGE_ENABLED
+    else LEGACY_UPLOAD_DIR
+)
+
 MAX_FILE_SIZE = settings.max_upload_size_mb * 1024 * 1024
 MAX_IMAGE_WIDTH = settings.max_image_width_px
 MAX_IMAGE_HEIGHT = settings.max_image_height_px
@@ -366,6 +385,96 @@ def validate_exam_file(file: UploadFile) -> ValidatedExamImage:
     )
 
 
+def _allowed_exam_roots() -> tuple[Path, ...]:
+    roots = (
+        UPLOAD_DIR,
+        NEW_UPLOAD_DIR,
+        LEGACY_UPLOAD_DIR,
+    )
+
+    unique_roots: list[Path] = []
+
+    for root in roots:
+        resolved_root = root.resolve(
+            strict=False
+        )
+
+        if resolved_root not in unique_roots:
+            unique_roots.append(
+                resolved_root
+            )
+
+    return tuple(unique_roots)
+
+
+def serialize_exam_file_path(
+    file_path: Path,
+) -> str:
+    """Serializa arquivos novos como caminhos relativos à raiz data."""
+
+    resolved_path = file_path.resolve(
+        strict=False
+    )
+    data_root = DATA_DIR.resolve(
+        strict=False
+    )
+
+    try:
+        relative_path = (
+            resolved_path.relative_to(
+                data_root
+            )
+        )
+    except ValueError:
+        # Caminhos legados permanecem absolutos até a migração.
+        return str(resolved_path)
+
+    return relative_path.as_posix()
+
+
+def _resolve_exam_path_and_root(
+    file_path: str,
+) -> tuple[Path, Path]:
+    """Resolve caminho relativo novo ou absoluto legado com sua raiz."""
+
+    raw_path = Path(file_path)
+
+    if raw_path.is_absolute():
+        candidate = raw_path
+    else:
+        if ".." in raw_path.parts:
+            raise _http_error(
+                403,
+                "Caminho de arquivo inválido.",
+            )
+
+        candidate = DATA_DIR / raw_path
+
+    if candidate.is_symlink():
+        raise _http_error(
+            403,
+            "Links simbólicos não são permitidos no armazenamento.",
+        )
+
+    resolved_path = candidate.resolve(
+        strict=False
+    )
+
+    for root in _allowed_exam_roots():
+        try:
+            resolved_path.relative_to(
+                root
+            )
+            return resolved_path, root
+        except ValueError:
+            continue
+
+    raise _http_error(
+        403,
+        "Caminho de arquivo inválido.",
+    )
+
+
 def _ensure_secure_directory(path: Path) -> Path:
     base_dir = UPLOAD_DIR.resolve()
     base_dir.mkdir(parents=True, exist_ok=True, mode=DIRECTORY_MODE)
@@ -389,11 +498,40 @@ def _ensure_secure_directory(path: Path) -> Path:
     return candidate
 
 
-def build_exam_storage_dir(*, clinic_id: int, patient_id: int, exam_id: int) -> Path:
+def _uses_new_upload_root() -> bool:
+    return (
+        UPLOAD_DIR.resolve(
+            strict=False
+        )
+        == NEW_UPLOAD_DIR.resolve(
+            strict=False
+        )
+    )
+
+
+def build_exam_storage_dir(
+    *,
+    clinic_id: int,
+    patient_id: int,
+    exam_id: int,
+) -> Path:
     """Cria a hierarquia interna sem usar o nome original do arquivo."""
 
+    storage_dir = (
+        UPLOAD_DIR
+        / str(clinic_id)
+        / str(patient_id)
+        / str(exam_id)
+    )
+
+    if _uses_new_upload_root():
+        storage_dir = (
+            storage_dir
+            / "original"
+        )
+
     return _ensure_secure_directory(
-        UPLOAD_DIR / str(clinic_id) / str(patient_id) / str(exam_id)
+        storage_dir
     )
 
 
@@ -433,44 +571,51 @@ def store_validated_exam_file(
 
 
 def resolve_safe_exam_file_path(file_path: str) -> Path:
-    """Resolve somente arquivos regulares internos e rejeita path traversal."""
+    """Resolve arquivos novos relativos e caminhos absolutos legados."""
 
-    base_dir = UPLOAD_DIR.resolve()
-    raw_path = Path(file_path)
-    if raw_path.is_symlink():
-        raise _http_error(403, "Links simbólicos não são permitidos no armazenamento.")
-
-    resolved_path = raw_path.resolve()
-    try:
-        resolved_path.relative_to(base_dir)
-    except ValueError as exc:
-        raise _http_error(403, "Caminho de arquivo inválido.") from exc
+    resolved_path, _ = (
+        _resolve_exam_path_and_root(
+            file_path
+        )
+    )
 
     return resolved_path
 
 
 def delete_exam_file_safely(file_path: str | None) -> bool:
-    """Remove apenas arquivo interno e limpa diretórios vazios até a raiz."""
+    """Remove apenas arquivo autorizado e limpa diretórios internos."""
 
     if not file_path:
         return False
 
     try:
-        resolved_path = resolve_safe_exam_file_path(file_path)
+        resolved_path, base_dir = (
+            _resolve_exam_path_and_root(
+                file_path
+            )
+        )
     except HTTPException:
         return False
 
-    if not resolved_path.exists() or not resolved_path.is_file():
+    if (
+        not resolved_path.exists()
+        or not resolved_path.is_file()
+    ):
         return False
 
-    resolved_path.unlink()
-    base_dir = UPLOAD_DIR.resolve()
+    try:
+        resolved_path.unlink()
+    except OSError:
+        return False
+
     parent = resolved_path.parent
+
     while parent != base_dir:
         try:
             parent.rmdir()
         except OSError:
             break
+
         parent = parent.parent
 
     return True

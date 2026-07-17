@@ -140,3 +140,10 @@ reports/
 
 # Dataset completo usado apenas para seleção local de ativos acadêmicos
 /kvasir-dataset/
+
+# =====================================================
+# DADOS OPERACIONAIS LOCAIS DO CLINICAI
+# =====================================================
+
+/data/*
+!/data/README.md

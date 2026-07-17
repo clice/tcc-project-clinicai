@@ -1,5 +1,6 @@
 """Configurações centrais do serviço de IA do ClinicAI."""
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -70,10 +71,44 @@ MODEL_VERSION = MODEL_VERSION_FALLBACK
 # ARMAZENAMENTO E LIMITES DE ENTRADA
 # =========================================================
 
-STORAGE_DIR = AI_ROOT_DIR / "storage"
-GRADCAM_DIR = STORAGE_DIR / "gradcam"
-PREDICTIONS_DIR = STORAGE_DIR / "predictions"
-TEMP_DIR = STORAGE_DIR / "temp"
+LEGACY_STORAGE_DIR = AI_ROOT_DIR / "storage"
+CONFIGURED_DATA_DIR = os.getenv(
+    "CLINICAI_DATA_DIR"
+)
+
+if CONFIGURED_DATA_DIR:
+    DATA_DIR = Path(
+        CONFIGURED_DATA_DIR
+    )
+    STORAGE_DIR = DATA_DIR
+    GRADCAM_DIR = (
+        DATA_DIR
+        / "attribution"
+    )
+    PREDICTIONS_DIR = (
+        DATA_DIR
+        / "predictions"
+    )
+    TEMP_DIR = (
+        DATA_DIR
+        / "temporary"
+    )
+else:
+    # Compatibilidade com containers criados antes da migração.
+    DATA_DIR = LEGACY_STORAGE_DIR
+    STORAGE_DIR = LEGACY_STORAGE_DIR
+    GRADCAM_DIR = (
+        LEGACY_STORAGE_DIR
+        / "gradcam"
+    )
+    PREDICTIONS_DIR = (
+        LEGACY_STORAGE_DIR
+        / "predictions"
+    )
+    TEMP_DIR = (
+        LEGACY_STORAGE_DIR
+        / "temp"
+    )
 
 MAX_INFERENCE_IMAGE_BYTES = 10 * 1024 * 1024
 MAX_INFERENCE_IMAGE_WIDTH = 12_000

@@ -8,7 +8,10 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from app.modules.exams.file_storage import build_exam_storage_dir
+from app.modules.exams.file_storage import (
+    build_exam_storage_dir,
+    serialize_exam_file_path,
+)
 
 if TYPE_CHECKING:
     from app.modules.exams.model import Exam
@@ -143,9 +146,17 @@ def install_exam_asset(
     target = _copy_if_missing(source, exam_asset_target(exam, asset_key))
 
     if assign_fields:
-        exam.file_path = str(target)
-        exam.file_name = str(entry["filename"])
-        exam.file_mime_type = str(entry["mime_type"])
+        exam.file_path = (
+            serialize_exam_file_path(
+                target
+            )
+        )
+        exam.file_name = str(
+            entry["filename"]
+        )
+        exam.file_mime_type = str(
+            entry["mime_type"]
+        )
 
     return target
 
