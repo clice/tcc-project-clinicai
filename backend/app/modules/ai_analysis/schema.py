@@ -101,6 +101,14 @@ class AIAnalysisResponse(BaseModel):
     model_version: str
 
     gradcam_available: bool = False
+
+    attribution_method: str | None = None
+    attribution_target_layers: dict[str, str] | None = None
+    attribution_local_evidence: dict[str, float] | None = None
+    attribution_branch_weights: dict[str, float] | None = None
+    attribution_branch_cam_raw_maxima: dict[str, float] | None = None
+    attribution_unavailable_reason: str | None = None
+
     processing_time_ms: int | None = None
 
     ai_notes: str | None = None

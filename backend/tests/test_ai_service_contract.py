@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -10,6 +12,7 @@ import httpx
 import pytest
 
 from app.modules.ai_analysis import client as ai_client
+from app.modules.ai_analysis import service as ai_analysis_service
 from app.modules.ai_analysis.client import (
     AIServiceResponseError,
     AIServiceTimeoutError,
@@ -28,7 +31,34 @@ VALID_RESPONSE = {
     "model_name": "ensemble_stacking",
     "model_version": "models-v0.1.0",
     "gradcam_available": True,
-    "gradcam_path": "/app/storage/gradcam/example.jpg",
+    "gradcam_path": (
+        "/app/storage/gradcam/example.jpg"
+    ),
+    "attribution_method": (
+        "weighted_base_gradcam_oriented_by_"
+        "ensemble_stacking_v1"
+    ),
+    "attribution_target_layers": {
+        "resnet50": "layer4[-1]",
+        "efficientnet_b4": "blocks[-1]",
+        "pvt_v2_b2": "stages[-1]",
+    },
+    "attribution_local_evidence": {
+        "resnet50": 1.4,
+        "efficientnet_b4": 1.5,
+        "pvt_v2_b2": 1.2,
+    },
+    "attribution_branch_weights": {
+        "resnet50": 0.35,
+        "efficientnet_b4": 0.36,
+        "pvt_v2_b2": 0.29,
+    },
+    "attribution_branch_cam_raw_maxima": {
+        "resnet50": 0.9,
+        "efficientnet_b4": 1.1,
+        "pvt_v2_b2": 0.2,
+    },
+    "attribution_unavailable_reason": None,
     "device": "cpu",
 }
 
@@ -89,6 +119,9 @@ def test_client_sends_exam_type_and_accepts_complete_contract(monkeypatch):
     assert captured["files"]["file"] == ("exam.png", b"image", "image/png")
     assert result["exam_domain"] == "gastrointestinal"
     assert result["model_name"] == "ensemble_stacking"
+    assert result["attribution_method"] == (
+        VALID_RESPONSE["attribution_method"]
+    )
 
 
 def test_client_classifies_timeout(monkeypatch):
@@ -212,7 +245,10 @@ def test_client_requires_gradcam_for_gastrointestinal(monkeypatch):
         ),
     )
 
-    with pytest.raises(AIServiceResponseError, match="gastrointestinal"):
+    with pytest.raises(
+        AIServiceResponseError,
+        match="motivo da indisponibilidade",
+    ):
         asyncio.run(
             request_prediction(
                 image_bytes=b"image",
@@ -221,6 +257,116 @@ def test_client_requires_gradcam_for_gastrointestinal(monkeypatch):
                 exam_type="colonoscopy",
             )
         )
+
+
+def test_client_rejects_missing_attribution_metadata(
+    monkeypatch,
+):
+    invalid = dict(VALID_RESPONSE)
+    invalid.pop("attribution_method")
+
+    monkeypatch.setattr(
+        ai_client.httpx,
+        "AsyncClient",
+        lambda **kwargs: StubAsyncClient(
+            response=StubResponse(
+                payload=invalid
+            ),
+            **kwargs,
+        ),
+    )
+
+    with pytest.raises(
+        AIServiceResponseError,
+        match="campos obrigatórios",
+    ):
+        asyncio.run(
+            request_prediction(
+                image_bytes=b"image",
+                filename="exam.png",
+                content_type="image/png",
+                exam_type="colonoscopy",
+            )
+        )
+
+
+def test_client_rejects_weights_that_do_not_sum_one(
+    monkeypatch,
+):
+    invalid = dict(
+        VALID_RESPONSE,
+        attribution_branch_weights={
+            "resnet50": 0.5,
+            "efficientnet_b4": 0.5,
+            "pvt_v2_b2": 0.5,
+        },
+    )
+
+    monkeypatch.setattr(
+        ai_client.httpx,
+        "AsyncClient",
+        lambda **kwargs: StubAsyncClient(
+            response=StubResponse(
+                payload=invalid
+            ),
+            **kwargs,
+        ),
+    )
+
+    with pytest.raises(
+        AIServiceResponseError,
+        match="somar 1",
+    ):
+        asyncio.run(
+            request_prediction(
+                image_bytes=b"image",
+                filename="exam.png",
+                content_type="image/png",
+                exam_type="colonoscopy",
+            )
+        )
+
+
+def test_client_accepts_documented_unavailable_map(
+    monkeypatch,
+):
+    unavailable = dict(
+        VALID_RESPONSE,
+        gradcam_available=False,
+        gradcam_path=None,
+        attribution_branch_weights=None,
+        attribution_branch_cam_raw_maxima=None,
+        attribution_unavailable_reason=(
+            "Nenhum ramo apresentou evidência "
+            "espacial mensurável."
+        ),
+    )
+
+    monkeypatch.setattr(
+        ai_client.httpx,
+        "AsyncClient",
+        lambda **kwargs: StubAsyncClient(
+            response=StubResponse(
+                payload=unavailable
+            ),
+            **kwargs,
+        ),
+    )
+
+    result = asyncio.run(
+        request_prediction(
+            image_bytes=b"image",
+            filename="exam.png",
+            content_type="image/png",
+            exam_type="colonoscopy",
+        )
+    )
+
+    assert result["gradcam_available"] is False
+    assert (
+        result["attribution_unavailable_reason"]
+        is not None
+    )
 
 
 def test_analyze_exam_sends_type_and_persists_model_contract(tmp_path, monkeypatch):
@@ -272,3 +418,104 @@ def test_analyze_exam_sends_type_and_persists_model_contract(tmp_path, monkeypat
     assert payload.model_version == "models-v0.1.0"
     assert payload.gradcam_path == "/app/storage/gradcam/example.jpg"
     assert result["model_name"] == "ensemble_stacking"
+
+    persisted_response = json.loads(
+        payload.raw_response
+    )
+
+    assert persisted_response[
+        "attribution_method"
+    ] == VALID_RESPONSE[
+        "attribution_method"
+    ]
+
+    assert persisted_response[
+        "attribution_branch_weights"
+    ] == VALID_RESPONSE[
+        "attribution_branch_weights"
+    ]
+
+def _build_analysis_with_raw_response(
+    raw_response,
+):
+    now = datetime.now(timezone.utc)
+
+    return SimpleNamespace(
+        id=4,
+        exam_id=17,
+        status_id=2,
+        status=SimpleNamespace(
+            name="completed",
+            display_name="Concluída",
+        ),
+        prediction_label="abnormal",
+        prediction_class=1,
+        confidence=0.9342,
+        model_name="ensemble_stacking",
+        model_version="models-v0.1.0",
+        gradcam_path=(
+            "/app/storage/gradcam/example.jpg"
+        ),
+        processing_time_ms=1234,
+        ai_notes=None,
+        raw_response=raw_response,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def test_analysis_response_exposes_attribution_metadata():
+    analysis = _build_analysis_with_raw_response(
+        json.dumps(
+            VALID_RESPONSE,
+            ensure_ascii=False,
+        )
+    )
+
+    result = (
+        ai_analysis_service
+        .build_ai_analysis_response(
+            analysis
+        )
+    )
+
+    assert result["attribution_method"] == (
+        VALID_RESPONSE[
+            "attribution_method"
+        ]
+    )
+
+    assert result[
+        "attribution_target_layers"
+    ] == VALID_RESPONSE[
+        "attribution_target_layers"
+    ]
+
+    assert result[
+        "attribution_branch_weights"
+    ] == VALID_RESPONSE[
+        "attribution_branch_weights"
+    ]
+
+
+def test_legacy_analysis_without_json_remains_compatible():
+    analysis = _build_analysis_with_raw_response(
+        str(VALID_RESPONSE)
+    )
+
+    result = (
+        ai_analysis_service
+        .build_ai_analysis_response(
+            analysis
+        )
+    )
+
+    assert result["attribution_method"] is None
+    assert (
+        result["attribution_target_layers"]
+        is None
+    )
+    assert (
+        result["attribution_branch_weights"]
+        is None
+    )

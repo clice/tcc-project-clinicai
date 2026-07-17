@@ -175,18 +175,48 @@ if (
 
 if (
   !list.includes(
-    "const summaryCardStatuses = ['pending', 'processing', 'awaiting_review', 'completed']",
-  )
+    "const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']",
+  ) ||
+  list.includes(
+    "const summaryCardStatuses = ['pending', 'processing'",
+  ) ||
+  !list.includes('<CCol sm={6} xl={4} key={status}>')
 ) {
-  throw new Error('Os cards da listagem não representam o fluxo iniciado em pending.')
+  throw new Error(
+    'Os cards devem mostrar somente pendentes, aguardando revisão e concluídos.',
+  )
 }
 if (
   !navigation.includes("name: 'Pendentes'") ||
   !navigation.includes("to: '/exams?status=pending'") ||
-  !navigation.includes("badgeKey: 'pending'")
+  !navigation.includes("badgeKey: 'pending'") ||
+  navigation.includes("name: 'Processando'") ||
+  navigation.includes("to: '/exams?status=processing'") ||
+  navigation.includes("badgeKey: 'processing'")
 ) {
-  throw new Error('A barra lateral não oferece o filtro e a contagem de exames pendentes.')
+  throw new Error(
+    'A barra lateral deve mostrar pendentes, mas não expor processing como seção permanente.',
+  )
 }
+if (
+  !list.includes(
+    "exam.status_name === 'processing' && exam.analysis_in_progress",
+  ) ||
+  !list.includes(
+    "const isProcessing = exam.status_name === 'processing'",
+  ) ||
+  !list.includes(
+    'canCancel={canChangeStatus && (isProcessing || isPending)}',
+  ) ||
+  !stateMachine.includes(
+    'StatusName.PROCESSING.value',
+  )
+) {
+  throw new Error(
+    'Processing deve permanecer no fluxo interno, na sinalização da análise e nas regras operacionais.',
+  )
+}
+
 if (
   !history.includes("import React, { useEffect, useRef, useState } from 'react'") ||
   !history.includes('const hasLoadedOnce = useRef(false)') ||
@@ -255,7 +285,10 @@ if (
     'def build_gradcam_download_filename(',
   ) ||
   !examService.includes(
-    'description="Download do mapa Grad-CAM autorizado."',
+    'description="Download do mapa de atribuição da IA autorizado."',
+  ) ||
+  !examService.includes(
+    '"artifact_type": "ai_attribution_map"',
   ) ||
   !examService.includes(
     '"delivery_mode": "attachment"',
@@ -275,6 +308,22 @@ if (
 ) {
   throw new Error(
     'Os downloads explícitos devem impedir respostas reutilizadas do cache do navegador.',
+  )
+}
+
+if (
+  !form.includes(
+    'buildAttributionMapDownloadName',
+  ) ||
+  !form.includes(
+    '`mapa-atribuicao-exame-${examId}-`',
+  ) ||
+  !form.includes(
+    'mapa de atribuição da IA',
+  )
+) {
+  throw new Error(
+    'A revisão e o download devem usar a nomenclatura pública do mapa de atribuição.',
   )
 }
 
@@ -408,15 +457,55 @@ if (
   !aiResultCard.includes('Uso do resultado:') ||
   !aiResultCard.includes('Sobre o mapa atual:') ||
   !aiResultCard.includes('Ensemble Stacking') ||
-  !aiResultCard.includes('ResNet-50') ||
-  !aiResultCard.includes('decisão completa do ensemble') ||
+  !aiResultCard.includes(
+    'ENSEMBLE_ATTRIBUTION_METHOD',
+  ) ||
+  !aiResultCard.includes(
+    'weighted_base_gradcam_oriented_by_ensemble_stacking_v1',
+  ) ||
+  !aiResultCard.includes(
+    'Mapa de atribuição composto',
+  ) ||
+  !aiResultCard.includes(
+    'Mapa Grad-CAM (ResNet-50)',
+  ) ||
+  !aiResultCard.includes(
+    'Grad-CAMs da ResNet-50, EfficientNet-B4 e',
+  ) ||
+  !aiResultCard.includes(
+    'PVTv2-B2 para a classe final prevista',
+  ) ||
+  !aiResultCard.includes(
+    'ponderados pelas evidências locais do',
+  ) ||
+  !aiResultCard.includes(
+    'metaclassificador',
+  ) ||
+  !aiResultCard.includes(
+    'mapa legado gerado',
+  ) ||
+  !aiResultCard.includes(
+    'decisão completa do Ensemble',
+  ) ||
+  !aiResultCard.includes(
+    'Pesos locais da composição:',
+  ) ||
+  !aiResultCard.includes(
+    'attribution_branch_weights',
+  ) ||
+  !aiResultCard.includes(
+    'formatAttributionWeight',
+  ) ||
   !aiResultCard.includes('risco, gravidade') ||
+  !aiResultCard.includes('causalidade') ||
   !aiResultCard.includes('Status da análise') ||
   !aiResultCard.includes('Predição') ||
   !aiResultCard.includes('Confiança') ||
   !aiResultCard.includes('Modelo utilizado') ||
   !aiResultCard.includes('Versão') ||
-  !aiResultCard.includes('Tempo de processamento') ||
+  !aiResultCard.includes(
+    'Tempo de processamento',
+  ) ||
   !aiResultCard.includes(
     "'ClinicAI Gastrointestinal — Ensemble Stacking'",
   ) ||
@@ -425,37 +514,59 @@ if (
     '<hr className="my-4" />',
   ) ||
   !aiResultCard.includes('Imagem original') ||
-  !aiResultCard.includes('Mapa Grad-CAM') ||
+  !aiResultCard.includes(
+    'const mapTitle = isEnsembleAttribution',
+  ) ||
+  !aiResultCard.includes(
+    'const mapName = isEnsembleAttribution',
+  ) ||
   !aiResultCard.includes(
     'Abrir imagem original em tamanho maior',
   ) ||
   !aiResultCard.includes(
     'Abrir mapa em tamanho maior',
   ) ||
-  !aiResultCard.includes('Baixar imagem original') ||
-  !aiResultCard.includes('Baixar mapa Grad-CAM') ||
+  !aiResultCard.includes(
+    'Baixar imagem original',
+  ) ||
+  !aiResultCard.includes(
+    'Baixar ${mapName}',
+  ) ||
+  !aiResultCard.includes(
+    'Intensidade de atribuição relativa',
+  ) ||
   !aiResultCard.includes(
     'Intensidade de contribuição relativa',
   ) ||
-  !aiResultCard.includes('Menor contribuição') ||
-  !aiResultCard.includes('Maior contribuição') ||
-  !aiResultCard.includes('linear-gradient(90deg') ||
-  !aiResultCard.includes('ai_notes?.trim()') ||
-  !aiResultCard.includes("height: '360px'") ||
+  !aiResultCard.includes(
+    'Menor intensidade',
+  ) ||
+  !aiResultCard.includes(
+    'Maior intensidade',
+  ) ||
+  !aiResultCard.includes(
+    'linear-gradient(90deg',
+  ) ||
+  !aiResultCard.includes(
+    'ai_notes?.trim()',
+  ) ||
+  !aiResultCard.includes(
+    "height: '360px'",
+  ) ||
   aiResultCard.includes(
     'Mapa produzido pela ResNet-50, componente',
   ) ||
   aiResultCard.includes('console.log(')
 ) {
   throw new Error(
-    'O componente de resultado da IA deve reunir orientação, métricas, imagens, escala e ações de arquivo.',
+    'O resultado da IA deve distinguir o mapa composto do mapa legado e preservar orientação, métricas, imagens, escala e ações.',
   )
 }
 
 
 const contributionScaleIndex =
   aiResultCard.indexOf(
-    'Intensidade de contribuição relativa',
+    'const contributionScaleStyle',
   )
 
 const originalImageSectionIndex =

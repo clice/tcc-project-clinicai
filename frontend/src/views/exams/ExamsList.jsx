@@ -47,9 +47,9 @@ import { formatDateBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
 import { hasPermission } from 'src/utils/permissions'
 
-// Os quatro estados principais formam o fluxo operacional exibido no topo.
-// Falha, divergência e cancelamento continuam disponíveis no submenu lateral.
-const summaryCardStatuses = ['pending', 'processing', 'awaiting_review', 'completed']
+// Os três estados persistentes mais relevantes para o usuário
+// são exibidos no topo. Processing permanece transitório e interno.
+const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']
 
 const getAiStatusFromExam = (exam) => {
   if (exam.ai_analysis_status) return exam.ai_analysis_status
@@ -294,7 +294,7 @@ const ExamsList = () => {
 
       <CRow className="mb-4">
         {summaryCardStatuses.map((status) => (
-          <CCol sm={6} xl={3} key={status}>
+          <CCol sm={6} xl={4} key={status}>
             <CCard
               role="button"
               className={statusFilter === status ? 'border-primary' : ''}

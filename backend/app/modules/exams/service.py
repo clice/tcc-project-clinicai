@@ -4,6 +4,7 @@ Service do módulo de exames.
 Concentra as regras de negócio relacionadas aos exames.
 """
 
+import json
 import re
 import unicodedata
 from datetime import datetime, timezone
@@ -1123,7 +1124,7 @@ def get_authorized_gradcam_file(
     exam_id: int,
     current_user: User,
 ):
-    """Resolve o Grad-CAM após validar perfil, escopo e caminho."""
+    """Resolve o mapa de atribuição da IA após validar perfil, escopo e caminho."""
 
     exam = get_exam_model_by_id(
         db=db,
@@ -1159,7 +1160,7 @@ def get_authorized_gradcam_file(
         raise HTTPException(
             status_code=404,
             detail=(
-                "Este exame não possui mapa Grad-CAM "
+                "Este exame não possui mapa de atribuição da IA "
                 "disponível."
             ),
         )
@@ -1181,7 +1182,7 @@ def build_gradcam_download_filename(
     exam: Exam,
     file_path,
 ) -> str:
-    """Gera nome público amigável para o mapa Grad-CAM."""
+    """Gera nome público amigável para o mapa de atribuição da IA."""
 
     patient_name = (
         exam.patient.name
@@ -1207,7 +1208,7 @@ def build_gradcam_download_filename(
     )
 
     return (
-        f"gradcam-exame-{exam.id}-"
+        f"mapa-atribuicao-exame-{exam.id}-"
         f"{patient_slug}-"
         f"{date_part}"
         f"{extension}"
@@ -1220,7 +1221,7 @@ def preview_exam_ai_file(
     current_user: User,
 ):
     """
-    Retorna o Grad-CAM para visualização inline.
+    Retorna o mapa de atribuição da IA para visualização inline.
 
     A prévia automática não registra download manual.
     """
@@ -1252,7 +1253,7 @@ def download_exam_ai_file(
     exam_id: int,
     current_user: User,
 ):
-    """Retorna o Grad-CAM como download explicitamente solicitado."""
+    """Retorna o mapa de atribuição da IA como download explicitamente solicitado."""
 
     exam, analysis, file_path, media_type = (
         get_authorized_gradcam_file(
@@ -1274,9 +1275,9 @@ def download_exam_ai_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.AI_ANALYSIS,
         entity_id=analysis.id,
-        description="Download do mapa Grad-CAM autorizado.",
+        description="Download do mapa de atribuição da IA autorizado.",
         new_data={
-            "artifact_type": "gradcam",
+            "artifact_type": "ai_attribution_map",
             "media_type": media_type,
             "download_name": download_name,
             "delivery_mode": "attachment",
@@ -1601,6 +1602,12 @@ async def analyze_exam(
             else None
         ),
         processing_time_ms=processing_time_ms,
-        raw_response=str(prediction),
+        raw_response=json.dumps(
+            prediction,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ),
     )
     return create_ai_analysis(db=db, payload=payload, current_user=current_user)

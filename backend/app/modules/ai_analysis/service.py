@@ -4,6 +4,8 @@ Service do módulo de análises de IA.
 Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 """
 
+import json
+
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
@@ -27,23 +29,116 @@ from app.modules.statuses.service import get_status_by_name_and_applies_to
 from app.modules.users.model import User
 
 
-def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
-    """
-    Monta a resposta da análise de IA.
-    """
+def extract_attribution_metadata(
+    raw_response: str | None,
+) -> dict:
+    """Extrai metadados novos sem quebrar análises legadas."""
+
+    metadata = {
+        "attribution_method": None,
+        "attribution_target_layers": None,
+        "attribution_local_evidence": None,
+        "attribution_branch_weights": None,
+        "attribution_branch_cam_raw_maxima": None,
+        "attribution_unavailable_reason": None,
+    }
+
+    if not raw_response:
+        return metadata
+
+    try:
+        payload = json.loads(
+            raw_response
+        )
+    except (
+        json.JSONDecodeError,
+        TypeError,
+    ):
+        return metadata
+
+    if not isinstance(payload, dict):
+        return metadata
+
+    method = payload.get(
+        "attribution_method"
+    )
+
+    if isinstance(method, str) and method.strip():
+        metadata[
+            "attribution_method"
+        ] = method
+
+    mapping_fields = (
+        "attribution_target_layers",
+        "attribution_local_evidence",
+        "attribution_branch_weights",
+        "attribution_branch_cam_raw_maxima",
+    )
+
+    for field in mapping_fields:
+        value = payload.get(field)
+
+        if isinstance(value, dict):
+            metadata[field] = dict(value)
+
+    unavailable_reason = payload.get(
+        "attribution_unavailable_reason"
+    )
+
+    if (
+        isinstance(unavailable_reason, str)
+        and unavailable_reason.strip()
+    ):
+        metadata[
+            "attribution_unavailable_reason"
+        ] = unavailable_reason
+
+    return metadata
+
+
+def build_ai_analysis_response(
+    ai_analysis: AIAnalysis,
+) -> dict:
+    """Monta a resposta da análise de IA."""
+
+    attribution_metadata = (
+        extract_attribution_metadata(
+            ai_analysis.raw_response
+        )
+    )
+
     return {
         "id": ai_analysis.id,
         "exam_id": ai_analysis.exam_id,
         "status_id": ai_analysis.status_id,
-        "status_name": ai_analysis.status.name if ai_analysis.status else None,
-        "status_display_name": ai_analysis.status.display_name if ai_analysis.status else None,
-        "prediction_label": ai_analysis.prediction_label,
-        "prediction_class": ai_analysis.prediction_class,
+        "status_name": (
+            ai_analysis.status.name
+            if ai_analysis.status
+            else None
+        ),
+        "status_display_name": (
+            ai_analysis.status.display_name
+            if ai_analysis.status
+            else None
+        ),
+        "prediction_label": (
+            ai_analysis.prediction_label
+        ),
+        "prediction_class": (
+            ai_analysis.prediction_class
+        ),
         "confidence": ai_analysis.confidence,
         "model_name": ai_analysis.model_name,
-        "model_version": ai_analysis.model_version,
-        "gradcam_available": bool(ai_analysis.gradcam_path),
-        "processing_time_ms": ai_analysis.processing_time_ms,
+        "model_version": (
+            ai_analysis.model_version
+        ),
+        "gradcam_available": bool(
+            ai_analysis.gradcam_path
+        ),
+        **attribution_metadata,
+        "processing_time_ms": (
+            ai_analysis.processing_time_ms
+        ),
         "ai_notes": ai_analysis.ai_notes,
         "created_at": ai_analysis.created_at,
         "updated_at": ai_analysis.updated_at,

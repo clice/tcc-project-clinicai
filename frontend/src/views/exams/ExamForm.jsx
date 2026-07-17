@@ -98,7 +98,7 @@ const buildOriginalDownloadName = ({
   return `exame-${examId}-${patientPart}-${datePart}.${extension}`
 }
 
-const buildGradcamDownloadName = ({
+const buildAttributionMapDownloadName = ({
   examId,
   patientName,
   examDate,
@@ -113,7 +113,7 @@ const buildGradcamDownloadName = ({
     mimeType === 'image/png' ? 'png' : 'jpg'
 
   return (
-    `gradcam-exame-${examId}-` +
+    `mapa-atribuicao-exame-${examId}-` +
     `${patientPart}-${datePart}.${extension}`
   )
 }
@@ -445,7 +445,7 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [canViewAiAnalysis, id, isAnalysisActive])
 
-  // O mapa Grad-CAM é carregado por uma rota de prévia.
+  // O mapa de atribuição da IA é carregado por uma rota de prévia.
   // Somente o clique explícito em download gera auditoria.
   useEffect(() => {
     if (!aiAnalysis?.gradcam_available || isCreateMode) {
@@ -475,7 +475,7 @@ const ExamForm = ({ mode = 'create' }) => {
           setGradcamError(
             getErrorMessage(
               err,
-              'Não foi possível carregar o mapa Grad-CAM.',
+              'Não foi possível carregar o mapa de atribuição da IA.',
             ),
           )
         }
@@ -645,7 +645,7 @@ const ExamForm = ({ mode = 'create' }) => {
       const anchor = document.createElement('a')
 
       anchor.href = objectUrl
-      anchor.download = buildGradcamDownloadName({
+      anchor.download = buildAttributionMapDownloadName({
         examId: id,
         patientName: selectedPatientName,
         examDate: form.exam_date,
@@ -663,7 +663,7 @@ const ExamForm = ({ mode = 'create' }) => {
       showError(
         getErrorMessage(
           err,
-          'Não foi possível baixar o mapa Grad-CAM.',
+          'Não foi possível baixar o mapa de atribuição da IA.',
         ),
       )
     } finally {
@@ -1230,8 +1230,8 @@ const ExamForm = ({ mode = 'create' }) => {
                             className="small"
                           >
                             Antes de concluir, compare a imagem
-                            original, o mapa Grad-CAM e o resultado
-                            automatizado apresentados abaixo. Os
+                            original, o mapa de atribuição da IA e o
+                            resultado automatizado apresentados abaixo. Os
                             achados e a conclusão encerram o exame.
                           </CAlert>
 

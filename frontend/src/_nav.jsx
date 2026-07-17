@@ -73,14 +73,6 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Processando',
-        to: '/exams?status=processing',
-        badgeKey: 'processing',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
         name: 'Revisão',
         to: '/exams?status=awaiting_review',
         badgeKey: 'awaiting_review',

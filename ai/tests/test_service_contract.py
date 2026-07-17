@@ -201,6 +201,131 @@ class ServiceContractTests(unittest.TestCase):
         self.assertTrue(result["gradcam_available"])
         gradcam.assert_called_once_with(b"image", domain="gastrointestinal")
 
+    def test_prediction_exposes_ensemble_attribution_metadata(
+        self,
+    ):
+        from app.inference import (
+            predictor as predictor_module,
+        )
+
+        fake_predictor = SimpleNamespace(
+            name="ensemble_stacking",
+            domain="gastrointestinal",
+            predict_differentiable=Mock(),
+        )
+
+        attribution = SimpleNamespace(
+            path=(
+                "/app/storage/gradcam/"
+                "composite-result.jpg"
+            ),
+            final_probabilities=(
+                0.2,
+                0.8,
+            ),
+            predicted_class=1,
+            method=(
+                "weighted_base_gradcam_oriented_by_"
+                "ensemble_stacking_v1"
+            ),
+            target_layers={
+                "resnet50": "layer4[-1]",
+                "efficientnet_b4": "blocks[-1]",
+                "pvt_v2_b2": "stages[-1]",
+            },
+            local_evidence={
+                "resnet50": 1.0,
+                "efficientnet_b4": 1.1,
+                "pvt_v2_b2": 0.9,
+            },
+            branch_weights={
+                "resnet50": 0.3333333333,
+                "efficientnet_b4": 0.3666666667,
+                "pvt_v2_b2": 0.3,
+            },
+            branch_cam_raw_maxima={
+                "resnet50": 0.8,
+                "efficientnet_b4": 1.2,
+                "pvt_v2_b2": 0.4,
+            },
+            unavailable_reason=None,
+        )
+
+        with patch.object(
+            predictor_module,
+            "resolve_active_predictor",
+            return_value=fake_predictor,
+        ), patch.object(
+            predictor_module,
+            "generate_ensemble_attribution_from_bytes",
+            return_value=attribution,
+        ) as generator, patch.object(
+            predictor_module,
+            "model_version_for_domain",
+            return_value="models-v1.2.3",
+        ):
+            result = predictor_module.predict_image(
+                b"image",
+                "colonoscopy",
+            )
+
+        self.assertEqual(
+            result["prediction_class"],
+            1,
+        )
+
+        self.assertEqual(
+            result["label"],
+            "abnormal",
+        )
+
+        self.assertEqual(
+            result["confidence"],
+            0.8,
+        )
+
+        self.assertTrue(
+            result["gradcam_available"]
+        )
+
+        self.assertEqual(
+            result["gradcam_path"],
+            attribution.path,
+        )
+
+        self.assertEqual(
+            result["attribution_method"],
+            attribution.method,
+        )
+
+        self.assertEqual(
+            result["attribution_target_layers"],
+            attribution.target_layers,
+        )
+
+        self.assertEqual(
+            result["attribution_branch_weights"],
+            attribution.branch_weights,
+        )
+
+        self.assertEqual(
+            result[
+                "attribution_branch_cam_raw_maxima"
+            ],
+            attribution.branch_cam_raw_maxima,
+        )
+
+        self.assertIsNone(
+            result[
+                "attribution_unavailable_reason"
+            ]
+        )
+
+        generator.assert_called_once_with(
+            b"image",
+            domain="gastrointestinal",
+        )
+
     def test_health_and_models_endpoints_expose_runtime_contract(self):
         from app import main as main_module
 
