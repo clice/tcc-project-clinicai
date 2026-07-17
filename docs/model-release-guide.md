@@ -15,7 +15,7 @@ A configuração padrão fica no `.env` da raiz:
 
 ```dotenv
 MODEL_RELEASE_REPOSITORY=clice/tcc-project-clinicai
-MODEL_RELEASE_TAG=models-v0.1.0
+MODEL_RELEASE_TAG=models-v0.1.1
 MODEL_RELEASE_MANIFEST=manifesto_modelos.json
 ```
 
@@ -27,11 +27,16 @@ verificação; se um download falhar, a versão anterior permanece intacta.
 
 ## 2. Release atual
 
-- Tag: `models-v0.1.0`;
-- Título: `Modelos ClinicAI v0.1.0`;
-- Página: <https://github.com/clice/tcc-project-clinicai/releases/tag/models-v0.1.0>;
+- Tag: `models-v0.1.1`;
+- Título: `Modelos ClinicAI v0.1.1`;
+- Página: <https://github.com/clice/tcc-project-clinicai/releases/tag/models-v0.1.1>;
 - Domínio: `gastrointestinal`;
-- Versão do manifesto: `0.1.0`.
+- Versão do manifesto: `0.1.1`;
+- Protocolo de treinamento: `viana_codigo_kfold3_roi_sh_da`;
+- Fold operacional: `3`;
+- Critério de seleção: proximidade do resultado do fold à média agregada dos três folds;
+- Interpretação: execução representativa para o protótipo, sem alegação de superioridade
+  estatística sobre os demais folds.
 
 Uma Release publicada deve conter exatamente:
 
@@ -45,6 +50,9 @@ manifesto_modelos.json
 
 Os arquivos automáticos `Source code (zip)` e `Source code (tar.gz)` não substituem esses
 anexos e não contêm os modelos ignorados pelo Git.
+
+A release `models-v0.1.0` permanece publicada como versão histórica. O padrão de instalação
+do projeto passa a apontar para `models-v0.1.1`, que contém o conjunto operacional do fold 3.
 
 ## 3. Quando criar uma nova Release
 
@@ -66,7 +74,7 @@ desde que o contrato de inferência permaneça compatível.
 
 | Tipo de alteração | Exemplo de versão |
 |---|---|
-| Correção dos artefatos, mantendo o mesmo contrato | `models-v0.1.1` |
+| Correção dos artefatos, mantendo o mesmo contrato | `models-v0.1.2` |
 | Nova versão compatível dos modelos ou do ensemble | `models-v0.2.0` |
 | Mudança incompatível de classes, entrada ou contrato | `models-v1.0.0` |
 
@@ -134,12 +142,12 @@ preservação integral da versão anterior quando a atualização falha.
 
 ## 5. Gerar o manifesto
 
-Escolha uma tag que ainda não exista. Exemplo para a versão `0.1.1`:
+Escolha uma tag que ainda não exista. Exemplo para uma atualização futura `0.1.2`:
 
 ```bash
 python3 scripts/generate_model_manifest.py \
-  --release-tag models-v0.1.1 \
-  --model-version 0.1.1
+  --release-tag models-v0.1.2 \
+  --model-version 0.1.2
 ```
 
 O arquivo será criado em:
@@ -168,7 +176,7 @@ Não altere `.env.example` para uma tag que ainda não foi publicada e validada.
 da nova Release, configure a tag somente no `.env` local:
 
 ```dotenv
-MODEL_RELEASE_TAG=models-v0.1.1
+MODEL_RELEASE_TAG=models-v0.1.2
 ```
 
 Depois que o teste em clone limpo da seção 8 passar, altere `MODEL_RELEASE_TAG` em `.env.example`
@@ -182,9 +190,9 @@ documentação.
 
 1. Abra <https://github.com/clice/tcc-project-clinicai/releases>.
 2. Selecione **Draft a new release**.
-3. Informe a nova tag, por exemplo `models-v0.1.1`.
+3. Informe uma tag ainda não publicada, por exemplo `models-v0.1.2`.
 4. Selecione `main` como target.
-5. Use o título `Modelos ClinicAI v0.1.1`.
+5. Use o título correspondente, por exemplo `Modelos ClinicAI v0.1.2`.
 6. Marque **Set as a pre-release** enquanto o sistema estiver em desenvolvimento.
 7. Descreva as mudanças dos modelos e eventuais requisitos de compatibilidade.
 8. Anexe os quatro artefatos e `manifesto_modelos.json`.

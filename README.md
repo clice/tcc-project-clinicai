@@ -118,7 +118,7 @@ Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles nã
 no código, então o backend não sobe sem essas variáveis definidas.
 
 O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
-baixar os modelos. A tag padrão é `models-v0.1.0`.
+baixar os modelos. A tag padrão é `models-v0.1.1`.
 
 ### 4. Baixar os modelos treinados
 
@@ -314,7 +314,10 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 - _Ensemble Stacking_ operacional, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2
 - Meta-classificador de regressão logística, baseado na reprodução operacional adaptada
   do método de Viana
-- Artefatos distribuídos pela GitHub Release `models-v0.1.0`
+- Artefatos operacionais distribuídos pela GitHub Release `models-v0.1.1`
+- Protocolo de treinamento dos artefatos: `viana_codigo_kfold3_roi_sh_da`
+- Fold operacional 3, selecionado como execução representativa por proximidade do
+  resultado à média agregada dos três folds, sem alegação de superioridade estatística
 
 ### Explicabilidade
 
@@ -351,8 +354,8 @@ Na raiz do projeto, execute:
 
 ```bash
 python scripts/generate_model_manifest.py \
-  --release-tag models-v0.1.0 \
-  --model-version 0.1.0
+  --release-tag models-v0.1.1 \
+  --model-version 0.1.1
 ```
 
 O comando gera `manifesto_modelos.json` com o tamanho e o hash SHA-256 de cada artefato. Os
@@ -362,8 +365,8 @@ modelos e o manifesto são ignorados pelo Git e devem ser anexados manualmente �
 
 No GitHub, abra **Releases** e selecione **Draft a new release**. Use:
 
-- tag: `models-v0.1.0`;
-- título: `Modelos ClinicAI v0.1.0`;
+- tag: `models-v0.1.1`;
+- título: `Modelos ClinicAI v0.1.1`;
 - opção **This is a pre-release**, enquanto o sistema estiver em desenvolvimento.
 
 Anexe exatamente os cinco arquivos:
@@ -381,12 +384,13 @@ Salve primeiro como rascunho, confira os nomes dos arquivos e somente depois pub
 ### 4. Versionar atualizações futuras
 
 A tag configurada em `.env` é fixa. Alterações posteriores no frontend, backend, README ou RBAC
-não modificam os artefatos da release `models-v0.1.0`.
+não modificam os artefatos da release `models-v0.1.1`.
 
 Se algum peso, meta-classificador, classe ou etapa de pré-processamento mudar, publique uma nova
-release, por exemplo `models-v0.1.1` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
+release, por exemplo `models-v0.1.2` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
 `.env.example`. Não substitua os arquivos de uma versão já publicada, pois as releases antigas
-devem continuar disponíveis para reprodutibilidade.
+devem continuar disponíveis para reprodutibilidade. A release `models-v0.1.0`
+permanece preservada como versão histórica anterior ao conjunto operacional do fold 3.
 
 O download atual usa assets públicos. Repositórios privados exigem um mecanismo de autenticação
 específico; tokens não devem ser armazenados no Compose, no README ou em arquivos versionados.
