@@ -52,8 +52,8 @@ const componentExpectations = {
     'canCancel={canChangeStatus',
   ],
   'src/views/patients/PatientForm.jsx': [
-    'hasPermission(user, PERMISSIONS.EXAMS_CREATE)',
-    'patient && canCreateExam',
+    /hasPermission\(\s*user,\s*PERMISSIONS\.EXAMS_CREATE,?\s*\)/,
+    /patient\?\.status_name\s*===\s*['"]active['"]\s*&&\s*canCreateExam/,
   ],
   'src/views/exams/ExamForm.jsx': ['hasPermission(user, PERMISSIONS.EXAMS_REVIEW)', 'isDoctor &&'],
 }
@@ -62,8 +62,10 @@ for (const [relativePath, expectedFragments] of Object.entries(componentExpectat
   const source = await readFile(path.join(frontendDirectory, relativePath), 'utf8')
   assert.doesNotMatch(source, /\bcanManage\b/, `${relativePath} ainda usa canManage`)
 
-  for (const fragment of expectedFragments) {
-    assert.ok(source.includes(fragment), `${relativePath} não aplica ${fragment}`)
+  for (const expected of expectedFragments) {
+    const matches = expected instanceof RegExp ? expected.test(source) : source.includes(expected)
+
+    assert.ok(matches, `${relativePath} não aplica ${String(expected)}`)
   }
 }
 

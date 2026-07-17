@@ -109,7 +109,7 @@ assert.match(
 )
 assert.match(examServiceSource, /getHistory:\s*async/)
 assert.match(examServiceSource, /`\/exams\/\$\{id\}\/history`/)
-assert.match(examFormSource, /<ExamHistoryCard examId=\{id\}/)
+assert.match(examFormSource, /<ExamHistoryCard\s+examId=\{id\}/)
 
 // A matriz do admin_master é apresentada como fixa e o backend rejeita
 // alterações que não teriam efeito por causa do bypass administrativo.
