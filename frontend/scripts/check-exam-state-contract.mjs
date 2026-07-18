@@ -201,15 +201,21 @@ if (
   !form.includes('const blob = await examService.previewFile(id)') ||
   !form.includes('const blob = await examService.downloadFile(id)') ||
   !form.includes('buildOriginalDownloadName({') ||
+  !form.includes('alt="Imagem original do exame"') ||
+  !form.includes('Baixar imagem do exame') ||
   !aiResultCard.includes('alt="Imagem original do exame"') ||
-  !aiResultCard.includes('Abrir imagem original em tamanho maior') ||
   !aiResultCard.includes('Baixar imagem original') ||
+  form.includes('target="_blank"') ||
+  form.includes('href={originalImageUrl}') ||
+  aiResultCard.includes('target="_blank"') ||
+  aiResultCard.includes('href={originalImageUrl}') ||
+  aiResultCard.includes('href={gradcamUrl}') ||
   form.includes("<CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />") ||
   form.includes("<div>{form.file_name || '-'}</div>") ||
   form.includes("<div>{form.file_mime_type || '-'}</div>")
 ) {
   throw new Error(
-    'O detalhe do exame deve exibir e baixar a imagem original sem expor nome físico ou MIME.',
+    'O detalhe deve exibir e baixar imagens sem abrir outra aba nem expor nome físico ou MIME.',
   )
 }
 
@@ -286,31 +292,54 @@ if (
   throw new Error('O paciente existente deve exibir seu histórico real de exames.')
 }
 
-const detailLayoutStart = form.indexOf('{!isCreateMode ? (')
-const detailLayout = form.slice(detailLayoutStart)
+const pendingLayoutStart = form.indexOf('{isPendingView ? (')
+const regularLayoutStart = form.indexOf(': !isCreateMode ? (')
+const pendingLayout = form.slice(pendingLayoutStart, regularLayoutStart)
+const regularLayout = form.slice(regularLayoutStart)
 
-const reviewIndex = detailLayout.indexOf('id="revisao-medica"')
-const aiResultIndex = detailLayout.indexOf('<ExamAiResultCard')
-const dataCardIndex = detailLayout.indexOf('{examDataCard}')
-const historyIndex = detailLayout.indexOf('<ExamHistoryCard')
+const reviewIndex = regularLayout.indexOf('id="revisao-medica"')
+const aiResultIndex = regularLayout.indexOf('<ExamAiResultCard')
+const dataCardIndex = regularLayout.indexOf('{isReadOnly ? examDataViewCard : examDataCard}')
+const historyIndex = regularLayout.indexOf('<ExamHistoryCard')
 
 if (
-  detailLayoutStart < 0 ||
+  pendingLayoutStart < 0 ||
+  regularLayoutStart <= pendingLayoutStart ||
+  !pendingLayout.includes('{pendingExamCard}') ||
+  pendingLayout.includes('<ExamAiResultCard') ||
   reviewIndex < 0 ||
   aiResultIndex <= reviewIndex ||
   dataCardIndex <= aiResultIndex ||
   historyIndex <= dataCardIndex
 ) {
   throw new Error(
-    'O detalhe deve priorizar revisão, resultado da IA, dados e histórico nesta ordem.',
+    'O pendente deve priorizar o card único; os demais detalhes mantêm revisão, IA, dados e histórico.',
   )
 }
 
 if (
-  !form.includes('const [isExamDataOpen, setIsExamDataOpen] = useState(') ||
-  !form.includes('aria-expanded={isExamDataOpen}') ||
-  !form.includes('{(!isReadOnly || isExamDataOpen) && (') ||
-  !form.includes('<CCol xs={12}>') ||
+  !form.includes("form.status_name === 'pending'") ||
+  !form.includes('const pendingExamCard = (') ||
+  !form.includes('<CCol lg={8}>') ||
+  !form.includes('<CCol lg={4}>') ||
+  !form.includes('Paciente') ||
+  !form.includes('Data do exame') ||
+  !form.includes('Tipo de exame') ||
+  !form.includes('Status') ||
+  !form.includes('Clínica') ||
+  !form.includes('Médico responsável') ||
+  !form.includes('Indicação clínica') ||
+  !form.includes('Observações') ||
+  !form.includes('className="g-4 align-items-start"') ||
+  !form.includes("height: 'auto'") ||
+  form.includes('const pendingImageLoadingStyle') ||
+  form.includes("height: '360px'") ||
+  form.includes('className="g-4 align-items-stretch"') ||
+  form.includes('<CCol lg={4} className="d-flex">') ||
+  form.includes('className="d-flex flex-column w-100"') ||
+  form.includes('className="w-100 rounded border bg-body-tertiary"') ||
+  form.includes('className="d-grid mt-auto"') ||
+  form.includes('isExamDataOpen') ||
   !form.includes('collapsible={isReadOnly}') ||
   !form.includes('defaultOpen={!isReadOnly}') ||
   !history.includes('collapsible = false') ||
@@ -321,18 +350,30 @@ if (
   !history.includes('className="mt-4 mb-4"')
 ) {
   throw new Error(
-    'Revisão deve ocupar toda a largura e dados e histórico devem ser recolhíveis na consulta.',
+    'Os dados devem usar visualização compacta e somente o histórico permanece recolhível.',
   )
 }
 
 if (
+  !form.includes('const examListFilterStatuses = new Set([') ||
+  !form.includes("'processing',") ||
+  !form.includes('? `/exams?status=${form.status_name}`') ||
+  !form.includes('to={examListPath}')
+) {
+  throw new Error('O botão Voltar deve retornar à listagem filtrada pelo status atual do exame.')
+}
+
+if (
   !form.includes('{isCreateMode ? title : form.title || title}') ||
+  !form.includes('Consulte os dados do exame e acompanhe seu fluxo de análise e revisão.') ||
   !form.includes('{selectedPatientName}') ||
   !form.includes('{formatDateBR(form.exam_date)}') ||
   !form.includes('examTypeLabels[form.exam_type]') ||
   !form.includes('statusColors[form.status_name]')
 ) {
-  throw new Error('O cabeçalho do detalhe deve resumir título, paciente, data, tipo e status.')
+  throw new Error(
+    'O cabeçalho deve preservar o título e o corpo deve apresentar paciente, data, tipo e status.',
+  )
 }
 
 if (
@@ -348,7 +389,7 @@ if (
   !aiResultCard.includes('Mapa de atribuição composto') ||
   !aiResultCard.includes('Mapa Grad-CAM (ResNet-50)') ||
   !aiResultCard.includes('Grad-CAMs da ResNet-50, EfficientNet-B4 e') ||
-  !aiResultCard.includes('PVTv2-B2 para a classe final prevista') ||
+  !/PVTv2-B2\s+para\s+a\s+classe\s+final\s+prevista/.test(aiResultCard) ||
   !aiResultCard.includes('ponderados pelas evidências locais do') ||
   !aiResultCard.includes('metaclassificador') ||
   !aiResultCard.includes('mapa legado gerado') ||
@@ -370,8 +411,6 @@ if (
   !aiResultCard.includes('Imagem original') ||
   !aiResultCard.includes('const mapTitle = isEnsembleAttribution') ||
   !aiResultCard.includes('const mapName = isEnsembleAttribution') ||
-  !aiResultCard.includes('Abrir imagem original em tamanho maior') ||
-  !aiResultCard.includes('Abrir mapa em tamanho maior') ||
   !aiResultCard.includes('Baixar imagem original') ||
   !aiResultCard.includes('Baixar ${mapName}') ||
   !aiResultCard.includes('Intensidade de atribuição relativa') ||
@@ -381,6 +420,9 @@ if (
   !aiResultCard.includes('linear-gradient(90deg') ||
   !aiResultCard.includes('ai_notes?.trim()') ||
   !aiResultCard.includes("height: '360px'") ||
+  aiResultCard.includes('Abrir imagem original em tamanho maior') ||
+  aiResultCard.includes('Abrir mapa em tamanho maior') ||
+  aiResultCard.includes('target="_blank"') ||
   aiResultCard.includes('Mapa produzido pela ResNet-50, componente') ||
   aiResultCard.includes('console.log(')
 ) {
@@ -401,7 +443,7 @@ if (
   gradcamImageSectionIndex <= contributionScaleIndex ||
   !aiResultCard.includes('className="g-4 align-items-stretch"') ||
   (aiResultCard.match(/className="h-100 d-flex flex-column"/g) || []).length !== 2 ||
-  (aiResultCard.match(/className="d-grid gap-2 mt-auto"/g) || []).length !== 2
+  (aiResultCard.match(/className="d-grid mt-auto"/g) || []).length !== 2
 ) {
   throw new Error(
     'A escala deve anteceder as imagens e as duas colunas devem permanecer visualmente equilibradas.',

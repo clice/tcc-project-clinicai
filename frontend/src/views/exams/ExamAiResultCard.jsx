@@ -11,21 +11,14 @@ import {
   CSpinner,
 } from '@coreui/react'
 
-import {
-  aiStatusColors,
-  aiStatusLabels,
-  predictionLabels,
-} from 'src/utils/constants'
+import { aiStatusColors, aiStatusLabels, predictionLabels } from 'src/utils/constants'
 
 const modelDisplayNames = {
-  ensemble_stacking:
-    'ClinicAI ES Gastrointestinal',
-  clinicai_stacking:
-    'ClinicAI ES Gastrointestinal',
+  ensemble_stacking: 'ClinicAI ES Gastrointestinal',
+  clinicai_stacking: 'ClinicAI ES Gastrointestinal',
 }
 
-const getModelDisplayName = (modelName) =>
-  modelDisplayNames[modelName] || modelName || '-'
+const getModelDisplayName = (modelName) => modelDisplayNames[modelName] || modelName || '-'
 
 const formatConfidence = (value) => {
   if (value === undefined || value === null) {
@@ -50,14 +43,10 @@ const contributionScaleStyle = {
     'linear-gradient(90deg, #000080 0%, #0066ff 25%, #00ffff 45%, #ffff00 70%, #ff0000 100%)',
 }
 
-const ENSEMBLE_ATTRIBUTION_METHOD =
-  'weighted_base_gradcam_oriented_by_ensemble_stacking_v1'
+const ENSEMBLE_ATTRIBUTION_METHOD = 'weighted_base_gradcam_oriented_by_ensemble_stacking_v1'
 
 const formatAttributionWeight = (value) => {
-  if (
-    typeof value !== 'number' ||
-    !Number.isFinite(value)
-  ) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return '-'
   }
 
@@ -80,16 +69,11 @@ const ExamAiResultCard = ({
   isGradcamDownloading,
   onGradcamDownload,
 }) => {
-  const hasGradcam = Boolean(
-    aiAnalysis?.gradcam_available,
-  )
+  const hasGradcam = Boolean(aiAnalysis?.gradcam_available)
 
-  const isEnsembleAttribution =
-    aiAnalysis?.attribution_method ===
-    ENSEMBLE_ATTRIBUTION_METHOD
+  const isEnsembleAttribution = aiAnalysis?.attribution_method === ENSEMBLE_ATTRIBUTION_METHOD
 
-  const attributionWeights =
-    aiAnalysis?.attribution_branch_weights
+  const attributionWeights = aiAnalysis?.attribution_branch_weights
 
   const mapTitle = isEnsembleAttribution
     ? 'Mapa de atribuição composto'
@@ -99,10 +83,7 @@ const ExamAiResultCard = ({
     ? 'mapa de atribuição composto'
     : 'mapa Grad-CAM da ResNet-50'
 
-  const statusLabel =
-    aiStatusLabels[aiStatus] ||
-    aiStatus ||
-    '-'
+  const statusLabel = aiStatusLabels[aiStatus] || aiStatus || '-'
 
   return (
     <CCard>
@@ -113,15 +94,10 @@ const ExamAiResultCard = ({
       <CCardBody>
         {canViewAiAnalysis ? (
           <>
-            <CAlert
-              color="info"
-              className="small"
-            >
+            <CAlert color="info" className="small">
               <div className="mb-2">
-                <strong>Uso do resultado:</strong>{' '}
-                Este resultado é gerado automaticamente para
-                apoio à análise. Ele pode conter erros e não
-                substitui a avaliação do profissional
+                <strong>Uso do resultado:</strong> Este resultado é gerado automaticamente para
+                apoio à análise. Ele pode conter erros e não substitui a avaliação do profissional
                 responsável.
               </div>
 
@@ -129,82 +105,45 @@ const ExamAiResultCard = ({
                 <strong>Sobre o mapa atual:</strong>{' '}
                 {isEnsembleAttribution ? (
                   <>
-                    A classificação e a confiança são produzidas
-                    pelo Ensemble Stacking. O mapa combina
-                    Grad-CAMs da ResNet-50, EfficientNet-B4 e
-                    PVTv2-B2 para a classe final prevista,
-                    ponderados pelas evidências locais do
-                    metaclassificador. As cores indicam atribuição
-                    relativa e não representam risco, gravidade,
-                    causalidade ou probabilidade clínica.
+                    A classificação e a confiança são produzidas pelo Ensemble Stacking. O mapa
+                    combina Grad-CAMs da ResNet-50, EfficientNet-B4 e PVTv2-B2 para a classe final
+                    prevista, ponderados pelas evidências locais do metaclassificador. As cores
+                    indicam atribuição relativa e não representam risco, gravidade, causalidade ou
+                    probabilidade clínica.
                   </>
                 ) : (
                   <>
-                    Esta análise utiliza o mapa legado gerado
-                    separadamente pela ResNet-50. Ele não explica
-                    sozinho a decisão completa do Ensemble
-                    Stacking. As cores indicam contribuição
-                    relativa e não representam risco, gravidade
-                    ou probabilidade clínica.
+                    Esta análise utiliza o mapa legado gerado separadamente pela ResNet-50. Ele não
+                    explica sozinho a decisão completa do Ensemble Stacking. As cores indicam
+                    contribuição relativa e não representam risco, gravidade ou probabilidade
+                    clínica.
                   </>
                 )}
               </div>
 
-              {isEnsembleAttribution &&
-                attributionWeights && (
-                  <div className="mt-2">
-                    <strong>
-                      Pesos locais da composição:
-                    </strong>{' '}
-                    ResNet-50{' '}
-                    {formatAttributionWeight(
-                      attributionWeights.resnet50,
-                    )}
-                    ; EfficientNet-B4{' '}
-                    {formatAttributionWeight(
-                      attributionWeights.efficientnet_b4,
-                    )}
-                    ; PVTv2-B2{' '}
-                    {formatAttributionWeight(
-                      attributionWeights.pvt_v2_b2,
-                    )}
-                    .
-                  </div>
-                )}
+              {isEnsembleAttribution && attributionWeights && (
+                <div className="mt-2">
+                  <strong>Pesos locais da composição:</strong> ResNet-50{' '}
+                  {formatAttributionWeight(attributionWeights.resnet50)}; EfficientNet-B4{' '}
+                  {formatAttributionWeight(attributionWeights.efficientnet_b4)}; PVTv2-B2{' '}
+                  {formatAttributionWeight(attributionWeights.pvt_v2_b2)}.
+                </div>
+              )}
             </CAlert>
 
             <CRow className="g-3">
               <CCol md={4}>
-                <div className="text-body-secondary small">
-                  Status da análise
-                </div>
+                <div className="text-body-secondary small">Status da análise</div>
 
-                <CBadge
-                  color={
-                    aiStatusColors[aiStatus] ||
-                    'secondary'
-                  }
-                >
-                  {statusLabel}
-                </CBadge>
+                <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>{statusLabel}</CBadge>
               </CCol>
 
               <CCol md={4}>
-                <div className="text-body-secondary small">
-                  Predição
-                </div>
+                <div className="text-body-secondary small">Predição</div>
 
                 {aiAnalysis ? (
-                  <CBadge
-                    color={
-                      aiAnalysis.prediction_class === 1
-                        ? 'danger'
-                        : 'success'
-                    }
-                  >
-                    {predictionLabels[
-                      aiAnalysis.prediction_label
-                    ] ||
+                  <CBadge color={aiAnalysis.prediction_class === 1 ? 'danger' : 'success'}>
+                    {predictionLabels[aiAnalysis.prediction_label] ||
                       aiAnalysis.prediction_label ||
                       '-'}
                   </CBadge>
@@ -214,45 +153,27 @@ const ExamAiResultCard = ({
               </CCol>
 
               <CCol md={4}>
-                <div className="text-body-secondary small">
-                  Confiança
-                </div>
+                <div className="text-body-secondary small">Confiança</div>
 
-                <strong>
-                  {formatConfidence(
-                    aiAnalysis?.confidence,
-                  )}
-                </strong>
+                <strong>{formatConfidence(aiAnalysis?.confidence)}</strong>
               </CCol>
             </CRow>
 
             <CRow className="g-3 mt-1">
               <CCol md={6}>
-                <div className="text-body-secondary small">
-                  Modelo utilizado
-                </div>
+                <div className="text-body-secondary small">Modelo utilizado</div>
 
-                <div>
-                  {getModelDisplayName(
-                    aiAnalysis?.model_name,
-                  )}
-                </div>
+                <div>{getModelDisplayName(aiAnalysis?.model_name)}</div>
               </CCol>
 
               <CCol md={3}>
-                <div className="text-body-secondary small">
-                  Versão
-                </div>
+                <div className="text-body-secondary small">Versão</div>
 
-                <div>
-                  {aiAnalysis?.model_version || '-'}
-                </div>
+                <div>{aiAnalysis?.model_version || '-'}</div>
               </CCol>
 
               <CCol md={3}>
-                <div className="text-body-secondary small">
-                  Tempo de processamento
-                </div>
+                <div className="text-body-secondary small">Tempo de processamento</div>
 
                 <div>
                   {aiAnalysis?.processing_time_ms !== null &&
@@ -263,61 +184,39 @@ const ExamAiResultCard = ({
               </CCol>
             </CRow>
 
-            {aiStatus === 'processing' &&
-              !aiAnalysis && (
-                <CAlert
-                  color="info"
-                  className="d-flex align-items-center gap-2 mt-4 mb-0"
-                >
-                  <CSpinner size="sm" />
+            {aiStatus === 'processing' && !aiAnalysis && (
+              <CAlert color="info" className="d-flex align-items-center gap-2 mt-4 mb-0">
+                <CSpinner size="sm" />
 
-                  <span>
-                    A análise está sendo executada. Uma segunda
-                    execução permanece bloqueada.
-                  </span>
-                </CAlert>
-              )}
+                <span>
+                  A análise está sendo executada. Uma segunda execução permanece bloqueada.
+                </span>
+              </CAlert>
+            )}
 
-            {aiStatus === 'failed' &&
-              !aiAnalysis && (
-                <CAlert
-                  color="danger"
-                  className="mt-4 mb-0"
-                >
-                  A análise falhou. Restaure o exame antes de
-                  realizar uma nova tentativa.
-                </CAlert>
-              )}
+            {aiStatus === 'failed' && !aiAnalysis && (
+              <CAlert color="danger" className="mt-4 mb-0">
+                A análise falhou. Restaure o exame antes de realizar uma nova tentativa.
+              </CAlert>
+            )}
 
-            {aiStatus !== 'processing' &&
-              aiStatus !== 'failed' &&
-              !aiAnalysis && (
-                <CAlert
-                  color="secondary"
-                  className="mt-4 mb-0"
-                >
-                  Este exame ainda não possui análise de IA
-                  vinculada.
-                </CAlert>
-              )}
+            {aiStatus !== 'processing' && aiStatus !== 'failed' && !aiAnalysis && (
+              <CAlert color="secondary" className="mt-4 mb-0">
+                Este exame ainda não possui análise de IA vinculada.
+              </CAlert>
+            )}
 
             {aiAnalysis?.ai_notes?.trim() && (
               <div className="mt-4">
-                <div className="text-body-secondary small">
-                  Observações técnicas da IA
-                </div>
+                <div className="text-body-secondary small">Observações técnicas da IA</div>
 
                 <div>{aiAnalysis.ai_notes}</div>
               </div>
             )}
           </>
         ) : (
-          <CAlert
-            color="secondary"
-            className="mb-0"
-          >
-            Você não possui permissão para visualizar o resultado
-            automatizado da análise.
+          <CAlert color="secondary" className="mb-0">
+            Você não possui permissão para visualizar o resultado automatizado da análise.
           </CAlert>
         )}
 
@@ -333,9 +232,7 @@ const ExamAiResultCard = ({
               </div>
 
               <div className="small text-body-secondary">
-                {isEnsembleAttribution
-                  ? 'Legenda do mapa composto'
-                  : 'Legenda do mapa Grad-CAM'}
+                {isEnsembleAttribution ? 'Legenda do mapa composto' : 'Legenda do mapa Grad-CAM'}
               </div>
             </div>
 
@@ -356,24 +253,14 @@ const ExamAiResultCard = ({
         <div className="position-relative">
           <CRow className="g-4 align-items-stretch">
             <CCol lg={6}>
-              <section
-                aria-labelledby="original-image-title"
-                className="h-100 d-flex flex-column"
-              >
-                <h2
-                  id="original-image-title"
-                  className="h6 mb-3"
-                >
+              <section aria-labelledby="original-image-title" className="h-100 d-flex flex-column">
+                <h2 id="original-image-title" className="h6 mb-3">
                   Imagem original
                 </h2>
 
                 {!canDownloadExamFile ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
-                    Você não possui permissão para acessar a
-                    imagem original.
+                  <CAlert color="secondary" className="mb-0">
+                    Você não possui permissão para acessar a imagem original.
                   </CAlert>
                 ) : isOriginalImageLoading ? (
                   <div
@@ -382,37 +269,20 @@ const ExamAiResultCard = ({
                   >
                     <CSpinner size="sm" />
 
-                    <span>
-                      Carregando imagem original...
-                    </span>
+                    <span>Carregando imagem original...</span>
                   </div>
                 ) : originalImageUrl ? (
                   <>
-                    <a
-                      href={originalImageUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="d-block mb-3 text-center"
-                    >
+                    <div className="mb-3 text-center">
                       <img
                         src={originalImageUrl}
                         alt="Imagem original do exame"
                         className="w-100 rounded border bg-body-tertiary"
                         style={imageAreaStyle}
                       />
-                    </a>
+                    </div>
 
-                    <div className="d-grid gap-2 mt-auto">
-                      <CButton
-                        color="secondary"
-                        variant="outline"
-                        href={originalImageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Abrir imagem original em tamanho maior
-                      </CButton>
-
+                    <div className="d-grid mt-auto">
                       <CButton
                         color="primary"
                         onClick={onOriginalDownload}
@@ -420,10 +290,7 @@ const ExamAiResultCard = ({
                       >
                         {isOriginalDownloading ? (
                           <>
-                            <CSpinner
-                              size="sm"
-                              className="me-2"
-                            />
+                            <CSpinner size="sm" className="me-2" />
                             Baixando...
                           </>
                         ) : (
@@ -433,12 +300,8 @@ const ExamAiResultCard = ({
                     </div>
                   </>
                 ) : (
-                  <CAlert
-                    color="warning"
-                    className="mb-0"
-                  >
-                    {originalImageError ||
-                      'Imagem original não disponível.'}
+                  <CAlert color="warning" className="mb-0">
+                    {originalImageError || 'Imagem original não disponível.'}
                   </CAlert>
                 )}
               </section>
@@ -447,30 +310,17 @@ const ExamAiResultCard = ({
             <CCol lg={6}>
               <hr className="d-lg-none my-0 mb-4" />
 
-              <section
-                aria-labelledby="gradcam-image-title"
-                className="h-100 d-flex flex-column"
-              >
-                <h2
-                  id="gradcam-image-title"
-                  className="h6 mb-3"
-                >
+              <section aria-labelledby="gradcam-image-title" className="h-100 d-flex flex-column">
+                <h2 id="gradcam-image-title" className="h6 mb-3">
                   {mapTitle}
                 </h2>
 
                 {!canViewAiAnalysis ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
-                    Você não possui permissão para acessar o{' '}
-                    {mapName}.
+                  <CAlert color="secondary" className="mb-0">
+                    Você não possui permissão para acessar o {mapName}.
                   </CAlert>
                 ) : !hasGradcam ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
+                  <CAlert color="secondary" className="mb-0">
                     Este exame não possui {mapName} disponível.
                   </CAlert>
                 ) : isGradcamLoading ? (
@@ -480,18 +330,11 @@ const ExamAiResultCard = ({
                   >
                     <CSpinner size="sm" />
 
-                    <span>
-                      Carregando {mapName}...
-                    </span>
+                    <span>Carregando {mapName}...</span>
                   </div>
                 ) : gradcamUrl ? (
                   <>
-                    <a
-                      href={gradcamUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="d-block mb-3 text-center"
-                    >
+                    <div className="mb-3 text-center">
                       <img
                         src={gradcamUrl}
                         alt={
@@ -502,19 +345,9 @@ const ExamAiResultCard = ({
                         className="w-100 rounded border bg-body-tertiary"
                         style={imageAreaStyle}
                       />
-                    </a>
+                    </div>
 
-                    <div className="d-grid gap-2 mt-auto">
-                      <CButton
-                        color="secondary"
-                        variant="outline"
-                        href={gradcamUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Abrir mapa em tamanho maior
-                      </CButton>
-
+                    <div className="d-grid mt-auto">
                       <CButton
                         color="primary"
                         onClick={onGradcamDownload}
@@ -522,10 +355,7 @@ const ExamAiResultCard = ({
                       >
                         {isGradcamDownloading ? (
                           <>
-                            <CSpinner
-                              size="sm"
-                              className="me-2"
-                            />
+                            <CSpinner size="sm" className="me-2" />
                             Baixando...
                           </>
                         ) : (
@@ -535,12 +365,8 @@ const ExamAiResultCard = ({
                     </div>
                   </>
                 ) : (
-                  <CAlert
-                    color="warning"
-                    className="mb-0"
-                  >
-                    {gradcamError ||
-                      `${mapTitle} não disponível.`}
+                  <CAlert color="warning" className="mb-0">
+                    {gradcamError || `${mapTitle} não disponível.`}
                   </CAlert>
                 )}
               </section>
