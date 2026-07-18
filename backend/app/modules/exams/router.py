@@ -158,7 +158,9 @@ def update_exam_route(
     exam_id: int,
     payload: ExamUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:update")),
+    current_user: User = Depends(
+        require_doctor_permission("exams:update")
+    ),
 ):
     """
     Atualiza parcialmente um exame.
@@ -343,7 +345,9 @@ def replace_exam_file_route(
     exam_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:upload")),
+    current_user: User = Depends(
+        require_doctor_permission("exams:upload")
+    ),
 ):
     """
     Substitui arquivo do exame.

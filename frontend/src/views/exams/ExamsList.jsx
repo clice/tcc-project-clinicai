@@ -89,6 +89,8 @@ const ExamsList = () => {
     (permission) => hasPermission(user, permission),
   )
 
+  const canEditExam = roleName === ROLES.DOCTOR && canEdit
+
   const loadExams = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -283,7 +285,7 @@ const ExamsList = () => {
             editTo={`/exams/${exam.id}/edit`}
             isInactive={isCanceled}
             canView={canView}
-            canEdit={canEdit && isPending}
+            canEdit={canEditExam && isPending}
             canUpload={false}
             canDownload={canDownloadCurrentStatus}
             downloadTitle={
@@ -305,7 +307,7 @@ const ExamsList = () => {
   }, [
     canChangeStatus,
     canDownload,
-    canEdit,
+    canEditExam,
     canReadAiAnalysis,
     canUseClinicalExamActions,
     canView,

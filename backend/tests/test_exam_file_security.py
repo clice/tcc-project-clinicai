@@ -423,11 +423,33 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
     exam.status_id = pending.id
     db_session.commit()
 
+    assert_http_error(
+        403,
+        lambda: replace_exam_file(
+            db_session,
+            exam.id,
+            upload(
+                make_png(4, 3),
+                filename="negado.png",
+                content_type="image/png",
+            ),
+            staff,
+        ),
+    )
+    assert old_file.exists()
+
+    doctor = exam.doctor
+    assert doctor is not None
+
     result = replace_exam_file(
         db_session,
         exam.id,
-        upload(make_png(4, 3), filename="novo.png", content_type="image/png"),
-        staff,
+        upload(
+            make_png(4, 3),
+            filename="novo.png",
+            content_type="image/png",
+        ),
+        doctor,
     )
 
     # O caminho físico permanece apenas no modelo interno e não deve fazer

@@ -83,8 +83,10 @@ if (!list.includes('canCancel={canChangeStatus && (isProcessing || isPending)}')
 if (!list.includes('canRestore={canChangeStatus && (isCanceled || isFailed)}')) {
   throw new Error('A ação de restaurar não reflete canceled/failed.')
 }
-if (!list.includes('canEdit={canEdit && isPending}')) {
-  throw new Error('A listagem deve permitir edição somente em pending.')
+if (!list.includes('canEdit={canEditExam && isPending}')) {
+  throw new Error(
+    'A listagem deve permitir edição somente ao médico e em pending.',
+  )
 }
 if (!list.includes('examStatusDisplayLabels[row.original.status_name]')) {
   throw new Error('A listagem não utiliza o catálogo padronizado de status em português.')
@@ -136,14 +138,15 @@ if (
   !form.includes('const defaultDoctorId =') ||
   !form.includes(': defaultClinicId,') ||
   !form.includes(': defaultDoctorId,') ||
-  !form.includes('if (!isAdminMaster) return') ||
-  !form.includes('{isCreateMode && isAdminMaster ? (') ||
-  !form.includes('doctor_id: isDoctor') ||
-  !form.includes('Clínica vinculada ao usuário autenticado.') ||
-  !form.includes('Médico autenticado responsável pelo exame.')
+  !form.includes('clinic_id:') ||
+  !form.includes('patient?.clinic_id') ||
+  !form.includes('doctor_id:') ||
+  !form.includes('patient.doctor_id') ||
+  !form.includes('responsibleDoctorName') ||
+  !form.includes('selectedClinicName')
 ) {
   throw new Error(
-    'O cadastro do exame deve fixar clínica e médico e filtrar os pacientes do médico autenticado.',
+    'O cadastro do exame deve preencher clínica e médico a partir do usuário e do paciente selecionado.',
   )
 }
 
@@ -321,39 +324,19 @@ if (
 }
 
 if (
-  !form.includes("form.status_name === 'pending'") ||
+  !form.includes('const examDataViewContent = (') ||
   !form.includes('const pendingExamCard = (') ||
-  !form.includes('<CCol lg={8}>') ||
-  !form.includes('<CCol lg={4}>') ||
-  !form.includes('Paciente') ||
-  !form.includes('Data do exame') ||
-  !form.includes('Tipo de exame') ||
-  !form.includes('Status') ||
-  !form.includes('Clínica') ||
-  !form.includes('Médico responsável') ||
-  !form.includes('Indicação clínica') ||
-  !form.includes('Observações') ||
-  !form.includes('className="g-4 align-items-start"') ||
-  !form.includes("height: 'auto'") ||
-  form.includes('const pendingImageLoadingStyle') ||
-  form.includes("height: '360px'") ||
-  form.includes('className="g-4 align-items-stretch"') ||
-  form.includes('<CCol lg={4} className="d-flex">') ||
-  form.includes('className="d-flex flex-column w-100"') ||
-  form.includes('className="w-100 rounded border bg-body-tertiary"') ||
-  form.includes('className="d-grid mt-auto"') ||
   form.includes('isExamDataOpen') ||
-  !form.includes('collapsible={isReadOnly}') ||
-  !form.includes('defaultOpen={!isReadOnly}') ||
+  !form.includes('<ExamHistoryCard') ||
+  !form.includes('defaultOpen={false}') ||
   !history.includes('collapsible = false') ||
   !history.includes('defaultOpen = true') ||
   !history.includes('const isContentOpen = !collapsible || isOpen') ||
   !history.includes('aria-expanded={isOpen}') ||
-  !history.includes('{isContentOpen && (') ||
-  !history.includes('className="mt-4 mb-4"')
+  !history.includes('{isContentOpen && (')
 ) {
   throw new Error(
-    'Os dados devem usar visualização compacta e somente o histórico permanece recolhível.',
+    'As telas devem manter os dados visíveis e somente o histórico recolhível.',
   )
 }
 
@@ -452,7 +435,8 @@ if (
 }
 
 if (
-  !form.includes('Dados Clínicos e Administrativos') ||
+  !form.includes("'Dados Cadastrais do Exame'") ||
+  !form.includes("'Editar Dados do Exame'") ||
   !form.includes('Observações') ||
   !form.includes('Achados da revisão médica *') ||
   !form.includes('Conclusão médica *')

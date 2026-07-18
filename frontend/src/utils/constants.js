@@ -56,12 +56,18 @@ export const examStatusDisplayLabels = {
 
 export const examTypeLabels = {
   colonoscopy: 'Colonoscopia',
-  endoscopy: 'Endoscopia',
+  endoscopy: 'Endoscopia digestiva alta',
 }
 
 export const examTypeOptions = [
-  { value: 'endoscopy', label: 'Endoscopia' },
-  { value: 'colonoscopy', label: 'Colonoscopia' },
+  {
+    value: 'endoscopy',
+    label: 'Endoscopia digestiva alta',
+  },
+  {
+    value: 'colonoscopy',
+    label: 'Colonoscopia',
+  },
 ]
 
 // AI ANALYSIS

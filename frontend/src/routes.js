@@ -156,7 +156,7 @@ export const routes = [
     path: '/exams/:id/edit',
     name: 'Editar Exame',
     element: EditExam,
-    roles: ['admin_master', 'doctor'],
+    roles: ['doctor'],
     permission: 'exams:update',
   },
   {

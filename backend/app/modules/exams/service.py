@@ -38,6 +38,7 @@ from app.modules.audit_logs.service import create_audit_log, list_entity_audit_l
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.exams.file_storage import (
+    copy_exam_file_to_storage,
     delete_exam_file_safely,
     resolve_safe_exam_file_path,
     serialize_exam_file_path,
@@ -414,6 +415,8 @@ def list_exam_form_options(
             {
                 "id": patient.id,
                 "name": patient.name,
+                "cpf": patient.cpf,
+                "birth_date": patient.birth_date,
                 "clinic_id": patient.clinic_id,
                 "doctor_id": patient.doctor_id,
                 "status_name": patient.status.name if patient.status else None,
@@ -866,48 +869,242 @@ def update_exam(
     payload: ExamUpdate,
     current_user: User,
 ) -> dict:
-    """Atualiza metadados somente antes da revisão clínica."""
+    """
+    Atualiza exame pendente exclusivamente pelo médico responsável.
 
-    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
-    validate_user_can_access_exam(current_user=current_user, exam=exam)
-    current_status = exam.status.name if exam.status else None
-    ensure_exam_is_editable(current_status)
+    Quando o paciente é corrigido, a imagem existente é copiada para
+    a hierarquia do novo paciente antes da confirmação no banco. O
+    arquivo anterior só é removido depois do commit.
+    """
 
-    update_data = model_dump_update(payload)
+    if (
+        not current_user.role
+        or current_user.role.name
+        != RoleName.DOCTOR.value
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Apenas usuários com perfil médico "
+                "podem editar exames."
+            ),
+        )
+
+    exam = get_exam_model_for_update(
+        db=db,
+        exam_id=exam_id,
+    )
+
+    validate_user_can_access_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    current_status = (
+        exam.status.name
+        if exam.status
+        else None
+    )
+
+    ensure_exam_is_editable(
+        current_status
+    )
+
+    update_data = model_dump_update(
+        payload
+    )
+
     if not update_data:
         db.rollback()
-        return build_exam_response(exam, current_user=current_user)
 
-    validate_user_can_access_clinic(current_user=current_user, clinic_id=exam.clinic_id)
-    old_data = {
-        "exam_type": exam.exam_type,
-        "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
-        "title": exam.title,
-        "description": exam.description,
-        "clinical_indication": exam.clinical_indication,
-    }
-    apply_update_data(exam, update_data)
-    audit_new_data = {
-        "exam_type": exam.exam_type,
-        "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
-        "title": exam.title,
-        "description": exam.description,
-        "clinical_indication": exam.clinical_indication,
-    }
-    create_audit_log(
-        db=db,
-        user_id=current_user.id,
+        return build_exam_response(
+            exam,
+            current_user=current_user,
+        )
+
+    validate_user_can_access_clinic(
+        current_user=current_user,
         clinic_id=exam.clinic_id,
-        action=AuditAction.UPDATE,
-        entity=AuditEntity.EXAM,
-        entity_id=exam.id,
-        description="Dados básicos do exame atualizados.",
-        old_data=old_data,
-        new_data=audit_new_data,
     )
-    db.commit()
-    exam = get_exam_model_by_id(db=db, exam_id=exam.id)
-    return build_exam_response(exam, current_user=current_user)
+
+    target_patient_id = int(
+        update_data.get(
+            "patient_id",
+            exam.patient_id,
+        )
+    )
+
+    patient_changed = (
+        target_patient_id
+        != exam.patient_id
+    )
+
+    if patient_changed:
+        target_patient = (
+            validate_patient_belongs_to_clinic(
+                db=db,
+                patient_id=target_patient_id,
+                clinic_id=exam.clinic_id,
+            )
+        )
+
+        if (
+            target_patient.doctor_id
+            != current_user.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "O paciente selecionado não está "
+                    "sob responsabilidade do médico autenticado."
+                ),
+            )
+
+        if (
+            exam.doctor_id
+            != current_user.id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Somente o médico responsável "
+                    "pode editar este exame."
+                ),
+            )
+
+        if not exam.file_path:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Não é possível alterar o paciente "
+                    "de um exame sem imagem vinculada."
+                ),
+            )
+
+    old_data = {
+        "patient_id": exam.patient_id,
+        "exam_type": exam.exam_type,
+        "exam_date": (
+            exam.exam_date.isoformat()
+            if exam.exam_date
+            else None
+        ),
+        "title": exam.title,
+        "description": exam.description,
+        "clinical_indication":
+            exam.clinical_indication,
+    }
+
+    old_file_path = exam.file_path
+    relocated_file_path = None
+    relocated_file_reference = None
+
+    try:
+        if patient_changed:
+            relocated_file_path = (
+                copy_exam_file_to_storage(
+                    exam.file_path,
+                    clinic_id=exam.clinic_id,
+                    patient_id=target_patient_id,
+                    exam_id=exam.id,
+                )
+            )
+
+            relocated_file_reference = (
+                serialize_exam_file_path(
+                    relocated_file_path
+                )
+            )
+
+        apply_update_data(
+            exam,
+            update_data,
+        )
+
+        if relocated_file_path is not None:
+            exam.file_path = (
+                relocated_file_reference
+            )
+
+            exam.file_name = (
+                relocated_file_path.name
+            )
+
+        audit_new_data = {
+            "patient_id": exam.patient_id,
+            "exam_type": exam.exam_type,
+            "exam_date": (
+                exam.exam_date.isoformat()
+                if exam.exam_date
+                else None
+            ),
+            "title": exam.title,
+            "description": exam.description,
+            "clinical_indication":
+                exam.clinical_indication,
+            "image_relocated":
+                patient_changed,
+        }
+
+        create_audit_log(
+            db=db,
+            user_id=current_user.id,
+            clinic_id=exam.clinic_id,
+            action=AuditAction.UPDATE,
+            entity=AuditEntity.EXAM,
+            entity_id=exam.id,
+            description=(
+                "Dados do exame atualizados "
+                "pelo médico responsável."
+            ),
+            old_data=old_data,
+            new_data=audit_new_data,
+        )
+
+        db.commit()
+
+    except HTTPException:
+        db.rollback()
+
+        if relocated_file_path is not None:
+            delete_exam_file_safely(
+                str(relocated_file_path)
+            )
+
+        raise
+
+    except Exception as exc:
+        db.rollback()
+
+        if relocated_file_path is not None:
+            delete_exam_file_safely(
+                str(relocated_file_path)
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao atualizar exame.",
+        ) from exc
+
+    if (
+        patient_changed
+        and old_file_path
+        and old_file_path
+        != relocated_file_reference
+    ):
+        delete_exam_file_safely(
+            old_file_path
+        )
+
+    exam = get_exam_model_by_id(
+        db=db,
+        exam_id=exam.id,
+    )
+
+    return build_exam_response(
+        exam,
+        current_user=current_user,
+    )
 
 
 def cancel_exam(
@@ -1689,9 +1886,25 @@ def replace_exam_file(
     file: UploadFile,
     current_user: User,
 ) -> dict:
-    """Substitui imagem em pending/failed e mantém o exame pronto para análise."""
+    """Substitui a imagem de um exame pendente pelo médico responsável."""
 
-    exam = get_exam_model_for_update(db=db, exam_id=exam_id)
+    if (
+        not current_user.role
+        or current_user.role.name
+        != RoleName.DOCTOR.value
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Apenas usuários com perfil médico "
+                "podem substituir a imagem do exame."
+            ),
+        )
+
+    exam = get_exam_model_for_update(
+        db=db,
+        exam_id=exam_id,
+    )
     validate_user_can_access_exam(current_user=current_user, exam=exam)
     current_status = exam.status.name if exam.status else None
     target_name = get_transition_target(current_status, ExamTransitionAction.REPLACE_FILE)

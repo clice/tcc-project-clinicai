@@ -107,6 +107,22 @@ export const examService = {
   },
 
   /**
+   * Substitui a imagem de um exame pendente.
+   */
+  replaceFile: async (id, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return executeExamMutation(
+      api.post(`/exams/${id}/replace-file`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+    )
+  },
+
+  /**
    * Atualiza status para cancelado.
    */
   cancel: async (id) => {

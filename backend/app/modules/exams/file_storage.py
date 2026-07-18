@@ -570,6 +570,71 @@ def store_validated_exam_file(
     raise _http_error(500, "Não foi possível gerar um nome físico exclusivo para o arquivo.") from last_error
 
 
+def copy_exam_file_to_storage(
+    file_path: str,
+    *,
+    clinic_id: int,
+    patient_id: int,
+    exam_id: int,
+) -> Path:
+    """
+    Copia uma imagem já validada para a hierarquia de outro paciente.
+
+    O arquivo de origem não é removido aqui. A remoção ocorre somente
+    depois que a transação do banco confirma a nova referência.
+    """
+
+    source_path = resolve_safe_exam_file_path(
+        file_path
+    )
+
+    if (
+        not source_path.exists()
+        or not source_path.is_file()
+    ):
+        raise _http_error(
+            404,
+            "A imagem atual do exame não foi encontrada.",
+        )
+
+    try:
+        data = source_path.read_bytes()
+    except OSError as exc:
+        raise _http_error(
+            500,
+            "Não foi possível ler a imagem atual do exame.",
+        ) from exc
+
+    if len(data) > MAX_FILE_SIZE:
+        raise _http_error(
+            413,
+            "A imagem atual excede o limite permitido.",
+        )
+
+    (
+        mime_type,
+        extension,
+        width,
+        height,
+    ) = _detect_and_parse(data)
+
+    validated_image = ValidatedExamImage(
+        data=data,
+        mime_type=mime_type,
+        extension=extension,
+        width=width,
+        height=height,
+        sha256=hashlib.sha256(data).hexdigest(),
+    )
+
+    return store_validated_exam_file(
+        validated_image,
+        clinic_id=clinic_id,
+        patient_id=patient_id,
+        exam_id=exam_id,
+    )
+
+
 def resolve_safe_exam_file_path(file_path: str) -> Path:
     """Resolve arquivos novos relativos e caminhos absolutos legados."""
 

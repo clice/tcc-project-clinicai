@@ -51,8 +51,10 @@ class ExamCreate(ExamBase):
 
 class ExamUpdate(StrictRequestModel):
     """
-    Schema usado para atualização parcial de exame.
+    Schema usado para atualização parcial de exame pendente.
     """
+
+    patient_id: int | None = Field(default=None, gt=0)
 
     exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None

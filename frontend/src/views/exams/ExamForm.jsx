@@ -40,8 +40,13 @@ import {
   statusColors,
 } from 'src/utils/constants'
 import { buildGradcamDownloadName, buildOriginalDownloadName } from 'src/utils/examDownloadNames'
+import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
-import { formatDateBR, formatDateTimeBR } from 'src/utils/formatters'
+import {
+  formatCpfBR,
+  formatDateBR,
+  formatDateTimeBR,
+} from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const allowedImageTypes = ['image/jpeg', 'image/png']
@@ -111,6 +116,10 @@ const mergeExamSnapshot = (current, examData) => ({
   ai_analysis_status: examData.ai_analysis_status ?? 'not_processed',
 })
 
+const buildPatientOptionLabel = (patient) =>
+  patient?.name ||
+  'Paciente sem nome'
+
 const resolveAiStatus = (form, analysis) => {
   if (analysis?.status_name) return analysis.status_name
   if (form.ai_analysis_status !== 'not_processed') return form.ai_analysis_status
@@ -130,6 +139,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [form, setForm] = useState(emptyExam)
   const [clinics, setClinics] = useState([])
   const [patients, setPatients] = useState([])
+  const [patientSearchValue, setPatientSearchValue] = useState('')
   const [doctors, setDoctors] = useState([])
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [gradcamUrl, setGradcamUrl] = useState(null)
@@ -141,6 +151,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [isOriginalImageLoading, setIsOriginalImageLoading] = useState(false)
   const [isOriginalDownloading, setIsOriginalDownloading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
@@ -170,6 +181,7 @@ const ExamForm = ({ mode = 'create' }) => {
   // revisar um exame que já está aguardando revisão médica — outros status
   // (processando, concluído, falhou, cancelado) não admitem essa ação.
   const canAnalyze =
+    isReadOnly &&
     hasPermission(user, PERMISSIONS.AI_ANALYSIS_CREATE) &&
     !isCreateMode &&
     form.status_name === 'pending' &&
@@ -213,31 +225,87 @@ const ExamForm = ({ mode = 'create' }) => {
     return doctor.status_name === 'active' ? String(doctor.id) : ''
   }, [doctors, isDoctor])
 
-  const availablePatients = useMemo(() => {
-    if (!form.clinic_id) return []
+  const availablePatients = useMemo(
+    () =>
+      patients.filter((patient) => {
+        const isSelected =
+          String(patient.id) ===
+          String(form.patient_id)
 
-    return patients.filter(
-      (patient) =>
-        String(patient.clinic_id) === String(form.clinic_id) &&
-        patient.status_name === 'active' &&
-        (!isDoctor || String(patient.doctor_id) === authenticatedDoctorId),
-    )
-  }, [authenticatedDoctorId, form.clinic_id, isDoctor, patients])
+        const isAvailable =
+          patient.status_name === 'active' ||
+          isSelected
+
+        const belongsToDoctor =
+          !isDoctor ||
+          String(patient.doctor_id) ===
+            authenticatedDoctorId
+
+        return (
+          isAvailable &&
+          belongsToDoctor
+        )
+      }),
+    [
+      authenticatedDoctorId,
+      form.patient_id,
+      isDoctor,
+      patients,
+    ],
+  )
 
   const selectedClinicName = useMemo(() => {
     const clinic = clinics.find((item) => String(item.id) === String(form.clinic_id))
     return clinic?.name || '-'
   }, [clinics, form.clinic_id])
 
-  const selectedPatientName = useMemo(() => {
-    const patient = patients.find((item) => String(item.id) === String(form.patient_id))
-    return patient?.name || '-'
-  }, [patients, form.patient_id])
+  const selectedPatient = useMemo(
+    () =>
+      patients.find(
+        (item) =>
+          String(item.id) ===
+          String(form.patient_id),
+      ) || null,
+    [
+      patients,
+      form.patient_id,
+    ],
+  )
+
+  const selectedPatientName =
+    selectedPatient?.name || '-'
+
+  const selectedPatientCpf =
+    formatCpfBR(selectedPatient?.cpf) || '-'
+
+  const selectedPatientAge =
+    calculateAge(selectedPatient?.birth_date)
+
+  useEffect(() => {
+    setPatientSearchValue(
+      selectedPatient
+        ? buildPatientOptionLabel(
+            selectedPatient,
+          )
+        : '',
+    )
+  }, [selectedPatient])
 
   const selectedDoctorName = useMemo(() => {
-    const doctor = doctors.find((item) => String(item.id) === String(form.doctor_id))
+    const doctor = doctors.find(
+      (item) =>
+        String(item.id) ===
+        String(form.doctor_id),
+    )
+
     return doctor?.name || '-'
   }, [doctors, form.doctor_id])
+
+  const responsibleDoctorName =
+    isDoctor
+      ? user?.name ||
+        selectedDoctorName
+      : selectedDoctorName
 
   useEffect(() => {
     const loadData = async () => {
@@ -477,6 +545,27 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [canDownloadExamFile, id])
 
+  useEffect(() => {
+    if (!selectedFile) {
+      setSelectedFilePreviewUrl(null)
+      return undefined
+    }
+
+    const objectUrl = URL.createObjectURL(
+      selectedFile,
+    )
+
+    setSelectedFilePreviewUrl(
+      objectUrl,
+    )
+
+    return () => {
+      URL.revokeObjectURL(
+        objectUrl,
+      )
+    }
+  }, [selectedFile])
+
   const updateField = (field, value) => {
     setForm((current) => ({
       ...current,
@@ -496,17 +585,64 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const handlePatientChange = (patientId) => {
-    const patient = patients.find((item) => String(item.id) === String(patientId))
+    const patient = patients.find(
+      (item) =>
+        String(item.id) ===
+        String(patientId),
+    )
 
     setForm((current) => ({
       ...current,
-      patient_id: patientId,
-      doctor_id: isDoctor
-        ? authenticatedDoctorId
-        : patient?.doctor_id
-          ? String(patient.doctor_id)
+      patient_id:
+        patient
+          ? String(patient.id)
           : '',
+      clinic_id:
+        patient?.clinic_id
+          ? String(patient.clinic_id)
+          : isDoctor
+            ? current.clinic_id
+            : '',
+      doctor_id:
+        patient
+          ? isDoctor
+            ? authenticatedDoctorId
+            : patient.doctor_id
+              ? String(patient.doctor_id)
+              : ''
+          : isDoctor
+            ? authenticatedDoctorId
+            : '',
+      patient_birth_date:
+        patient?.birth_date || '',
     }))
+  }
+
+  const handlePatientSearchChange = (
+    event,
+  ) => {
+    const value = event.target.value
+
+    setPatientSearchValue(value)
+
+    const normalizedValue =
+      value
+        .trim()
+        .toLocaleLowerCase('pt-BR')
+
+    const matchingPatient =
+      availablePatients.find(
+        (patient) =>
+          buildPatientOptionLabel(patient)
+            .toLocaleLowerCase('pt-BR') ===
+          normalizedValue,
+      )
+
+    handlePatientChange(
+      matchingPatient
+        ? String(matchingPatient.id)
+        : '',
+    )
   }
 
   const handleFileChange = (event) => {
@@ -516,8 +652,12 @@ const ExamForm = ({ mode = 'create' }) => {
 
     setForm((current) => ({
       ...current,
-      file_name: file?.name || '',
-      file_mime_type: file?.type || '',
+      file_name:
+        file?.name ||
+        (isCreateMode ? '' : current.file_name),
+      file_mime_type:
+        file?.type ||
+        (isCreateMode ? '' : current.file_mime_type),
     }))
   }
 
@@ -646,6 +786,7 @@ const ExamForm = ({ mode = 'create' }) => {
   })
 
   const buildUpdatePayload = () => ({
+    patient_id: Number(form.patient_id),
     exam_type: form.exam_type,
     exam_date: form.exam_date || null,
 
@@ -679,6 +820,23 @@ const ExamForm = ({ mode = 'create' }) => {
         const payload = buildUpdatePayload()
 
         await examService.update(id, payload)
+
+        if (selectedFile) {
+          try {
+            await examService.replaceFile(
+              id,
+              selectedFile,
+            )
+          } catch (imageError) {
+            showError(
+              getErrorMessage(
+                imageError,
+                'Os dados foram atualizados, mas não foi possível substituir a imagem do exame.',
+              ),
+            )
+            return
+          }
+        }
       }
 
       showSuccess('Exame salvo com sucesso.')
@@ -774,10 +932,12 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const examDataCard = (
-    <CCard>
+    <CCard className="mb-4">
       <CCardHeader>
         <strong>
-          {isCreateMode ? 'Dados Cadastrais do Exame' : 'Dados Clínicos e Administrativos'}
+          {isCreateMode
+            ? 'Dados Cadastrais do Exame'
+            : 'Editar Dados do Exame'}
         </strong>
       </CCardHeader>
 
@@ -785,187 +945,283 @@ const ExamForm = ({ mode = 'create' }) => {
         <CForm onSubmit={handleSubmit}>
           <CRow className="g-3">
             <CCol md={6}>
-              <CFormLabel>Clínica</CFormLabel>
+              <div className="text-body-secondary small mb-1">
+                Clínica
+              </div>
 
-              {isCreateMode && isAdminMaster ? (
-                <CFormSelect
-                  value={form.clinic_id}
-                  onChange={(event) => handleClinicChange(event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-
-                  {activeClinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </CFormSelect>
-              ) : (
-                <CFormInput value={selectedClinicName} disabled />
-              )}
-
-              {isCreateMode && !isAdminMaster && (
-                <div className="text-body-secondary small mt-1">
-                  Clínica vinculada ao usuário autenticado.
-                </div>
-              )}
-
-              {!isCreateMode && (
-                <div className="text-body-secondary small mt-1">
-                  A clínica não pode ser alterada após o cadastro do exame.
-                </div>
-              )}
-            </CCol>
-
-            <CCol md={6}>
-              <CFormLabel>Paciente</CFormLabel>
-
-              {isCreateMode ? (
-                <CFormSelect
-                  value={form.patient_id}
-                  disabled={!form.clinic_id}
-                  onChange={(event) => handlePatientChange(event.target.value)}
-                  required
-                >
-                  <option value="">
-                    {form.clinic_id ? 'Selecione...' : 'Selecione uma clínica primeiro'}
-                  </option>
-
-                  {availablePatients.map((patient) => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.name}
-                    </option>
-                  ))}
-                </CFormSelect>
-              ) : (
-                <CFormInput value={selectedPatientName} disabled />
-              )}
-
-              {!isCreateMode && (
-                <div className="text-body-secondary small mt-1">
-                  O paciente não pode ser alterado após o cadastro do exame.
-                </div>
-              )}
-            </CCol>
-
-            <CCol md={6}>
-              <CFormLabel>Médico responsável</CFormLabel>
-              <CFormInput value={selectedDoctorName} disabled />
-              <div className="text-body-secondary small mt-1">
-                {isCreateMode && isDoctor
-                  ? 'Médico autenticado responsável pelo exame.'
-                  : 'O médico é definido automaticamente pelo paciente selecionado.'}
+              <div className="fw-semibold">
+                {selectedClinicName}
               </div>
             </CCol>
 
             <CCol md={6}>
-              <CFormLabel>Status</CFormLabel>
+              <div className="text-body-secondary small mb-1">
+                Médico responsável
+              </div>
+
+              <div className="fw-semibold">
+                {responsibleDoctorName}
+              </div>
+            </CCol>
+
+            <CCol md={8}>
+              <CFormLabel
+                htmlFor="exam-patient-search"
+              >
+                Paciente
+              </CFormLabel>
+
               <CFormInput
-                value={
-                  examStatusDisplayLabels[form.status_name] ||
-                  form.status_display_name ||
-                  (isCreateMode ? 'Pendente após o cadastro' : '-')
+                id="exam-patient-search"
+                type="text"
+                list="exam-patient-options"
+                value={patientSearchValue}
+                placeholder="Digite ou selecione o paciente"
+                autoComplete="off"
+                aria-autocomplete="list"
+                onChange={
+                  handlePatientSearchChange
                 }
-                disabled
+                required
               />
-              <div className="text-body-secondary small mt-1">
-                O status é controlado automaticamente pelo fluxo do sistema.
+
+              <datalist id="exam-patient-options">
+                {availablePatients.map(
+                  (patient) => (
+                    <option
+                      key={patient.id}
+                      value={
+                        buildPatientOptionLabel(
+                          patient,
+                        )
+                      }
+                    />
+                  ),
+                )}
+              </datalist>
+            </CCol>
+
+            <CCol md={2}>
+              <div className="text-body-secondary small mb-1">
+                CPF
+              </div>
+
+              <div className="fw-semibold pt-2">
+                {selectedPatientCpf}
               </div>
             </CCol>
 
-            <CCol md={12}>
-              <CFormLabel>Título</CFormLabel>
+            <CCol md={2}>
+              <div className="text-body-secondary small mb-1">
+                Idade
+              </div>
+
+              <div className="fw-semibold pt-2">
+                {selectedPatientAge === '-'
+                  ? '-'
+                  : `${selectedPatientAge} anos`}
+              </div>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>
+                Título
+              </CFormLabel>
+
               <CFormInput
                 value={form.title}
-                disabled={isReadOnly}
-                placeholder="Identificador do exame. Ex: Colonoscopia - rastreamento"
-                onChange={(event) => updateField('title', event.target.value)}
+                placeholder="Ex: Colonoscopia de rastreamento"
+                onChange={(event) =>
+                  updateField(
+                    'title',
+                    event.target.value,
+                  )
+                }
                 required
               />
             </CCol>
 
-            <CCol md={6}>
-              <CFormLabel>Tipo de exame</CFormLabel>
+            <CCol md={4}>
+              <CFormLabel>
+                Tipo de exame
+              </CFormLabel>
+
               <CFormSelect
                 value={form.exam_type}
-                disabled={isReadOnly}
-                onChange={(event) => updateField('exam_type', event.target.value)}
+                onChange={(event) =>
+                  updateField(
+                    'exam_type',
+                    event.target.value,
+                  )
+                }
                 required
               >
-                <option value="">Selecione...</option>
+                <option value="">
+                  Selecione...
+                </option>
 
-                {examTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                {examTypeOptions.map(
+                  (option) => (
+                    <option
+                      key={option.value}
+                      value={option.value}
+                    >
+                      {option.label}
+                    </option>
+                  ),
+                )}
               </CFormSelect>
             </CCol>
 
+            <CCol md={2}>
+              <CFormLabel>
+                Data do exame
+              </CFormLabel>
+
+              <CFormInput
+                type="date"
+                value={form.exam_date}
+                onChange={(event) =>
+                  updateField(
+                    'exam_date',
+                    event.target.value,
+                  )
+                }
+              />
+            </CCol>
+
             <CCol md={6}>
-              <CFormLabel>Data do exame</CFormLabel>
+              <div className="mb-3">
+                <CFormLabel>
+                  Indicação clínica
+                </CFormLabel>
 
-              {isReadOnly ? (
-                <CFormInput value={formatDateBR(form.exam_date)} disabled />
-              ) : (
-                <CFormInput
-                  type="date"
-                  value={form.exam_date}
-                  onChange={(event) => updateField('exam_date', event.target.value)}
+                <CFormTextarea
+                  rows={5}
+                  value={
+                    form.clinical_indication
+                  }
+                  placeholder="Motivo pelo qual o exame foi solicitado ou realizado."
+                  onChange={(event) =>
+                    updateField(
+                      'clinical_indication',
+                      event.target.value,
+                    )
+                  }
                 />
-              )}
-            </CCol>
+              </div>
 
-            <CCol md={12}>
-              <CFormLabel>Indicação clínica</CFormLabel>
-              <CFormTextarea
-                rows={2}
-                value={form.clinical_indication}
-                disabled={isReadOnly}
-                placeholder="Motivo pelo qual o exame foi solicitado ou realizado. Ex: dor abdominal, rastreamento, refluxo persistente..."
-                onChange={(event) => updateField('clinical_indication', event.target.value)}
-              />
-            </CCol>
+              <div>
+                <CFormLabel>
+                  Observações
+                </CFormLabel>
 
-            <CCol md={12}>
-              <CFormLabel>Observações</CFormLabel>
-              <CFormTextarea
-                rows={2}
-                value={form.description}
-                disabled={isReadOnly}
-                placeholder="Informações adicionais relacionadas ao cadastro do exame. Este campo não substitui os achados nem a conclusão médica."
-                onChange={(event) => updateField('description', event.target.value)}
-              />
-            </CCol>
-
-            {isCreateMode && (
-              <CCol md={12}>
-                <CFormLabel>Imagem do exame</CFormLabel>
-                <CFormInput
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={handleFileChange}
-                  required
+                <CFormTextarea
+                  rows={5}
+                  value={form.description}
+                  placeholder="Informações adicionais relacionadas ao cadastro do exame."
+                  onChange={(event) =>
+                    updateField(
+                      'description',
+                      event.target.value,
+                    )
+                  }
                 />
-                <div className="text-body-secondary small mt-2">
-                  Envie uma imagem em formato JPG, JPEG ou PNG.
+              </div>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>
+                Imagem do exame
+              </CFormLabel>
+
+              <CFormInput
+                type="file"
+                accept="image/jpeg,image/png"
+                onChange={handleFileChange}
+                required={isCreateMode}
+              />
+
+              <div className="text-body-secondary small mt-2">
+                {isEditMode
+                  ? 'Selecione uma nova imagem somente para substituir a imagem atual.'
+                  : 'Envie uma imagem em formato JPG, JPEG ou PNG.'}
+              </div>
+
+              <div className="mt-3">
+                <div className="text-body-secondary small mb-2">
+                  Miniatura da imagem
                 </div>
-              </CCol>
-            )}
+
+                {selectedFilePreviewUrl ||
+                (isEditMode &&
+                  originalImageUrl) ? (
+                  <>
+                    <img
+                      src={
+                        selectedFilePreviewUrl ||
+                        originalImageUrl
+                      }
+                      alt={
+                        selectedFilePreviewUrl
+                          ? 'Miniatura da imagem selecionada'
+                          : 'Miniatura da imagem atual do exame'
+                      }
+                      className="w-100 rounded border bg-body-tertiary"
+                      style={{
+                        display: 'block',
+                        maxHeight: '360px',
+                        objectFit: 'contain',
+                      }}
+                    />
+
+                    <div className="text-body-secondary small mt-2">
+                      {selectedFilePreviewUrl
+                        ? 'Prévia da imagem que será enviada.'
+                        : 'Imagem atualmente vinculada ao exame.'}
+                    </div>
+                  </>
+                ) : isEditMode &&
+                  isOriginalImageLoading ? (
+                  <div className="d-flex align-items-center justify-content-center gap-2 py-4 text-body-secondary">
+                    <CSpinner size="sm" />
+
+                    <span>
+                      Carregando imagem...
+                    </span>
+                  </div>
+                ) : (
+                  <div className="rounded border bg-body-tertiary text-body-secondary text-center py-5 px-3">
+                    {isEditMode
+                      ? originalImageError ||
+                        'Imagem atual não disponível.'
+                      : 'Selecione uma imagem para visualizar a miniatura.'}
+                  </div>
+                )}
+              </div>
+            </CCol>
           </CRow>
 
-          {!isReadOnly && (
-            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-              <CButton color="primary" type="submit" disabled={isSaving}>
-                {isSaving ? 'Salvando...' : 'Salvar'}
-              </CButton>
+          <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+            <CButton
+              color="primary"
+              type="submit"
+              disabled={isSaving}
+            >
+              {isSaving
+                ? 'Salvando...'
+                : 'Salvar'}
+            </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/exams">
-                Cancelar
-              </CButton>
-            </div>
-          )}
+            <CButton
+              color="secondary"
+              variant="outline"
+              as={Link}
+              to="/exams"
+            >
+              Cancelar
+            </CButton>
+          </div>
         </CForm>
       </CCardBody>
     </CCard>
@@ -1107,7 +1363,9 @@ const ExamForm = ({ mode = 'create' }) => {
           <p className="text-body-secondary mb-0">
             {isCreateMode
               ? 'Cadastre os dados e a imagem que serão vinculados ao exame.'
-              : 'Consulte os dados do exame e acompanhe seu fluxo de análise e revisão.'}
+              : isEditMode
+                ? 'Corrija os dados cadastrais e, quando necessário, substitua a imagem do exame pendente.'
+                : 'Consulte os dados do exame e acompanhe seu fluxo de análise e revisão.'}
           </p>
         </div>
 
@@ -1134,6 +1392,21 @@ const ExamForm = ({ mode = 'create' }) => {
       {isPendingView ? (
         <>
           {pendingExamCard}
+
+          <ExamHistoryCard
+            examId={id}
+            refreshKey={historyRefreshKey}
+            collapsible
+            defaultOpen={false}
+          />
+        </>
+      ) : isEditMode ? (
+        <>
+          <CRow className="g-4">
+            <CCol lg={12}>
+              {examDataCard}
+            </CCol>
+          </CRow>
 
           <ExamHistoryCard
             examId={id}
