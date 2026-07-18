@@ -155,12 +155,12 @@ const StatusForm = ({ mode = 'view' }) => {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
               <CCol md={4}>
-                <CFormLabel>Nome Técnico</CFormLabel>
+                <CFormLabel>Nome técnico</CFormLabel>
                 <CFormInput value={form.name} disabled />
               </CCol>
 
               <CCol md={4}>
-                <CFormLabel>Nome de Exibição</CFormLabel>
+                <CFormLabel>Nome de exibição</CFormLabel>
                 <CFormInput
                   value={form.display_name}
                   disabled={isReadOnly}
@@ -190,15 +190,24 @@ const StatusForm = ({ mode = 'view' }) => {
             </CRow>
 
             {!isReadOnly && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
+              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+                <CButton
+                  color="primary"
+                  type="submit"
+                  disabled={isSaving}
+                >
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-
-                <CButton color="secondary" variant="outline" as={Link} to="/statuses">
+  
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  as={Link}
+                  to="/exams"
+                >
                   Cancelar
                 </CButton>
-              </CButtonGroup>
+              </div>
             )}
           </CForm>
         </CCardBody>

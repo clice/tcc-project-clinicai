@@ -182,7 +182,7 @@ const PatientsList = () => {
         )}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
@@ -190,14 +190,14 @@ const PatientsList = () => {
             </div>
           ) : (
             <>
-              <CFormInput
+              {/* <CFormInput
                 className="mb-3"
                 type="search"
                 value={searchTerm}
                 placeholder="Buscar por paciente, CPF, médico ou clínica"
                 aria-label="Buscar pacientes"
                 onChange={(event) => setSearchTerm(event.target.value)}
-              />
+              /> */}
               <AppTabs
                 tabs={patientTabs}
                 counts={tabCounts}

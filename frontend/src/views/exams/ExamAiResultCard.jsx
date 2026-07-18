@@ -19,9 +19,9 @@ import {
 
 const modelDisplayNames = {
   ensemble_stacking:
-    'ClinicAI Gastrointestinal — Ensemble Stacking',
+    'ClinicAI ES Gastrointestinal',
   clinicai_stacking:
-    'ClinicAI Gastrointestinal — Ensemble Stacking',
+    'ClinicAI ES Gastrointestinal',
 }
 
 const getModelDisplayName = (modelName) =>

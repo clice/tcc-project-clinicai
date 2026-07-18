@@ -249,7 +249,7 @@ const RoleForm = ({ mode = 'view' }) => {
 
                 {isAdminMasterRole && (
                   <div className="alert alert-info small mb-3">
-                    Acesso total fixo — o Administrador Master tem acesso irrestrito ao sistema por
+                    <b>Acesso total:</b> o Administrador Master tem acesso irrestrito ao sistema por
                     padrão. Esta matriz é somente leitura porque desmarcar itens aqui não reduz o
                     acesso efetivo desse perfil.
                   </div>
@@ -290,15 +290,24 @@ const RoleForm = ({ mode = 'view' }) => {
             </CRow>
 
             {!isReadOnly && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
+              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+                <CButton
+                  color="primary"
+                  type="submit"
+                  disabled={isSaving}
+                >
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-
-                <CButton color="secondary" variant="outline" as={Link} to="/roles">
+  
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  as={Link}
+                  to="/exams"
+                >
                   Cancelar
                 </CButton>
-              </CButtonGroup>
+              </div>
             )}
           </CForm>
         </CCardBody>

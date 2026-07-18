@@ -83,7 +83,7 @@ const StatusesList = () => {
             continuam editáveis (nome de exibição e descrição). */}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 

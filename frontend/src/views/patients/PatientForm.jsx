@@ -517,24 +517,22 @@ const PatientForm = ({ mode = 'create' }) => {
           <p className="text-body-secondary mb-0">Cadastro clínico e administrativo do paciente.</p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
-          <CButtonGroup>
-            {patient?.status_name === 'active' && canCreateExam && (
-              <CButton
-                color="info"
-                size="lg"
-                as={Link}
-                to={`/exams/create?patient=${id}`}
-                className="text-white"
-              >
-                Cadastrar exame
-              </CButton>
-            )}
-
-            <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
-              Voltar
+        <div className="d-flex justify-content-center mt-4 gap-2">
+          {patient?.status_name === 'active' && canCreateExam && (
+            <CButton
+              color="primary"
+              size="lg"
+              as={Link}
+              to={`/exams/create?patient=${id}`}
+              className="text-white"
+            >
+              Cadastrar Exame
             </CButton>
-          </CButtonGroup>
+          )}
+
+          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
+            Voltar
+          </CButton>
         </div>
       </div>
 
@@ -542,7 +540,7 @@ const PatientForm = ({ mode = 'create' }) => {
         <CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>
           <CCard>
             <CCardHeader>
-              <strong>Dados do paciente</strong>
+              <strong>Dados do Paciente</strong>
             </CCardHeader>
 
             <CCardBody>
@@ -641,7 +639,7 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={6}>
-                    <CFormLabel>Médico responsável</CFormLabel>
+                    <CFormLabel>Médico Responsável</CFormLabel>
 
                     {isDoctor ? (
                       <CFormInput
@@ -731,15 +729,24 @@ const PatientForm = ({ mode = 'create' }) => {
                 </CRow>
 
                 {!isReadOnly && (
-                  <CButtonGroup className="mt-4">
-                    <CButton color="primary" type="submit" disabled={isSaving}>
+                  <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+                    <CButton
+                      color="primary"
+                      type="submit"
+                      disabled={isSaving}
+                    >
                       {isSaving ? 'Salvando...' : 'Salvar'}
                     </CButton>
-
-                    <CButton color="secondary" variant="outline" as={Link} to="/patients">
+      
+                    <CButton
+                      color="secondary"
+                      variant="outline"
+                      as={Link}
+                      to="/exams"
+                    >
                       Cancelar
                     </CButton>
-                  </CButtonGroup>
+                  </div>
                 )}
               </CForm>
             </CCardBody>

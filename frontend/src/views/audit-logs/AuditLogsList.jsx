@@ -131,11 +131,6 @@ const AuditLogsList = () => {
         cell: ({ getValue }) => entityLabels[getValue()] || getValue() || '-',
       },
       {
-        accessorKey: 'entity_id',
-        header: 'ID Registro',
-        cell: ({ getValue }) => getValue() || '-',
-      },
-      {
         accessorKey: 'user_name',
         header: 'Usuário',
         cell: ({ getValue }) => getValue() || 'Sistema',
@@ -166,7 +161,7 @@ const AuditLogsList = () => {
         </div>
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -179,36 +174,6 @@ const AuditLogsList = () => {
                 columns={columns}
                 emptyMessage="Nenhum log de auditoria encontrado."
               />
-
-              <div className="d-flex justify-content-between align-items-center mt-3">
-                <small className="text-body-secondary">
-                  {total > 0
-                    ? `Página ${page + 1} de ${totalPages} — ${total} registro(s) no total`
-                    : 'Nenhum registro'}
-                </small>
-
-                <div className="d-flex gap-2">
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    disabled={!canGoPrevious}
-                    onClick={() => setPage((current) => Math.max(0, current - 1))}
-                  >
-                    Anterior
-                  </CButton>
-
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    disabled={!canGoNext}
-                    onClick={() => setPage((current) => current + 1)}
-                  >
-                    Próxima
-                  </CButton>
-                </div>
-              </div>
             </>
           )}
         </CCardBody>

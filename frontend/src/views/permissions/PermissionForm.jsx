@@ -124,7 +124,7 @@ const PermissionForm = ({ mode = 'view' }) => {
 
       <CCard>
         <CCardHeader>
-          <strong>Registro da Permissão</strong>
+          <strong>Dados da Permissão</strong>
         </CCardHeader>
 
         <CCardBody>
@@ -168,16 +168,25 @@ const PermissionForm = ({ mode = 'view' }) => {
               </CCol>
             </CRow>
 
-            {isEditMode && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
+            {!isReadOnly && (
+              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+                <CButton
+                  color="primary"
+                  type="submit"
+                  disabled={isSaving}
+                >
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-
-                <CButton color="secondary" variant="outline" as={Link} to="/permissions">
+  
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  as={Link}
+                  to="/exams"
+                >
                   Cancelar
                 </CButton>
-              </CButtonGroup>
+              </div>
             )}
           </CForm>
         </CCardBody>

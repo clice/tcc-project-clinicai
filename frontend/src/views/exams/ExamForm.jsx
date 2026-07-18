@@ -858,8 +858,8 @@ const ExamForm = ({ mode = 'create' }) => {
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <strong>
           {isCreateMode
-            ? 'Dados para cadastro'
-            : 'Dados clínicos e administrativos'}
+            ? 'Dados Cadastrais do Exame'
+            : 'Dados Clínicos e Administrativos'}
         </strong>
 
         {isReadOnly && (
@@ -1099,7 +1099,7 @@ const ExamForm = ({ mode = 'create' }) => {
           </CRow>
 
           {!isReadOnly && (
-            <CButtonGroup className="mt-4">
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
               <CButton
                 color="primary"
                 type="submit"
@@ -1116,7 +1116,7 @@ const ExamForm = ({ mode = 'create' }) => {
               >
                 Cancelar
               </CButton>
-            </CButtonGroup>
+            </div>
           )}
         </CForm>
         </CCardBody>
@@ -1176,7 +1176,7 @@ const ExamForm = ({ mode = 'create' }) => {
           )}
         </div>
 
-        <div className="d-flex flex-wrap align-items-center gap-2">
+        <div className="d-flex d-flex justify-content-center mt-4 gap-2">
           {(canAnalyze || isAnalyzing) && (
             <CButton
               color="primary"
@@ -1193,7 +1193,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   Analisando...
                 </>
               ) : (
-                'Executar análise de IA'
+                'Executar Análise de IA'
               )}
             </CButton>
           )}

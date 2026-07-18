@@ -437,15 +437,24 @@ const ClinicForm = ({ mode = 'create' }) => {
             </CRow>
 
             {!isReadOnly && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
+              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+                <CButton
+                  color="primary"
+                  type="submit"
+                  disabled={isSaving}
+                >
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-
-                <CButton color="secondary" variant="outline" as={Link} to="/clinics">
+  
+                <CButton
+                  color="secondary"
+                  variant="outline"
+                  as={Link}
+                  to="/exams"
+                >
                   Cancelar
                 </CButton>
-              </CButtonGroup>
+              </div>
             )}
           </CForm>
         </CCardBody>
