@@ -1,0 +1,230 @@
+/**
+ * Garante a separação entre listagem operacional e detalhes clínicos.
+ */
+
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import {
+  fileURLToPath,
+} from 'node:url'
+
+const scriptDirectory =
+  path.dirname(
+    fileURLToPath(import.meta.url),
+  )
+
+const projectDirectory =
+  path.resolve(
+    scriptDirectory,
+    '..',
+    '..',
+  )
+
+const read = (relativePath) =>
+  readFile(
+    path.join(
+      projectDirectory,
+      relativePath,
+    ),
+    'utf8',
+  )
+
+const [
+  permissions,
+  routes,
+  navigation,
+  sidebar,
+  examsList,
+  backendRouter,
+  backendSchema,
+  backendService,
+  roleSeed,
+] = await Promise.all([
+  read(
+    'frontend/src/utils/permissions.js',
+  ),
+  read(
+    'frontend/src/routes.js',
+  ),
+  read(
+    'frontend/src/_nav.jsx',
+  ),
+  read(
+    'frontend/src/components/layout/AppSidebar.jsx',
+  ),
+  read(
+    'frontend/src/views/exams/ExamsList.jsx',
+  ),
+  read(
+    'backend/app/modules/exams/router.py',
+  ),
+  read(
+    'backend/app/modules/exams/schema.py',
+  ),
+  read(
+    'backend/app/modules/exams/service.py',
+  ),
+  read(
+    'backend/app/modules/role_permissions/seed.py',
+  ),
+])
+
+assert.match(
+  permissions,
+  /EXAMS_LIST:\s*'exams:list'/,
+)
+
+const listRoute = routes.match(
+  /\{\s*path:\s*'\/exams',[\s\S]*?\n\s*\},/,
+)
+
+assert.ok(
+  listRoute,
+  'Rota da listagem não encontrada.',
+)
+
+assert.match(
+  listRoute[0],
+  /clinic_staff/,
+)
+
+assert.match(
+  listRoute[0],
+  /permission:\s*'exams:list'/,
+)
+
+const detailRoute = routes.match(
+  /\{\s*path:\s*'\/exams\/:id',[\s\S]*?\n\s*\},/,
+)
+
+assert.ok(
+  detailRoute,
+  'Rota de detalhes não encontrada.',
+)
+
+assert.doesNotMatch(
+  detailRoute[0],
+  /clinic_staff/,
+)
+
+assert.match(
+  detailRoute[0],
+  /permission:\s*'exams:read'/,
+)
+
+assert.match(
+  navigation,
+  /name:\s*'Exames'[\s\S]*?permission:\s*PERMISSIONS\.EXAMS_LIST/,
+)
+
+assert.match(
+  sidebar,
+  /hasPermission\(user, PERMISSIONS\.EXAMS_LIST\)/,
+)
+
+assert.doesNotMatch(
+  sidebar,
+  /useExamStatusCounts\(\{\}, canReadExams\)/,
+)
+
+assert.match(
+  examsList,
+  /const canUseClinicalExamActions = roleName === ROLES\.DOCTOR \|\| roleName === ROLES\.ADMIN_MASTER/,
+)
+
+assert.match(
+  examsList,
+  /if \(!canUseClinicalExamActions\) \{\s*return result/,
+)
+
+assert.match(
+  backendRouter,
+  /@router\.get\([\s\S]*?"\/"[\s\S]*?require_permission\("exams:list"\)/,
+)
+
+assert.match(
+  backendRouter,
+  /@router\.get\("\/\{exam_id\}"[\s\S]*?require_permission\("exams:read"\)/,
+)
+
+assert.match(
+  backendRouter,
+  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*?require_permission\("exams:read"\)/,
+)
+
+const listSchema =
+  backendSchema
+    .split(
+      'class ExamListItemResponse',
+    )[1]
+    .split(
+      'class ExamResponse',
+    )[0]
+
+for (const forbiddenField of [
+  'description:',
+  'clinical_indication:',
+  'findings:',
+  'conclusion:',
+  'ai_prediction_label:',
+  'ai_prediction_class:',
+  'patient_cpf:',
+  'file_name:',
+]) {
+  assert.doesNotMatch(
+    listSchema,
+    new RegExp(
+      forbiddenField,
+    ),
+    `A listagem resumida expõe ${forbiddenField}`,
+  )
+}
+
+assert.match(
+  backendService,
+  /elif role_name == RoleName\.CLINIC_STAFF\.value:[\s\S]*?Exam\.clinic_id == current_user\.clinic_id/,
+)
+
+assert.match(
+  backendService,
+  /Funcionário da clínica não tem permissão para filtrar por resultado da IA/,
+)
+
+assert.match(
+  backendService,
+  /return \[[\s\S]*?build_exam_list_response\(exam\) for exam in exams/,
+)
+
+const staffPermissions =
+  roleSeed
+    .split(
+      'CLINIC_STAFF_PERMISSIONS = [',
+    )[1]
+    .split(']')[0]
+
+assert.match(
+  staffPermissions,
+  /"exams:list"/,
+)
+
+for (const forbiddenPermission of [
+  'exams:read',
+  'exams:create',
+  'exams:update',
+  'exams:download',
+  'exams:review',
+  'ai_analysis:read',
+]) {
+  assert.doesNotMatch(
+    staffPermissions,
+    new RegExp(
+      `"${forbiddenPermission}"`,
+    ),
+    `Funcionário recebeu indevidamente ${forbiddenPermission}`,
+  )
+}
+
+console.log(
+  'Acesso resumido aprovado: Funcionário da Clínica lista exames da própria clínica sem ações, detalhes ou resultados.',
+)

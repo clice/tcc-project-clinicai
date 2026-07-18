@@ -52,8 +52,8 @@ const injectCountBadges = (items, counts) => {
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const { roleName, user } = useAuth()
-  const canReadExams = hasPermission(user, PERMISSIONS.EXAMS_READ)
-  const { counts: examCounts } = useExamStatusCounts({}, canReadExams)
+  const canListExams = hasPermission(user, PERMISSIONS.EXAMS_LIST)
+  const { counts: examCounts } = useExamStatusCounts({}, canListExams)
 
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)

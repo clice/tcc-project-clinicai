@@ -57,6 +57,7 @@ export const PERMISSIONS = {
 
   // EXAMS
   EXAMS_CREATE: 'exams:create',
+  EXAMS_LIST: 'exams:list',
   EXAMS_READ: 'exams:read',
   EXAMS_UPDATE: 'exams:update',
   EXAMS_CHANGE_STATUS: 'exams:change_status',

@@ -142,8 +142,8 @@ export const routes = [
     path: '/exams',
     name: 'Exames',
     element: ExamsList,
-    roles: ['admin_master', 'doctor'],
-    permission: 'exams:read',
+    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    permission: 'exams:list',
   },
   {
     path: '/exams/create',
