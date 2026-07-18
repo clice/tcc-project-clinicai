@@ -53,6 +53,18 @@ assert.match(form, /if \(isCreateMode \|\| !isDoctor\)/)
 assert.match(form, /status_display_name \|\| form\.status_name/)
 assert.match(list, /ROLES\.DOCTOR/)
 assert.match(list, /ROLES\.CLINIC_STAFF/)
+assert.match(
+  list,
+  /const showClinicColumn = roleName === ROLES\.ADMIN_MASTER/,
+)
+assert.match(
+  list,
+  /\.\.\.\(\s*showClinicColumn\s*\?\s*\[\s*\{\s*accessorKey:\s*['"]clinic_name['"]/,
+)
+assert.match(
+  list,
+  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*loadPatients,\s*showClinicColumn,?\s*\]/,
+)
 assert.match(list, /Buscar por paciente, CPF, médico ou clínica/)
 
 console.log(
