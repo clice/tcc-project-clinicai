@@ -49,6 +49,7 @@ const AppActionButtons = ({
   canEdit = false,
   canUpload = false,
   canDownload = false,
+  downloadTitle = 'Download',
   canCancel = false,
   canRestore = false,
   canInactivate = false,
@@ -164,7 +165,7 @@ const AppActionButtons = ({
             color="info"
             className="rounded-pill text-white"
             type="button"
-            title="Download"
+            title={downloadTitle}
             onClick={onDownload}
           >
             <CIcon icon={cilCloudDownload} />

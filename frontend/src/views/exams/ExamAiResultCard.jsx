@@ -75,13 +75,8 @@ const ExamAiResultCard = ({
 
   const attributionWeights = aiAnalysis?.attribution_branch_weights
 
-  const mapTitle = isEnsembleAttribution
-    ? 'Mapa de atribuição composto'
-    : 'Mapa Grad-CAM (ResNet-50)'
-
-  const mapName = isEnsembleAttribution
-    ? 'mapa de atribuição composto'
-    : 'mapa Grad-CAM da ResNet-50'
+  const mapTitle = 'Mapa Grad-CAM'
+  const mapName = 'mapa Grad-CAM'
 
   const statusLabel = aiStatusLabels[aiStatus] || aiStatus || '-'
 
@@ -102,21 +97,21 @@ const ExamAiResultCard = ({
               </div>
 
               <div>
-                <strong>Sobre o mapa atual:</strong>{' '}
+                <strong>Sobre o Mapa Grad-CAM:</strong>{' '}
                 {isEnsembleAttribution ? (
                   <>
-                    A classificação e a confiança são produzidas pelo Ensemble Stacking. O mapa
-                    combina Grad-CAMs da ResNet-50, EfficientNet-B4 e PVTv2-B2 para a classe final
-                    prevista, ponderados pelas evidências locais do metaclassificador. As cores
-                    indicam atribuição relativa e não representam risco, gravidade, causalidade ou
-                    probabilidade clínica.
+                    A classificação e a confiança são produzidas pelo Ensemble Stacking. O Mapa
+                    Grad-CAM combina mapas Grad-CAM da ResNet-50, EfficientNet-B4 e PVTv2-B2 para a
+                    classe final prevista, ponderados pelas evidências locais do metaclassificador.
+                    As cores indicam atribuição relativa e não representam risco, gravidade,
+                    causalidade ou probabilidade clínica.
                   </>
                 ) : (
                   <>
-                    Esta análise utiliza o mapa legado gerado separadamente pela ResNet-50. Ele não
-                    explica sozinho a decisão completa do Ensemble Stacking. As cores indicam
-                    contribuição relativa e não representam risco, gravidade ou probabilidade
-                    clínica.
+                    Esta análise utiliza um Mapa Grad-CAM legado gerado separadamente pela
+                    ResNet-50. Ele não explica sozinho a decisão completa do Ensemble Stacking. As
+                    cores indicam contribuição relativa e não representam risco, gravidade ou
+                    probabilidade clínica.
                   </>
                 )}
               </div>
@@ -232,7 +227,7 @@ const ExamAiResultCard = ({
               </div>
 
               <div className="small text-body-secondary">
-                {isEnsembleAttribution ? 'Legenda do mapa composto' : 'Legenda do mapa Grad-CAM'}
+                {isEnsembleAttribution ? 'Legenda do Mapa Grad-CAM' : 'Legenda do Mapa Grad-CAM'}
               </div>
             </div>
 
@@ -339,8 +334,8 @@ const ExamAiResultCard = ({
                         src={gradcamUrl}
                         alt={
                           isEnsembleAttribution
-                            ? 'Mapa de atribuição composto destacando regiões associadas à classe final prevista'
-                            : 'Mapa Grad-CAM da ResNet-50 destacando regiões que contribuíram para a predição'
+                            ? 'Mapa Grad-CAM destacando regiões associadas à classe final prevista'
+                            : 'Mapa Grad-CAM destacando regiões que contribuíram para a predição'
                         }
                         className="w-100 rounded border bg-body-tertiary"
                         style={imageAreaStyle}

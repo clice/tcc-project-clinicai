@@ -43,6 +43,7 @@ def add_catalog(db: Session) -> tuple[dict[str, Role], dict[str, Permission]]:
         "patients:update",
         "patients:change_status",
         "exams:create",
+        "exams:list",
         "exams:read",
         "exams:update",
         "exams:upload",

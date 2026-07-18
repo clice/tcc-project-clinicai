@@ -101,6 +101,25 @@ class ExamMedicalReview(StrictRequestModel):
         return normalize_required_text(value, "Campo obrigatório.")
     
 
+class ExamListItemResponse(BaseModel):
+    """Resumo operacional usado somente na listagem de exames."""
+
+    id: int
+    clinic_id: int
+    patient_name: str | None = None
+    doctor_name: str | None = None
+    status_id: int
+    status_name: str | None = None
+    status_display_name: str | None = None
+    exam_type: str
+    exam_date: date | None = None
+    title: str
+    analysis_in_progress: bool = False
+    ai_analysis_status: str | None = None
+    file_available: bool = False
+    gradcam_available: bool = False
+
+
 class ExamResponse(BaseModel):
     """
     Schema usado nas respostas da API.
@@ -113,6 +132,8 @@ class ExamResponse(BaseModel):
 
     patient_id: int
     patient_name: str | None = None
+    patient_cpf: str | None = None
+    patient_birth_date: date | None = None
 
     doctor_id: int | None = None
     doctor_name: str | None = None

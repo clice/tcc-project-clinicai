@@ -12,6 +12,7 @@ from app.core.deps import require_doctor_permission, require_permission
 from app.modules.ai_analysis.schema import AIAnalysisResponse
 from app.modules.exams.schema import (
     ExamCreate,
+    ExamListItemResponse,
     ExamHistoryResponse,
     ExamMedicalReview,
     ExamResponse,
@@ -23,6 +24,7 @@ from app.modules.exams.service import (
     create_exam,
     download_exam_ai_file,
     download_exam_file,
+    download_exam_images_package,
     get_exam_by_id,
     get_exam_history,
     list_exam_form_options,
@@ -88,7 +90,9 @@ def create_exam_route(
     )
 
 
-@router.get("/", response_model=list[ExamResponse])
+@router.get(
+    "/", response_model=list[ExamListItemResponse]
+)
 def list_exams_route(
     search: str | None = Query(default=None),
     clinic_id: int | None = Query(default=None),
@@ -100,7 +104,7 @@ def list_exams_route(
     ),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_permission("exams:list")),
 ):
     """
     Lista exames cadastrados.
@@ -316,6 +320,23 @@ def download_exam_ai_file_route(
         exam_id=exam_id,
         current_user=current_user,
     )
+
+@router.get("/{exam_id}/images/download")
+def download_exam_images_package_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:download")
+    ),
+):
+    """Baixa a imagem original e o Mapa Grad-CAM em um ZIP."""
+
+    return download_exam_images_package(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
 
 @router.post("/{exam_id}/replace-file", response_model=ExamResponse)
 def replace_exam_file_route(

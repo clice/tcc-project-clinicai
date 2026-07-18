@@ -181,6 +181,20 @@ export const examService = {
   },
 
   /**
+   * Baixa a imagem original e o Mapa Grad-CAM em um arquivo ZIP.
+   */
+  downloadImagePackage: async (id) => {
+    const response = await api.get(`/exams/${id}/images/download`, {
+      responseType: 'blob',
+      params: {
+        download_request: Date.now(),
+      },
+    })
+
+    return response.data
+  },
+
+  /**
    * Carrega o mapa Grad-CAM para visualização autenticada.
    */
   previewAiFile: async (id) => {

@@ -1,33 +1,16 @@
 /**
  * Listagem de exames.
  *
- * Exibe exames vinculados a pacientes, médicos e clínicas.
- * Também apresenta status do exame, status estimado da IA e ação de download.
+ * Médico e Administrador Master mantêm as ações clínicas autorizadas.
+ * O Funcionário da Clínica não recebe coluna de ações.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import {
-  CAlert,
-  CBadge,
-  CButton,
-  CCard,
-  CCardBody,
-  CCol,
-  CFormInput,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CRow,
-  CSpinner,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilCloudUpload, cilFolderOpen, cilUser, cilPencil, cilReload } from '@coreui/icons'
+import { CBadge, CButton, CCard, CCardBody, CCol, CRow, CSpinner } from '@coreui/react'
 
-import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
+import AppTable from 'src/components/shared/AppTable'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
@@ -35,21 +18,31 @@ import { useFeedback } from 'src/hooks/useFeedback'
 import { examService } from 'src/services/examService'
 
 import {
+  aiStatusColors,
+  aiStatusLabels,
+  examStatusDisplayLabels,
+  examStatusLabels,
   examTypeLabels,
   statusColors,
-  examStatusLabels,
-  examStatusDisplayLabels,
-  aiStatusLabels,
-  aiStatusColors,
 } from 'src/utils/constants'
+import {
+  buildExamImagesPackageDownloadName,
+  buildOriginalDownloadName,
+} from 'src/utils/examDownloadNames'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
-import { hasPermission } from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
-// Os três estados persistentes mais relevantes para o usuário
-// são exibidos no topo. Processing permanece transitório e interno.
 const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']
+
+const packageDownloadStatuses = new Set([
+  'awaiting_review',
+  'completed',
+  'completed_with_divergence',
+])
+
+const originalDownloadStatuses = new Set(['pending', 'failed', 'canceled'])
 
 const getAiStatusFromExam = (exam) => {
   if (exam.ai_analysis_status) return exam.ai_analysis_status
@@ -59,13 +52,33 @@ const getAiStatusFromExam = (exam) => {
   return 'not_processed'
 }
 
+const triggerBlobDownload = (blob, fileName) => {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+
+  window.setTimeout(() => {
+    window.URL.revokeObjectURL(url)
+  }, 1000)
+}
+
 const ExamsList = () => {
   const { user } = useAuth()
   const { showError, showSuccess } = useFeedback()
+  const roleName = getUserRole(user)
+
+  // TODO(revisão futura de RBAC): retirar o acesso clínico do
+  // admin_master e deixar estas ações exclusivamente para médicos.
+  const canUseClinicalExamActions = roleName === ROLES.DOCTOR || roleName === ROLES.ADMIN_MASTER
+
+  const canReadAiAnalysis = hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
   const [searchParams, setSearchParams] = useSearchParams()
-  // Sem ?status= na URL = visão geral (todos os exames), útil quando se
-  // clica em "Exames" no topo do submenu, sem escolher um status específico.
   const statusFilter = searchParams.get('status')
 
   const [exams, setExams] = useState([])
@@ -94,7 +107,13 @@ const ExamsList = () => {
   }, [showError])
 
   useEffect(() => {
-    void loadExams()
+    const initialLoadTimerId = window.setTimeout(() => {
+      void loadExams()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(initialLoadTimerId)
+    }
   }, [loadExams])
 
   const filteredExams = useMemo(() => {
@@ -117,25 +136,38 @@ const ExamsList = () => {
     [exams],
   )
 
-  const handleDownloadFile = useCallback(
+  const handleDownload = useCallback(
     async (exam) => {
       try {
         showError('')
 
+        if (packageDownloadStatuses.has(exam.status_name)) {
+          const blob = await examService.downloadImagePackage(exam.id)
+
+          triggerBlobDownload(
+            blob,
+            buildExamImagesPackageDownloadName({
+              examId: exam.id,
+              patientName: exam.patient_name,
+              examDate: exam.exam_date,
+            }),
+          )
+          return
+        }
+
         const blob = await examService.downloadFile(exam.id)
 
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-
-        link.href = url
-        link.download = exam.file_name || `exame-${exam.id}`
-        document.body.appendChild(link)
-        link.click()
-
-        link.remove()
-        window.URL.revokeObjectURL(url)
-      } catch {
-        showError('Erro ao baixar arquivo do exame.')
+        triggerBlobDownload(
+          blob,
+          buildOriginalDownloadName({
+            examId: exam.id,
+            patientName: exam.patient_name,
+            examDate: exam.exam_date,
+            mimeType: blob.type,
+          }),
+        )
+      } catch (err) {
+        showError(getErrorMessage(err, 'Não foi possível baixar as imagens do exame.'))
       }
     },
     [showError],
@@ -145,9 +177,7 @@ const ExamsList = () => {
     async (exam) => {
       try {
         showError('')
-
         await examService.cancel(exam.id)
-
         showSuccess('Exame cancelado com sucesso.')
         await loadExams()
       } catch (err) {
@@ -161,9 +191,7 @@ const ExamsList = () => {
     async (exam) => {
       try {
         showError('')
-
         await examService.restore(exam.id)
-
         showSuccess('Exame retomado com sucesso.')
         await loadExams()
       } catch (err) {
@@ -173,8 +201,8 @@ const ExamsList = () => {
     [loadExams, showError, showSuccess],
   )
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const result = [
       {
         accessorKey: 'title',
         header: 'Exame',
@@ -224,51 +252,67 @@ const ExamsList = () => {
           )
         },
       },
-      {
-        id: 'actions',
-        header: 'Ações',
-        enableSorting: false,
-        cell: ({ row }) => {
-          const exam = row.original
+    ]
 
-          const isProcessing = exam.status_name === 'processing'
-          const isPending = exam.status_name === 'pending'
-          const isCompleted = exam.status_name === 'completed'
-          const isFailed = exam.status_name === 'failed'
-          const isCanceled = exam.status_name === 'canceled'
+    if (!canUseClinicalExamActions) {
+      return result
+    }
 
-          return (
-            <AppActionButtons
-              itemLabel={exam.title}
-              viewTo={`/exams/${exam.id}`}
-              editTo={`/exams/${exam.id}/edit`}
-              isInactive={isCanceled}
-              canView={canView}
-              canEdit={canEdit && (isPending || isFailed)}
-              canUpload={false}
-              canDownload={canDownload && Boolean(exam.file_name)}
-              canCancel={canChangeStatus && (isProcessing || isPending)}
-              canRestore={canChangeStatus && (isCanceled || isFailed)}
-              canInactivate={false}
-              canActivate={false}
-              onDownload={() => handleDownloadFile(exam)}
-              onCancel={() => handleCancelExam(exam)}
-              onRestore={() => handleRestoreExam(exam)}
-            />
-          )
-        },
+    result.push({
+      id: 'actions',
+      header: 'Ações',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const exam = row.original
+        const isProcessing = exam.status_name === 'processing'
+        const isPending = exam.status_name === 'pending'
+        const isFailed = exam.status_name === 'failed'
+        const isCanceled = exam.status_name === 'canceled'
+        const requiresPackage = packageDownloadStatuses.has(exam.status_name)
+        const allowsOriginal = originalDownloadStatuses.has(exam.status_name)
+
+        const canDownloadCurrentStatus =
+          canDownload &&
+          exam.file_available &&
+          (allowsOriginal || (requiresPackage && canReadAiAnalysis && exam.gradcam_available))
+
+        return (
+          <AppActionButtons
+            itemLabel={exam.title}
+            viewTo={`/exams/${exam.id}`}
+            editTo={`/exams/${exam.id}/edit`}
+            isInactive={isCanceled}
+            canView={canView}
+            canEdit={canEdit && isPending}
+            canUpload={false}
+            canDownload={canDownloadCurrentStatus}
+            downloadTitle={
+              requiresPackage ? 'Baixar imagem original e Mapa Grad-CAM' : 'Baixar imagem original'
+            }
+            canCancel={canChangeStatus && (isProcessing || isPending)}
+            canRestore={canChangeStatus && (isCanceled || isFailed)}
+            canInactivate={false}
+            canActivate={false}
+            onDownload={() => handleDownload(exam)}
+            onCancel={() => handleCancelExam(exam)}
+            onRestore={() => handleRestoreExam(exam)}
+          />
+        )
       },
-    ],
-    [
-      canView,
-      canEdit,
-      canChangeStatus,
-      canDownload,
-      handleCancelExam,
-      handleDownloadFile,
-      handleRestoreExam,
-    ],
-  )
+    })
+
+    return result
+  }, [
+    canChangeStatus,
+    canDownload,
+    canEdit,
+    canReadAiAnalysis,
+    canUseClinicalExamActions,
+    canView,
+    handleCancelExam,
+    handleDownload,
+    handleRestoreExam,
+  ])
 
   return (
     <>
@@ -283,7 +327,7 @@ const ExamsList = () => {
           </p>
         </div>
 
-        {canCreate && (
+        {canCreate && canUseClinicalExamActions && (
           <div className="d-flex justify-content-center mt-4">
             <CButton color="primary" size="lg" as={Link} to="/exams/create">
               Cadastrar Exame

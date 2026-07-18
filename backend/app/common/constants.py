@@ -44,6 +44,7 @@ class AuditEntity(StrEnum):
 class PermissionAction(StrEnum):
     CREATE = "create"
     READ = "read"
+    LIST = "list"
     UPDATE = "update"
     DELETE = "delete"
     CHANGE_STATUS = "change_status"

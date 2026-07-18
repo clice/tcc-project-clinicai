@@ -234,7 +234,7 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
     ]
 
     expected_name = (
-        f"mapa-atribuicao-exame-{exam.id}-"
+        f"mapa-grad-cam-exame-{exam.id}-"
         "paciente-grad-cam-sem-data.jpg"
     )
 
@@ -255,7 +255,7 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
     assert len(logs) == 1
     assert (
         logs[0].description
-        == "Download do mapa de atribuição da IA autorizado."
+        == "Download do Mapa Grad-CAM autorizado."
     )
     assert (
         logs[0].new_data["artifact_type"]

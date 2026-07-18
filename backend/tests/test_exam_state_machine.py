@@ -46,7 +46,6 @@ EXPECTED_TRANSITIONS = {
     ("processing", "analysis_succeeded", "awaiting_review"),
     ("processing", "analysis_failed", "failed"),
     ("failed", "restore", "pending"),
-    ("failed", "replace_file", "pending"),
     ("canceled", "restore", "pending"),
     ("awaiting_review", "review_confirm", "completed"),
     ("awaiting_review", "review_divergence", "completed_with_divergence"),
@@ -343,18 +342,38 @@ def test_processing_exam_metadata_cannot_be_edited(db_session) -> None:
     assert error.value.status_code == 409
 
 
-@pytest.mark.parametrize("status_name", ["pending", "failed"])
-def test_pre_analysis_or_failed_exam_metadata_can_be_edited(
+def test_pending_exam_metadata_can_be_edited(
     db_session,
-    status_name: str,
 ) -> None:
-    context = _seed_exam_context(db_session, status_name=status_name)
+    context = _seed_exam_context(
+        db_session,
+        status_name="pending",
+    )
 
     result = update_exam(
         db_session,
         context.exam.id,
-        ExamUpdate(title=f"Exame editado em {status_name}"),
+        ExamUpdate(title="Exame pendente editado"),
         context.doctor,
     )
 
-    assert result["title"] == f"Exame editado em {status_name}"
+    assert result["title"] == "Exame pendente editado"
+
+
+def test_failed_exam_metadata_cannot_be_edited(
+    db_session,
+) -> None:
+    context = _seed_exam_context(
+        db_session,
+        status_name="failed",
+    )
+
+    with pytest.raises(HTTPException) as error:
+        update_exam(
+            db_session,
+            context.exam.id,
+            ExamUpdate(title="Tentativa após falha"),
+            context.doctor,
+        )
+
+    assert error.value.status_code == 409

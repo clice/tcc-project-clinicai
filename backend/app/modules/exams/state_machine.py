@@ -42,7 +42,6 @@ EXAM_TRANSITION_TABLE: dict[tuple[str | None, ExamTransitionAction], str] = {
     ): StatusName.AWAITING_REVIEW.value,
     (StatusName.PROCESSING.value, ExamTransitionAction.ANALYSIS_FAILED): StatusName.FAILED.value,
     (StatusName.FAILED.value, ExamTransitionAction.RESTORE): StatusName.PENDING.value,
-    (StatusName.FAILED.value, ExamTransitionAction.REPLACE_FILE): StatusName.PENDING.value,
     (StatusName.CANCELED.value, ExamTransitionAction.RESTORE): StatusName.PENDING.value,
     (
         StatusName.AWAITING_REVIEW.value,
@@ -76,7 +75,6 @@ FINAL_EXAM_STATUSES = frozenset(
 EDITABLE_EXAM_STATUSES = frozenset(
     {
         StatusName.PENDING.value,
-        StatusName.FAILED.value,
     }
 )
 
@@ -102,7 +100,7 @@ def get_transition_target(
 
 
 def ensure_exam_is_editable(current_status: str | None) -> None:
-    """Permite edição somente antes da análise ou depois de uma falha."""
+    """Permite edição somente enquanto o exame está pendente."""
 
     if current_status not in EDITABLE_EXAM_STATUSES:
         raise HTTPException(

@@ -4,6 +4,8 @@ Service do módulo de exames.
 Concentra as regras de negócio relacionadas aos exames.
 """
 
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 import json
 import re
 import unicodedata
@@ -11,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
@@ -85,6 +87,8 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "clinic_name": exam.clinic.name if exam.clinic else None,
         "patient_id": exam.patient_id,
         "patient_name": exam.patient.name if exam.patient else None,
+        "patient_cpf": exam.patient.cpf if exam.patient else None,
+        "patient_birth_date": exam.patient.birth_date if exam.patient else None,
         "doctor_id": exam.doctor_id,
         "doctor_name": exam.doctor.name if exam.doctor else None,
         "status_id": exam.status_id,
@@ -113,6 +117,44 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "ai_prediction_class": ai_prediction_class,
         "created_at": exam.created_at,
         "updated_at": exam.updated_at,
+    }
+
+
+def build_exam_list_response(exam: Exam) -> dict:
+    """Monta somente os campos da listagem operacional."""
+
+    return {
+        "id": exam.id,
+        "clinic_id": exam.clinic_id,
+        "patient_name": (
+            exam.patient.name if exam.patient else None
+        ),
+        "doctor_name": (
+            exam.doctor.name if exam.doctor else None
+        ),
+        "status_id": exam.status_id,
+        "status_name": (
+            exam.status.name if exam.status else None
+        ),
+        "status_display_name": (
+            exam.status.display_name if exam.status else None
+        ),
+        "exam_type": exam.exam_type,
+        "exam_date": exam.exam_date,
+        "title": exam.title,
+        "analysis_in_progress": bool(
+            exam.analysis_in_progress
+        ),
+        "ai_analysis_status": (
+            exam.ai_analysis.status.name
+            if exam.ai_analysis and exam.ai_analysis.status
+            else None
+        ),
+        "file_available": bool(exam.file_path),
+        "gradcam_available": bool(
+            exam.ai_analysis
+            and exam.ai_analysis.gradcam_path
+        ),
     }
 
 
@@ -658,16 +700,20 @@ def list_exams(
 
     if search:
         term = f"%{search.strip()}%"
-        query = query.filter(
-            or_(
-                Exam.title.ilike(term),
-                Exam.exam_type.ilike(term),
-                Exam.description.ilike(term),
-                Exam.clinical_indication.ilike(term),
-                Exam.findings.ilike(term),
-                Exam.conclusion.ilike(term),
+        visible_filters = [
+            Exam.title.ilike(term),
+            Exam.exam_type.ilike(term),
+        ]
+        if role_name != RoleName.CLINIC_STAFF.value:
+            visible_filters.extend(
+                [
+                    Exam.description.ilike(term),
+                    Exam.clinical_indication.ilike(term),
+                    Exam.findings.ilike(term),
+                    Exam.conclusion.ilike(term),
+                ]
             )
-        )
+        query = query.filter(or_(*visible_filters))
 
     if not include_inactive:
         query = query.filter(
@@ -677,7 +723,9 @@ def list_exams(
 
     exams = query.order_by(Exam.created_at.desc()).all()
 
-    return [build_exam_response(exam, current_user=current_user) for exam in exams]
+    return [
+        build_exam_list_response(exam) for exam in exams
+    ]
 
 
 def create_exam(
@@ -1134,7 +1182,7 @@ def get_authorized_gradcam_file(
     exam_id: int,
     current_user: User,
 ):
-    """Resolve o mapa de atribuição da IA após validar perfil, escopo e caminho."""
+    """Resolve o Mapa Grad-CAM após validar perfil, escopo e caminho."""
 
     exam = get_exam_model_by_id(
         db=db,
@@ -1170,7 +1218,7 @@ def get_authorized_gradcam_file(
         raise HTTPException(
             status_code=404,
             detail=(
-                "Este exame não possui mapa de atribuição da IA "
+                "Este exame não possui Mapa Grad-CAM "
                 "disponível."
             ),
         )
@@ -1192,7 +1240,7 @@ def build_gradcam_download_filename(
     exam: Exam,
     file_path,
 ) -> str:
-    """Gera nome público amigável para o mapa de atribuição da IA."""
+    """Gera nome público amigável para o Mapa Grad-CAM."""
 
     patient_name = (
         exam.patient.name
@@ -1218,10 +1266,77 @@ def build_gradcam_download_filename(
     )
 
     return (
-        f"mapa-atribuicao-exame-{exam.id}-"
+        f"mapa-grad-cam-exame-{exam.id}-"
         f"{patient_slug}-"
         f"{date_part}"
         f"{extension}"
+    )
+
+
+
+EXAM_IMAGE_PACKAGE_STATUSES = frozenset(
+    {
+        StatusName.AWAITING_REVIEW.value,
+        StatusName.COMPLETED.value,
+        StatusName.COMPLETED_WITH_DIVERGENCE.value,
+    }
+)
+
+
+def build_exam_images_package_filename(exam: Exam) -> str:
+    """Gera o nome público do ZIP da imagem e do Mapa Grad-CAM."""
+
+    patient_name = exam.patient.name if exam.patient else None
+    patient_slug = slugify_exam_download_component(
+        patient_name,
+        fallback="paciente",
+    )
+    date_part = (
+        exam.exam_date.isoformat()
+        if exam.exam_date
+        else "sem-data"
+    )
+
+    return (
+        f"imagens-exame-{exam.id}-"
+        f"{patient_slug}-{date_part}.zip"
+    )
+
+
+def build_exam_images_package_bytes(
+    *,
+    original_path,
+    original_name: str,
+    gradcam_path,
+    gradcam_name: str,
+) -> bytes:
+    """Cria um ZIP em memória sem expor caminhos físicos."""
+
+    buffer = BytesIO()
+    with ZipFile(
+        buffer,
+        mode="w",
+        compression=ZIP_DEFLATED,
+    ) as archive:
+        archive.write(original_path, arcname=original_name)
+        archive.write(gradcam_path, arcname=gradcam_name)
+
+    return buffer.getvalue()
+
+
+def user_has_permission(
+    current_user: User,
+    permission_name: str,
+) -> bool:
+    """Consulta a permissão já carregada na sessão autenticada."""
+
+    if not current_user.role:
+        return False
+
+    return any(
+        role_permission.permission
+        and role_permission.permission.name == permission_name
+        for role_permission in current_user.role.role_permissions
     )
 
 
@@ -1231,7 +1346,7 @@ def preview_exam_ai_file(
     current_user: User,
 ):
     """
-    Retorna o mapa de atribuição da IA para visualização inline.
+    Retorna o Mapa Grad-CAM para visualização inline.
 
     A prévia automática não registra download manual.
     """
@@ -1263,7 +1378,7 @@ def download_exam_ai_file(
     exam_id: int,
     current_user: User,
 ):
-    """Retorna o mapa de atribuição da IA como download explicitamente solicitado."""
+    """Retorna o Mapa Grad-CAM como download explicitamente solicitado."""
 
     exam, analysis, file_path, media_type = (
         get_authorized_gradcam_file(
@@ -1285,7 +1400,7 @@ def download_exam_ai_file(
         action=AuditAction.DOWNLOAD,
         entity=AuditEntity.AI_ANALYSIS,
         entity_id=analysis.id,
-        description="Download do mapa de atribuição da IA autorizado.",
+        description="Download do Mapa Grad-CAM autorizado.",
         new_data={
             "artifact_type": "ai_attribution_map",
             "media_type": media_type,
@@ -1302,6 +1417,119 @@ def download_exam_ai_file(
         media_type=media_type,
         content_disposition_type="attachment",
         headers={
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+def download_exam_images_package(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Baixa a imagem original e o Mapa Grad-CAM em um ZIP."""
+
+    role_name = (
+        current_user.role.name
+        if current_user.role
+        else None
+    )
+
+    # TODO(revisão futura de RBAC): retirar o bypass clínico do
+    # admin_master e deixar imagens/detalhes exclusivamente para médicos.
+    if role_name not in {
+        RoleName.ADMIN_MASTER.value,
+        RoleName.DOCTOR.value,
+    }:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Somente médicos e o administrador podem "
+                "baixar as imagens do exame."
+            ),
+        )
+
+    if (
+        role_name != RoleName.ADMIN_MASTER.value
+        and not user_has_permission(
+            current_user,
+            "ai_analysis:read",
+        )
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Permissão 'ai_analysis:read' necessária.",
+        )
+
+    exam, original_path = get_authorized_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+    current_status = exam.status.name if exam.status else None
+
+    if current_status not in EXAM_IMAGE_PACKAGE_STATUSES:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "O pacote com o Mapa Grad-CAM só está disponível "
+                "para exames em revisão ou concluídos."
+            ),
+        )
+
+    _, analysis, gradcam_path, _ = get_authorized_gradcam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    original_name = build_exam_download_filename(
+        exam,
+        original_path,
+    )
+    gradcam_name = build_gradcam_download_filename(
+        exam,
+        gradcam_path,
+    )
+    package_name = build_exam_images_package_filename(exam)
+    package_bytes = build_exam_images_package_bytes(
+        original_path=original_path,
+        original_name=original_name,
+        gradcam_path=gradcam_path,
+        gradcam_name=gradcam_name,
+    )
+
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.DOWNLOAD,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description=(
+            "Download do pacote com a imagem original e "
+            "o Mapa Grad-CAM autorizado."
+        ),
+        new_data={
+            "artifact_type": "exam_images_package",
+            "included_artifacts": [
+                "original_exam_image",
+                "gradcam",
+            ],
+            "download_name": package_name,
+            "delivery_mode": "attachment",
+            "ai_analysis_id": analysis.id,
+        },
+    )
+    db.commit()
+
+    return StreamingResponse(
+        iter([package_bytes]),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{package_name}"'
+            ),
             "Cache-Control": "no-store",
         },
     )

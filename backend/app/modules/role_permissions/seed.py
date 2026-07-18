@@ -29,6 +29,7 @@ DOCTOR_PERMISSIONS = [
     "patients:update",
     "patients:change_status",
     "exams:create",
+    "exams:list",
     "exams:read",
     "exams:update",
     "exams:upload",
@@ -49,6 +50,7 @@ CLINIC_STAFF_PERMISSIONS = [
     "patients:read",
     "patients:update",
     "patients:change_status",
+    "exams:list",
 ]
 
 

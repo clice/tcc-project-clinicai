@@ -39,6 +39,7 @@ import {
   examTypeOptions,
   statusColors,
 } from 'src/utils/constants'
+import { buildGradcamDownloadName, buildOriginalDownloadName } from 'src/utils/examDownloadNames'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatDateBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
@@ -84,35 +85,6 @@ const emptyExam = {
   reviewed_at: '',
   analysis_in_progress: false,
   analysis_started_at: '',
-}
-
-const normalizeDownloadPart = (value, fallback) => {
-  const normalized = String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase()
-    .slice(0, 60)
-    .replace(/-+$/g, '')
-
-  return normalized || fallback
-}
-
-const buildOriginalDownloadName = ({ examId, patientName, examDate, mimeType }) => {
-  const patientPart = normalizeDownloadPart(patientName, 'paciente')
-  const datePart = examDate || 'sem-data'
-  const extension = mimeType === 'image/png' ? 'png' : 'jpg'
-
-  return `exame-${examId}-${patientPart}-${datePart}.${extension}`
-}
-
-const buildAttributionMapDownloadName = ({ examId, patientName, examDate, mimeType }) => {
-  const patientPart = normalizeDownloadPart(patientName, 'paciente')
-  const datePart = examDate || 'sem-data'
-  const extension = mimeType === 'image/png' ? 'png' : 'jpg'
-
-  return `mapa-atribuicao-exame-${examId}-` + `${patientPart}-${datePart}.${extension}`
 }
 
 const mergeExamSnapshot = (current, examData) => ({
@@ -415,7 +387,7 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [canViewAiAnalysis, id, isAnalysisActive])
 
-  // O mapa de atribuição da IA é carregado por uma rota de prévia.
+  // O Mapa Grad-CAM é carregado por uma rota de prévia.
   // Somente o clique explícito em download gera auditoria.
   useEffect(() => {
     if (!aiAnalysis?.gradcam_available || isCreateMode) {
@@ -440,9 +412,7 @@ const ExamForm = ({ mode = 'create' }) => {
       } catch (err) {
         if (!isCancelled) {
           setGradcamUrl(null)
-          setGradcamError(
-            getErrorMessage(err, 'Não foi possível carregar o mapa de atribuição da IA.'),
-          )
+          setGradcamError(getErrorMessage(err, 'Não foi possível carregar o Mapa Grad-CAM.'))
         }
       } finally {
         if (!isCancelled) {
@@ -600,7 +570,7 @@ const ExamForm = ({ mode = 'create' }) => {
       const anchor = document.createElement('a')
 
       anchor.href = objectUrl
-      anchor.download = buildAttributionMapDownloadName({
+      anchor.download = buildGradcamDownloadName({
         examId: id,
         patientName: selectedPatientName,
         examDate: form.exam_date,
@@ -615,7 +585,7 @@ const ExamForm = ({ mode = 'create' }) => {
         URL.revokeObjectURL(objectUrl)
       }, 1000)
     } catch (err) {
-      showError(getErrorMessage(err, 'Não foi possível baixar o mapa de atribuição da IA.'))
+      showError(getErrorMessage(err, 'Não foi possível baixar o Mapa Grad-CAM.'))
     } finally {
       setIsGradcamDownloading(false)
     }
@@ -1186,8 +1156,8 @@ const ExamForm = ({ mode = 'create' }) => {
 
                       <CCardBody>
                         <CAlert color="warning" className="small">
-                          Antes de concluir, compare a imagem original, o mapa de atribuição da IA e
-                          o resultado automatizado apresentados abaixo. Os achados e a conclusão
+                          Antes de concluir, compare a imagem original, o Mapa Grad-CAM e o
+                          resultado automatizado apresentados abaixo. Os achados e a conclusão
                           encerram o exame.
                         </CAlert>
 

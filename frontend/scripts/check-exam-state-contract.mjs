@@ -14,6 +14,7 @@ const history = read('frontend/src/views/exams/ExamHistoryCard.jsx')
 const aiResultCard = read('frontend/src/views/exams/ExamAiResultCard.jsx')
 const navigation = read('frontend/src/_nav.jsx')
 const service = read('frontend/src/services/examService.js')
+const downloadNames = read('frontend/src/utils/examDownloadNames.js')
 const stateMachine = read('backend/app/modules/exams/state_machine.py')
 const examService = read('backend/app/modules/exams/service.py')
 const examRouter = read('backend/app/modules/exams/router.py')
@@ -44,10 +45,10 @@ const editableStatusesMatch = stateMachine.match(
 if (
   !editableStatusesMatch ||
   !editableStatusesMatch[1].includes('StatusName.PENDING.value') ||
-  !editableStatusesMatch[1].includes('StatusName.FAILED.value') ||
+  editableStatusesMatch[1].includes('StatusName.FAILED.value') ||
   editableStatusesMatch[1].includes('StatusName.PROCESSING.value')
 ) {
-  throw new Error('Somente exames pending/failed podem ter metadados editados.')
+  throw new Error('Somente exames pending podem ter metadados editados.')
 }
 
 const requiredActions = [
@@ -82,8 +83,8 @@ if (!list.includes('canCancel={canChangeStatus && (isProcessing || isPending)}')
 if (!list.includes('canRestore={canChangeStatus && (isCanceled || isFailed)}')) {
   throw new Error('A ação de restaurar não reflete canceled/failed.')
 }
-if (!list.includes('canEdit={canEdit && (isPending || isFailed)}')) {
-  throw new Error('A listagem deve permitir edição somente em pending/failed.')
+if (!list.includes('canEdit={canEdit && isPending}')) {
+  throw new Error('A listagem deve permitir edição somente em pending.')
 }
 if (!list.includes('examStatusDisplayLabels[row.original.status_name]')) {
   throw new Error('A listagem não utiliza o catálogo padronizado de status em português.')
@@ -240,25 +241,27 @@ if (
   !examService.includes('def get_authorized_gradcam_file(') ||
   !examService.includes('def preview_exam_ai_file(') ||
   !examService.includes('def build_gradcam_download_filename(') ||
-  !examService.includes('description="Download do mapa de atribuição da IA autorizado."') ||
+  !examService.includes('description="Download do Mapa Grad-CAM autorizado."') ||
   !examService.includes('"artifact_type": "ai_attribution_map"') ||
   !examService.includes('"delivery_mode": "attachment"')
 ) {
   throw new Error('A prévia do Grad-CAM deve ser separada do download manual auditado.')
 }
 
-if ((service.match(/download_request: Date\.now\(\)/g) || []).length !== 2) {
+if ((service.match(/download_request: Date\.now\(\)/g) || []).length !== 3) {
   throw new Error(
     'Os downloads explícitos devem impedir respostas reutilizadas do cache do navegador.',
   )
 }
 
 if (
-  !form.includes('buildAttributionMapDownloadName') ||
-  !form.includes('`mapa-atribuicao-exame-${examId}-`') ||
-  !form.includes('mapa de atribuição da IA')
+  !form.includes('buildGradcamDownloadName') ||
+  !downloadNames.includes('mapa-grad-cam-exame-') ||
+  !downloadNames.includes('imagens-exame-') ||
+  !service.includes('downloadImagePackage') ||
+  !service.includes('`/exams/${id}/images/download`')
 ) {
-  throw new Error('A revisão e o download devem usar a nomenclatura pública do mapa de atribuição.')
+  throw new Error('Os downloads devem usar os nomes e o pacote ZIP padronizados.')
 }
 
 const patientHistoryGuardPattern =
@@ -382,17 +385,17 @@ if (
   !aiResultCard.includes('<strong>Resultado da IA</strong>') ||
   !aiResultCard.includes('color="info"') ||
   !aiResultCard.includes('Uso do resultado:') ||
-  !aiResultCard.includes('Sobre o mapa atual:') ||
+  !aiResultCard.includes('Sobre o Mapa Grad-CAM:') ||
   !aiResultCard.includes('Ensemble Stacking') ||
   !aiResultCard.includes('ENSEMBLE_ATTRIBUTION_METHOD') ||
   !aiResultCard.includes('weighted_base_gradcam_oriented_by_ensemble_stacking_v1') ||
-  !aiResultCard.includes('Mapa de atribuição composto') ||
-  !aiResultCard.includes('Mapa Grad-CAM (ResNet-50)') ||
-  !aiResultCard.includes('Grad-CAMs da ResNet-50, EfficientNet-B4 e') ||
+  !aiResultCard.includes("const mapTitle = 'Mapa Grad-CAM'") ||
+  !aiResultCard.includes("const mapName = 'mapa Grad-CAM'") ||
+  !aiResultCard.includes('mapas Grad-CAM da ResNet-50, EfficientNet-B4 e') ||
   !/PVTv2-B2\s+para\s+a\s+classe\s+final\s+prevista/.test(aiResultCard) ||
   !aiResultCard.includes('ponderados pelas evidências locais do') ||
   !aiResultCard.includes('metaclassificador') ||
-  !aiResultCard.includes('mapa legado gerado') ||
+  !aiResultCard.includes('Mapa Grad-CAM legado gerado') ||
   !aiResultCard.includes('decisão completa do Ensemble') ||
   !aiResultCard.includes('Pesos locais da composição:') ||
   !aiResultCard.includes('attribution_branch_weights') ||
@@ -409,8 +412,6 @@ if (
   !aiResultCard.includes('model_version') ||
   !aiResultCard.includes('<hr className="my-4" />') ||
   !aiResultCard.includes('Imagem original') ||
-  !aiResultCard.includes('const mapTitle = isEnsembleAttribution') ||
-  !aiResultCard.includes('const mapName = isEnsembleAttribution') ||
   !aiResultCard.includes('Baixar imagem original') ||
   !aiResultCard.includes('Baixar ${mapName}') ||
   !aiResultCard.includes('Intensidade de atribuição relativa') ||
@@ -427,7 +428,7 @@ if (
   aiResultCard.includes('console.log(')
 ) {
   throw new Error(
-    'O resultado da IA deve distinguir o mapa composto do mapa legado e preservar orientação, métricas, imagens, escala e ações.',
+    'O resultado da IA deve preservar a distinção técnica entre composição e legado, além da orientação, das métricas, das imagens, da escala e das ações.',
   )
 }
 
