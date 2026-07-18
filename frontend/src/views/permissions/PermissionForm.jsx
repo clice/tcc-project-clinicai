@@ -182,7 +182,7 @@ const PermissionForm = ({ mode = 'view' }) => {
                   color="secondary"
                   variant="outline"
                   as={Link}
-                  to="/exams"
+                  to="/permissions"
                 >
                   Cancelar
                 </CButton>

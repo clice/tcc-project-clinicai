@@ -450,7 +450,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                   color="secondary"
                   variant="outline"
                   as={Link}
-                  to="/exams"
+                  to="/clinics"
                 >
                   Cancelar
                 </CButton>

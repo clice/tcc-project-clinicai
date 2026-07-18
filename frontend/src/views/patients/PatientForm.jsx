@@ -536,7 +536,7 @@ const PatientForm = ({ mode = 'create' }) => {
         </div>
       </div>
 
-      <CRow className="g-4">
+      <CRow className="mb-4 g-4">
         <CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>
           <CCard>
             <CCardHeader>
@@ -742,7 +742,7 @@ const PatientForm = ({ mode = 'create' }) => {
                       color="secondary"
                       variant="outline"
                       as={Link}
-                      to="/exams"
+                      to="/patients"
                     >
                       Cancelar
                     </CButton>

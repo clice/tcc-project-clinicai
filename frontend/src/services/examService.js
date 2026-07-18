@@ -5,6 +5,16 @@
  */
 
 import api from 'src/services/api'
+import { notifyExamStatusCountsChanged } from 'src/utils/examStatusEvents'
+
+const executeExamMutation = async (requestPromise) => {
+  try {
+    const response = await requestPromise
+    return response.data
+  } finally {
+    notifyExamStatusCountsChanged()
+  }
+}
 
 const buildExamFormData = (payload) => {
   const formData = new FormData()
@@ -39,8 +49,8 @@ const buildExamFormData = (payload) => {
 
 export const examService = {
   /**
-  * Lista todos os exames cadastrados.
-  */
+   * Lista todos os exames cadastrados.
+   */
   list: async (params = {}) => {
     const response = await api.get('/exams/', {
       params: {
@@ -80,53 +90,48 @@ export const examService = {
   create: async (payload) => {
     const formData = buildExamFormData(payload)
 
-    const response = await api.post('/exams/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-
-    return response.data
+    return executeExamMutation(
+      api.post('/exams/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+    )
   },
 
   /**
    * Atualiza parcialmente um exame existente.
    */
   update: async (id, payload) => {
-    const response = await api.patch(`/exams/${id}`, payload)
-    return response.data
+    return executeExamMutation(api.patch(`/exams/${id}`, payload))
   },
 
   /**
    * Atualiza status para cancelado.
    */
   cancel: async (id) => {
-    const response = await api.patch(`/exams/${id}/cancel`)
-    return response.data
+    return executeExamMutation(api.patch(`/exams/${id}/cancel`))
   },
 
   /**
    * Atualiza status para reprocessamento.
    */
   reprocess: async (id) => {
-    const response = await api.patch(`/exams/${id}/restore`)
-    return response.data
+    return executeExamMutation(api.patch(`/exams/${id}/restore`))
   },
 
   /**
    * Atualiza status para restaurar.
    */
   restore: async (id) => {
-    const response = await api.patch(`/exams/${id}/restore`)
-    return response.data
+    return executeExamMutation(api.patch(`/exams/${id}/restore`))
   },
 
   /**
    * Dispara a análise de IA. O backend garante claim atômico e idempotência.
    */
   analyze: async (id) => {
-    const response = await api.post(`/exams/${id}/analyze`)
-    return response.data
+    return executeExamMutation(api.post(`/exams/${id}/analyze`))
   },
 
   /**
@@ -139,8 +144,7 @@ export const examService = {
    * partir daqui (RN10).
    */
   review: async (id, payload) => {
-    const response = await api.patch(`/exams/${id}/review`, payload)
-    return response.data
+    return executeExamMutation(api.patch(`/exams/${id}/review`, payload))
   },
 
   /**
@@ -180,12 +184,9 @@ export const examService = {
    * Carrega o mapa Grad-CAM para visualização autenticada.
    */
   previewAiFile: async (id) => {
-    const response = await api.get(
-      `/exams/${id}/ai-file/preview`,
-      {
-        responseType: 'blob',
-      },
-    )
+    const response = await api.get(`/exams/${id}/ai-file/preview`, {
+      responseType: 'blob',
+    })
 
     return response.data
   },
@@ -194,15 +195,12 @@ export const examService = {
    * Baixa explicitamente o mapa Grad-CAM.
    */
   downloadAiFile: async (id) => {
-    const response = await api.get(
-      `/exams/${id}/ai-file/download`,
-      {
-        responseType: 'blob',
-        params: {
-          download_request: Date.now(),
-        },
+    const response = await api.get(`/exams/${id}/ai-file/download`, {
+      responseType: 'blob',
+      params: {
+        download_request: Date.now(),
       },
-    )
+    })
 
     return response.data
   },

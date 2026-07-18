@@ -11,9 +11,7 @@ const form = read('frontend/src/views/exams/ExamForm.jsx')
 const patientForm = read('frontend/src/views/patients/PatientForm.jsx')
 const list = read('frontend/src/views/exams/ExamsList.jsx')
 const history = read('frontend/src/views/exams/ExamHistoryCard.jsx')
-const aiResultCard = read(
-  'frontend/src/views/exams/ExamAiResultCard.jsx',
-)
+const aiResultCard = read('frontend/src/views/exams/ExamAiResultCard.jsx')
 const navigation = read('frontend/src/_nav.jsx')
 const service = read('frontend/src/services/examService.js')
 const stateMachine = read('backend/app/modules/exams/state_machine.py')
@@ -102,9 +100,7 @@ if (
   !form.includes('consecutiveErrors < maxConsecutivePollingErrors') ||
   !form.includes('window.clearTimeout(timerId)')
 ) {
-  throw new Error(
-    'O polling deve limitar erros consecutivos e limpar o timer ao desmontar a tela.',
-  )
+  throw new Error('O polling deve limitar erros consecutivos e limpar o timer ao desmontar a tela.')
 }
 if (!form.includes('navigate(`/exams/${createdExam.id}`)')) {
   throw new Error('O cadastro não redireciona para o exame recém-criado.')
@@ -112,7 +108,7 @@ if (!form.includes('navigate(`/exams/${createdExam.id}`)')) {
 if (
   !patientForm.includes("patient?.status_name === 'active'") ||
   !patientForm.includes('to={`/exams/create?patient=${id}`}') ||
-  !patientForm.includes('Cadastrar exame')
+  !patientForm.includes('Cadastrar Exame')
 ) {
   throw new Error(
     'O paciente ativo não oferece corretamente o cadastro de exame pela rota existente.',
@@ -132,28 +128,18 @@ if (
   )
 }
 if (
-  !form.includes(
-    'const authenticatedDoctorId = useMemo(() => {',
-  ) ||
-  !form.includes(
-    'String(patient.doctor_id) ===',
-  ) ||
+  !form.includes('const authenticatedDoctorId = useMemo(() => {') ||
+  !form.includes('String(patient.doctor_id) ===') ||
   !form.includes('authenticatedDoctorId') ||
   !form.includes('const defaultClinicId =') ||
   !form.includes('const defaultDoctorId =') ||
   !form.includes(': defaultClinicId,') ||
   !form.includes(': defaultDoctorId,') ||
   !form.includes('if (!isAdminMaster) return') ||
-  !form.includes(
-    '{isCreateMode && isAdminMaster ? (',
-  ) ||
+  !form.includes('{isCreateMode && isAdminMaster ? (') ||
   !form.includes('doctor_id: isDoctor') ||
-  !form.includes(
-    'Clínica vinculada ao usuário autenticado.',
-  ) ||
-  !form.includes(
-    'Médico autenticado responsável pelo exame.',
-  )
+  !form.includes('Clínica vinculada ao usuário autenticado.') ||
+  !form.includes('Médico autenticado responsável pelo exame.')
 ) {
   throw new Error(
     'O cadastro do exame deve fixar clínica e médico e filtrar os pacientes do médico autenticado.',
@@ -168,23 +154,15 @@ if (
   !patientForm.includes('Object.keys(payload).length === 0') ||
   !patientForm.includes('setPatient(updatedPatient)')
 ) {
-  throw new Error(
-    'A edição do paciente deve enviar somente os campos efetivamente alterados.',
-  )
+  throw new Error('A edição do paciente deve enviar somente os campos efetivamente alterados.')
 }
 
 if (
-  !list.includes(
-    "const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']",
-  ) ||
-  list.includes(
-    "const summaryCardStatuses = ['pending', 'processing'",
-  ) ||
+  !list.includes("const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']") ||
+  list.includes("const summaryCardStatuses = ['pending', 'processing'") ||
   !list.includes('<CCol sm={6} xl={4} key={status}>')
 ) {
-  throw new Error(
-    'Os cards devem mostrar somente pendentes, aguardando revisão e concluídos.',
-  )
+  throw new Error('Os cards devem mostrar somente pendentes, aguardando revisão e concluídos.')
 }
 if (
   !navigation.includes("name: 'Pendentes'") ||
@@ -199,18 +177,10 @@ if (
   )
 }
 if (
-  !list.includes(
-    "exam.status_name === 'processing' && exam.analysis_in_progress",
-  ) ||
-  !list.includes(
-    "const isProcessing = exam.status_name === 'processing'",
-  ) ||
-  !list.includes(
-    'canCancel={canChangeStatus && (isProcessing || isPending)}',
-  ) ||
-  !stateMachine.includes(
-    'StatusName.PROCESSING.value',
-  )
+  !list.includes("exam.status_name === 'processing' && exam.analysis_in_progress") ||
+  !list.includes("const isProcessing = exam.status_name === 'processing'") ||
+  !list.includes('canCancel={canChangeStatus && (isProcessing || isPending)}') ||
+  !stateMachine.includes('StatusName.PROCESSING.value')
 ) {
   throw new Error(
     'Processing deve permanecer no fluxo interno, na sinalização da análise e nas regras operacionais.',
@@ -231,16 +201,10 @@ if (
   !form.includes('const blob = await examService.previewFile(id)') ||
   !form.includes('const blob = await examService.downloadFile(id)') ||
   !form.includes('buildOriginalDownloadName({') ||
-  !aiResultCard.includes(
-    'alt="Imagem original do exame"',
-  ) ||
-  !aiResultCard.includes(
-    'Abrir imagem original em tamanho maior',
-  ) ||
+  !aiResultCard.includes('alt="Imagem original do exame"') ||
+  !aiResultCard.includes('Abrir imagem original em tamanho maior') ||
   !aiResultCard.includes('Baixar imagem original') ||
-  form.includes(
-    "<CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />",
-  ) ||
+  form.includes("<CFormInput value={form.file_name || 'Nenhum arquivo vinculado'} disabled />") ||
   form.includes("<div>{form.file_name || '-'}</div>") ||
   form.includes("<div>{form.file_mime_type || '-'}</div>")
 ) {
@@ -254,101 +218,57 @@ if (
   !examRouter.includes('return preview_exam_file(') ||
   !examService.includes('def preview_exam_file(') ||
   !examService.includes('def build_exam_download_filename(') ||
-  !examService.includes(
-    'content_disposition_type="inline"',
-  ) ||
-  !examService.includes(
-    'content_disposition_type="attachment"',
-  )
+  !examService.includes('content_disposition_type="inline"') ||
+  !examService.includes('content_disposition_type="attachment"')
 ) {
-  throw new Error(
-    'A prévia automática deve ser separada do download manual auditado.',
-  )
+  throw new Error('A prévia automática deve ser separada do download manual auditado.')
 }
 
 if (
   !service.includes('previewAiFile: async (id) =>') ||
-  !service.includes(
-    '`/exams/${id}/ai-file/preview`',
-  ) ||
+  !service.includes('`/exams/${id}/ai-file/preview`') ||
   !service.includes('downloadAiFile: async (id) =>') ||
-  !examRouter.includes(
-    '@router.get("/{exam_id}/ai-file/preview")',
-  ) ||
+  !examRouter.includes('@router.get("/{exam_id}/ai-file/preview")') ||
   !examRouter.includes('return preview_exam_ai_file(') ||
-  !examRouter.includes(
-    '@router.get("/{exam_id}/ai-file/download")',
-  ) ||
+  !examRouter.includes('@router.get("/{exam_id}/ai-file/download")') ||
   !examService.includes('def get_authorized_gradcam_file(') ||
   !examService.includes('def preview_exam_ai_file(') ||
-  !examService.includes(
-    'def build_gradcam_download_filename(',
-  ) ||
-  !examService.includes(
-    'description="Download do mapa de atribuição da IA autorizado."',
-  ) ||
-  !examService.includes(
-    '"artifact_type": "ai_attribution_map"',
-  ) ||
-  !examService.includes(
-    '"delivery_mode": "attachment"',
-  )
+  !examService.includes('def build_gradcam_download_filename(') ||
+  !examService.includes('description="Download do mapa de atribuição da IA autorizado."') ||
+  !examService.includes('"artifact_type": "ai_attribution_map"') ||
+  !examService.includes('"delivery_mode": "attachment"')
 ) {
-  throw new Error(
-    'A prévia do Grad-CAM deve ser separada do download manual auditado.',
-  )
+  throw new Error('A prévia do Grad-CAM deve ser separada do download manual auditado.')
 }
 
-if (
-  (
-    service.match(
-      /download_request: Date\.now\(\)/g,
-    ) || []
-  ).length !== 2
-) {
+if ((service.match(/download_request: Date\.now\(\)/g) || []).length !== 2) {
   throw new Error(
     'Os downloads explícitos devem impedir respostas reutilizadas do cache do navegador.',
   )
 }
 
 if (
-  !form.includes(
-    'buildAttributionMapDownloadName',
-  ) ||
-  !form.includes(
-    '`mapa-atribuicao-exame-${examId}-`',
-  ) ||
-  !form.includes(
-    'mapa de atribuição da IA',
-  )
+  !form.includes('buildAttributionMapDownloadName') ||
+  !form.includes('`mapa-atribuicao-exame-${examId}-`') ||
+  !form.includes('mapa de atribuição da IA')
 ) {
-  throw new Error(
-    'A revisão e o download devem usar a nomenclatura pública do mapa de atribuição.',
-  )
+  throw new Error('A revisão e o download devem usar a nomenclatura pública do mapa de atribuição.')
 }
 
 const patientHistoryGuardPattern =
   /\{!isCreateMode && hasPatientExams && \(\s*<CCol lg=\{4\}>[\s\S]*?<strong>Histórico de Exames<\/strong>[\s\S]*?<\/CCol>\s*\)\}/
 
 if (
-  !patientForm.includes(
-    '<CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>',
-  ) ||
+  !patientForm.includes('<CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>') ||
   !patientHistoryGuardPattern.test(patientForm)
 ) {
-  throw new Error(
-    'O histórico só deve aparecer quando o paciente possuir exames.',
-  )
+  throw new Error('O histórico só deve aparecer quando o paciente possuir exames.')
 }
 
 if (
-  !patientForm.includes(
-    "import { examService } from 'src/services/examService'",
-  ) ||
+  !patientForm.includes("import { examService } from 'src/services/examService'") ||
   !patientForm.includes('const [patientExams, setPatientExams]') ||
-  !patientForm.includes(
-    'const hasPatientExams = patientExams.length > 0',
-  ) ||
+  !patientForm.includes('const hasPatientExams = patientExams.length > 0') ||
   !patientForm.includes('const canReadExams = hasPermission(') ||
   !patientForm.includes('const data = await examService.list({') ||
   !patientForm.includes('patientId: id') ||
@@ -359,36 +279,20 @@ if (
   !patientForm.includes('formatDateBR(exam.exam_date)') ||
   !patientForm.includes('to={`/exams/${exam.id}`}') ||
   !patientForm.includes('Abrir exame') ||
-  !patientForm.includes(
-    '{!isCreateMode && hasPatientExams && (',
-  ) ||
-  patientForm.includes(
-    'Nenhum exame registrado para este paciente.',
-  ) ||
+  !patientForm.includes('{!isCreateMode && hasPatientExams && (') ||
+  patientForm.includes('Nenhum exame registrado para este paciente.') ||
   patientForm.includes('Área preparada para o módulo Exams.')
 ) {
-  throw new Error(
-    'O paciente existente deve exibir seu histórico real de exames.',
-  )
+  throw new Error('O paciente existente deve exibir seu histórico real de exames.')
 }
 
-const detailLayoutStart = form.indexOf(
-  '{!isCreateMode ? (',
-)
+const detailLayoutStart = form.indexOf('{!isCreateMode ? (')
 const detailLayout = form.slice(detailLayoutStart)
 
-const reviewIndex = detailLayout.indexOf(
-  'id="revisao-medica"',
-)
-const aiResultIndex = detailLayout.indexOf(
-  '<ExamAiResultCard',
-)
-const dataCardIndex = detailLayout.indexOf(
-  '{examDataCard}',
-)
-const historyIndex = detailLayout.indexOf(
-  '<ExamHistoryCard',
-)
+const reviewIndex = detailLayout.indexOf('id="revisao-medica"')
+const aiResultIndex = detailLayout.indexOf('<ExamAiResultCard')
+const dataCardIndex = detailLayout.indexOf('{examDataCard}')
+const historyIndex = detailLayout.indexOf('<ExamHistoryCard')
 
 if (
   detailLayoutStart < 0 ||
@@ -403,21 +307,15 @@ if (
 }
 
 if (
-  !form.includes(
-    'const [isExamDataOpen, setIsExamDataOpen] = useState(',
-  ) ||
+  !form.includes('const [isExamDataOpen, setIsExamDataOpen] = useState(') ||
   !form.includes('aria-expanded={isExamDataOpen}') ||
-  !form.includes(
-    '{(!isReadOnly || isExamDataOpen) && (',
-  ) ||
+  !form.includes('{(!isReadOnly || isExamDataOpen) && (') ||
   !form.includes('<CCol xs={12}>') ||
   !form.includes('collapsible={isReadOnly}') ||
   !form.includes('defaultOpen={!isReadOnly}') ||
   !history.includes('collapsible = false') ||
   !history.includes('defaultOpen = true') ||
-  !history.includes(
-    'const isContentOpen = !collapsible || isOpen',
-  ) ||
+  !history.includes('const isContentOpen = !collapsible || isOpen') ||
   !history.includes('aria-expanded={isOpen}') ||
   !history.includes('{isContentOpen && (') ||
   !history.includes('className="mt-4 mb-4"')
@@ -428,74 +326,36 @@ if (
 }
 
 if (
-  !form.includes(
-    "{isCreateMode ? title : form.title || title}",
-  ) ||
+  !form.includes('{isCreateMode ? title : form.title || title}') ||
   !form.includes('{selectedPatientName}') ||
   !form.includes('{formatDateBR(form.exam_date)}') ||
-  !form.includes(
-    'examTypeLabels[form.exam_type]',
-  ) ||
-  !form.includes(
-    'statusColors[form.status_name]',
-  )
+  !form.includes('examTypeLabels[form.exam_type]') ||
+  !form.includes('statusColors[form.status_name]')
 ) {
-  throw new Error(
-    'O cabeçalho do detalhe deve resumir título, paciente, data, tipo e status.',
-  )
+  throw new Error('O cabeçalho do detalhe deve resumir título, paciente, data, tipo e status.')
 }
 
 if (
-  !form.includes(
-    "import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'",
-  ) ||
+  !form.includes("import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'") ||
   !form.includes('<ExamAiResultCard') ||
-  !aiResultCard.includes(
-    '<strong>Resultado da IA</strong>',
-  ) ||
+  !aiResultCard.includes('<strong>Resultado da IA</strong>') ||
   !aiResultCard.includes('color="info"') ||
   !aiResultCard.includes('Uso do resultado:') ||
   !aiResultCard.includes('Sobre o mapa atual:') ||
   !aiResultCard.includes('Ensemble Stacking') ||
-  !aiResultCard.includes(
-    'ENSEMBLE_ATTRIBUTION_METHOD',
-  ) ||
-  !aiResultCard.includes(
-    'weighted_base_gradcam_oriented_by_ensemble_stacking_v1',
-  ) ||
-  !aiResultCard.includes(
-    'Mapa de atribuição composto',
-  ) ||
-  !aiResultCard.includes(
-    'Mapa Grad-CAM (ResNet-50)',
-  ) ||
-  !aiResultCard.includes(
-    'Grad-CAMs da ResNet-50, EfficientNet-B4 e',
-  ) ||
-  !aiResultCard.includes(
-    'PVTv2-B2 para a classe final prevista',
-  ) ||
-  !aiResultCard.includes(
-    'ponderados pelas evidências locais do',
-  ) ||
-  !aiResultCard.includes(
-    'metaclassificador',
-  ) ||
-  !aiResultCard.includes(
-    'mapa legado gerado',
-  ) ||
-  !aiResultCard.includes(
-    'decisão completa do Ensemble',
-  ) ||
-  !aiResultCard.includes(
-    'Pesos locais da composição:',
-  ) ||
-  !aiResultCard.includes(
-    'attribution_branch_weights',
-  ) ||
-  !aiResultCard.includes(
-    'formatAttributionWeight',
-  ) ||
+  !aiResultCard.includes('ENSEMBLE_ATTRIBUTION_METHOD') ||
+  !aiResultCard.includes('weighted_base_gradcam_oriented_by_ensemble_stacking_v1') ||
+  !aiResultCard.includes('Mapa de atribuição composto') ||
+  !aiResultCard.includes('Mapa Grad-CAM (ResNet-50)') ||
+  !aiResultCard.includes('Grad-CAMs da ResNet-50, EfficientNet-B4 e') ||
+  !aiResultCard.includes('PVTv2-B2 para a classe final prevista') ||
+  !aiResultCard.includes('ponderados pelas evidências locais do') ||
+  !aiResultCard.includes('metaclassificador') ||
+  !aiResultCard.includes('mapa legado gerado') ||
+  !aiResultCard.includes('decisão completa do Ensemble') ||
+  !aiResultCard.includes('Pesos locais da composição:') ||
+  !aiResultCard.includes('attribution_branch_weights') ||
+  !aiResultCard.includes('formatAttributionWeight') ||
   !aiResultCard.includes('risco, gravidade') ||
   !aiResultCard.includes('causalidade') ||
   !aiResultCard.includes('Status da análise') ||
@@ -503,59 +363,25 @@ if (
   !aiResultCard.includes('Confiança') ||
   !aiResultCard.includes('Modelo utilizado') ||
   !aiResultCard.includes('Versão') ||
-  !aiResultCard.includes(
-    'Tempo de processamento',
-  ) ||
-  !aiResultCard.includes(
-    "'ClinicAI Gastrointestinal — Ensemble Stacking'",
-  ) ||
+  !aiResultCard.includes('Tempo de processamento') ||
+  !aiResultCard.includes("'ClinicAI ES Gastrointestinal'") ||
   !aiResultCard.includes('model_version') ||
-  !aiResultCard.includes(
-    '<hr className="my-4" />',
-  ) ||
+  !aiResultCard.includes('<hr className="my-4" />') ||
   !aiResultCard.includes('Imagem original') ||
-  !aiResultCard.includes(
-    'const mapTitle = isEnsembleAttribution',
-  ) ||
-  !aiResultCard.includes(
-    'const mapName = isEnsembleAttribution',
-  ) ||
-  !aiResultCard.includes(
-    'Abrir imagem original em tamanho maior',
-  ) ||
-  !aiResultCard.includes(
-    'Abrir mapa em tamanho maior',
-  ) ||
-  !aiResultCard.includes(
-    'Baixar imagem original',
-  ) ||
-  !aiResultCard.includes(
-    'Baixar ${mapName}',
-  ) ||
-  !aiResultCard.includes(
-    'Intensidade de atribuição relativa',
-  ) ||
-  !aiResultCard.includes(
-    'Intensidade de contribuição relativa',
-  ) ||
-  !aiResultCard.includes(
-    'Menor intensidade',
-  ) ||
-  !aiResultCard.includes(
-    'Maior intensidade',
-  ) ||
-  !aiResultCard.includes(
-    'linear-gradient(90deg',
-  ) ||
-  !aiResultCard.includes(
-    'ai_notes?.trim()',
-  ) ||
-  !aiResultCard.includes(
-    "height: '360px'",
-  ) ||
-  aiResultCard.includes(
-    'Mapa produzido pela ResNet-50, componente',
-  ) ||
+  !aiResultCard.includes('const mapTitle = isEnsembleAttribution') ||
+  !aiResultCard.includes('const mapName = isEnsembleAttribution') ||
+  !aiResultCard.includes('Abrir imagem original em tamanho maior') ||
+  !aiResultCard.includes('Abrir mapa em tamanho maior') ||
+  !aiResultCard.includes('Baixar imagem original') ||
+  !aiResultCard.includes('Baixar ${mapName}') ||
+  !aiResultCard.includes('Intensidade de atribuição relativa') ||
+  !aiResultCard.includes('Intensidade de contribuição relativa') ||
+  !aiResultCard.includes('Menor intensidade') ||
+  !aiResultCard.includes('Maior intensidade') ||
+  !aiResultCard.includes('linear-gradient(90deg') ||
+  !aiResultCard.includes('ai_notes?.trim()') ||
+  !aiResultCard.includes("height: '360px'") ||
+  aiResultCard.includes('Mapa produzido pela ResNet-50, componente') ||
   aiResultCard.includes('console.log(')
 ) {
   throw new Error(
@@ -563,39 +389,19 @@ if (
   )
 }
 
+const contributionScaleIndex = aiResultCard.indexOf('const contributionScaleStyle')
 
-const contributionScaleIndex =
-  aiResultCard.indexOf(
-    'const contributionScaleStyle',
-  )
+const originalImageSectionIndex = aiResultCard.indexOf('id="original-image-title"')
 
-const originalImageSectionIndex =
-  aiResultCard.indexOf(
-    'id="original-image-title"',
-  )
-
-const gradcamImageSectionIndex =
-  aiResultCard.indexOf(
-    'id="gradcam-image-title"',
-  )
+const gradcamImageSectionIndex = aiResultCard.indexOf('id="gradcam-image-title"')
 
 if (
   contributionScaleIndex < 0 ||
   originalImageSectionIndex <= contributionScaleIndex ||
   gradcamImageSectionIndex <= contributionScaleIndex ||
-  !aiResultCard.includes(
-    'className="g-4 align-items-stretch"',
-  ) ||
-  (
-    aiResultCard.match(
-      /className="h-100 d-flex flex-column"/g,
-    ) || []
-  ).length !== 2 ||
-  (
-    aiResultCard.match(
-      /className="d-grid gap-2 mt-auto"/g,
-    ) || []
-  ).length !== 2
+  !aiResultCard.includes('className="g-4 align-items-stretch"') ||
+  (aiResultCard.match(/className="h-100 d-flex flex-column"/g) || []).length !== 2 ||
+  (aiResultCard.match(/className="d-grid gap-2 mt-auto"/g) || []).length !== 2
 ) {
   throw new Error(
     'A escala deve anteceder as imagens e as duas colunas devem permanecer visualmente equilibradas.',
@@ -603,13 +409,9 @@ if (
 }
 
 if (
-  !form.includes(
-    'Dados clínicos e administrativos',
-  ) ||
+  !form.includes('Dados Clínicos e Administrativos') ||
   !form.includes('Observações') ||
-  !form.includes(
-    'Achados da revisão médica *',
-  ) ||
+  !form.includes('Achados da revisão médica *') ||
   !form.includes('Conclusão médica *')
 ) {
   throw new Error(
@@ -619,16 +421,10 @@ if (
 
 if (
   form.includes('<strong>Arquivo</strong>') ||
-  form.includes(
-    '<div className="text-body-secondary small">Resumo</div>',
-  ) ||
-  form.includes(
-    '<div>{aiAnalysis.ai_notes || \'-\'}</div>',
-  )
+  form.includes('<div className="text-body-secondary small">Resumo</div>') ||
+  form.includes("<div>{aiAnalysis.ai_notes || '-'}</div>")
 ) {
-  throw new Error(
-    'A tela ainda contém a organização lateral ou textos artificiais antigos.',
-  )
+  throw new Error('A tela ainda contém a organização lateral ou textos artificiais antigos.')
 }
 
 if (form.includes('console.log(')) {

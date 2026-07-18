@@ -488,7 +488,7 @@ const UserForm = ({ mode = 'create' }) => {
                   color="secondary"
                   variant="outline"
                   as={Link}
-                  to="/exams"
+                  to="/users"
                 >
                   Cancelar
                 </CButton>

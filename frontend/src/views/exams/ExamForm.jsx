@@ -1176,7 +1176,7 @@ const ExamForm = ({ mode = 'create' }) => {
           )}
         </div>
 
-        <div className="d-flex d-flex justify-content-center mt-4 gap-2">
+        <div className="d-flex justify-content-center mt-4 gap-2">
           {(canAnalyze || isAnalyzing) && (
             <CButton
               color="primary"

@@ -203,7 +203,7 @@ const StatusForm = ({ mode = 'view' }) => {
                   color="secondary"
                   variant="outline"
                   as={Link}
-                  to="/exams"
+                  to="/statuses"
                 >
                   Cancelar
                 </CButton>
