@@ -90,7 +90,10 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav items={filteredNavigation} />
+      <AppSidebarNav
+        items={filteredNavigation}
+        roleName={roleName}
+      />
     </CSidebar>
   )
 }

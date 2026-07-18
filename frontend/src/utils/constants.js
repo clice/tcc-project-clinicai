@@ -20,7 +20,7 @@ export const moduleLabels = {
 // STATUS
 
 export const statusColors = {
-  pending: 'secondary',
+  pending: 'info',
   processing: 'info',
   awaiting_review: 'warning',
   completed: 'success',
@@ -47,7 +47,7 @@ export const examStatusDisplayLabels = {
   processing: 'Processando',
   awaiting_review: 'Aguardando revisão',
   completed: 'Concluído',
-  completed_with_divergence: 'Concluído com divergência',
+  completed_with_divergence: 'Com divergência',
   failed: 'Falha na IA',
   canceled: 'Cancelado',
 }

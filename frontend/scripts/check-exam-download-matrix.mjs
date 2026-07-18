@@ -25,7 +25,7 @@ const requiredListFragments = [
   'exam.file_available',
   'exam.gradcam_available',
   'downloadImagePackage(exam.id)',
-  'canEdit={canEdit && isPending}',
+  'canEdit={canEditExam && isPending}',
   'canRestore={canChangeStatus && (isCanceled || isFailed)}',
   'canCancel={canChangeStatus && (isProcessing || isPending)}',
   'canUseClinicalExamActions',
@@ -56,20 +56,31 @@ if (
 }
 
 if (
-  card.includes('Mapa de atribuição composto') ||
-  card.includes('mapa de atribuição composto') ||
-  form.includes('mapa-atribuicao-exame-') ||
-  form.includes('mapa de atribuição da IA')
+  !card.includes(
+    "'Mapa de atribuição composto'",
+  ) ||
+  !card.includes(
+    "'Mapa Grad-CAM (ResNet-50)'",
+  ) ||
+  !card.includes('onPackageDownload') ||
+  !card.includes('cilCloudDownload') ||
+  !card.includes('cilPrint') ||
+  !card.includes(
+    'title="Baixar imagem original e mapa de atribuição"',
+  ) ||
+  card.includes('Baixar imagem e mapa') ||
+  card.includes('onOriginalDownload') ||
+  card.includes('onGradcamDownload') ||
+  !form.includes(
+    'buildExamImagesPackageDownloadName',
+  ) ||
+  !form.includes(
+    'downloadImagePackage',
+  )
 ) {
-  throw new Error('A nomenclatura pública antiga ainda está exposta.')
-}
-
-if (
-  !card.includes("const mapTitle = 'Mapa Grad-CAM'") ||
-  !card.includes("const mapName = 'mapa Grad-CAM'") ||
-  !form.includes('buildGradcamDownloadName')
-) {
-  throw new Error('Mapa Grad-CAM não foi padronizado no detalhe.')
+  throw new Error(
+    'O detalhe deve distinguir o mapa composto do legado e disponibilizar somente o pacote conjunto.',
+  )
 }
 
 const editableSection = backendState

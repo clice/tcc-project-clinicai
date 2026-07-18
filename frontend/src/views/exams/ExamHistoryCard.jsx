@@ -31,7 +31,7 @@ const statusLabels = {
   processing: 'Processando',
   awaiting_review: 'Aguardando revisão',
   completed: 'Concluído',
-  completed_with_divergence: 'Concluído com divergência',
+  completed_with_divergence: 'Com divergência',
   failed: 'Falha',
   canceled: 'Cancelado',
 }
@@ -100,7 +100,7 @@ const ExamHistoryCard = ({
   }, [examId, isContentOpen, refreshKey])
 
   return (
-    <CCard className="mt-4 mb-4">
+    <CCard className="mb-4">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <strong>Histórico do Exame</strong>
 

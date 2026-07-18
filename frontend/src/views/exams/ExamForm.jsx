@@ -24,6 +24,8 @@ import {
   CRow,
   CSpinner,
 } from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilWarning } from '@coreui/icons'
 
 import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
@@ -32,19 +34,21 @@ import { examService } from 'src/services/examService'
 import { aiAnalysisService } from 'src/services/aiAnalysisService'
 import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'
 import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
+import ExamSummaryHeader from 'src/views/exams/ExamSummaryHeader'
 
 import {
   examStatusDisplayLabels,
-  examTypeLabels,
   examTypeOptions,
   statusColors,
 } from 'src/utils/constants'
-import { buildGradcamDownloadName, buildOriginalDownloadName } from 'src/utils/examDownloadNames'
+import {
+  buildExamImagesPackageDownloadName,
+  buildOriginalDownloadName,
+} from 'src/utils/examDownloadNames'
 import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
 import {
   formatCpfBR,
-  formatDateBR,
   formatDateTimeBR,
 } from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
@@ -145,7 +149,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [gradcamUrl, setGradcamUrl] = useState(null)
   const [gradcamError, setGradcamError] = useState('')
   const [isGradcamLoading, setIsGradcamLoading] = useState(false)
-  const [isGradcamDownloading, setIsGradcamDownloading] = useState(false)
+  const [isPackageDownloading, setIsPackageDownloading] = useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(null)
   const [originalImageError, setOriginalImageError] = useState('')
   const [isOriginalImageLoading, setIsOriginalImageLoading] = useState(false)
@@ -167,7 +171,11 @@ const ExamForm = ({ mode = 'create' }) => {
   const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
-  const isPendingView = isReadOnly && form.status_name === 'pending'
+  const isPendingView =
+    isReadOnly &&
+    ['pending', 'failed', 'canceled'].includes(
+      form.status_name,
+    )
 
   const roleName = getUserRole(user)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
@@ -176,6 +184,18 @@ const ExamForm = ({ mode = 'create' }) => {
     roleName !== ROLES.CLINIC_STAFF && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
   const canDownloadExamFile = !isCreateMode && hasPermission(user, PERMISSIONS.EXAMS_DOWNLOAD)
+
+  const canDownloadExamPackage =
+    canDownloadExamFile &&
+    canViewAiAnalysis &&
+    Boolean(
+      aiAnalysis?.gradcam_available,
+    ) &&
+    [
+      'awaiting_review',
+      'completed',
+      'completed_with_divergence',
+    ].includes(form.status_name)
 
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
@@ -455,8 +475,8 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }, [canViewAiAnalysis, id, isAnalysisActive])
 
-  // O Mapa Grad-CAM é carregado por uma rota de prévia.
-  // Somente o clique explícito em download gera auditoria.
+  // O mapa de atribuição é carregado por uma rota de prévia.
+  // Somente o clique explícito no pacote gera auditoria de download.
   useEffect(() => {
     if (!aiAnalysis?.gradcam_available || isCreateMode) {
       return undefined
@@ -480,7 +500,12 @@ const ExamForm = ({ mode = 'create' }) => {
       } catch (err) {
         if (!isCancelled) {
           setGradcamUrl(null)
-          setGradcamError(getErrorMessage(err, 'Não foi possível carregar o Mapa Grad-CAM.'))
+          setGradcamError(
+            getErrorMessage(
+              err,
+              'Não foi possível carregar o mapa de atribuição.',
+            ),
+          )
         }
       } finally {
         if (!isCancelled) {
@@ -695,27 +720,33 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }
 
-  const handleGradcamDownload = async () => {
-    if (!canViewAiAnalysis || !aiAnalysis?.gradcam_available) {
-      return
-    }
+  const handlePackageDownload = async () => {
+    if (!canDownloadExamPackage) return
 
     showError('')
 
     try {
-      setIsGradcamDownloading(true)
+      setIsPackageDownloading(true)
 
-      const blob = await examService.downloadAiFile(id)
-      const objectUrl = URL.createObjectURL(blob)
-      const anchor = document.createElement('a')
+      const blob =
+        await examService.downloadImagePackage(
+          id,
+        )
+
+      const objectUrl =
+        URL.createObjectURL(blob)
+
+      const anchor =
+        document.createElement('a')
 
       anchor.href = objectUrl
-      anchor.download = buildGradcamDownloadName({
-        examId: id,
-        patientName: selectedPatientName,
-        examDate: form.exam_date,
-        mimeType: blob.type,
-      })
+      anchor.download =
+        buildExamImagesPackageDownloadName({
+          examId: id,
+          patientName:
+            selectedPatientName,
+          examDate: form.exam_date,
+        })
 
       document.body.appendChild(anchor)
       anchor.click()
@@ -725,9 +756,14 @@ const ExamForm = ({ mode = 'create' }) => {
         URL.revokeObjectURL(objectUrl)
       }, 1000)
     } catch (err) {
-      showError(getErrorMessage(err, 'Não foi possível baixar o Mapa Grad-CAM.'))
+      showError(
+        getErrorMessage(
+          err,
+          'Não foi possível baixar a imagem original e o mapa de atribuição.',
+        ),
+      )
     } finally {
-      setIsGradcamDownloading(false)
+      setIsPackageDownloading(false)
     }
   }
 
@@ -753,7 +789,7 @@ const ExamForm = ({ mode = 'create' }) => {
     }
 
     if (!form.title.trim()) {
-      showError('Informe o título do exame.')
+      showError('Informe a descrição do exame.')
       return false
     }
 
@@ -931,6 +967,236 @@ const ExamForm = ({ mode = 'create' }) => {
     }
   }
 
+  const examSummaryHeader = (
+    <ExamSummaryHeader
+      patientName={selectedPatientName}
+      patientCpf={selectedPatientCpf}
+      patientBirthDate={
+        selectedPatient?.birth_date ||
+        ''
+      }
+      examType={form.exam_type}
+      examDate={form.exam_date}
+    />
+  )
+
+  const reviewPanel = canReview ? (
+    <section
+      id="revisao-medica"
+      aria-labelledby="medical-review-title"
+      className="h-100 rounded border border-warning bg-warning-subtle p-3"
+    >
+      <h2
+        id="medical-review-title"
+        className="h5 mb-3"
+      >
+        Revisão médica
+      </h2>
+
+      <CAlert
+        color="warning"
+        className="small d-flex align-items-start gap-2"
+        style={{
+          backgroundColor:
+            'rgba(var(--cui-warning-rgb), 0.12)',
+          borderColor:
+            'rgba(var(--cui-warning-rgb), 0.35)',
+        }}
+      >
+        <CIcon
+          icon={cilWarning}
+          className="flex-shrink-0 mt-1"
+          aria-hidden="true"
+        />
+
+        <span>
+          Compare a imagem original, o mapa de
+          atribuição e o resultado automatizado
+          antes de registrar os achados e a
+          conclusão médica.
+        </span>
+      </CAlert>
+
+      <CForm
+        onSubmit={handleReviewSubmit}
+      >
+        <div className="mb-3">
+          <CFormLabel htmlFor="findings">
+            Achados da revisão médica *
+          </CFormLabel>
+
+          <CFormTextarea
+            id="findings"
+            rows={4}
+            value={review.findings}
+            onChange={handleReviewFieldChange(
+              'findings',
+            )}
+            placeholder="Descreva os achados observados ao interpretar a imagem e o resultado automatizado."
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <CFormLabel htmlFor="conclusion">
+            Conclusão médica *
+          </CFormLabel>
+
+          <CFormTextarea
+            id="conclusion"
+            rows={4}
+            value={review.conclusion}
+            onChange={handleReviewFieldChange(
+              'conclusion',
+            )}
+            placeholder="Registre o parecer final sobre o exame."
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <CFormLabel>
+            Em relação à classificação
+            automatizada
+          </CFormLabel>
+
+          <CFormCheck
+            type="radio"
+            name="has_discrepancy"
+            id="discrepancy-false"
+            label="Confirmo o resultado sugerido pela IA"
+            checked={
+              !review.has_discrepancy
+            }
+            onChange={() =>
+              setReview((current) => ({
+                ...current,
+                has_discrepancy: false,
+              }))
+            }
+          />
+
+          <CFormCheck
+            type="radio"
+            name="has_discrepancy"
+            id="discrepancy-true"
+            label="Identifiquei divergência em relação ao resultado da IA"
+            checked={
+              review.has_discrepancy
+            }
+            onChange={() =>
+              setReview((current) => ({
+                ...current,
+                has_discrepancy: true,
+              }))
+            }
+          />
+        </div>
+
+        <CButton
+          type="submit"
+          color="warning"
+          disabled={isReviewing}
+        >
+          {isReviewing ? (
+            <>
+              <CSpinner
+                size="sm"
+                className="me-2"
+              />
+
+              Registrando revisão...
+            </>
+          ) : (
+            'Concluir revisão'
+          )}
+        </CButton>
+      </CForm>
+    </section>
+  ) : form.findings || form.conclusion ? (
+    <section
+      id="revisao-medica"
+      aria-labelledby="medical-review-result-title"
+      className={`h-100 rounded border p-3 ${
+        form.status_name ===
+        'completed_with_divergence'
+          ? 'border-dark'
+          : 'border-success bg-success-subtle'
+      }`}
+      style={
+        form.status_name ===
+        'completed_with_divergence'
+          ? {
+              backgroundColor:
+                'rgba(var(--cui-dark-rgb), 0.08)',
+            }
+          : undefined
+      }
+    >
+      <h2
+        id="medical-review-result-title"
+        className="h5 mb-3"
+      >
+        Resultado da revisão médica
+      </h2>
+
+      <div className="mb-3">
+        <div className="text-body-secondary small">
+          Achados da revisão médica
+        </div>
+
+        <div>
+          {form.findings || '-'}
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <div className="text-body-secondary small">
+          Conclusão médica
+        </div>
+
+        <div>
+          {form.conclusion || '-'}
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <div className="text-body-secondary small">
+          Desfecho
+        </div>
+
+        <CBadge
+          color={
+            form.status_name ===
+            'completed_with_divergence'
+              ? 'dark'
+              : 'success'
+          }
+        >
+          {form.status_name ===
+          'completed_with_divergence'
+            ? 'Com divergência'
+            : 'Concluído'}
+        </CBadge>
+      </div>
+
+      <div>
+        <div className="text-body-secondary small">
+          Revisado por
+        </div>
+
+        <div>
+          {form.reviewed_by_name || '-'}
+          {form.reviewed_at
+            ? ` em ${formatDateTimeBR(
+                form.reviewed_at,
+              )}`
+            : ''}
+        </div>
+      </div>
+    </section>
+  ) : null
+
   const examDataCard = (
     <CCard className="mb-4">
       <CCardHeader>
@@ -1025,7 +1291,7 @@ const ExamForm = ({ mode = 'create' }) => {
 
             <CCol md={6}>
               <CFormLabel>
-                Título
+                Descrição
               </CFormLabel>
 
               <CFormInput
@@ -1229,49 +1495,45 @@ const ExamForm = ({ mode = 'create' }) => {
 
   const examDataViewContent = (
     <CRow className="g-4">
-      <CCol md={12}>
-        <div className="text-body-secondary small mb-1">Paciente</div>
-        <div className="fw-semibold">{selectedPatientName}</div>
+      <CCol md={6}>
+        <div className="text-body-secondary small mb-1">
+          Clínica
+        </div>
+
+        <div className="fw-semibold">
+          {selectedClinicName}
+        </div>
       </CCol>
 
       <CCol md={6}>
-        <div className="text-body-secondary small mb-1">Clínica</div>
-        <div>{selectedClinicName}</div>
-      </CCol>
+        <div className="text-body-secondary small mb-1">
+          Médico responsável
+        </div>
 
-      <CCol md={6}>
-        <div className="text-body-secondary small mb-1">Médico responsável</div>
-        <div>{selectedDoctorName}</div>
-      </CCol>
-
-      <CCol md={3}>
-        <div className="text-body-secondary small mb-1">Data do exame</div>
-        <div>{formatDateBR(form.exam_date)}</div>
-      </CCol>
-
-      <CCol md={3}>
-        <div className="text-body-secondary small mb-1">Tipo de exame</div>
-        <div>{examTypeLabels[form.exam_type] || form.exam_type || '-'}</div>
-      </CCol>
-
-      <CCol md={2}>
-        <div className="text-body-secondary small mb-1">Status</div>
-        <CBadge color={statusColors[form.status_name] || 'secondary'}>
-          {examStatusDisplayLabels[form.status_name] || form.status_display_name || '-'}
-        </CBadge>
-      </CCol>
-
-      <CCol xs={12}>
-        <div className="text-body-secondary small mb-1">Indicação clínica</div>
-        <div className="rounded bg-body-tertiary p-3">
-          {form.clinical_indication?.trim() || 'Não informada.'}
+        <div className="fw-semibold">
+          {selectedDoctorName}
         </div>
       </CCol>
 
       <CCol xs={12}>
-        <div className="text-body-secondary small mb-1">Observações</div>
+        <div className="text-body-secondary small mb-1">
+          Indicação clínica
+        </div>
+
         <div className="rounded bg-body-tertiary p-3">
-          {form.description?.trim() || 'Nenhuma observação registrada.'}
+          {form.clinical_indication?.trim() ||
+            'Não informada.'}
+        </div>
+      </CCol>
+
+      <CCol xs={12}>
+        <div className="text-body-secondary small mb-1">
+          Observações
+        </div>
+
+        <div className="rounded bg-body-tertiary p-3">
+          {form.description?.trim() ||
+            'Nenhuma observação registrada.'}
         </div>
       </CCol>
     </CRow>
@@ -1280,17 +1542,19 @@ const ExamForm = ({ mode = 'create' }) => {
   const examDataViewCard = (
     <CCard>
       <CCardHeader>
-        <strong>Dados do Exame</strong>
+        {examSummaryHeader}
       </CCardHeader>
 
-      <CCardBody>{examDataViewContent}</CCardBody>
+      <CCardBody>
+        {examDataViewContent}
+      </CCardBody>
     </CCard>
   )
 
   const pendingExamCard = (
-    <CCard>
+    <CCard className="mb-4">
       <CCardHeader>
-        <strong>Dados do Exame</strong>
+        {examSummaryHeader}
       </CCardHeader>
 
       <CCardBody>
@@ -1358,7 +1622,30 @@ const ExamForm = ({ mode = 'create' }) => {
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
 
-          <h1 className="h3 mb-0">{isCreateMode ? title : form.title || title}</h1>
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <h1 className="h3 mb-0">
+              {isCreateMode
+                ? title
+                : form.title || title}
+            </h1>
+
+            {!isCreateMode &&
+              form.status_name && (
+                <CBadge
+                  color={
+                    statusColors[
+                      form.status_name
+                    ] || 'secondary'
+                  }
+                >
+                  {examStatusDisplayLabels[
+                    form.status_name
+                  ] ||
+                    form.status_display_name ||
+                    '-'}
+                </CBadge>
+              )}
+          </div>
 
           <p className="text-body-secondary mb-0">
             {isCreateMode
@@ -1417,171 +1704,57 @@ const ExamForm = ({ mode = 'create' }) => {
         </>
       ) : !isCreateMode ? (
         <>
-          <CRow className="g-4">
-            {(canReview || form.findings || form.conclusion) && (
-              <CCol xs={12}>
-                <div id="revisao-medica">
-                  {canReview ? (
-                    <CCard className="border-warning">
-                      <CCardHeader className="bg-warning-subtle">
-                        <strong>Revisão médica</strong>
-                      </CCardHeader>
+          <div className="mb-4">
+            {examDataViewCard}
+          </div>
 
-                      <CCardBody>
-                        <CAlert color="warning" className="small">
-                          Antes de concluir, compare a imagem original, o Mapa Grad-CAM e o
-                          resultado automatizado apresentados abaixo. Os achados e a conclusão
-                          encerram o exame.
-                        </CAlert>
-
-                        <CForm onSubmit={handleReviewSubmit}>
-                          <div className="mb-3">
-                            <CFormLabel htmlFor="findings">Achados da revisão médica *</CFormLabel>
-                            <CFormTextarea
-                              id="findings"
-                              rows={4}
-                              value={review.findings}
-                              onChange={handleReviewFieldChange('findings')}
-                              placeholder="Descreva os achados observados ao interpretar a imagem e o resultado automatizado."
-                              required
-                            />
-                          </div>
-
-                          <div className="mb-3">
-                            <CFormLabel htmlFor="conclusion">Conclusão médica *</CFormLabel>
-                            <CFormTextarea
-                              id="conclusion"
-                              rows={4}
-                              value={review.conclusion}
-                              onChange={handleReviewFieldChange('conclusion')}
-                              placeholder="Registre o parecer final sobre o exame."
-                              required
-                            />
-                          </div>
-
-                          <div className="mb-3">
-                            <CFormLabel>Em relação à classificação automatizada</CFormLabel>
-
-                            <CFormCheck
-                              type="radio"
-                              name="has_discrepancy"
-                              id="discrepancy-false"
-                              label="Confirmo o resultado sugerido pela IA"
-                              checked={!review.has_discrepancy}
-                              onChange={() =>
-                                setReview((current) => ({
-                                  ...current,
-                                  has_discrepancy: false,
-                                }))
-                              }
-                            />
-
-                            <CFormCheck
-                              type="radio"
-                              name="has_discrepancy"
-                              id="discrepancy-true"
-                              label="Identifiquei divergência em relação ao resultado da IA"
-                              checked={review.has_discrepancy}
-                              onChange={() =>
-                                setReview((current) => ({
-                                  ...current,
-                                  has_discrepancy: true,
-                                }))
-                              }
-                            />
-                          </div>
-
-                          <CButton type="submit" color="warning" disabled={isReviewing}>
-                            {isReviewing ? (
-                              <>
-                                <CSpinner size="sm" className="me-2" />
-                                Registrando revisão...
-                              </>
-                            ) : (
-                              'Concluir revisão'
-                            )}
-                          </CButton>
-                        </CForm>
-                      </CCardBody>
-                    </CCard>
-                  ) : (
-                    <CCard
-                      className={
-                        form.status_name === 'completed_with_divergence'
-                          ? 'border-dark'
-                          : 'border-success'
-                      }
-                    >
-                      <CCardHeader>
-                        <strong>Resultado da revisão médica</strong>
-                      </CCardHeader>
-
-                      <CCardBody>
-                        <div className="mb-3">
-                          <div className="text-body-secondary small">Achados da revisão médica</div>
-                          <div>{form.findings || '-'}</div>
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="text-body-secondary small">Conclusão médica</div>
-                          <div>{form.conclusion || '-'}</div>
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="text-body-secondary small">Desfecho</div>
-                          <CBadge
-                            color={
-                              form.status_name === 'completed_with_divergence' ? 'dark' : 'success'
-                            }
-                          >
-                            {form.status_name === 'completed_with_divergence'
-                              ? 'Concluído com divergência'
-                              : 'Concluído'}
-                          </CBadge>
-                        </div>
-
-                        <div>
-                          <div className="text-body-secondary small">Revisado por</div>
-                          <div>
-                            {form.reviewed_by_name || '-'}
-                            {form.reviewed_at ? ` em ${formatDateTimeBR(form.reviewed_at)}` : ''}
-                          </div>
-                        </div>
-                      </CCardBody>
-                    </CCard>
-                  )}
-                </div>
-              </CCol>
-            )}
-
-            <CCol xs={12}>
-              <ExamAiResultCard
-                aiStatus={aiStatus}
-                aiAnalysis={aiAnalysis}
-                canViewAiAnalysis={canViewAiAnalysis}
-                canDownloadExamFile={canDownloadExamFile}
-                originalImageUrl={originalImageUrl}
-                originalImageError={originalImageError}
-                isOriginalImageLoading={isOriginalImageLoading}
-                isOriginalDownloading={isOriginalDownloading}
-                onOriginalDownload={handleOriginalDownload}
-                gradcamUrl={gradcamUrl}
-                gradcamError={gradcamError}
-                isGradcamLoading={isGradcamLoading}
-                isGradcamDownloading={isGradcamDownloading}
-                onGradcamDownload={handleGradcamDownload}
-              />
-            </CCol>
-          </CRow>
-
-          <div className="mt-4">{isReadOnly ? examDataViewCard : examDataCard}</div>
-
-          <ExamHistoryCard
-            examId={id}
-            refreshKey={historyRefreshKey}
-            collapsible={isReadOnly}
-            defaultOpen={!isReadOnly}
+          <ExamAiResultCard
+            aiStatus={aiStatus}
+            aiAnalysis={aiAnalysis}
+            canViewAiAnalysis={
+              canViewAiAnalysis
+            }
+            canDownloadExamFile={
+              canDownloadExamFile
+            }
+            canDownloadExamPackage={
+              canDownloadExamPackage
+            }
+            originalImageUrl={
+              originalImageUrl
+            }
+            originalImageError={
+              originalImageError
+            }
+            isOriginalImageLoading={
+              isOriginalImageLoading
+            }
+            gradcamUrl={gradcamUrl}
+            gradcamError={
+              gradcamError
+            }
+            isGradcamLoading={
+              isGradcamLoading
+            }
+            isPackageDownloading={
+              isPackageDownloading
+            }
+            onPackageDownload={
+              handlePackageDownload
+            }
+            reviewPanel={reviewPanel}
           />
+
+          <div className="mt-4">
+            <ExamHistoryCard
+              examId={id}
+              refreshKey={
+                historyRefreshKey
+              }
+              collapsible
+              defaultOpen={false}
+            />
+          </div>
         </>
       ) : (
         <CRow className="g-4">

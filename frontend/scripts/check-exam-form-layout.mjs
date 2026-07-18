@@ -119,7 +119,7 @@ assert.match(
 
 assert.match(
   form,
-  /<CCol md=\{6\}>[\s\S]*?Título[\s\S]*?<CCol md=\{4\}>[\s\S]*?Tipo de exame[\s\S]*?<CCol md=\{2\}>[\s\S]*?Data do exame/,
+  /<CCol md=\{6\}>[\s\S]*?Descrição[\s\S]*?<CCol md=\{4\}>[\s\S]*?Tipo de exame[\s\S]*?<CCol md=\{2\}>[\s\S]*?Data do exame/,
 )
 
 assert.match(
@@ -143,5 +143,5 @@ assert.match(
 )
 
 console.log(
-  'Layout de cadastro e edição aprovado: clínica e médico estáticos, paciente com oito colunas, CPF e idade carregados, tipo/data reorganizados e textareas ampliados.',
+  'Layout de cadastro e edição aprovado: clínica e médico estáticos, paciente com oito colunas, CPF e idade carregados, descrição/tipo/data reorganizados e textareas ampliados.',
 )

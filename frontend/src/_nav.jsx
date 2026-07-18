@@ -59,6 +59,10 @@ const _nav = [
     // dos detalhes e dos resultados continua protegida por exams:read.
     roles: ['admin_master', 'doctor', 'clinic_staff'],
     permission: PERMISSIONS.EXAMS_LIST,
+    lockedOpenRoles: [
+      'doctor',
+      'clinic_staff',
+    ],
     items: [
       {
         component: CNavItem,
@@ -86,7 +90,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Divergência',
+        name: 'Com Divergência',
         to: '/exams?status=completed_with_divergence',
         badgeKey: 'completed_with_divergence',
         roles: ['admin_master', 'doctor', 'clinic_staff'],

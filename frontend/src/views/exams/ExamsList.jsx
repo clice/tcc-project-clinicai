@@ -34,7 +34,24 @@ import { formatDateBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
-const summaryCardStatuses = ['pending', 'awaiting_review', 'completed']
+const summaryCards = [
+  {
+    status: 'pending',
+    color: 'info',
+  },
+  {
+    status: 'awaiting_review',
+    color: 'warning',
+  },
+  {
+    status: 'completed',
+    color: 'success',
+  },
+  {
+    status: 'completed_with_divergence',
+    color: 'dark',
+  },
+]
 
 const packageDownloadStatuses = new Set([
   'awaiting_review',
@@ -339,20 +356,92 @@ const ExamsList = () => {
       </div>
 
       <CRow className="mb-4">
-        {summaryCardStatuses.map((status) => (
-          <CCol sm={6} xl={4} key={status}>
-            <CCard
-              role="button"
-              className={statusFilter === status ? 'border-primary' : ''}
-              onClick={() => setSearchParams(status === statusFilter ? {} : { status })}
-            >
-              <CCardBody>
-                <div className="text-body-secondary small">{examStatusLabels[status]}</div>
-                <div className="fs-4 fw-semibold">{tabCounts[status] ?? 0}</div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-        ))}
+        {summaryCards.map(
+          ({
+            status,
+            color,
+          }) => {
+            const isSelected =
+              statusFilter === status
+
+            const toggleStatus = () => {
+              setSearchParams(
+                isSelected
+                  ? {}
+                  : { status },
+              )
+            }
+
+            return (
+              <CCol
+                sm={6}
+                xl={3}
+                className="mb-3 mb-xl-0"
+                key={status}
+              >
+                <CCard
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={
+                    isSelected
+                  }
+                  className={
+                    `h-100 ${
+                      isSelected
+                        ? 'shadow-sm'
+                        : ''
+                    }`
+                  }
+                  style={{
+                    borderTop:
+                      `4px solid var(--cui-${color})`,
+                  }}
+                  onClick={
+                    toggleStatus
+                  }
+                  onKeyDown={(
+                    event,
+                  ) => {
+                    if (
+                      event.key !==
+                        'Enter' &&
+                      event.key !== ' '
+                    ) {
+                      return
+                    }
+
+                    event.preventDefault()
+                    toggleStatus()
+                  }}
+                >
+                  <CCardBody>
+                    <div
+                      className="small fw-bold"
+                      style={{
+                        color:
+                          `var(--cui-${color})`,
+                      }}
+                    >
+                      {
+                        examStatusLabels[
+                          status
+                        ]
+                      }
+                    </div>
+
+                    <div className="fs-4 fw-semibold text-body">
+                      {
+                        tabCounts[
+                          status
+                        ] ?? 0
+                      }
+                    </div>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            )
+          },
+        )}
       </CRow>
 
       <CCard className="mb-4">

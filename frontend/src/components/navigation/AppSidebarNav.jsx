@@ -7,7 +7,10 @@ import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
-export const AppSidebarNav = ({ items }) => {
+export const AppSidebarNav = ({
+  items,
+  roleName = null,
+}) => {
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -49,12 +52,57 @@ export const AppSidebarNav = ({ items }) => {
   }
 
   const navGroup = (item, index) => {
-    const { component, name, icon, items, to, ...rest } = item
+    const {
+      component,
+      name,
+      icon,
+      items,
+      to,
+      lockedOpenRoles = [],
+      ...rest
+    } = item
+
     const Component = component
+
+    const isLockedOpen =
+      lockedOpenRoles.includes(
+        roleName,
+      )
+
+    const groupProperties =
+      isLockedOpen
+        ? {
+            ...rest,
+            visible: true,
+            onVisibleChange: () => {},
+          }
+        : rest
+
     return (
-      <Component compact as="div" key={index} toggler={navLink(name, icon)} {...rest}>
-        {items?.map((item, index) =>
-          item.items ? navGroup(item, index) : navItem(item, index, true),
+      <Component
+        compact
+        as="div"
+        key={index}
+        toggler={
+          navLink(name, icon)
+        }
+        {...groupProperties}
+      >
+        {items?.map(
+          (
+            childItem,
+            childIndex,
+          ) =>
+            childItem.items
+              ? navGroup(
+                  childItem,
+                  childIndex,
+                )
+              : navItem(
+                  childItem,
+                  childIndex,
+                  true,
+                ),
         )}
       </Component>
     )
@@ -69,5 +117,8 @@ export const AppSidebarNav = ({ items }) => {
 }
 
 AppSidebarNav.propTypes = {
-  items: PropTypes.arrayOf(PropTypes.any).isRequired,
+  items: PropTypes.arrayOf(
+    PropTypes.any,
+  ).isRequired,
+  roleName: PropTypes.string,
 }
