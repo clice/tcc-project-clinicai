@@ -138,3 +138,48 @@ def test_migration_adds_and_removes_exam_list_permission() -> None:
             ).scalar_one()
             == 0
         )
+
+def test_migration_leaves_empty_database_for_bootstrap() -> None:
+    engine = sa.create_engine("sqlite://")
+    metadata = sa.MetaData()
+
+    sa.Table(
+        "roles",
+        metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String, nullable=False, unique=True),
+    )
+    sa.Table(
+        "permissions",
+        metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String, nullable=False, unique=True),
+        sa.Column("display_name", sa.String, nullable=False),
+        sa.Column("description", sa.String),
+        sa.Column("module", sa.String, nullable=False),
+    )
+    sa.Table(
+        "role_permissions",
+        metadata,
+        sa.Column("role_id", sa.Integer, primary_key=True),
+        sa.Column("permission_id", sa.Integer, primary_key=True),
+    )
+    metadata.create_all(engine)
+
+    migration = load_migration()
+
+    with engine.begin() as connection:
+        migration.op = Operations(
+            MigrationContext.configure(connection)
+        )
+        migration.upgrade()
+
+        permission_count = connection.scalar(
+            sa.text("SELECT count(*) FROM permissions")
+        )
+        link_count = connection.scalar(
+            sa.text("SELECT count(*) FROM role_permissions")
+        )
+
+    assert permission_count == 0
+    assert link_count == 0

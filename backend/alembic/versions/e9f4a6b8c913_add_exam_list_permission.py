@@ -51,6 +51,36 @@ def get_permission_id(connection) -> int | None:
 
 def upgrade() -> None:
     connection = op.get_bind()
+    role_ids = set(
+        connection.execute(
+            sa.select(roles_table.c.id).where(
+                roles_table.c.name.in_(ROLE_NAMES)
+            )
+        ).scalars()
+    )
+    catalog_has_entries = (
+        connection.execute(
+            sa.select(permissions_table.c.id).limit(1)
+        ).first()
+        is not None
+    )
+
+    # Em uma instalação nova, migrations precedem o bootstrap. Nesse caso,
+    # roles e permissions ainda estão vazias e o seed criará o catálogo e a
+    # matriz completos. Inserir somente exams:list aqui deixaria o catálogo
+    # parcial e impediria o bootstrap.
+    if not role_ids and not catalog_has_entries:
+        return
+
+    # Fora do banco totalmente vazio, os três perfis oficiais devem existir.
+    # Um catálogo ainda vazio é aceito quando todos os perfis estão presentes,
+    # preservando a compatibilidade da migration com bancos inicializados por
+    # fluxos anteriores.
+    if len(role_ids) != len(ROLE_NAMES):
+        raise RuntimeError(
+            "Nem todos os perfis oficiais foram encontrados."
+        )
+
     permission_id = get_permission_id(connection)
 
     if permission_id is None:
@@ -70,18 +100,6 @@ def upgrade() -> None:
     if permission_id is None:
         raise RuntimeError(
             "Não foi possível criar ou localizar exams:list."
-        )
-
-    role_ids = set(
-        connection.execute(
-            sa.select(roles_table.c.id).where(
-                roles_table.c.name.in_(ROLE_NAMES)
-            )
-        ).scalars()
-    )
-    if len(role_ids) != len(ROLE_NAMES):
-        raise RuntimeError(
-            "Nem todos os perfis oficiais foram encontrados."
         )
 
     linked_role_ids = set(
