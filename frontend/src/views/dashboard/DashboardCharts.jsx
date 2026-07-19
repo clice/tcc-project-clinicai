@@ -1,0 +1,88 @@
+import React from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow } from '@coreui/react'
+import { CChartDoughnut, CChartLine } from '@coreui/react-chartjs'
+
+import { examStatusLabels } from 'src/utils/constants'
+import { CHART_COLORS, DASHBOARD_STATUSES } from './dashboardData'
+
+const DashboardCharts = ({ counts, monthlyData, concordance }) => {
+  const distribution = DASHBOARD_STATUSES.filter((status) => counts[status] > 0)
+  const reviewed = counts.completed + counts.completed_with_divergence
+  const concordancePercent = concordance * 100
+
+  return (
+    <>
+      <CRow className="mb-4">
+        <CCol lg={8}>
+          <CCard className="h-100">
+            <CCardHeader><strong>Exames concluídos nos últimos seis meses</strong></CCardHeader>
+            <CCardBody>
+              <CChartLine
+                data={{
+                  labels: monthlyData.map((month) => month.label),
+                  datasets: [
+                    {
+                      label: 'Concluídos',
+                      borderColor: CHART_COLORS.completed,
+                      backgroundColor: 'rgba(46, 184, 92, 0.15)',
+                      data: monthlyData.map((month) => month.completed),
+                      tension: 0.3,
+                    },
+                    {
+                      label: 'Com divergência',
+                      borderColor: CHART_COLORS.completed_with_divergence,
+                      backgroundColor: 'rgba(79, 93, 115, 0.15)',
+                      data: monthlyData.map((month) => month.divergence),
+                      tension: 0.3,
+                    },
+                  ],
+                }}
+                options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
+                style={{ height: '300px' }}
+              />
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol lg={4}>
+          <CCard className="h-100">
+            <CCardHeader><strong>Distribuição dos exames</strong></CCardHeader>
+            <CCardBody>
+              {distribution.length === 0 ? (
+                <p className="text-body-secondary mb-0">Nenhum exame disponível.</p>
+              ) : (
+                <CChartDoughnut
+                  data={{
+                    labels: distribution.map((status) => examStatusLabels[status]),
+                    datasets: [{
+                      backgroundColor: distribution.map((status) => CHART_COLORS[status]),
+                      data: distribution.map((status) => counts[status]),
+                    }],
+                  }}
+                  options={{ plugins: { legend: { position: 'bottom' } } }}
+                />
+              )}
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      <CCard className="mb-4">
+        <CCardBody>
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Concordância com a análise de IA</strong>
+              <div className="text-body-secondary small">
+                {reviewed} exame(s) revisado(s) e finalizado(s)
+              </div>
+            </div>
+            <div className="fs-4 fw-semibold">{concordancePercent.toFixed(1)}%</div>
+          </div>
+          <CProgress color="primary" value={concordancePercent} />
+        </CCardBody>
+      </CCard>
+    </>
+  )
+}
+
+export default DashboardCharts
