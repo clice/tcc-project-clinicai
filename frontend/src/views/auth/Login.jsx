@@ -27,6 +27,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
+import { clinicaiSygnet } from 'src/assets/brand/clinicaiSygnet'
 import { useAuth } from 'src/hooks/useAuth'
 
 const Login = () => {
@@ -132,14 +133,23 @@ const Login = () => {
                 className="clinicai-login-brand-panel text-white py-5"
                 style={{ width: '44%' }}
               >
-                <CCardBody className="text-center">
-                  <div>
-                    <h2>ClinicAI</h2>
-                    <p>
-                      Sistema web para gestão clínica e apoio à análise de exames utilizando 
-                      inteligência artificial.
-                    </p>
-                  </div>
+                <CCardBody className="clinicai-login-brand-content">
+                  <CIcon
+                    customClassName="clinicai-login-brand-icon"
+                    icon={clinicaiSygnet}
+                    height={88}
+                    aria-label="Logo do ClinicAI"
+                  />
+
+                  <h2 className="clinicai-login-brand-name">
+                    Clinic<span className="clinicai-brand-ai">AI</span>
+                  </h2>
+
+                  <p className="clinicai-login-description">
+                    Protótipo de Sistema <em>Web</em> para Gestão de Clínicas com
+                    Classificação Binária de Imagens de Exames Gastrointestinais por
+                    Inteligência Artificial
+                  </p>
                 </CCardBody>
               </CCard>
             </CCardGroup>

@@ -23,7 +23,15 @@ export const AppSidebarNav = ({
             )}
         {name && name}
         {badge && (
-          <CBadge color={badge.color} className="ms-auto" size="sm">
+          <CBadge
+            color={badge.color}
+            className={`ms-auto ${
+              badge.color === 'completed'
+                ? 'clinicai-success-badge'
+                : ''
+            }`}
+            size="sm"
+          >
             {badge.text}
           </CBadge>
         )}

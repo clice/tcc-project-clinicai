@@ -18,8 +18,6 @@ import { useFeedback } from 'src/hooks/useFeedback'
 import { examService } from 'src/services/examService'
 
 import {
-  aiStatusColors,
-  aiStatusLabels,
   examStatusDisplayLabels,
   examStatusLabels,
   examTypeLabels,
@@ -60,14 +58,6 @@ const packageDownloadStatuses = new Set([
 ])
 
 const originalDownloadStatuses = new Set(['pending', 'failed', 'canceled'])
-
-const getAiStatusFromExam = (exam) => {
-  if (exam.ai_analysis_status) return exam.ai_analysis_status
-  if (exam.status_name === 'processing' && exam.analysis_in_progress) return 'processing'
-  if (exam.status_name === 'failed') return 'failed'
-
-  return 'not_processed'
-}
 
 const triggerBlobDownload = (blob, fileName) => {
   const url = window.URL.createObjectURL(blob)
@@ -223,15 +213,6 @@ const ExamsList = () => {
   const columns = useMemo(() => {
     const result = [
       {
-        accessorKey: 'title',
-        header: 'Exame',
-      },
-      {
-        accessorKey: 'exam_type',
-        header: 'Tipo',
-        cell: ({ getValue }) => examTypeLabels[getValue()] || getValue() || '-',
-      },
-      {
         accessorKey: 'exam_date',
         header: 'Data',
         cell: ({ getValue }) => formatDateBR(getValue()),
@@ -240,6 +221,15 @@ const ExamsList = () => {
         accessorKey: 'patient_name',
         header: 'Paciente',
         cell: ({ getValue }) => getValue() || '-',
+      },
+      {
+        accessorKey: 'exam_type',
+        header: 'Tipo',
+        cell: ({ getValue }) => examTypeLabels[getValue()] || getValue() || '-',
+      },
+      {
+        accessorKey: 'title',
+        header: 'Descrição',
       },
       ...(showDoctorColumn
         ? [
@@ -259,31 +249,31 @@ const ExamsList = () => {
             },
           ]
         : []),
-      {
-        accessorKey: 'status_display_name',
-        header: 'Status',
-        cell: ({ row }) => (
-          <CBadge color={statusColors[row.original.status_name] || 'secondary'}>
-            {examStatusDisplayLabels[row.original.status_name] ||
-              row.original.status_display_name ||
-              row.original.status_name ||
-              '-'}
-          </CBadge>
-        ),
-      },
-      {
-        id: 'ai_status',
-        header: 'IA',
-        cell: ({ row }) => {
-          const aiStatus = getAiStatusFromExam(row.original)
+      ...(!statusFilter
+        ? [
+            {
+              accessorKey: 'status_display_name',
+              header: 'Status',
+              cell: ({ row }) => (
+                <CBadge
+                  color={
+                    statusColors[
+                      row.original.status_name
+                    ] || 'secondary'
+                  }
+                >
+                  {examStatusDisplayLabels[
+                    row.original.status_name
+                  ] ||
+                    row.original.status_display_name ||
+                    row.original.status_name ||
+                    '-'}
+                </CBadge>
+              ),
+            },
+          ]
+        : []),
 
-          return (
-            <CBadge color={aiStatusColors[aiStatus] || 'secondary'}>
-              {aiStatusLabels[aiStatus] || aiStatus}
-            </CBadge>
-          )
-        },
-      },
     ]
 
     if (!canUseClinicalExamActions) {
@@ -343,6 +333,7 @@ const ExamsList = () => {
     canView,
     showClinicColumn,
     showDoctorColumn,
+    statusFilter,
     handleCancelExam,
     handleDownload,
     handleRestoreExam,

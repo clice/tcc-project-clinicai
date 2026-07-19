@@ -131,123 +131,6 @@ const ExamAiResultCard = ({
       </CCardHeader>
 
       <CCardBody>
-        {canViewAiAnalysis &&
-          hasAttributionMap && (
-            <CRow className="g-3 mb-4 align-items-center">
-              <CCol
-                lg={
-                  canDownloadExamPackage
-                    ? 6
-                    : 12
-                }
-              >
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                  <div className="small fw-semibold">
-                    Intensidade de atribuição
-                    relativa
-                  </div>
-
-                  <div className="small text-body-secondary">
-                    Escala do mapa de
-                    atribuição
-                  </div>
-                </div>
-
-                <div
-                  className="rounded border"
-                  style={
-                    contributionScaleStyle
-                  }
-                  role="img"
-                  aria-label="Escala de azul para vermelho representando menor e maior intensidade relativa"
-                />
-
-                <div className="d-flex justify-content-between gap-3 small text-body-secondary mt-1">
-                  <span>
-                    Menor intensidade
-                  </span>
-
-                  <span>
-                    Maior intensidade
-                  </span>
-                </div>
-
-              </CCol>
-
-              {canDownloadExamPackage && (
-                <CCol
-                  lg={6}
-                  className="ps-lg-5"
-                >
-                  <div
-                    className="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-end gap-3"
-                    role="group"
-                    aria-label="Ações do exame"
-                  >
-                    <CButton
-                      color="primary"
-                      className="clinicai-btn d-inline-flex align-items-center justify-content-center text-nowrap px-4"
-                      type="button"
-                      title="Baixar imagem original e mapa de atribuição"
-                      aria-label="Baixar imagem original e mapa de atribuição"
-                      onClick={
-                        onPackageDownload
-                      }
-                      disabled={
-                        isPackageDownloading
-                      }
-                    >
-                      {isPackageDownloading ? (
-                        <>
-                          <CSpinner
-                            size="sm"
-                            className="me-2"
-                          />
-
-                          <span>
-                            Baixando...
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <CIcon
-                            icon={
-                              cilCloudDownload
-                            }
-                            className="me-2"
-                          />
-
-                          <span>
-                            Baixar
-                          </span>
-                        </>
-                      )}
-                    </CButton>
-
-                    {/* <CButton
-                      color="secondary"
-                      variant="outline"
-                      className="d-inline-flex align-items-center justify-content-center text-nowrap px-4"
-                      type="button"
-                      title="Impressão do exame ainda não disponível"
-                      aria-label="Impressão do exame ainda não disponível"
-                      disabled
-                    >
-                      <CIcon
-                        icon={cilPrint}
-                        className="me-2"
-                      />
-
-                      <span>
-                        Imprimir
-                      </span>
-                    </CButton> */}
-                  </div>
-                </CCol>
-              )}
-            </CRow>
-          )}
-
         <div className="position-relative">
           <CRow className="g-4 align-items-stretch">
             <CCol lg={6}>
@@ -305,8 +188,6 @@ const ExamAiResultCard = ({
             </CCol>
 
             <CCol lg={6}>
-              <hr className="d-lg-none my-0 mb-4" />
-
               <section
                 aria-labelledby="attribution-image-title"
                 className="h-100 d-flex flex-column"
@@ -368,15 +249,105 @@ const ExamAiResultCard = ({
                       `${mapTitle} não disponível.`}
                   </CAlert>
                 )}
+
               </section>
             </CCol>
           </CRow>
 
-          <div
-            className="d-none d-lg-block position-absolute top-0 bottom-0 start-50 border-start"
-            aria-hidden="true"
-          />
         </div>
+
+        {(canDownloadExamPackage ||
+          (
+            canViewAiAnalysis &&
+            hasAttributionMap &&
+            gradcamUrl
+          )) && (
+          <CRow className="g-3 mt-1 mb-4 align-items-center">
+            {canDownloadExamPackage && (
+              <CCol lg={6}>
+                <div
+                  className="d-flex justify-content-start"
+                  role="group"
+                  aria-label="Ações do exame"
+                >
+                  <CButton
+                    color="primary"
+                    className="clinicai-btn d-inline-flex align-items-center justify-content-center text-nowrap px-4"
+                    type="button"
+                    title="Baixar imagem original e mapa de atribuição"
+                    aria-label="Baixar imagem original e mapa de atribuição"
+                    onClick={onPackageDownload}
+                    disabled={isPackageDownloading}
+                  >
+                    {isPackageDownloading ? (
+                      <>
+                        <CSpinner
+                          size="sm"
+                          className="me-2"
+                        />
+
+                        <span>Baixando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CIcon
+                          icon={cilCloudDownload}
+                          className="me-2"
+                        />
+
+                        <span>Baixar imagens</span>
+                      </>
+                    )}
+                  </CButton>
+                </div>
+              </CCol>
+            )}
+
+            {canViewAiAnalysis &&
+              hasAttributionMap &&
+              gradcamUrl && (
+                <CCol
+                  lg={6}
+                  className={
+                    canDownloadExamPackage
+                      ? undefined
+                      : 'ms-lg-auto'
+                  }
+                >
+                  <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div className="small fw-semibold">
+                      Escala do mapa de
+                      atribuição
+                    </div>
+
+                    <div className="small text-body-secondary">
+                      Intensidade de atribuição
+                      relativa
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded border"
+                    style={
+                      contributionScaleStyle
+                    }
+                    role="img"
+                    aria-label="Escala de azul para vermelho representando menor e maior intensidade relativa"
+                  />
+
+                  <div className="d-flex justify-content-between gap-3 small text-body-secondary mt-1">
+                    <span>
+                      Menor intensidade
+                    </span>
+
+                    <span>
+                      Maior intensidade
+                    </span>
+                  </div>
+                </CCol>
+              )}
+          </CRow>
+        )}
 
         <hr className="my-4" />
 
@@ -495,6 +466,11 @@ const ExamAiResultCard = ({
                             aiStatus
                           ] || 'secondary'
                         }
+                        className={
+                          aiStatus === 'completed'
+                            ? 'clinicai-success-badge'
+                            : undefined
+                        }
                       >
                         {statusLabel}
                       </CBadge>
@@ -512,6 +488,12 @@ const ExamAiResultCard = ({
                             1
                               ? 'danger'
                               : 'success'
+                          }
+                          className={
+                            aiAnalysis.prediction_class ===
+                            1
+                              ? undefined
+                              : 'clinicai-success-badge'
                           }
                         >
                           {predictionLabels[

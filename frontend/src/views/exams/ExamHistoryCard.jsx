@@ -110,6 +110,7 @@ const ExamHistoryCard = ({
             variant="outline"
             size="sm"
             type="button"
+            className="clinicai-soft-action"
             aria-expanded={isOpen}
             onClick={() =>
               setIsOpen((current) => !current)

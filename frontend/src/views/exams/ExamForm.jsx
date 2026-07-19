@@ -301,7 +301,10 @@ const ExamForm = ({ mode = 'create' }) => {
     formatCpfBR(selectedPatient?.cpf) || '-'
 
   const selectedPatientAge =
-    calculateAge(selectedPatient?.birth_date)
+    calculateAge(
+      selectedPatient?.birth_date,
+      form.exam_date,
+    )
 
   useEffect(() => {
     setPatientSearchValue(
@@ -1174,6 +1177,12 @@ const ExamForm = ({ mode = 'create' }) => {
               ? 'dark'
               : 'success'
           }
+          className={
+            form.status_name ===
+            'completed_with_divergence'
+              ? undefined
+              : 'clinicai-success-badge'
+          }
         >
           {form.status_name ===
           'completed_with_divergence'
@@ -1687,7 +1696,14 @@ const ExamForm = ({ mode = 'create' }) => {
             </CButton>
           )}
 
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to={examListPath}>
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            className="clinicai-soft-action"
+            as={Link}
+            to={examListPath}
+          >
             Voltar
           </CButton>
         </div>

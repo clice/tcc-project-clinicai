@@ -198,7 +198,14 @@ const RoleForm = ({ mode = 'view' }) => {
         </div>
 
         <div className="d-flex justify-content-center mt-4">
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/roles">
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            className="clinicai-soft-action"
+            as={Link}
+            to="/roles"
+          >
             Voltar
           </CButton>
         </div>

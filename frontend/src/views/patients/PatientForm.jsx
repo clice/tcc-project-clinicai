@@ -530,7 +530,14 @@ const PatientForm = ({ mode = 'create' }) => {
             </CButton>
           )}
 
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/patients">
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            className="clinicai-soft-action"
+            as={Link}
+            to="/patients"
+          >
             Voltar
           </CButton>
         </div>
@@ -808,7 +815,7 @@ const PatientForm = ({ mode = 'create' }) => {
                         color="primary"
                         variant="outline"
                         size="sm"
-                        className="mt-3"
+                        className="clinicai-soft-action mt-3"
                         as={Link}
                         to={`/exams/${exam.id}`}
                       >

@@ -15,6 +15,7 @@ const ExamSummaryHeader = ({
 }) => {
   const age = calculateAge(
     patientBirthDate,
+    examDate,
   )
 
   const resolvedPatientName =

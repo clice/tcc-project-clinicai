@@ -56,7 +56,7 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
 
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
+        <CDropdownHeader className="clinicai-user-menu-header fw-semibold mb-2">
           Usuário
         </CDropdownHeader>
 
@@ -70,14 +70,24 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button" onClick={() => navigate('/profile')}>
+        <CDropdownItem
+          as="button"
+          type="button"
+          className="clinicai-user-menu-action"
+          onClick={() => navigate('/profile')}
+        >
           <CIcon icon={cilUser} className="me-2" />
           Perfil
         </CDropdownItem>
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button" onClick={handleLogout}>
+        <CDropdownItem
+          as="button"
+          type="button"
+          className="clinicai-user-menu-action"
+          onClick={handleLogout}
+        >
           <CIcon icon={cilAccountLogout} className="me-2" />
           Sair
         </CDropdownItem>
