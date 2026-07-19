@@ -67,7 +67,7 @@ const AppSidebar = () => {
 
   return (
     <CSidebar
-      className="border-end"
+      className="app-sidebar border-end"
       colorScheme="dark"
       position="fixed"
       unfoldable={unfoldable}
@@ -76,15 +76,23 @@ const AppSidebar = () => {
         dispatch({ type: 'set', sidebarShow: visible })
       }}
     >
-      <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/dashboard">
-          <span className="sidebar-brand-full d-flex align-items-center gap-2">
-            <CIcon icon={clinicaiSygnet} height={32} />
-            <span className="fs-5 fw-semibold">
-              Clinic<span style={{ color: '#5dd39e' }}>AI</span>
+      <CSidebarHeader className="clinicai-sidebar-header">
+        <CSidebarBrand className="clinicai-sidebar-brand" to="/dashboard">
+          <span className="sidebar-brand-full clinicai-brand-full">
+            <CIcon
+              customClassName="clinicai-brand-icon"
+              icon={clinicaiSygnet}
+              height={42}
+            />
+            <span className="clinicai-brand-name">
+              Clinic<span className="clinicai-brand-ai">AI</span>
             </span>
           </span>
-          <CIcon customClassName="sidebar-brand-narrow" icon={clinicaiSygnet} height={32} />
+          <CIcon
+            customClassName="sidebar-brand-narrow clinicai-brand-icon"
+            icon={clinicaiSygnet}
+            height={38}
+          />
         </CSidebarBrand>
 
         <CCloseButton

@@ -524,7 +524,7 @@ const PatientForm = ({ mode = 'create' }) => {
               size="lg"
               as={Link}
               to={`/exams/create?patient=${id}`}
-              className="text-white"
+              className="clinicai-btn text-white"
             >
               Cadastrar Exame
             </CButton>

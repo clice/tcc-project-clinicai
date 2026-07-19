@@ -23,7 +23,7 @@ export const statusColors = {
   pending: 'info',
   processing: 'info',
   awaiting_review: 'warning',
-  completed: 'success',
+  completed: 'completed',
   completed_with_divergence: 'dark',
   canceled: 'secondary',
   failed: 'danger',
@@ -89,7 +89,7 @@ export const predictionLabels = {
 export const aiStatusColors = {
   pending: 'secondary',
   processing: 'info',
-  completed: 'success',
+  completed: 'completed',
   failed: 'danger',
   canceled: 'secondary',
   not_processed: 'secondary',

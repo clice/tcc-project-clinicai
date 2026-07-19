@@ -45,7 +45,7 @@ const summaryCards = [
   },
   {
     status: 'completed',
-    color: 'success',
+    color: 'completed',
   },
   {
     status: 'completed_with_divergence',
@@ -367,7 +367,13 @@ const ExamsList = () => {
 
         {canCreate && canUseClinicalExamActions && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/exams/create">
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/exams/create"
+            >
               Cadastrar Exame
             </CButton>
           </div>

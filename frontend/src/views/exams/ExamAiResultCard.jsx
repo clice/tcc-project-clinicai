@@ -186,7 +186,7 @@ const ExamAiResultCard = ({
                   >
                     <CButton
                       color="primary"
-                      className="d-inline-flex align-items-center justify-content-center text-nowrap px-4"
+                      className="clinicai-btn d-inline-flex align-items-center justify-content-center text-nowrap px-4"
                       type="button"
                       title="Baixar imagem original e mapa de atribuição"
                       aria-label="Baixar imagem original e mapa de atribuição"

@@ -10,7 +10,7 @@ export const DASHBOARD_STATUSES = [
 export const CHART_COLORS = {
   pending: '#3399ff',
   awaiting_review: '#f9b115',
-  completed: '#2eb85c',
+  completed: '#27c150',
   completed_with_divergence: '#4f5d73',
   failed: '#e55353',
   canceled: '#768192',

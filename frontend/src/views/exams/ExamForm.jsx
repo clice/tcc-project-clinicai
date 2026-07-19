@@ -30,6 +30,8 @@ import { cilWarning } from '@coreui/icons'
 import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
+import { cilCloudDownload } from '@coreui/icons'
+
 import { examService } from 'src/services/examService'
 import { aiAnalysisService } from 'src/services/aiAnalysisService'
 import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'
@@ -1563,9 +1565,36 @@ const ExamForm = ({ mode = 'create' }) => {
 
           <CCol lg={4}>
             <section aria-labelledby="pending-exam-image-title" className="w-100">
-              <h2 id="pending-exam-image-title" className="h6 mb-3">
-                Imagem do Exame
-              </h2>
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <h2 id="pending-exam-image-title" className="h6 mb-0">
+                  Imagem do Exame
+                </h2>
+
+                {canDownloadExamFile && originalImageUrl && (
+                  <CButton
+                    color="primary"
+                    className="clinicai-btn d-inline-flex align-items-center"
+                    size="sm"
+                    type="button"
+                    onClick={handleOriginalDownload}
+                    disabled={isOriginalDownloading}
+                    title="Baixar imagem do exame"
+                    aria-label="Baixar imagem do exame"
+                  >
+                    {isOriginalDownloading ? (
+                      <>
+                        <CSpinner size="sm" className="me-2" />
+                        Baixando...
+                      </>
+                    ) : (
+                      <>
+                        <CIcon icon={cilCloudDownload} className="me-2" />
+                        Baixar
+                      </>
+                    )}
+                  </CButton>
+                )}
+              </div>
 
               {!canDownloadExamFile ? (
                 <CAlert color="secondary" className="mb-0">
@@ -1577,33 +1606,14 @@ const ExamForm = ({ mode = 'create' }) => {
                   <span>Carregando imagem do exame...</span>
                 </div>
               ) : originalImageUrl ? (
-                <>
-                  <div className="mb-3 text-center">
-                    <img
-                      src={originalImageUrl}
-                      alt="Imagem original do exame"
-                      className="w-100 rounded border"
-                      style={pendingImageAreaStyle}
-                    />
-                  </div>
-
-                  <div className="d-grid mt-3">
-                    <CButton
-                      color="primary"
-                      onClick={handleOriginalDownload}
-                      disabled={isOriginalDownloading}
-                    >
-                      {isOriginalDownloading ? (
-                        <>
-                          <CSpinner size="sm" className="me-2" />
-                          Baixando...
-                        </>
-                      ) : (
-                        'Baixar imagem do exame'
-                      )}
-                    </CButton>
-                  </div>
-                </>
+                <div className="text-center">
+                  <img
+                    src={originalImageUrl}
+                    alt="Imagem original do exame"
+                    className="w-100 rounded border"
+                    style={pendingImageAreaStyle}
+                  />
+                </div>
               ) : (
                 <CAlert color="warning" className="mb-0">
                   {originalImageError || 'Imagem do exame não disponível.'}
@@ -1658,7 +1668,14 @@ const ExamForm = ({ mode = 'create' }) => {
 
         <div className="d-flex justify-content-center mt-4 gap-2">
           {(canAnalyze || isAnalyzing) && (
-            <CButton color="primary" size="lg" onClick={handleAnalyze} disabled={isAnalyzing}>
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              type="button"
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+            >
               {isAnalyzing ? (
                 <>
                   <CSpinner size="sm" className="me-2" />

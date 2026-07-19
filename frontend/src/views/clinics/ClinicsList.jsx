@@ -150,7 +150,13 @@ const ClinicsList = () => {
 
         {canCreate && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/clinics/create">
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/clinics/create"
+            >
               Cadastrar Clínica
             </CButton>
           </div>

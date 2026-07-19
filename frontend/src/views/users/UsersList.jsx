@@ -176,7 +176,13 @@ const UsersList = () => {
 
         {canCreate && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/users/create">
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/users/create"
+            >
               Cadastrar Usuário
             </CButton>
           </div>

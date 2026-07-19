@@ -162,8 +162,8 @@ const AppActionButtons = ({
 
         {showDownload && (
           <CButton
-            color="info"
-            className="rounded-pill text-white"
+            color="primary"
+            className="clinicai-btn rounded-pill"
             type="button"
             title={downloadTitle}
             onClick={onDownload}

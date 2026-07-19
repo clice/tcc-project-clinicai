@@ -114,7 +114,12 @@ const Login = () => {
 
                     <CRow>
                       <CCol xs={12}>
-                        <CButton color="primary" className="px-4" type="submit" disabled={isLoading}>
+                        <CButton
+                          color="primary"
+                          className="clinicai-btn px-4"
+                          type="submit"
+                          disabled={isLoading}
+                        >
                           {isLoading ? 'Entrando...' : 'Entrar'}
                         </CButton>
                       </CCol>
@@ -123,7 +128,10 @@ const Login = () => {
                 </CCardBody>
               </CCard>
 
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              <CCard
+                className="clinicai-login-brand-panel text-white py-5"
+                style={{ width: '44%' }}
+              >
                 <CCardBody className="text-center">
                   <div>
                     <h2>ClinicAI</h2>

@@ -78,7 +78,11 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
             </div>
             <div className="fs-4 fw-semibold">{concordancePercent.toFixed(1)}%</div>
           </div>
-          <CProgress color="primary" value={concordancePercent} />
+          <CProgress
+            className="clinicai-progress"
+            color="primary"
+            value={concordancePercent}
+          />
         </CCardBody>
       </CCard>
     </>
