@@ -506,6 +506,28 @@ def get_ai_metrics(db: Session) -> dict:
         name=StatusName.COMPLETED_WITH_DIVERGENCE.value,
         applies_to=StatusScope.EXAM.value,
     )
+
+    reviewed_confidence_mean, reviewed_analyses_count = (
+        db.query(
+            sa_func.avg(AIAnalysis.confidence),
+            sa_func.count(AIAnalysis.confidence),
+        )
+        .join(Exam, AIAnalysis.exam_id == Exam.id)
+        .filter(
+            Exam.status_id.in_(
+                [
+                    completed_status.id,
+                    completed_with_divergence_status.id,
+                ]
+            ),
+            AIAnalysis.confidence.is_not(None),
+        )
+        .one()
+    )
+    if reviewed_confidence_mean is not None:
+        reviewed_confidence_mean = float(reviewed_confidence_mean)
+    reviewed_analyses_count = int(reviewed_analyses_count)
+
     completed_count = (
         db.query(Exam).filter(Exam.status_id == completed_status.id).count()
     )
@@ -554,6 +576,8 @@ def get_ai_metrics(db: Session) -> dict:
         "total_analyses": total_analyses,
         "by_model": by_model,
         "confidence_mean": confidence_mean,
+        "reviewed_confidence_mean": reviewed_confidence_mean,
+        "reviewed_analyses_count": reviewed_analyses_count,
         "confidence_min": confidence_min,
         "confidence_max": confidence_max,
         "confidence_distribution": confidence_distribution,

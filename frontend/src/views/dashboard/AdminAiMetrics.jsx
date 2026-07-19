@@ -8,8 +8,14 @@ const AdminAiMetrics = ({ metrics }) => {
   if (!metrics) return null
 
   const items = [
-    ['Análises realizadas', metrics.total_analyses ?? 0],
-    ['Confiança média', formatPercent(metrics.confidence_mean)],
+    [
+      'Análises de exames revisados',
+      metrics.reviewed_analyses_count ?? 0,
+    ],
+    [
+      'Confiança média nessas análises',
+      formatPercent(metrics.reviewed_confidence_mean),
+    ],
     [
       'Tempo médio de processamento',
       metrics.processing_time_mean_ms === null || metrics.processing_time_mean_ms === undefined
