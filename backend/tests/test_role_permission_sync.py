@@ -31,7 +31,7 @@ def add_role_with_permissions(
     )
     sentinel_role = Role(
         name="clinic_staff",
-        display_name="Funcionário da clínica",
+        display_name="Funcionário da Clínica",
         permissions_initialized=True,
     )
     db.add_all([role, sentinel_role, permission_to_remove, permission_to_add])
