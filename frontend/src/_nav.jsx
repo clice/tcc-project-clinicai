@@ -6,7 +6,6 @@ import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
   cilFile,
-  cilMedicalCross,
   cilHospital,
   cilPeople,
   cilSettings,
@@ -27,25 +26,18 @@ const _nav = [
     roles: ['admin_master', 'doctor', 'clinic_staff'],
   },
 
-  ////////// ADMIN
+  ////////// CARE
 
   {
     component: CNavTitle,
-    name: 'Administrativo',
+    name: 'Atendimento',
     roles: ['admin_master', 'doctor', 'clinic_staff'],
-  },
-  {
-    component: CNavItem,
-    name: 'Clínicas',
-    to: '/clinics',
-    icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
-    roles: ['admin_master'],
   },
   {
     component: CNavItem,
     name: 'Pacientes',
     to: '/patients',
-    icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_staff'],
     permission: PERMISSIONS.PATIENTS_READ,
   },
@@ -115,18 +107,25 @@ const _nav = [
     ],
   },
 
-  ////////// SYSTEM
+  ////////// ADMINISTRATION
 
   {
     component: CNavTitle,
-    name: 'Sistema',
+    name: 'Administração',
+    roles: ['admin_master'],
+  },
+  {
+    component: CNavItem,
+    name: 'Clínicas',
+    to: '/clinics',
+    icon: <CIcon icon={cilHospital} customClassName="nav-icon" />,
     roles: ['admin_master'],
   },
   {
     component: CNavItem,
     name: 'Usuários',
     to: '/users',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     roles: ['admin_master'],
   },
   {
