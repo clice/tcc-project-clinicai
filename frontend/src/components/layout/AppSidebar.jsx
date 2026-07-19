@@ -81,7 +81,7 @@ const AppSidebar = () => {
           <span className="sidebar-brand-full d-flex align-items-center gap-2">
             <CIcon icon={clinicaiSygnet} height={32} />
             <span className="fs-5 fw-semibold">
-              Clinic<span className="text-info">AI</span>
+              Clinic<span style={{ color: '#5dd39e' }}>AI</span>
             </span>
           </span>
           <CIcon customClassName="sidebar-brand-narrow" icon={clinicaiSygnet} height={32} />

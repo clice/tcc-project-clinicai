@@ -1,11 +1,10 @@
 export const clinicaiSygnet = [
   '80 80',
   `<g>
-    <rect x="2" y="2" width="76" height="76" rx="20" fill="#0d6efd"/>
-    <path
-      d="M32 16h16v16h16v16H48v16H32V48H16V32h16V16Z"
-      fill="#ffffff"
-    />
-    <circle cx="59" cy="21" r="7" fill="#63e6be"/>
+    <rect x="3" y="3" width="74" height="74" rx="19" fill="#0f5132" stroke="#5dd39e" stroke-width="2"/>
+    <path d="M31 14h18v17h17v18H49v17H31V49H14V31h17V14Z" fill="#d1e7dd"/>
+    <path d="M18 42h9l4-8 6 18 7-25 6 15h10" fill="none" stroke="#198754" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54 29l9-9h6" fill="none" stroke="#5dd39e" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="69" cy="20" r="4" fill="#5dd39e"/>
   </g>`,
 ]
