@@ -16,8 +16,7 @@ import { AppSidebarNav } from 'src/components/navigation/AppSidebarNav'
 import { useAuth } from 'src/hooks/useAuth'
 import { useExamStatusCounts } from 'src/hooks/useExamStatusCounts'
 
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
+import { clinicaiSygnet } from 'src/assets/brand/clinicaiSygnet'
 
 import { statusColors } from 'src/utils/constants'
 import { filterNavigationByAccess } from 'src/utils/navigationAccess.mjs'
@@ -79,8 +78,13 @@ const AppSidebar = () => {
     >
       <CSidebarHeader className="border-bottom">
         <CSidebarBrand to="/dashboard">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+          <span className="sidebar-brand-full d-flex align-items-center gap-2">
+            <CIcon icon={clinicaiSygnet} height={32} />
+            <span className="fs-5 fw-semibold">
+              Clinic<span className="text-info">AI</span>
+            </span>
+          </span>
+          <CIcon customClassName="sidebar-brand-narrow" icon={clinicaiSygnet} height={32} />
         </CSidebarBrand>
 
         <CCloseButton
