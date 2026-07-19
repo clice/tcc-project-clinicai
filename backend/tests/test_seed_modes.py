@@ -1,16 +1,19 @@
 """Testes do bootstrap estrutural e da massa acadêmica."""
 
-from collections import Counter
+from collections import Counter, defaultdict
+import json
 
 import pytest
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.common.validators import is_valid_cpf
+from app.core.config import settings
 from app.core.security import verify_password
-from app.modules import academic_demo_assets
-from app.modules.academic_demo_assets import verify_bundled_demo_assets
+from app.modules.academic_demo_assets import (
+    get_demo_manifest,
+    verify_bundled_demo_assets,
+)
 from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.clinics.model import Clinic
@@ -23,6 +26,34 @@ from app.modules.role_permissions.model import RolePermission
 from app.modules.seeds import bootstrap_reference_data, seed_academic_demo
 from app.modules.users.model import User
 from app.modules.users.seed import ACADEMIC_DEMO_EMAILS
+
+
+EXPECTED_CLINIC_KEYS = {
+    "clinic_primary",
+    "clinic_large",
+    "clinic_specialized",
+}
+EXPECTED_STATUS_COUNTS = {
+    "awaiting_review": 18,
+    "canceled": 3,
+    "completed": 52,
+    "completed_with_divergence": 2,
+    "failed": 6,
+    "pending": 9,
+}
+EXPECTED_ANALYSIS_EXAM_STATUS_COUNTS = {
+    "awaiting_review": 18,
+    "completed": 52,
+    "completed_with_divergence": 2,
+}
+EXPECTED_ATTRIBUTION_KEYS = {
+    "attribution_method",
+    "attribution_target_layers",
+    "attribution_local_evidence",
+    "attribution_branch_weights",
+    "attribution_branch_cam_raw_maxima",
+    "attribution_unavailable_reason",
+}
 
 
 def count(db: Session, model: type) -> int:
@@ -116,7 +147,9 @@ def test_academic_demo_is_predictable_and_idempotent(
     db_session: Session,
     isolated_demo_uploads,
 ) -> None:
-    assert len(verify_bundled_demo_assets()) == 4
+    manifest = get_demo_manifest()
+    assert manifest["schema_version"] == 2
+    assert len(verify_bundled_demo_assets()) == 162
 
     bootstrap = bootstrap_reference_data(db_session)
     db_session.commit()
@@ -124,26 +157,18 @@ def test_academic_demo_is_predictable_and_idempotent(
     demo = seed_academic_demo(db_session, bootstrap)
     db_session.commit()
 
-    assert len(demo.clinics) == 8
-    assert len(demo.users) == 5
-    assert len(demo.patients) == 8
-    assert len(demo.exams) == 7
-    assert len(demo.ai_analyses) == 4
+    assert set(demo.clinics) == EXPECTED_CLINIC_KEYS
+    assert len(demo.clinics) == 3
+    assert len(demo.users) == 7
+    assert len(demo.patients) == 30
+    assert len(demo.exams) == 90
+    assert len(demo.ai_analyses) == 72
 
     expected_emails = set(ACADEMIC_DEMO_EMAILS) | {
         settings.bootstrap_admin_email
     }
     assert {user.email for user in demo.users.values()} == expected_emails
     assert demo.users["admin_master"].id == bootstrap.admin_user.id
-
-    primary_clinic = demo.clinics["clinic_primary"]
-    primary_doctor = demo.users["doctor_primary"]
-    assert all(
-        patient.clinic_id == primary_clinic.id for patient in demo.patients.values()
-    )
-    assert all(
-        patient.doctor_id == primary_doctor.id for patient in demo.patients.values()
-    )
 
     invalid_demo_cpfs = {
         patient.name: patient.cpf
@@ -152,19 +177,44 @@ def test_academic_demo_is_predictable_and_idempotent(
     }
     assert invalid_demo_cpfs == {}
 
-    assert all(exam.clinic_id == primary_clinic.id for exam in demo.exams.values())
-    assert all(exam.doctor_id == primary_doctor.id for exam in demo.exams.values())
-    assert all(exam.patient.clinic_id == exam.clinic_id for exam in demo.exams.values())
+    patients_by_clinic = Counter(
+        patient.clinic_id for patient in demo.patients.values()
+    )
+    exams_by_clinic = Counter(exam.clinic_id for exam in demo.exams.values())
+    clinic_ids = {clinic.id for clinic in demo.clinics.values()}
+    assert patients_by_clinic == Counter({clinic_id: 10 for clinic_id in clinic_ids})
+    assert exams_by_clinic == Counter({clinic_id: 30 for clinic_id in clinic_ids})
+
+    exams_by_patient = Counter(exam.patient_id for exam in demo.exams.values())
+    assert set(exams_by_patient.values()) == {3}
+    assert all(
+        patient.clinic_id == patient.doctor.clinic_id
+        for patient in demo.patients.values()
+    )
+    assert all(
+        exam.clinic_id == exam.patient.clinic_id == exam.doctor.clinic_id
+        for exam in demo.exams.values()
+    )
 
     status_counts = Counter(exam.status.name for exam in demo.exams.values())
-    assert dict(status_counts) == {
-        "pending": 1,
-        "awaiting_review": 2,
-        "completed": 1,
-        "completed_with_divergence": 1,
-        "failed": 1,
-        "canceled": 1,
-    }
+    assert dict(sorted(status_counts.items())) == EXPECTED_STATUS_COUNTS
+
+    monthly_counts: dict[int, Counter[str]] = defaultdict(Counter)
+    for exam in demo.exams.values():
+        monthly_counts[exam.clinic_id][exam.exam_date.strftime("%Y-%m")] += 1
+    assert set(monthly_counts) == clinic_ids
+    assert all(
+        dict(sorted(months.items()))
+        == {
+            "2026-02": 5,
+            "2026-03": 5,
+            "2026-04": 5,
+            "2026-05": 5,
+            "2026-06": 5,
+            "2026-07": 5,
+        }
+        for months in monthly_counts.values()
+    )
 
     for exam in demo.exams.values():
         assert exam.file_path
@@ -174,35 +224,67 @@ def test_academic_demo_is_predictable_and_idempotent(
         assert exam.analysis_in_progress is False
         assert exam.analysis_started_at is None
 
-    for exam in (
-        demo.exams["exam_completed_confirmed"],
-        demo.exams["exam_completed_with_divergence"],
-    ):
-        assert exam.reviewed_by_id == primary_doctor.id
-        assert exam.reviewed_at is not None
-        assert exam.findings
-        assert exam.conclusion
+        reviewed = exam.status.name in {
+            "completed",
+            "completed_with_divergence",
+        }
+        if reviewed:
+            assert exam.reviewed_by_id == exam.doctor_id
+            assert exam.reviewed_at is not None
+            assert exam.findings
+            assert exam.conclusion
+        else:
+            assert exam.reviewed_by_id is None
+            assert exam.reviewed_at is None
+
+    assert sum(
+        exam.status.name in {"completed", "completed_with_divergence"}
+        for exam in demo.exams.values()
+    ) == 54
 
     label_counts = Counter(
         analysis.prediction_label for analysis in demo.ai_analyses.values()
     )
-    assert dict(label_counts) == {"normal": 2, "abnormal": 2}
+    assert dict(sorted(label_counts.items())) == {"abnormal": 34, "normal": 38}
+
+    analysis_exam_status_counts = Counter(
+        analysis.exam.status.name for analysis in demo.ai_analyses.values()
+    )
+    assert (
+        dict(sorted(analysis_exam_status_counts.items()))
+        == EXPECTED_ANALYSIS_EXAM_STATUS_COUNTS
+    )
 
     for analysis in demo.ai_analyses.values():
         assert analysis.status.name == "completed"
         assert analysis.model_name == "ensemble_stacking"
-        assert analysis.model_version == "0.1.0"
+        assert analysis.model_version == "0.1.1"
         assert analysis.gradcam_path
         assert resolve_safe_gradcam_path(analysis.gradcam_path).is_file()
-        assert analysis.raw_response is None
 
-    assert demo.exams["exam_pending"].ai_analysis is None
-    assert demo.exams["exam_failed"].ai_analysis is None
-    assert demo.exams["exam_canceled"].ai_analysis is None
+        metadata = json.loads(analysis.raw_response)
+        assert EXPECTED_ATTRIBUTION_KEYS <= set(metadata)
+        assert metadata["attribution_method"] == (
+            "weighted_base_gradcam_oriented_by_ensemble_stacking_v1"
+        )
+        assert set(metadata["attribution_target_layers"]) == {
+            "resnet50",
+            "efficientnet_b4",
+            "pvt_v2_b2",
+        }
+        assert metadata["attribution_unavailable_reason"] is None
 
+    assert sum(exam.ai_analysis is None for exam in demo.exams.values()) == 18
+
+    primary_clinic = demo.clinics["clinic_primary"]
+    primary_doctor = demo.users["doctor_primary"]
+    pending_exam = next(
+        exam
+        for exam in demo.exams.values()
+        if exam.clinic_id == primary_clinic.id and exam.status.name == "pending"
+    )
     original_hash = primary_doctor.password_hash
     primary_clinic.name = "Clínica Primária Personalizada"
-    pending_exam = demo.exams["exam_pending"]
     pending_exam.description = "Descrição acadêmica personalizada"
     db_session.commit()
 
@@ -211,11 +293,11 @@ def test_academic_demo_is_predictable_and_idempotent(
         seed_academic_demo(db_session, bootstrap)
         db_session.commit()
 
-    assert count(db_session, Clinic) == 8
-    assert count(db_session, User) == 5
-    assert count(db_session, Patient) == 8
-    assert count(db_session, Exam) == 7
-    assert count(db_session, AIAnalysis) == 4
+    assert count(db_session, Clinic) == 3
+    assert count(db_session, User) == 7
+    assert count(db_session, Patient) == 30
+    assert count(db_session, Exam) == 90
+    assert count(db_session, AIAnalysis) == 72
 
     db_session.refresh(primary_clinic)
     db_session.refresh(primary_doctor)
@@ -225,48 +307,28 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert pending_exam.description == "Descrição acadêmica personalizada"
 
 
-def test_academic_demo_reconciles_legacy_patient_cpfs(
+
+def test_database_contract_accepts_academic_demo(
     db_session: Session,
     isolated_demo_uploads,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    bootstrap = bootstrap_reference_data(db_session)
-    db_session.commit()
-
-    demo = seed_academic_demo(db_session, bootstrap)
-    db_session.commit()
-
-    legacy_cpfs = {
-        "patient_young": "22233344450",
-        "patient_fictitious_cpf": "00000000000",
-        "patient_female_elderly": "32165498700",
-    }
-    expected_cpfs = {
-        "patient_young": "22233344405",
-        "patient_fictitious_cpf": "00000000191",
-        "patient_female_elderly": "32165498791",
-    }
-
-    original_ids = {
-        key: demo.patients[key].id
-        for key in legacy_cpfs
-    }
-
-    for key, legacy_cpf in legacy_cpfs.items():
-        demo.patients[key].cpf = legacy_cpf
-
-    db_session.commit()
+    from app.maintenance import database_contract
 
     bootstrap = bootstrap_reference_data(db_session)
-    reconciled = seed_academic_demo(db_session, bootstrap)
     db_session.commit()
 
-    assert count(db_session, Patient) == 8
+    seed_academic_demo(db_session, bootstrap)
+    db_session.commit()
 
-    for key, expected_cpf in expected_cpfs.items():
-        patient = reconciled.patients[key]
-        assert patient.id == original_ids[key]
-        assert patient.cpf == expected_cpf
-        assert is_valid_cpf(patient.cpf)
+    monkeypatch.setattr(
+        database_contract,
+        "SessionLocal",
+        lambda: db_session,
+    )
+
+    database_contract.assert_demo_data()
+
 
 
 def test_demo_phase_can_be_rolled_back_without_partial_clinics(

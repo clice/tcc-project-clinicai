@@ -1,32 +1,24 @@
-"""Massa acadêmica coerente do módulo de exames."""
+"""Exames coerentes da massa acadêmica demonstrativa."""
 
-from datetime import date, datetime, timezone
+from datetime import (
+    date,
+    datetime,
+    time,
+    timezone,
+)
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import StatusName, StatusScope
-from app.modules.academic_demo_assets import exam_asset_target, install_exam_asset
+from app.modules.academic_demo_assets import (
+    exam_asset_target,
+    get_demo_exam_definitions,
+    install_exam_asset,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
-
-
-def get_exam_status(
-    db: Session,
-    name: StatusName,
-) -> Status | None:
-    """Busca status de exame pelo nome oficial."""
-
-    return (
-        db.query(Status)
-        .filter(
-            Status.name == name.value,
-            Status.applies_to == StatusScope.EXAM.value,
-        )
-        .first()
-    )
 
 
 def get_or_create_exam(
@@ -38,16 +30,16 @@ def get_or_create_exam(
     status_id: int,
     exam_type: str,
     title: str,
-    asset_key: str,
-    exam_date: date | None = None,
-    description: str | None = None,
-    clinical_indication: str | None = None,
+    asset_entry: dict,
+    exam_date: date,
+    description: str,
+    clinical_indication: str,
     findings: str | None = None,
     conclusion: str | None = None,
     reviewed_by_id: int | None = None,
     reviewed_at: datetime | None = None,
 ) -> Exam:
-    """Cria um exame demo sem alterar registros já existentes."""
+    """Cria um exame demo sem alterar registro existente."""
 
     exam = (
         db.query(Exam)
@@ -60,9 +52,18 @@ def get_or_create_exam(
     )
 
     if exam:
-        expected_path = exam_asset_target(exam, asset_key).resolve(strict=False)
+        expected_path = exam_asset_target(
+            exam,
+            asset_entry,
+        ).resolve(strict=False)
+
         if exam.file_path == str(expected_path):
-            install_exam_asset(exam, asset_key, assign_fields=False)
+            install_exam_asset(
+                exam,
+                asset_entry,
+                assign_fields=False,
+            )
+
         return exam
 
     exam = Exam(
@@ -85,7 +86,13 @@ def get_or_create_exam(
 
     db.add(exam)
     db.flush()
-    install_exam_asset(exam, asset_key, assign_fields=True)
+
+    install_exam_asset(
+        exam,
+        asset_entry,
+        assign_fields=True,
+    )
+
     db.flush()
     db.refresh(exam)
 
@@ -99,163 +106,94 @@ def seed_exams(
     users: dict[str, User],
     statuses: dict[str, Status],
 ) -> dict[str, Exam]:
-    """Cria sete estados demonstrativos com arquivos físicos válidos."""
-
-    primary_clinic = clinics.get("clinic_primary")
-    doctor_primary = users.get("doctor_primary")
-
-    required_patients = {
-        "pending": patients.get("patient_example_1"),
-        "awaiting_normal": patients.get("patient_example_2"),
-        "awaiting_abnormal": patients.get("patient_elderly"),
-        "completed": patients.get("patient_young"),
-        "divergence": patients.get("patient_fictitious_cpf"),
-        "failed": patients.get("patient_minimal"),
-        "canceled": patients.get("patient_complete"),
-    }
-
-    required_statuses = {
-        "pending": statuses.get("exam_pending")
-        or get_exam_status(db, StatusName.PENDING),
-        "awaiting_review": statuses.get("exam_awaiting_review")
-        or get_exam_status(db, StatusName.AWAITING_REVIEW),
-        "completed": statuses.get("exam_completed")
-        or get_exam_status(db, StatusName.COMPLETED),
-        "divergence": statuses.get("exam_completed_with_divergence")
-        or get_exam_status(db, StatusName.COMPLETED_WITH_DIVERGENCE),
-        "failed": statuses.get("exam_failed")
-        or get_exam_status(db, StatusName.FAILED),
-        "canceled": statuses.get("exam_canceled")
-        or get_exam_status(db, StatusName.CANCELED),
-    }
-
-    if (
-        not primary_clinic
-        or not doctor_primary
-        or not all(required_patients.values())
-        or not all(required_statuses.values())
-    ):
-        return {}
-
-    reviewed_confirmed_at = datetime(
-        2026,
-        7,
-        10,
-        14,
-        30,
-        tzinfo=timezone.utc,
-    )
-    reviewed_divergence_at = datetime(
-        2026,
-        7,
-        11,
-        15,
-        45,
-        tzinfo=timezone.utc,
-    )
-
-    definitions = {
-        "exam_pending": {
-            "patient": required_patients["pending"],
-            "status": required_statuses["pending"],
-            "asset_key": "normal_image",
-            "exam_date": date(2026, 7, 6),
-            "title": "Demo — colonoscopia pronta para análise",
-            "description": "Registro acadêmico aguardando execução do modelo.",
-            "clinical_indication": "Demonstração técnica do estado pending.",
-        },
-        "exam_awaiting_review_normal": {
-            "patient": required_patients["awaiting_normal"],
-            "status": required_statuses["awaiting_review"],
-            "asset_key": "normal_image",
-            "exam_date": date(2026, 7, 7),
-            "title": "Demo — predição normal aguardando revisão",
-            "description": "Predição real do modelo sobre ativo acadêmico Kvasir.",
-            "clinical_indication": "Demonstração técnica do estado awaiting_review.",
-        },
-        "exam_awaiting_review_abnormal": {
-            "patient": required_patients["awaiting_abnormal"],
-            "status": required_statuses["awaiting_review"],
-            "asset_key": "abnormal_image",
-            "exam_date": date(2026, 7, 8),
-            "title": "Demo — predição abnormal aguardando revisão",
-            "description": "Predição real do modelo sobre ativo acadêmico Kvasir.",
-            "clinical_indication": "Demonstração técnica do estado awaiting_review.",
-        },
-        "exam_completed_confirmed": {
-            "patient": required_patients["completed"],
-            "status": required_statuses["completed"],
-            "asset_key": "normal_image",
-            "exam_date": date(2026, 7, 9),
-            "title": "Demo — revisão confirmatória concluída",
-            "description": "Exemplo acadêmico de confirmação médica.",
-            "clinical_indication": "Demonstração técnica do estado completed.",
-            "findings": (
-                "A revisão acadêmica confirmou a classificação normal "
-                "apresentada pelo modelo."
-            ),
-            "conclusion": "Exemplo acadêmico encerrado sem divergência.",
-            "reviewed_by_id": doctor_primary.id,
-            "reviewed_at": reviewed_confirmed_at,
-        },
-        "exam_completed_with_divergence": {
-            "patient": required_patients["divergence"],
-            "status": required_statuses["divergence"],
-            "asset_key": "abnormal_image",
-            "exam_date": date(2026, 7, 10),
-            "title": "Demo — revisão concluída com divergência",
-            "description": "Exemplo acadêmico de divergência médica.",
-            "clinical_indication": (
-                "Demonstração técnica do estado completed_with_divergence."
-            ),
-            "findings": (
-                "A revisão acadêmica registrou divergência em relação "
-                "à classificação abnormal."
-            ),
-            "conclusion": "Exemplo acadêmico encerrado com divergência médica.",
-            "reviewed_by_id": doctor_primary.id,
-            "reviewed_at": reviewed_divergence_at,
-        },
-        "exam_failed": {
-            "patient": required_patients["failed"],
-            "status": required_statuses["failed"],
-            "asset_key": "abnormal_image",
-            "exam_date": date(2026, 7, 11),
-            "title": "Demo — falha de processamento restaurável",
-            "description": (
-                "Registro acadêmico com arquivo preservado para restauração."
-            ),
-            "clinical_indication": "Demonstração técnica do estado failed.",
-        },
-        "exam_canceled": {
-            "patient": required_patients["canceled"],
-            "status": required_statuses["canceled"],
-            "asset_key": "normal_image",
-            "exam_date": date(2026, 7, 12),
-            "title": "Demo — exame cancelado restaurável",
-            "description": "Registro acadêmico cancelado com arquivo preservado.",
-            "clinical_indication": "Demonstração técnica do estado canceled.",
-        },
-    }
+    """Cria os 90 exames definidos no manifesto v2."""
 
     result: dict[str, Exam] = {}
-    for key, definition in definitions.items():
-        result[key] = get_or_create_exam(
+
+    for definition in get_demo_exam_definitions():
+        clinic = clinics[
+            definition["clinic_key"]
+        ]
+        doctor = users[
+            definition["doctor_key"]
+        ]
+        patient = patients[
+            definition["patient_key"]
+        ]
+        status = statuses[
+            "exam_" + definition["status"]
+        ]
+        exam_date = date.fromisoformat(
+            definition["exam_date"]
+        )
+        review = definition.get("review")
+
+        reviewed_at = None
+        findings = None
+        conclusion = None
+
+        if review is not None:
+            reviewed_at = datetime.combine(
+                exam_date,
+                time(
+                    hour=14,
+                    minute=30,
+                    tzinfo=timezone.utc,
+                ),
+            )
+            findings = str(
+                review["review_notes"]
+            )
+            conclusion = (
+                "Revisão acadêmica concluída "
+                "com concordância."
+                if review["agrees_with_ai"]
+                else
+                "Revisão acadêmica concluída "
+                "com divergência."
+            )
+
+        source_label = definition[
+            "source_asset"
+        ]["label"]
+
+        result[
+            definition["exam_key"]
+        ] = get_or_create_exam(
             db=db,
-            clinic_id=primary_clinic.id,
-            patient_id=definition["patient"].id,
-            doctor_id=doctor_primary.id,
-            status_id=definition["status"].id,
-            exam_type="colonoscopy",
-            asset_key=definition["asset_key"],
-            exam_date=definition["exam_date"],
+            clinic_id=clinic.id,
+            patient_id=patient.id,
+            doctor_id=doctor.id,
+            status_id=status.id,
+            exam_type=definition[
+                "exam_type"
+            ],
             title=definition["title"],
-            description=definition["description"],
-            clinical_indication=definition["clinical_indication"],
-            findings=definition.get("findings"),
-            conclusion=definition.get("conclusion"),
-            reviewed_by_id=definition.get("reviewed_by_id"),
-            reviewed_at=definition.get("reviewed_at"),
+            asset_entry=definition[
+                "source_asset"
+            ],
+            exam_date=exam_date,
+            description=(
+                "Exame fictício da massa acadêmica "
+                f"com imagem de referência {source_label}."
+            ),
+            clinical_indication=(
+                "Demonstração técnica do estado "
+                f"{definition['status']}."
+            ),
+            findings=findings,
+            conclusion=conclusion,
+            reviewed_by_id=(
+                doctor.id
+                if review is not None
+                else None
+            ),
+            reviewed_at=reviewed_at,
+        )
+
+    if len(result) != 90:
+        raise RuntimeError(
+            "O seed acadêmico deve produzir 90 exames."
         )
 
     return result

@@ -132,11 +132,11 @@ EXPECTED_BOOTSTRAP_COUNTS = {
 
 EXPECTED_DEMO_COUNTS = {
     **EXPECTED_BOOTSTRAP_COUNTS,
-    "clinics": 8,
-    "users": 5,
-    "patients": 8,
-    "exams": 7,
-    "ai_analysis": 4,
+    "clinics": 3,
+    "users": 7,
+    "patients": 30,
+    "exams": 90,
+    "ai_analysis": 72,
     "audit_logs": 0,
 }
 
@@ -405,7 +405,7 @@ def assert_demo_data() -> None:
         )
         if {row.email for row in rows} != expected_emails:
             raise AssertionError(
-                "As cinco contas esperadas não foram criadas."
+                "As sete contas esperadas não foram criadas."
             )
 
         admin = next(
@@ -466,12 +466,12 @@ def assert_demo_data() -> None:
         exams = db.query(Exam).all()
         exam_status_counts = Counter(exam.status.name for exam in exams)
         expected_exam_status_counts = {
-            "pending": 1,
-            "awaiting_review": 2,
-            "completed": 1,
-            "completed_with_divergence": 1,
-            "failed": 1,
-            "canceled": 1,
+            "pending": 9,
+            "awaiting_review": 18,
+            "completed": 52,
+            "completed_with_divergence": 2,
+            "failed": 6,
+            "canceled": 3,
         }
         if dict(exam_status_counts) != expected_exam_status_counts:
             raise AssertionError(
@@ -508,7 +508,7 @@ def assert_demo_data() -> None:
 
         analyses = db.query(AIAnalysis).all()
         label_counts = Counter(item.prediction_label for item in analyses)
-        if dict(label_counts) != {"normal": 2, "abnormal": 2}:
+        if dict(label_counts) != {"normal": 38, "abnormal": 34}:
             raise AssertionError(
                 f"Distribuição de predições divergente: {dict(label_counts)}."
             )
@@ -517,9 +517,9 @@ def assert_demo_data() -> None:
             item.exam.status.name for item in analyses
         )
         expected_analysis_exam_status_counts = {
-            "awaiting_review": 2,
-            "completed": 1,
-            "completed_with_divergence": 1,
+            "awaiting_review": 18,
+            "completed": 52,
+            "completed_with_divergence": 2,
         }
         if dict(analysis_exam_status_counts) != expected_analysis_exam_status_counts:
             raise AssertionError(
@@ -534,15 +534,30 @@ def assert_demo_data() -> None:
                 )
             if (
                 analysis.model_name != "ensemble_stacking"
-                or analysis.model_version != "0.1.0"
+                or analysis.model_version != "0.1.1"
             ):
                 raise AssertionError(
                     "Modelo acadêmico divergente: "
                     f"{analysis.model_name} {analysis.model_version}."
                 )
-            if analysis.raw_response is not None:
+            try:
+                raw_response = json.loads(analysis.raw_response)
+            except (TypeError, json.JSONDecodeError) as exc:
                 raise AssertionError(
-                    f"Análise acadêmica expôs raw_response: {analysis.id}."
+                    f"Metadados de atribuição inválidos: {analysis.id}."
+                ) from exc
+
+            expected_attribution_keys = {
+                "attribution_method",
+                "attribution_target_layers",
+                "attribution_local_evidence",
+                "attribution_branch_weights",
+                "attribution_branch_cam_raw_maxima",
+                "attribution_unavailable_reason",
+            }
+            if not expected_attribution_keys.issubset(raw_response):
+                raise AssertionError(
+                    f"Metadados de atribuição incompletos: {analysis.id}."
                 )
             resolve_safe_gradcam_path(analysis.gradcam_path)
     finally:

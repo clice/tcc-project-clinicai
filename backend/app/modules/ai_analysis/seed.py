@@ -1,29 +1,44 @@
-"""Massa acadêmica coerente do módulo de análises de IA."""
+"""Análises reais da massa acadêmica demonstrativa."""
+
+import json
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import StatusName, StatusScope
+from app.common.constants import (
+    StatusName,
+    StatusScope,
+)
 from app.modules.academic_demo_assets import (
     bundled_gradcam_path,
-    get_demo_asset_entry,
-    get_demo_manifest,
+    get_demo_exam_definitions,
 )
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.exams.model import Exam
 from app.modules.statuses.model import Status
 
 
+ATTRIBUTION_FIELDS = (
+    "attribution_method",
+    "attribution_target_layers",
+    "attribution_local_evidence",
+    "attribution_branch_weights",
+    "attribution_branch_cam_raw_maxima",
+    "attribution_unavailable_reason",
+)
+
+
 def get_ai_analysis_status(
     db: Session,
     name: StatusName,
 ) -> Status | None:
-    """Busca uma análise pelo status."""
+    """Busca status de análise pelo nome oficial."""
 
     return (
         db.query(Status)
         .filter(
             Status.name == name.value,
-            Status.applies_to == StatusScope.AI_ANALYSIS.value,
+            Status.applies_to
+            == StatusScope.AI_ANALYSIS.value,
         )
         .first()
     )
@@ -32,38 +47,68 @@ def get_ai_analysis_status(
 def get_or_create_ai_analysis(
     db: Session,
     *,
-    exam_id: int,
+    exam: Exam,
     status_id: int,
-    image_asset_key: str,
-    gradcam_asset_key: str,
+    definition: dict,
 ) -> AIAnalysis:
-    """Cria uma análise do demo sem alterar registros já existentes."""
+    """Cria uma análise sem alterar registro existente."""
 
-    ai_analysis = db.query(AIAnalysis).filter(AIAnalysis.exam_id == exam_id).first()
+    existing = (
+        db.query(AIAnalysis)
+        .filter(
+            AIAnalysis.exam_id == exam.id
+        )
+        .first()
+    )
 
-    if ai_analysis:
-        return ai_analysis
+    if existing:
+        return existing
 
-    image_entry = get_demo_asset_entry(image_asset_key)
-    prediction = image_entry["prediction"]
-    model = get_demo_manifest()["model"]
-    gradcam_path = bundled_gradcam_path(gradcam_asset_key)
+    analysis = definition["analysis"]
+    source = definition["source_asset"]
+    gradcam_path = bundled_gradcam_path(
+        analysis["gradcam_asset"]
+    )
+
+    attribution_payload = {
+        field: analysis.get(field)
+        for field in ATTRIBUTION_FIELDS
+    }
 
     ai_analysis = AIAnalysis(
-        exam_id=exam_id,
+        exam_id=exam.id,
         status_id=status_id,
-        prediction_label=str(prediction["label"]),
-        prediction_class=int(prediction["class"]),
-        confidence=float(prediction["confidence"]),
-        model_name=str(model["name"]),
-        model_version=str(model["version"]),
-        gradcam_path=str(gradcam_path),
-        processing_time_ms=None,
-        ai_notes=(
-            "Predição do Ensemble Stacking sobre imagem acadêmica do "
-            f"Kvasir ({image_entry['source_class']}); sem finalidade clínica."
+        prediction_label=str(
+            analysis["prediction_label"]
         ),
-        raw_response=None,
+        prediction_class=int(
+            analysis["prediction_class"]
+        ),
+        confidence=float(
+            analysis["confidence"]
+        ),
+        model_name=str(
+            analysis["model_name"]
+        ),
+        model_version=str(
+            analysis["model_version"]
+        ),
+        gradcam_path=str(gradcam_path),
+        processing_time_ms=int(
+            analysis["processing_time_ms"]
+        ),
+        ai_notes=(
+            "Predição real do Ensemble Stacking "
+            "sobre ativo acadêmico de referência "
+            f"{source['label']}; sem finalidade clínica."
+        ),
+        raw_response=json.dumps(
+            attribution_payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ),
     )
 
     db.add(ai_analysis)
@@ -78,52 +123,55 @@ def seed_ai_analysis(
     exams: dict[str, Exam],
     statuses: dict[str, Status] | None = None,
 ) -> dict[str, AIAnalysis]:
-    """Cria quatro análises concluídas e coerentes com os exames."""
+    """Cria as 72 análises registradas no manifesto."""
 
-    completed_status = None
-    if statuses:
-        completed_status = statuses.get("ai_analysis_completed")
-
-    completed_status = completed_status or get_ai_analysis_status(
-        db,
-        StatusName.COMPLETED,
+    completed_status = (
+        statuses.get(
+            "ai_analysis_completed"
+        )
+        if statuses
+        else None
     )
 
-    definitions = {
-        "ai_awaiting_review_normal": {
-            "exam": exams.get("exam_awaiting_review_normal"),
-            "image_asset_key": "normal_image",
-            "gradcam_asset_key": "normal_gradcam",
-        },
-        "ai_awaiting_review_abnormal": {
-            "exam": exams.get("exam_awaiting_review_abnormal"),
-            "image_asset_key": "abnormal_image",
-            "gradcam_asset_key": "abnormal_gradcam",
-        },
-        "ai_completed_confirmed": {
-            "exam": exams.get("exam_completed_confirmed"),
-            "image_asset_key": "normal_image",
-            "gradcam_asset_key": "normal_gradcam",
-        },
-        "ai_completed_with_divergence": {
-            "exam": exams.get("exam_completed_with_divergence"),
-            "image_asset_key": "abnormal_image",
-            "gradcam_asset_key": "abnormal_gradcam",
-        },
-    }
+    completed_status = (
+        completed_status
+        or get_ai_analysis_status(
+            db,
+            StatusName.COMPLETED,
+        )
+    )
 
-    if not completed_status or not all(
-        definition["exam"] for definition in definitions.values()
-    ):
+    if completed_status is None:
         return {}
 
-    return {
-        key: get_or_create_ai_analysis(
-            db=db,
-            exam_id=definition["exam"].id,
-            status_id=completed_status.id,
-            image_asset_key=definition["image_asset_key"],
-            gradcam_asset_key=definition["gradcam_asset_key"],
+    result: dict[str, AIAnalysis] = {}
+
+    for definition in get_demo_exam_definitions():
+        if definition.get("analysis") is None:
+            continue
+
+        exam_key = definition["exam_key"]
+        exam = exams.get(exam_key)
+
+        if exam is None:
+            raise RuntimeError(
+                "Exame acadêmico ausente para análise: "
+                f"{exam_key}."
+            )
+
+        result[exam_key] = (
+            get_or_create_ai_analysis(
+                db,
+                exam=exam,
+                status_id=completed_status.id,
+                definition=definition,
+            )
         )
-        for key, definition in definitions.items()
-    }
+
+    if len(result) != 72:
+        raise RuntimeError(
+            "O seed acadêmico deve produzir "
+            "72 análises."
+        )
+
+    return result

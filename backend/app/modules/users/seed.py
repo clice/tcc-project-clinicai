@@ -1,4 +1,4 @@
-"""Administrador inicial do bootstrap e usuários fictícios da demonstração."""
+"""Administrador inicial e usuários fictícios da demonstração."""
 
 from sqlalchemy.orm import Session
 
@@ -9,15 +9,15 @@ from app.modules.statuses.model import Status
 from app.modules.users.model import User
 
 
-# Credencial padronizada apenas para as contas adicionais da massa fictícia.
-# O Administrador Master pertence ao bootstrap e usa as variáveis
-# BOOTSTRAP_ADMIN_* da configuração.
 ACADEMIC_DEMO_PASSWORD = "clinicai123"
+
 ACADEMIC_DEMO_EMAILS = (
     "doctor@clinicai.com",
-    "doctor2@clinicai.com",
     "staff@clinicai.com",
-    "inactive@clinicai.com",
+    "doctor.cariri@clinicai.com",
+    "staff.cariri@clinicai.com",
+    "doctor.endoscopia@clinicai.com",
+    "staff.endoscopia@clinicai.com",
 )
 
 
@@ -32,7 +32,11 @@ def get_or_create_user(
     clinic_id: int | None = None,
     phone: str | None = None,
 ) -> User:
-    user = db.query(User).filter(User.email == email).first()
+    user = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
 
     if user:
         return user
@@ -45,7 +49,9 @@ def get_or_create_user(
         role_id=role_id,
         status_id=status_id,
         clinic_id=clinic_id,
-        password_hash=get_password_hash(password),
+        password_hash=get_password_hash(
+            password
+        ),
     )
 
     db.add(user)
@@ -53,8 +59,6 @@ def get_or_create_user(
     db.refresh(user)
 
     return user
-
-
 
 
 def seed_bootstrap_admin(
@@ -67,12 +71,7 @@ def seed_bootstrap_admin(
     cpf: str,
     password: str,
 ) -> User:
-    """Cria o único usuário inicial do modo bootstrap.
-
-    A busca é feita pelo e-mail configurado. Quando o usuário já existe, seus
-    dados e sua senha são preservados para que reinícios não sobrescrevam
-    alterações administrativas.
-    """
+    """Cria o único Administrador Master do bootstrap."""
 
     return get_or_create_user(
         db=db,
@@ -85,6 +84,7 @@ def seed_bootstrap_admin(
         clinic_id=None,
     )
 
+
 def seed_users(
     db: Session,
     roles: dict[str, Role],
@@ -93,46 +93,75 @@ def seed_users(
     *,
     admin_master: User,
 ) -> dict[str, User]:
-    return {
-        "admin_master": admin_master,
-        "doctor_primary": get_or_create_user(
-            db=db,
-            name="Dr. João Silva",
-            email="doctor@clinicai.com",
-            password=ACADEMIC_DEMO_PASSWORD,
-            cpf="11144477735",
-            role_id=roles["doctor"].id,
-            status_id=statuses["user_active"].id,
-            clinic_id=clinics["clinic_primary"].id,
-        ),
-        "doctor_secondary": get_or_create_user(
-            db=db,
-            name="Dra. Maria Souza",
-            email="doctor2@clinicai.com",
-            password=ACADEMIC_DEMO_PASSWORD,
-            cpf="52998224725",
-            role_id=roles["doctor"].id,
-            status_id=statuses["user_active"].id,
-            clinic_id=clinics["clinic_secondary"].id,
-        ),
-        "staff_primary": get_or_create_user(
-            db=db,
-            name="Recepção Clínica",
-            email="staff@clinicai.com",
-            password=ACADEMIC_DEMO_PASSWORD,
-            cpf="15350946056",
-            role_id=roles["clinic_staff"].id,
-            status_id=statuses["user_active"].id,
-            clinic_id=clinics["clinic_primary"].id,
-        ),
-        "user_inactive": get_or_create_user(
-            db=db,
-            name="Usuário Inativo",
-            email="inactive@clinicai.com",
-            password=ACADEMIC_DEMO_PASSWORD,
-            cpf="98765432100",
-            role_id=roles["clinic_staff"].id,
-            status_id=statuses["user_inactive"].id,
-            clinic_id=clinics["clinic_primary"].id,
-        ),
+    """Cria um médico e um funcionário por clínica."""
+
+    definitions = {
+        "doctor_primary": {
+            "name": "Dr. João Silva",
+            "email": "doctor@clinicai.com",
+            "cpf": "11144477735",
+            "role": "doctor",
+            "clinic": "clinic_primary",
+        },
+        "staff_primary": {
+            "name": "Recepção Clínica Primária",
+            "email": "staff@clinicai.com",
+            "cpf": "15350946056",
+            "role": "clinic_staff",
+            "clinic": "clinic_primary",
+        },
+        "doctor_large": {
+            "name": "Dr. Marcos Lima",
+            "email": "doctor.cariri@clinicai.com",
+            "cpf": "31415926590",
+            "role": "doctor",
+            "clinic": "clinic_large",
+        },
+        "staff_large": {
+            "name": "Recepção Hospital Cariri",
+            "email": "staff.cariri@clinicai.com",
+            "cpf": "27182818205",
+            "role": "clinic_staff",
+            "clinic": "clinic_large",
+        },
+        "doctor_specialized": {
+            "name": "Dra. Helena Costa",
+            "email": "doctor.endoscopia@clinicai.com",
+            "cpf": "16180339805",
+            "role": "doctor",
+            "clinic": "clinic_specialized",
+        },
+        "staff_specialized": {
+            "name": "Recepção Centro Endoscópico",
+            "email": "staff.endoscopia@clinicai.com",
+            "cpf": "14142135651",
+            "role": "clinic_staff",
+            "clinic": "clinic_specialized",
+        },
     }
+
+    users = {
+        "admin_master": admin_master,
+    }
+
+    for key, definition in definitions.items():
+        clinic = clinics[
+            definition["clinic"]
+        ]
+
+        users[key] = get_or_create_user(
+            db=db,
+            name=definition["name"],
+            email=definition["email"],
+            password=ACADEMIC_DEMO_PASSWORD,
+            cpf=definition["cpf"],
+            role_id=roles[
+                definition["role"]
+            ].id,
+            status_id=statuses[
+                "user_active"
+            ].id,
+            clinic_id=clinic.id,
+        )
+
+    return users

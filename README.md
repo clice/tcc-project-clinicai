@@ -242,21 +242,28 @@ O modo `academic_demo` acrescenta as contas fictícias abaixo:
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Médico | doctor@clinicai.com | clinicai123 |
-| Médico | doctor2@clinicai.com | clinicai123 |
-| Funcionário da Clínica | staff@clinicai.com | clinicai123 |
-| Funcionário da Clínica (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
+| Médico — Clínica Primária | doctor@clinicai.com | clinicai123 |
+| Funcionário — Clínica Primária | staff@clinicai.com | clinicai123 |
+| Médico — Hospital Regional Cariri | doctor.cariri@clinicai.com | clinicai123 |
+| Funcionário — Hospital Regional Cariri | staff.cariri@clinicai.com | clinicai123 |
+| Médico — Centro Endoscópico Cariri | doctor.endoscopia@clinicai.com | clinicai123 |
+| Funcionário — Centro Endoscópico Cariri | staff.endoscopia@clinicai.com | clinicai123 |
 
 Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
 ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
 um usuário que já exista.
 
-O `academic_demo` consolidado cria sete exames que representam `pending`,
-duas variações de `awaiting_review`, `completed`, `completed_with_divergence`,
-`failed` e `canceled`, além de quatro análises concluídas do `ensemble_stacking`
-versão `0.1.0`. Os dois ativos acadêmicos de imagem e seus Grad-CAMs têm
-procedência, licença, hashes e predições registrados em
-`backend/demo_assets/manifest.json`.
+O `academic_demo` consolidado cria três clínicas, seis contas de acesso,
+30 pacientes fictícios e 90 exames, sendo 30 por clínica. A massa contempla
+`pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed`
+e `canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão
+`0.1.1`, todas com mapas Grad-CAM.
+
+As 90 imagens acadêmicas — 45 normais e 45 anormais segundo seus rótulos de
+origem — têm procedência, licença, hashes, vínculos e resultados registrados em
+`backend/demo_assets/manifest.json`. Esse conjunto serve exclusivamente à
+demonstração acadêmica e não representa uma avaliação formal ou validação
+clínica do modelo.
 
 ---
 
@@ -285,7 +292,7 @@ procedência, licença, hashes e predições registrados em
 - Classificação binária pelo _Ensemble Stacking_ com ResNet-50, EfficientNet-B4 e PVTv2-B2
 - Revisão médica com confirmação ou divergência e histórico auditável
 - Disponibilização autenticada do mapa Grad-CAM
-- Massa `academic_demo` reproduzível com sete estados de exames e quatro análises coerentes
+- Massa `academic_demo` reproduzível com três clínicas, 30 pacientes, 90 exames e 72 análises com Grad-CAM
 
 ### 🔄 Em validação e finalização
 
