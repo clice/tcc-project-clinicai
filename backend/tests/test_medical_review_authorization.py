@@ -80,7 +80,7 @@ def test_non_doctor_is_forbidden_even_with_review_permission(role_name: str) -> 
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == (
-        "Apenas usuários com perfil médico podem revisar exames."
+        "Apenas usuários com perfil médico podem executar ações clínicas de exames."
     )
 
 

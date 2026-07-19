@@ -89,9 +89,9 @@ const ExamsList = () => {
   const { showError, showSuccess } = useFeedback()
   const roleName = getUserRole(user)
 
-  // TODO(revisão futura de RBAC): retirar o acesso clínico do
-  // admin_master e deixar estas ações exclusivamente para médicos.
-  const canUseClinicalExamActions = roleName === ROLES.DOCTOR || roleName === ROLES.ADMIN_MASTER
+  const canUseClinicalExamActions = roleName === ROLES.DOCTOR
+  const showDoctorColumn = roleName !== ROLES.DOCTOR
+  const showClinicColumn = roleName === ROLES.ADMIN_MASTER
 
   const canReadAiAnalysis = hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
@@ -241,11 +241,24 @@ const ExamsList = () => {
         header: 'Paciente',
         cell: ({ getValue }) => getValue() || '-',
       },
-      {
-        accessorKey: 'doctor_name',
-        header: 'Médico',
-        cell: ({ getValue }) => getValue() || '-',
-      },
+      ...(showDoctorColumn
+        ? [
+            {
+              accessorKey: 'doctor_name',
+              header: 'Médico',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
+      ...(showClinicColumn
+        ? [
+            {
+              accessorKey: 'clinic_name',
+              header: 'Clínica',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
       {
         accessorKey: 'status_display_name',
         header: 'Status',
@@ -328,6 +341,8 @@ const ExamsList = () => {
     canReadAiAnalysis,
     canUseClinicalExamActions,
     canView,
+    showClinicColumn,
+    showDoctorColumn,
     handleCancelExam,
     handleDownload,
     handleRestoreExam,
@@ -342,7 +357,11 @@ const ExamsList = () => {
             {statusFilter ? `Exames: ${examStatusLabels[statusFilter] || statusFilter}` : 'Exames'}
           </h1>
           <p className="text-body-secondary mb-0">
-            Gerencie exames, análise por IA e revisão médica.
+            {roleName === ROLES.DOCTOR
+              ? 'Gerencie seus exames, a análise por IA e a revisão médica.'
+              : roleName === ROLES.CLINIC_STAFF
+                ? 'Acompanhe os exames dos pacientes vinculados à sua clínica.'
+                : 'Acompanhe os status dos exames cadastrados em todas as clínicas.'}
           </p>
         </div>
 

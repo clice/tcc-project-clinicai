@@ -116,6 +116,48 @@ assert.deepEqual(
   ['Pacientes'],
 )
 
+const clinicalNavigation = [
+  {
+    name: 'Cadastrar Exame',
+    roles: ['doctor'],
+    permission: 'exams:create',
+  },
+]
+
+const doctorClinicalAccess =
+  filterNavigationByAccess(
+    clinicalNavigation,
+    {
+      roleName: 'doctor',
+      hasPermission: (
+        permission,
+      ) =>
+        permission ===
+        'exams:create',
+    },
+  )
+
+assert.deepEqual(
+  doctorClinicalAccess.map(
+    (item) => item.name,
+  ),
+  ['Cadastrar Exame'],
+)
+
+const adminCannotBypassDoctorRole =
+  filterNavigationByAccess(
+    clinicalNavigation,
+    {
+      roleName: 'admin_master',
+      hasPermission: () => true,
+    },
+  )
+
+assert.deepEqual(
+  adminCannotBypassDoctorRole,
+  [],
+)
+
 console.log(
-  'Navegação aprovada: exams:list oferece somente a listagem de exames ao Funcionário da Clínica.',
+  'Navegação aprovada: role e permissão são cumulativas; exams:list não concede ações clínicas.',
 )

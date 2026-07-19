@@ -169,7 +169,7 @@ def require_doctor_permission(permission_name: str):
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Apenas usuários com perfil médico podem revisar exames.",
+                detail="Apenas usuários com perfil médico podem executar ações clínicas de exames.",
             )
 
         if permission_name not in get_user_permission_names(current_user):

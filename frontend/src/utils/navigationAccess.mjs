@@ -8,11 +8,18 @@
 export const filterNavigationByAccess = (items, { roleName, hasPermission = () => false }) => {
   return items
     .map((item) => {
-      // Mesma precedência de RoleRoute: uma permissão declarada é a fonte da
-      // verdade; roles funcionam como regra exclusiva ou fallback.
-      const allowed = item.permission
-        ? hasPermission(item.permission)
-        : !item.roles || item.roles.includes(roleName)
+      // Role e permissão são cumulativas quando ambas são declaradas.
+      const roleAllowed =
+        !item.roles ||
+        item.roles.includes(roleName)
+
+      const permissionAllowed =
+        !item.permission ||
+        hasPermission(item.permission)
+
+      const allowed =
+        roleAllowed &&
+        permissionAllowed
 
       if (!allowed) {
         return null

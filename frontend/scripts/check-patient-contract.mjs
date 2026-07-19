@@ -110,20 +110,33 @@ assert.ok(
 )
 assert.match(list, /ROLES\.DOCTOR/)
 assert.match(list, /ROLES\.CLINIC_STAFF/)
+
+assert.match(
+  list,
+  /const showDoctorColumn = roleName !== ROLES\.DOCTOR/,
+)
+
 assert.match(
   list,
   /const showClinicColumn = roleName === ROLES\.ADMIN_MASTER/,
 )
+
+assert.match(
+  list,
+  /\.\.\.\(\s*showDoctorColumn\s*\?\s*\[\s*\{\s*accessorKey:\s*['"]doctor_name['"]/,
+)
+
 assert.match(
   list,
   /\.\.\.\(\s*showClinicColumn\s*\?\s*\[\s*\{\s*accessorKey:\s*['"]clinic_name['"]/,
 )
+
 assert.match(
   list,
-  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*loadPatients,\s*showClinicColumn,?\s*\]/,
+  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*loadPatients,\s*showClinicColumn,\s*showDoctorColumn,?\s*\]/,
 )
 assert.match(list, /Buscar por paciente, CPF, médico ou clínica/)
 
 console.log(
-  'Contrato de pacientes coerente: escopo, vínculos, transferência, status, filtros e histórico em largura total validados.',
+  'Contrato de pacientes coerente: escopo, vínculos, colunas por perfil, status, filtros e histórico em largura total validados.',
 )

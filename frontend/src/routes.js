@@ -104,10 +104,9 @@ export const routes = [
   },
 
   // PATIENTS
-  // "permission" tem prioridade sobre "roles" (ver RoleRoute.jsx) — se um
-  // admin remover patients:read do Médico, esta rota passa a bloquear
-  // sozinha, sem precisar editar este arquivo. "roles" continua aqui como
-  // fallback documentado, caso a permissão nunca chegue a ser removida.
+  // Quando uma rota declara "roles" e "permission", as duas restrições
+  // são aplicadas em conjunto. A role define o perfil autorizado e a
+  // permissão confirma que a capacidade continua concedida ao perfil.
   {
     path: '/patients',
     name: 'Pacientes',
@@ -149,7 +148,7 @@ export const routes = [
     path: '/exams/create',
     name: 'Adicionar Exame',
     element: CreateExam,
-    roles: ['admin_master', 'doctor'],
+    roles: ['doctor'],
     permission: 'exams:create',
   },
   {
@@ -163,7 +162,7 @@ export const routes = [
     path: '/exams/:id',
     name: 'Detalhes do Exame',
     element: ViewExam,
-    roles: ['admin_master', 'doctor'],
+    roles: ['doctor'],
     permission: 'exams:read',
   },
 

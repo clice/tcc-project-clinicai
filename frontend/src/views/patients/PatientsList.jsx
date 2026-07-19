@@ -39,6 +39,7 @@ const PatientsList = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   const roleName = getUserRole(user)
+  const showDoctorColumn = roleName !== ROLES.DOCTOR
   const showClinicColumn = roleName === ROLES.ADMIN_MASTER
 
   const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
@@ -130,7 +131,15 @@ const PatientsList = () => {
         header: 'Telefone',
         cell: ({ getValue }) => formatPhoneBR(getValue()) || '-',
       },
-      { accessorKey: 'doctor_name', header: 'Médico', cell: ({ getValue }) => getValue() || '-' },
+      ...(showDoctorColumn
+        ? [
+            {
+              accessorKey: 'doctor_name',
+              header: 'Médico',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
       ...(showClinicColumn
         ? [
             {
@@ -165,7 +174,14 @@ const PatientsList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadPatients, showClinicColumn],
+    [
+      canView,
+      canEdit,
+      canChangeStatus,
+      loadPatients,
+      showClinicColumn,
+      showDoctorColumn,
+    ],
   )
 
   return (

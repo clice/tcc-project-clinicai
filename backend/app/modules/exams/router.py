@@ -45,7 +45,7 @@ router = APIRouter(prefix="/exams", tags=["Exams"])
 @router.get("/form-options")
 def get_exam_form_options_route(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
 ):
     """
     Retorna dados auxiliares para o formulário de exames.
@@ -66,7 +66,7 @@ def create_exam_route(
     clinical_indication: str | None = Form(default=None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:create")),
+    current_user: User = Depends(require_doctor_permission("exams:create")),
 ):
     """
     Cria um novo exame.
@@ -126,7 +126,7 @@ def list_exams_route(
 def get_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
 ):
     """
     Busca um exame específico pelo ID.
@@ -142,7 +142,7 @@ def get_exam_route(
 def get_exam_history_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
 ):
     """Retorna os eventos do ciclo de vida do exame (RF36)."""
 
@@ -177,7 +177,7 @@ def update_exam_route(
 def cancel_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:change_status")),
+    current_user: User = Depends(require_doctor_permission("exams:change_status")),
 ):
     """
     Cancela logicamente um exame.
@@ -193,7 +193,7 @@ def cancel_exam_route(
 def restore_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:change_status")),
+    current_user: User = Depends(require_doctor_permission("exams:change_status")),
 ):
     """
     Restaura um exame cancelado ou com falha para pending.
@@ -212,7 +212,7 @@ def restore_exam_route(
 async def analyze_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:create")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:create")),
 ):
     """
     Envia o exame para análise pelo serviço de IA (RF41-48).
@@ -256,7 +256,7 @@ def preview_exam_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission("exams:download")
+        require_doctor_permission("exams:download")
     ),
 ):
     """
@@ -276,7 +276,7 @@ def preview_exam_file_route(
 def download_exam_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:download")),
+    current_user: User = Depends(require_doctor_permission("exams:download")),
 ):
     """
     Retorna informações do arquivo vinculado ao exame.
@@ -293,7 +293,7 @@ def preview_exam_ai_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission("ai_analysis:read")
+        require_doctor_permission("ai_analysis:read")
     ),
 ):
     """
@@ -313,7 +313,7 @@ def preview_exam_ai_file_route(
 def download_exam_ai_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:read")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:read")),
 ):
     """Retorna o mapa Grad-CAM sem expor o caminho físico armazenado."""
 
@@ -328,7 +328,7 @@ def download_exam_images_package_route(
     exam_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(
-        require_permission("exams:download")
+        require_doctor_permission("exams:download")
     ),
 ):
     """Baixa a imagem original e o Mapa Grad-CAM em um ZIP."""

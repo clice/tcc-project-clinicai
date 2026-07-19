@@ -330,7 +330,7 @@ def _seed_download_context(db_session, physical_file: Path):
         ]
     )
     db_session.commit()
-    return exam, staff_a, staff_b
+    return exam, doctor_a, staff_a, staff_b
 
 
 def test_download_is_scoped_to_clinic_and_audited(
@@ -340,18 +340,25 @@ def test_download_is_scoped_to_clinic_and_audited(
     physical_file = isolated_upload_root / "1" / "1" / "1" / "arquivo.png"
     physical_file.parent.mkdir(parents=True)
     physical_file.write_bytes(make_png())
-    exam, staff_a, staff_b = _seed_download_context(db_session, physical_file)
+    exam, doctor, staff_a, staff_b = _seed_download_context(
+        db_session,
+        physical_file,
+    )
 
     assert_http_error(
         403,
         lambda: download_exam_file(db_session, exam.id, staff_b),
+    )
+    assert_http_error(
+        403,
+        lambda: download_exam_file(db_session, exam.id, staff_a),
     )
     assert db_session.query(AuditLog).filter(AuditLog.action == "download").count() == 0
 
     preview_response = preview_exam_file(
         db_session,
         exam.id,
-        staff_a,
+        doctor,
     )
 
     assert Path(preview_response.path) == physical_file
@@ -374,7 +381,7 @@ def test_download_is_scoped_to_clinic_and_audited(
     response = download_exam_file(
         db_session,
         exam.id,
-        staff_a,
+        doctor,
     )
 
     assert Path(response.path) == physical_file
@@ -412,9 +419,12 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
     old_file = isolated_upload_root / "1" / "1" / "1" / "antigo.png"
     old_file.parent.mkdir(parents=True)
     old_file.write_bytes(make_png())
-    exam, staff, _ = _seed_download_context(db_session, old_file)
+    exam, doctor, staff, _ = _seed_download_context(
+        db_session,
+        old_file,
+    )
 
-    cancel_exam(db_session, exam.id, staff)
+    cancel_exam(db_session, exam.id, doctor)
     assert old_file.exists(), "Cancelamento é lógico e deve reter o arquivo."
 
     # Retoma diretamente para pending para isolar a política física de troca.

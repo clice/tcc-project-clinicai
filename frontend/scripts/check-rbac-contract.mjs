@@ -101,11 +101,11 @@ for (const permission of actionPermissions) {
 assert.match(actionsSource, /canReview:\s*'exams:review'/)
 assert.match(backendSource, /require_doctor_permission\("exams:review"\)/)
 
-// RF36: o histórico usa a mesma permissão de leitura do exame, valida o
-// escopo no backend e possui consumo explícito na tela de detalhes.
+// RF36: o histórico exige simultaneamente perfil médico e permissão de
+// leitura, valida o escopo no backend e possui consumo na tela de detalhes.
 assert.match(
   examsRouter,
-  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*require_permission\("exams:read"\)/,
+  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*require_doctor_permission\("exams:read"\)/,
 )
 assert.match(examServiceSource, /getHistory:\s*async/)
 assert.match(examServiceSource, /`\/exams\/\$\{id\}\/history`/)

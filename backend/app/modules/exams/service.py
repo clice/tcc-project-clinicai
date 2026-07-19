@@ -127,6 +127,9 @@ def build_exam_list_response(exam: Exam) -> dict:
     return {
         "id": exam.id,
         "clinic_id": exam.clinic_id,
+        "clinic_name": (
+            exam.clinic.name if exam.clinic else None
+        ),
         "patient_name": (
             exam.patient.name if exam.patient else None
         ),
@@ -171,6 +174,28 @@ def validate_user_can_access_exam(
         current_user=current_user,
         exam=exam,
     )
+
+
+def validate_user_is_doctor_for_exam_action(
+    *,
+    current_user: User,
+) -> None:
+    """
+    Impede que chamadas diretas ao service contornem a barreira
+    médica aplicada nas rotas de ações clínicas de exames.
+    """
+    if (
+        not current_user.role
+        or current_user.role.name
+        != RoleName.DOCTOR.value
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Apenas usuários com perfil médico "
+                "podem executar ações clínicas de exames."
+            ),
+        )
 
 
 def validate_user_can_access_clinic(
@@ -342,6 +367,10 @@ def list_exam_form_options(
     """
     Retorna os dados necessários para montar o formulário de exames.
     """
+    validate_user_is_doctor_for_exam_action(
+        current_user=current_user,
+    )
+
     role_name = current_user.role.name if current_user.role else None
 
     clinics_query = db.query(Clinic).options(joinedload(Clinic.status))
@@ -668,13 +697,28 @@ def list_exams(
         query = query.filter(Exam.clinic_id == current_user.clinic_id)
 
     elif role_name == RoleName.DOCTOR.value:
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não está vinculado a uma clínica.",
+            )
+
+        if clinic_id is not None and clinic_id != current_user.clinic_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Você não tem permissão para listar exames de outra clínica.",
+            )
+
         if doctor_id is not None and doctor_id != current_user.id:
             raise HTTPException(
                 status_code=403,
                 detail="Você não tem permissão para listar exames de outro médico.",
             )
 
-        query = query.filter(Exam.doctor_id == current_user.id)
+        query = query.filter(
+            Exam.doctor_id == current_user.id,
+            Exam.clinic_id == current_user.clinic_id,
+        )
 
     else:
         raise HTTPException(
@@ -741,10 +785,11 @@ def create_exam(
     Cria um novo exame com upload obrigatório.
     Status inicial: PENDING.
     """
-    doctor_id = payload.doctor_id
+    validate_user_is_doctor_for_exam_action(
+        current_user=current_user,
+    )
 
-    if current_user.role and current_user.role.name == RoleName.DOCTOR.value:
-        doctor_id = current_user.id
+    doctor_id = current_user.id
 
     validate_user_can_access_clinic(
         current_user=current_user,

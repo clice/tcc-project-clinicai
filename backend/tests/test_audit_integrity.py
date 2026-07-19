@@ -317,7 +317,7 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
             title="Exame com upload auditado",
         ),
         upload(make_png(3, 4), filename="nome-original.png"),
-        context["staff"],
+        context["doctor"],
     )
 
     logs = (
@@ -332,7 +332,7 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
     assert logs[1].new_data["image_width"] == 3
     assert logs[1].new_data["image_height"] == 4
 
-    response = download_exam_file(db_session, created["id"], context["staff"])
+    response = download_exam_file(db_session, created["id"], context["doctor"])
     assert Path(response.path).is_file()
 
     download_log = (

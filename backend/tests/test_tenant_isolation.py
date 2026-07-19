@@ -27,22 +27,39 @@ def build_user(
     )
 
 
-@pytest.mark.parametrize("resource_kind", ["patient", "exam"])
-def test_clinic_staff_cannot_cross_clinic_boundary(resource_kind: str) -> None:
+def test_clinic_staff_patient_access_is_limited_to_own_clinic() -> None:
     staff = build_user("clinic_staff", clinic_id=1)
     own_record = SimpleNamespace(clinic_id=1, doctor_id=99)
     other_record = SimpleNamespace(clinic_id=2, doctor_id=99)
-    guard = (
-        ensure_user_can_access_patient
-        if resource_kind == "patient"
-        else ensure_user_can_access_exam
+
+    ensure_user_can_access_patient(
+        current_user=staff,
+        patient=own_record,
     )
 
-    guard(current_user=staff, **{resource_kind: own_record})
     with pytest.raises(HTTPException) as exc_info:
-        guard(current_user=staff, **{resource_kind: other_record})
+        ensure_user_can_access_patient(
+            current_user=staff,
+            patient=other_record,
+        )
 
     assert exc_info.value.status_code == 403
+
+
+def test_clinic_staff_cannot_access_individual_exams() -> None:
+    staff = build_user("clinic_staff", clinic_id=1)
+
+    for exam in (
+        SimpleNamespace(clinic_id=1, doctor_id=99),
+        SimpleNamespace(clinic_id=2, doctor_id=99),
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            ensure_user_can_access_exam(
+                current_user=staff,
+                exam=exam,
+            )
+
+        assert exc_info.value.status_code == 403
 
 
 @pytest.mark.parametrize("resource_kind", ["patient", "exam"])
@@ -73,10 +90,23 @@ def test_non_admin_cannot_submit_data_for_another_clinic() -> None:
     assert exc_info.value.status_code == 403
 
 
-def test_admin_master_can_access_any_clinic_record() -> None:
+def test_admin_master_has_administrative_but_not_clinical_access() -> None:
     admin = build_user("admin_master", clinic_id=None)
     external_record = SimpleNamespace(clinic_id=999, doctor_id=999)
 
-    ensure_user_can_access_clinic_data(current_user=admin, clinic_id=999)
-    ensure_user_can_access_patient(current_user=admin, patient=external_record)
-    ensure_user_can_access_exam(current_user=admin, exam=external_record)
+    ensure_user_can_access_clinic_data(
+        current_user=admin,
+        clinic_id=999,
+    )
+    ensure_user_can_access_patient(
+        current_user=admin,
+        patient=external_record,
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        ensure_user_can_access_exam(
+            current_user=admin,
+            exam=external_record,
+        )
+
+    assert exc_info.value.status_code == 403

@@ -43,7 +43,7 @@ def ensure_user_can_access_patient(
     Regra:
     - admin_master acessa qualquer paciente;
     - clinic_staff acessa pacientes da própria clínica;
-    - doctor acessa apenas pacientes vinculados a ele.
+    - doctor acessa apenas pacientes vinculados a ele e à própria clínica.
     """
     role_name = get_user_role_name(current_user)
 
@@ -53,7 +53,11 @@ def ensure_user_can_access_patient(
     if role_name == RoleName.CLINIC_STAFF.value and patient.clinic_id == current_user.clinic_id:
         return
 
-    if role_name == RoleName.DOCTOR.value and patient.doctor_id == current_user.id:
+    if (
+        role_name == RoleName.DOCTOR.value
+        and patient.doctor_id == current_user.id
+        and patient.clinic_id == current_user.clinic_id
+    ):
         return
 
     raise HTTPException(status_code=403, detail=detail)
@@ -67,19 +71,17 @@ def ensure_user_can_access_exam(
 ) -> None:
     """
     Regra:
-    - admin_master acessa qualquer exame;
-    - clinic_staff acessa exames da própria clínica;
-    - doctor acessa apenas exames vinculados a ele.
+    - detalhes e ações clínicas são exclusivos do médico;
+    - doctor acessa apenas exames vinculados a ele e à própria clínica;
+    - admin_master e clinic_staff permanecem restritos à listagem operacional.
     """
     role_name = get_user_role_name(current_user)
 
-    if role_name == RoleName.ADMIN_MASTER.value:
-        return
-
-    if role_name == RoleName.CLINIC_STAFF.value and exam.clinic_id == current_user.clinic_id:
-        return
-
-    if role_name == RoleName.DOCTOR.value and exam.doctor_id == current_user.id:
+    if (
+        role_name == RoleName.DOCTOR.value
+        and exam.doctor_id == current_user.id
+        and exam.clinic_id == current_user.clinic_id
+    ):
         return
 
     raise HTTPException(status_code=403, detail=detail)
@@ -92,7 +94,6 @@ def filter_query_by_user_scope(
     current_user: User,
     clinic_field_name: str = "clinic_id",
     doctor_field_name: str = "doctor_id",
-    doctor_only: bool = False,
 ):
     """
     Aplica escopo de listagem conforme perfil.
@@ -112,10 +113,11 @@ def filter_query_by_user_scope(
         return query.filter(getattr(model, clinic_field_name) == clinic_id)
 
     if role_name == RoleName.DOCTOR.value:
-        if doctor_only:
-            return query.filter(getattr(model, doctor_field_name) == current_user.id)
-
-        return query.filter(getattr(model, doctor_field_name) == current_user.id)
+        clinic_id = ensure_user_has_clinic(current_user)
+        return query.filter(
+            getattr(model, doctor_field_name) == current_user.id,
+            getattr(model, clinic_field_name) == clinic_id,
+        )
 
     raise HTTPException(
         status_code=403,

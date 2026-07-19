@@ -86,6 +86,7 @@ def test_list_response_contains_only_operational_summary() -> None:
     exam = SimpleNamespace(
         id=7,
         clinic_id=2,
+        clinic=SimpleNamespace(name="Clínica"),
         patient=SimpleNamespace(name="Paciente"),
         doctor=SimpleNamespace(name="Médico"),
         status_id=3,
@@ -109,6 +110,7 @@ def test_list_response_contains_only_operational_summary() -> None:
     assert set(response) == {
         "id",
         "clinic_id",
+        "clinic_name",
         "patient_name",
         "doctor_name",
         "status_id",
@@ -135,5 +137,6 @@ def test_list_response_contains_only_operational_summary() -> None:
         "patient_cpf",
         "patient_birth_date",
     }
+    assert response["clinic_name"] == "Clínica"
     assert response["gradcam_available"] is True
     assert forbidden.isdisjoint(response)

@@ -70,6 +70,10 @@ const [
   ),
 ])
 
+const roleRoute = await read(
+  'frontend/src/components/auth/RoleRoute.jsx',
+)
+
 assert.match(
   permissions,
   /EXAMS_LIST:\s*'exams:list'/,
@@ -94,6 +98,25 @@ assert.match(
   /permission:\s*'exams:list'/,
 )
 
+const createRoute = routes.match(
+  /\{\s*path:\s*'\/exams\/create',[\s\S]*?\n\s*\},/,
+)
+
+assert.ok(
+  createRoute,
+  'Rota de criação não encontrada.',
+)
+
+assert.match(
+  createRoute[0],
+  /roles:\s*\['doctor'\]/,
+)
+
+assert.doesNotMatch(
+  createRoute[0],
+  /admin_master|clinic_staff/,
+)
+
 const detailRoute = routes.match(
   /\{\s*path:\s*'\/exams\/:id',[\s\S]*?\n\s*\},/,
 )
@@ -103,9 +126,14 @@ assert.ok(
   'Rota de detalhes não encontrada.',
 )
 
+assert.match(
+  detailRoute[0],
+  /roles:\s*\['doctor'\]/,
+)
+
 assert.doesNotMatch(
   detailRoute[0],
-  /clinic_staff/,
+  /admin_master|clinic_staff/,
 )
 
 assert.match(
@@ -130,12 +158,37 @@ assert.doesNotMatch(
 
 assert.match(
   examsList,
-  /const canUseClinicalExamActions = roleName === ROLES\.DOCTOR \|\| roleName === ROLES\.ADMIN_MASTER/,
+  /const canUseClinicalExamActions = roleName === ROLES\.DOCTOR/,
+)
+
+assert.match(
+  examsList,
+  /const showDoctorColumn = roleName !== ROLES\.DOCTOR/,
+)
+
+assert.match(
+  examsList,
+  /const showClinicColumn = roleName === ROLES\.ADMIN_MASTER/,
+)
+
+assert.match(
+  examsList,
+  /\.\.\.\(\s*showDoctorColumn\s*\?\s*\[\s*\{\s*accessorKey:\s*['"]doctor_name['"]/,
+)
+
+assert.match(
+  examsList,
+  /\.\.\.\(\s*showClinicColumn\s*\?\s*\[\s*\{\s*accessorKey:\s*['"]clinic_name['"]/,
 )
 
 assert.match(
   examsList,
   /if \(!canUseClinicalExamActions\) \{\s*return result/,
+)
+
+assert.match(
+  examsList,
+  /canCreate && canUseClinicalExamActions/,
 )
 
 assert.match(
@@ -145,12 +198,12 @@ assert.match(
 
 assert.match(
   backendRouter,
-  /@router\.get\("\/\{exam_id\}"[\s\S]*?require_permission\("exams:read"\)/,
+  /@router\.get\("\/\{exam_id\}"[\s\S]*?require_doctor_permission\("exams:read"\)/,
 )
 
 assert.match(
   backendRouter,
-  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*?require_permission\("exams:read"\)/,
+  /@router\.get\("\/\{exam_id\}\/history"[\s\S]*?require_doctor_permission\("exams:read"\)/,
 )
 
 const listSchema =
@@ -161,6 +214,11 @@ const listSchema =
     .split(
       'class ExamResponse',
     )[0]
+
+assert.match(
+  listSchema,
+  /clinic_name:\s*str \| None = None/,
+)
 
 for (const forbiddenField of [
   'description:',
@@ -189,6 +247,21 @@ assert.match(
 assert.match(
   backendService,
   /Funcionário da clínica não tem permissão para filtrar por resultado da IA/,
+)
+
+assert.match(
+  roleRoute,
+  /const roleAllowed =/,
+)
+
+assert.match(
+  roleRoute,
+  /if \(!roleAllowed\)/,
+)
+
+assert.match(
+  roleRoute,
+  /requiredPermission &&[\s\S]*!hasPermission\(user, requiredPermission\)/,
 )
 
 assert.match(
@@ -226,5 +299,5 @@ for (const forbiddenPermission of [
 }
 
 console.log(
-  'Acesso resumido aprovado: Funcionário da Clínica lista exames da própria clínica sem ações, detalhes ou resultados.',
+  'Acesso de exames aprovado: Médico recebe ações clínicas; Funcionário e Administrador recebem somente a listagem operacional.',
 )
