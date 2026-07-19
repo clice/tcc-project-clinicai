@@ -51,6 +51,63 @@ assert.match(patientService, /doctor_id: doctorId \|\| undefined/)
 
 assert.match(form, /if \(isCreateMode \|\| !isDoctor\)/)
 assert.match(form, /status_display_name \|\| form\.status_name/)
+
+assert.equal(
+  (
+    form.match(
+      /<CCol xs=\{12\}>/g,
+    ) || []
+  ).length,
+  2,
+  'Dados e histórico devem ocupar toda a largura.',
+)
+
+assert.doesNotMatch(
+  form,
+  /lg=\{isCreateMode \|\| !hasPatientExams \? 12 : 8\}/,
+)
+
+assert.doesNotMatch(
+  form,
+  /<CCol lg=\{4\}>/,
+)
+
+assert.match(
+  form,
+  /maxHeight:\s*'420px'/,
+)
+
+assert.match(
+  form,
+  /overflowY:\s*'auto'/,
+)
+
+assert.match(
+  form,
+  /tabIndex=\{0\}/,
+)
+
+assert.match(
+  form,
+  /aria-label="Histórico de exames do paciente"/,
+)
+
+const patientDataPosition =
+  form.indexOf(
+    '<strong>Dados do Paciente</strong>',
+  )
+
+const patientHistoryPosition =
+  form.indexOf(
+    '<strong>Histórico de Exames</strong>',
+  )
+
+assert.ok(
+  patientDataPosition >= 0 &&
+    patientHistoryPosition >
+      patientDataPosition,
+  'O histórico deve aparecer depois dos dados do paciente.',
+)
 assert.match(list, /ROLES\.DOCTOR/)
 assert.match(list, /ROLES\.CLINIC_STAFF/)
 assert.match(
@@ -68,5 +125,5 @@ assert.match(
 assert.match(list, /Buscar por paciente, CPF, médico ou clínica/)
 
 console.log(
-  'Contrato de pacientes coerente: escopo, vínculos, transferência, status e filtros validados.',
+  'Contrato de pacientes coerente: escopo, vínculos, transferência, status, filtros e histórico em largura total validados.',
 )

@@ -537,7 +537,7 @@ const PatientForm = ({ mode = 'create' }) => {
       </div>
 
       <CRow className="mb-4 g-4">
-        <CCol lg={isCreateMode || !hasPatientExams ? 12 : 8}>
+        <CCol xs={12}>
           <CCard>
             <CCardHeader>
               <strong>Dados do Paciente</strong>
@@ -754,13 +754,20 @@ const PatientForm = ({ mode = 'create' }) => {
         </CCol>
 
         {!isCreateMode && hasPatientExams && (
-          <CCol lg={4}>
+          <CCol xs={12}>
             <CCard>
               <CCardHeader>
                 <strong>Histórico de Exames</strong>
               </CCardHeader>
 
-              <CCardBody>
+              <CCardBody
+                style={{
+                  maxHeight: '420px',
+                  overflowY: 'auto',
+                }}
+                tabIndex={0}
+                aria-label="Histórico de exames do paciente"
+              >
                 <CListGroup flush>
                   {patientExams.map((exam) => (
                     <CListGroupItem
