@@ -113,14 +113,9 @@ const Login = () => {
                     </CInputGroup>
 
                     <CRow>
-                      <CCol xs={6}>
+                      <CCol xs={12}>
                         <CButton color="primary" className="px-4" type="submit" disabled={isLoading}>
                           {isLoading ? 'Entrando...' : 'Entrar'}
-                        </CButton>
-                      </CCol>
-                      <CCol xs={6} className="text-right">
-                        <CButton color="link" className="px-0">
-                          Esqueceu a senha?
                         </CButton>
                       </CCol>
                     </CRow>
