@@ -245,7 +245,7 @@ const ProfilePage = () => {
         />
       )}
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Alterar senha</strong>
         </CCardHeader>
