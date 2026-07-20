@@ -15,6 +15,9 @@ const backendRouter = await readProjectFile('backend/app/modules/clinics/router.
 const backendService = await readProjectFile('backend/app/modules/clinics/service.py')
 const clinicService = await readProjectFile('frontend/src/services/clinicService.js')
 const clinicForm = await readProjectFile('frontend/src/views/clinics/ClinicForm.jsx')
+const clinicsList = await readProjectFile('frontend/src/views/clinics/ClinicsList.jsx')
+const frontendRoutes = await readProjectFile('frontend/src/routes.js')
+const actionPermissions = await readProjectFile('frontend/src/utils/actionPermissions.mjs')
 const profilePage = await readProjectFile('frontend/src/views/profile/ProfilePage.jsx')
 const clinicProfileCard = await readProjectFile('frontend/src/views/profile/ClinicProfileCard.jsx')
 
@@ -79,6 +82,43 @@ assert.match(
   clinicForm,
   /<CCol md=\{6\}>[\s\S]*?<CFormLabel>Bairro<\/CFormLabel>[\s\S]*?<CCol md=\{6\}>[\s\S]*?<CFormLabel>Cidade<\/CFormLabel>/,
 )
+assert.doesNotMatch(frontendRoutes, /const ViewClinic/)
+assert.doesNotMatch(
+  frontendRoutes,
+  /path:\s*['"]\/clinics\/:id['"]/,
+  'A rota exclusiva de visualização de clínica deve permanecer removida.',
+)
+assert.doesNotMatch(
+  clinicsList,
+  /viewTo=\{`\/clinics\/\$\{clinic\.id\}`\}/,
+  'A lista de clínicas não deve oferecer ação separada de visualização.',
+)
+assert.doesNotMatch(
+  clinicsList,
+  /canView=\{canView\}/,
+  'A lista de clínicas não deve depender da ação canView.',
+)
+assert.match(clinicsList, /editTo=\{`\/clinics\/\$\{clinic\.id\}\/edit`\}/)
+assert.match(clinicForm, /navigate\(`\/clinics\/\$\{created\.id\}\/edit`\)/)
+assert.match(
+  clinicForm,
+  /Esta tela permite alterar os dados da clínica\./,
+  'A edição deve informar que o salvamento altera os dados.',
+)
+assert.doesNotMatch(clinicForm, /mode === ['"]view['"]/)
+assert.doesNotMatch(clinicForm, /\bisReadOnly\b/)
+
+const clinicActionsBody = actionPermissions.match(
+  /clinics:\s*Object\.freeze\(\{([\s\S]*?)\}\),\s*users:/,
+)?.[1]
+assert.ok(clinicActionsBody, 'A matriz de ações de clínicas não foi localizada.')
+assert.doesNotMatch(
+  clinicActionsBody,
+  /canView/,
+  'Clínicas não devem manter uma ação separada de visualização.',
+)
+assert.match(clinicActionsBody, /canEdit:\s*['"]clinics:update['"]/)
+
 assert.doesNotMatch(
   clinicProfileCard,
   /status_id\s*:/,

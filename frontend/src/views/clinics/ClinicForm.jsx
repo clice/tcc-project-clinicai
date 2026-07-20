@@ -3,13 +3,13 @@
  *
  * Usado para:
  * - criar clínica;
- * - visualizar clínica;
  * - editar clínica.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
+  CAlert,
   CButton,
   CButtonGroup,
   CCard,
@@ -55,15 +55,13 @@ const ClinicForm = ({ mode = 'create' }) => {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingAddress, setIsLoadingAddress] = useState(false)
 
-  const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
 
-  const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Clínica'
-    if (isEditMode) return 'Editar Clínica'
-    return 'Detalhes da Clínica'
-  }, [isCreateMode, isEditMode])
+  const title = useMemo(
+    () => (isCreateMode ? 'Cadastrar Clínica' : 'Editar Clínica'),
+    [isCreateMode],
+  )
 
   useEffect(() => {
     const loadPageData = async () => {
@@ -214,8 +212,6 @@ const ClinicForm = ({ mode = 'create' }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (isReadOnly) return
-
     showError('')
     showSuccess('')
 
@@ -226,7 +222,7 @@ const ClinicForm = ({ mode = 'create' }) => {
 
       if (isCreateMode) {
         const created = await clinicService.create(buildPayload())
-        navigate(`/clinics/${created.id}`)
+        navigate(`/clinics/${created.id}/edit`)
         return
       }
 
@@ -266,6 +262,13 @@ const ClinicForm = ({ mode = 'create' }) => {
         </div>
       </div>
 
+      {isEditMode && (
+        <CAlert color="info">
+          Esta tela permite alterar os dados da clínica. Revise as informações antes de selecionar
+          “Salvar”.
+        </CAlert>
+      )}
+
       <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados da Clínica</strong>
@@ -278,7 +281,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Nome</CFormLabel>
                 <CFormInput
                   value={form.name}
-                  disabled={isReadOnly}
                   placeholder="Ex: Clínica Vida"
                   onChange={(event) => updateField('name', event.target.value)}
                   required
@@ -289,7 +291,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>CNPJ</CFormLabel>
                 <CFormInput
                   value={form.cnpj}
-                  disabled={isReadOnly}
                   placeholder="00.000.000/0000-00"
                   onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
                   required
@@ -301,7 +302,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormInput
                   type="email"
                   value={form.email}
-                  disabled={isReadOnly}
                   placeholder="contato@clinica.com"
                   onChange={(event) => updateField('email', event.target.value)}
                 />
@@ -311,7 +311,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Telefone</CFormLabel>
                 <CFormInput
                   value={form.phone}
-                  disabled={isReadOnly}
                   placeholder="(00) 0000-0000"
                   onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                 />
@@ -321,7 +320,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Celular</CFormLabel>
                 <CFormInput
                   value={form.mobile_phone}
-                  disabled={isReadOnly}
                   placeholder="(00) 00000-0000"
                   onChange={(event) =>
                     updateField('mobile_phone', formatPhoneBR(event.target.value))
@@ -333,7 +331,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>CEP</CFormLabel>
                 <CFormInput
                   value={form.zip_code}
-                  disabled={isReadOnly || isLoadingAddress}
+                  disabled={isLoadingAddress}
                   onChange={(event) => updateField('zip_code', formatZipCodeBR(event.target.value))}
                   onBlur={handleZipCodeBlur}
                   placeholder="00000-000"
@@ -349,7 +347,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Número</CFormLabel>
                 <CFormInput
                   value={form.number}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('number', event.target.value)}
                 />
               </CCol>
@@ -384,17 +381,15 @@ const ClinicForm = ({ mode = 'create' }) => {
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton color="primary" type="submit" disabled={isSaving}>
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
 
-                <CButton color="secondary" variant="outline" as={Link} to="/clinics">
-                  Cancelar
-                </CButton>
-              </div>
-            )}
+              <CButton color="secondary" variant="outline" as={Link} to="/clinics">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

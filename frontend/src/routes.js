@@ -21,7 +21,6 @@ const ClinicForm = React.lazy(() => import('./views/clinics/ClinicForm'))
 
 const CreateClinic = () => React.createElement(ClinicForm, { mode: 'create' })
 const EditClinic = () => React.createElement(ClinicForm, { mode: 'edit' })
-const ViewClinic = () => React.createElement(ClinicForm, { mode: 'view' })
 
 // PATIENTS
 const PatientsList = React.lazy(() => import('./views/patients/PatientsList'))
@@ -95,13 +94,6 @@ export const routes = [
     element: EditClinic,
     roles: ['admin_master'],
   },
-  {
-    path: '/clinics/:id',
-    name: 'Detalhes da Clínica',
-    element: ViewClinic,
-    roles: ['admin_master'],
-  },
-
   // PATIENTS
   // Quando uma rota declara "roles" e "permission", as duas restrições
   // são aplicadas em conjunto. A role define o perfil autorizado e a

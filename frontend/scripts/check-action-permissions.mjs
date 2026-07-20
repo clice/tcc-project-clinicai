@@ -33,7 +33,6 @@ const componentExpectations = {
   ],
   'src/views/clinics/ClinicsList.jsx': [
     '{canCreate &&',
-    'canView={canView}',
     'canEdit={canEdit}',
     'canInactivate={canChangeStatus',
   ],
