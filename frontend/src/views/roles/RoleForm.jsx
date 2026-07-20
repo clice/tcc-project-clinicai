@@ -2,7 +2,6 @@
  * Formulário do módulo de Roles.
  *
  * Usado para:
- * - visualizar perfil;
  * - editar perfil;
  * - vincular permissões ao perfil usando checkboxes.
  */
@@ -39,7 +38,7 @@ const emptyRole = {
   description: '',
 }
 
-const RoleForm = ({ mode = 'view' }) => {
+const RoleForm = () => {
   const { id } = useParams()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
@@ -48,20 +47,12 @@ const RoleForm = ({ mode = 'view' }) => {
   const [selectedPermissionIds, setSelectedPermissionIds] = useState([])
   const [isSaving, setIsSaving] = useState(false)
 
-  const isReadOnly = mode === 'view'
-  const isEditMode = mode === 'edit'
-
   // O admin_master recebe bypass total na autorização do backend
   // (require_admin/hasPermission) — desmarcar permissões dele aqui
   // altera o banco, mas não reduz o acesso efetivo. Deixar essa matriz
   // editável sugeria uma consequência que não existe de verdade.
   const isAdminMasterRole = form.name === 'admin_master'
-  const isPermissionMatrixReadOnly = isReadOnly || isAdminMasterRole
-
-  const title = useMemo(() => {
-    if (isEditMode) return 'Editar Perfil'
-    return 'Detalhes do Perfil'
-  }, [isEditMode])
+  const isPermissionMatrixReadOnly = isAdminMasterRole
 
   /**
    * Agrupa permissões pelo módulo.
@@ -156,8 +147,6 @@ const RoleForm = ({ mode = 'view' }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (isReadOnly) return
-
     setIsSaving(true)
     showError('')
     showSuccess('')
@@ -171,14 +160,12 @@ const RoleForm = ({ mode = 'view' }) => {
     }
 
     try {
-      if (isEditMode) {
-        await roleService.update(id, buildPayload())
-        await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
+      await roleService.update(id, buildPayload())
+      await rolePermissionService.syncRolePermissions(id, selectedPermissionIds)
 
-        showSuccess(
-          'Perfil atualizado com sucesso. Usuários conectados terão os acessos sincronizados ao retornar à aba ou em até 60 segundos.',
-        )
-      }
+      showSuccess(
+        'Perfil atualizado com sucesso. Usuários conectados terão os acessos sincronizados ao retornar à aba ou em até 60 segundos.',
+      )
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar o perfil.'))
     } finally {
@@ -191,7 +178,7 @@ const RoleForm = ({ mode = 'view' }) => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0">Editar Perfil</h1>
           <p className="text-body-secondary mb-0">
             Configure os perfis oficiais e suas permissões de acesso.
           </p>
@@ -209,6 +196,11 @@ const RoleForm = ({ mode = 'view' }) => {
             Voltar
           </CButton>
         </div>
+      </div>
+
+      <div className="alert alert-info">
+        Esta tela permite alterar os dados e as permissões do perfil. Revise as informações antes de
+        selecionar “Salvar”.
       </div>
 
       <CCard>
@@ -231,7 +223,6 @@ const RoleForm = ({ mode = 'view' }) => {
                 <CFormLabel>Nome de exibição</CFormLabel>
                 <CFormInput
                   value={form.display_name}
-                  disabled={isReadOnly}
                   placeholder="Ex: Administrador Master"
                   onChange={(event) => updateField('display_name', event.target.value)}
                   required
@@ -242,7 +233,6 @@ const RoleForm = ({ mode = 'view' }) => {
                 <CFormLabel>Descrição</CFormLabel>
                 <CFormTextarea
                   value={form.description}
-                  disabled={isReadOnly}
                   rows={3}
                   placeholder="Descrição opcional do perfil"
                   onChange={(event) => updateField('description', event.target.value)}
@@ -296,26 +286,15 @@ const RoleForm = ({ mode = 'view' }) => {
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton
-                  color="primary"
-                  type="submit"
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
-  
-                <CButton
-                  color="secondary"
-                  variant="outline"
-                  as={Link}
-                  to="/roles"
-                >
-                  Cancelar
-                </CButton>
-              </div>
-            )}
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
+
+              <CButton color="secondary" variant="outline" as={Link} to="/roles">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

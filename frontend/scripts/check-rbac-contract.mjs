@@ -18,6 +18,7 @@ const actionsSource = await readProjectFile('frontend/src/utils/actionPermission
 const examServiceSource = await readProjectFile('frontend/src/services/examService.js')
 const examFormSource = await readProjectFile('frontend/src/views/exams/ExamForm.jsx')
 const roleFormSource = await readProjectFile('frontend/src/views/roles/RoleForm.jsx')
+const rolesListSource = await readProjectFile('frontend/src/views/roles/RolesList.jsx')
 const rolePermissionServiceSource = await readProjectFile(
   'backend/app/modules/role_permissions/service.py',
 )
@@ -73,23 +74,19 @@ for (const permission of [...routePermissions, ...navigationPermissions]) {
   )
 }
 
-// Clínicas e usuários administrativos possuem botões por ação, mas sua
-// barreira autoritativa é a role admin_master em todo o router.
+// Clínicas possuem botões por ação no frontend, mas sua barreira
+// autoritativa continua sendo a role admin_master em todo o router.
+// Usuários usam require_permission(...), permitindo também o gestor de
+// clínica conforme as permissões reais encontradas em backendPermissions.
 const adminOnlyActions = new Set([
   'clinics:create',
   'clinics:read',
   'clinics:update',
   'clinics:change_status',
-  'users:create',
-  'users:read',
-  'users:update',
-  'users:change_status',
 ])
 const clinicsRouter = await readProjectFile('backend/app/modules/clinics/router.py')
-const usersRouter = await readProjectFile('backend/app/modules/users/router.py')
 const examsRouter = await readProjectFile('backend/app/modules/exams/router.py')
 assert.match(clinicsRouter, /Depends\(require_admin\)/)
-assert.match(usersRouter, /Depends\(require_admin\)/)
 
 for (const permission of actionPermissions) {
   assert.ok(
@@ -113,7 +110,14 @@ assert.match(examFormSource, /<ExamHistoryCard\s+examId=\{id\}/)
 
 // A matriz do admin_master é apresentada como fixa e o backend rejeita
 // alterações que não teriam efeito por causa do bypass administrativo.
-assert.match(roleFormSource, /isPermissionMatrixReadOnly = isReadOnly \|\| isAdminMasterRole/)
+assert.match(roleFormSource, /isPermissionMatrixReadOnly = isAdminMasterRole/)
+assert.doesNotMatch(roleFormSource, /\bisReadOnly\b|mode === ['"]view['"]/)
+assert.match(roleFormSource, /Esta tela permite alterar os dados e as permissões do perfil\./)
+assert.doesNotMatch(routesSource, /const ViewRole/)
+assert.doesNotMatch(routesSource, /path:\s*['"]\/roles\/:id['"]/)
+assert.doesNotMatch(rolesListSource, /viewTo=\{`\/roles\/\$\{row\.original\.id\}`\}/)
+assert.doesNotMatch(rolesListSource, /canView=\{canManage\}/)
+assert.match(rolesListSource, /editTo=\{`\/roles\/\$\{row\.original\.id\}\/edit`\}/)
 assert.match(rolePermissionServiceSource, /ensure_role_permission_matrix_editable\(role\)/)
 
 console.log(

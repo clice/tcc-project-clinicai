@@ -2,7 +2,7 @@
  * Listagem de perfis.
  *
  * Exibe os perfis cadastrados no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * a edição dos dados e das permissões.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -41,7 +41,13 @@ const RolesList = () => {
   }, [])
 
   useEffect(() => {
-    void loadRoles()
+    const timeoutId = window.setTimeout(() => {
+      void loadRoles()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadRoles])
 
   const columns = useMemo(
@@ -54,12 +60,7 @@ const RolesList = () => {
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/roles/${row.original.id}`}
-            editTo={`/roles/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/roles/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],
@@ -90,7 +91,7 @@ const RolesList = () => {
 
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <AppTable data={roles} columns={columns} emptyMessage="Nenhum perfil encontrado." />

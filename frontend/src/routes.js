@@ -55,8 +55,7 @@ const AuditLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'
 const RolesList = React.lazy(() => import('./views/roles/RolesList'))
 const RoleForm = React.lazy(() => import('./views/roles/RoleForm'))
 
-const EditRole = () => React.createElement(RoleForm, { mode: 'edit' })
-const ViewRole = () => React.createElement(RoleForm, { mode: 'view' })
+const EditRole = () => React.createElement(RoleForm)
 
 // PERMISSIONS
 const PermissionsList = React.lazy(() => import('./views/permissions/PermissionsList'))
@@ -185,7 +184,6 @@ export const routes = [
   // ROLES
   { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master'] },
   { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master'] },
-  { path: '/roles/:id', name: 'Detalhes do Perfil', element: ViewRole, roles: ['admin_master'] },
 
   // PERMISSIONS
   { path: '/permissions', name: 'Permissões', element: PermissionsList, roles: ['admin_master'] },
