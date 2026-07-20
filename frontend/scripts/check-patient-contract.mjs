@@ -106,7 +106,7 @@ assert.match(
 
 assert.match(
   list,
-  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*handleChangeStatus,\s*showClinicColumn,\s*showDoctorColumn,?\s*\]/,
+  /\[\s*canEdit,\s*canChangeStatus,\s*handleChangeStatus,\s*showClinicColumn,\s*showDoctorColumn,?\s*\]/,
 )
 assert.doesNotMatch(
   list,
@@ -143,6 +143,16 @@ assert.doesNotMatch(
   /\{patient\?\.status_name === 'active' && canCreateExam && \(/,
   'A permissão isolada de criação não deve expor a ação ao administrador.',
 )
+
+assert.doesNotMatch(form, /mode === 'view'/)
+assert.match(form, /const isReadOnly = isArchiveMode/)
+assert.match(
+  form,
+  /Esta tela permite alterar os dados do paciente\./,
+  'A edição deve informar que o salvamento altera os dados.',
+)
+assert.doesNotMatch(list, /viewTo=\{`\/patients\//)
+assert.doesNotMatch(list, /canView=\{canView\}/)
 
 console.log(
   'Contrato de pacientes coerente: escopo, vínculos, status e histórico contado com acesso não clínico do gestor validados.',

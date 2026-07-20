@@ -28,7 +28,6 @@ const frontendDirectory = path.resolve(scriptDirectory, '..')
 const componentExpectations = {
   'src/views/patients/PatientsList.jsx': [
     '{canCreate &&',
-    'canView={canView}',
     'canEdit={canEdit}',
     'canInactivate={canChangeStatus',
   ],
@@ -53,7 +52,7 @@ const componentExpectations = {
   ],
   'src/views/patients/PatientForm.jsx': [
     /hasPermission\(\s*user,\s*PERMISSIONS\.EXAMS_CREATE,?\s*\)/,
-    /patient\?\.status_name\s*===\s*['"]active['"]\s*&&\s*canCreateExam/,
+    /patient\?\.status_name\s*===\s*['"]active['"]\s*&&\s*isDoctor\s*&&\s*canCreateExam/,
   ],
   'src/views/exams/ExamForm.jsx': ['hasPermission(user, PERMISSIONS.EXAMS_REVIEW)', 'isDoctor &&'],
 }
@@ -68,5 +67,36 @@ for (const [relativePath, expectedFragments] of Object.entries(componentExpectat
     assert.ok(matches, `${relativePath} não aplica ${String(expected)}`)
   }
 }
+
+const patientList = await readFile(
+  path.join(frontendDirectory, 'src/views/patients/PatientsList.jsx'),
+  'utf8',
+)
+const routes = await readFile(path.join(frontendDirectory, 'src/routes.js'), 'utf8')
+const userForm = await readFile(
+  path.join(frontendDirectory, 'src/views/users/UserForm.jsx'),
+  'utf8',
+)
+
+assert.doesNotMatch(
+  patientList,
+  /viewTo=\{`\/patients\//,
+  'A lista de pacientes não deve oferecer visualização separada.',
+)
+assert.doesNotMatch(
+  patientList,
+  /canView=\{canView\}/,
+  'A lista de pacientes não deve manter a ação redundante de visualização.',
+)
+assert.doesNotMatch(
+  routes,
+  /const ViewPatient|element: ViewPatient|path: '\/patients\/:id'/,
+  'A rota separada de visualização de paciente deve permanecer removida.',
+)
+assert.match(
+  userForm,
+  /to=\{`\/patients\/\$\{patient\.id\}\/edit`\}/,
+  'Pacientes associados ao médico devem abrir diretamente na edição.',
+)
 
 console.log('Matriz por ação válida para permissões unitárias e componentes de lista.')

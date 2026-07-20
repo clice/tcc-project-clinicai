@@ -464,7 +464,7 @@ const UserForm = ({ mode = 'create' }) => {
 
       <CCard className="mb-4">
         <CCardHeader>
-          <strong>{isClinicManager ? 'Dados do Médico' : 'Dados do Usuário'}</strong>
+          <strong>{isDoctorRole ? 'Dados do Médico' : 'Dados do Usuário'}</strong>
         </CCardHeader>
 
         <CCardBody>
@@ -692,7 +692,7 @@ const UserForm = ({ mode = 'create' }) => {
                           size="sm"
                           className="clinicai-soft-action mt-2 pt-2"
                           as={Link}
-                          to={`/patients/${patient.id}`}
+                          to={`/patients/${patient.id}/edit`}
                         >
                           Ver paciente
                         </CButton>

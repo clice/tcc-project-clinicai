@@ -29,7 +29,6 @@ const PatientForm = React.lazy(() => import('./views/patients/PatientForm'))
 
 const CreatePatient = () => React.createElement(PatientForm, { mode: 'create' })
 const EditPatient = () => React.createElement(PatientForm, { mode: 'edit' })
-const ViewPatient = () => React.createElement(PatientForm, { mode: 'view' })
 
 // EXAMS
 const ExamsList = React.lazy(() => import('./views/exams/ExamsList'))
@@ -128,14 +127,6 @@ export const routes = [
     roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'patients:update',
   },
-  {
-    path: '/patients/:id',
-    name: 'Detalhes do Paciente',
-    element: ViewPatient,
-    roles: ['admin_master', 'doctor', 'clinic_manager'],
-    permission: 'patients:read',
-  },
-
   // EXAMS
   {
     path: '/exams',

@@ -40,9 +40,8 @@ const PatientsList = () => {
   const showDoctorColumn = roleName !== ROLES.DOCTOR
   const showClinicColumn = roleName === ROLES.ADMIN_MASTER
 
-  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
-    'patients',
-    (permission) => hasPermission(user, permission),
+  const { canCreate, canEdit, canChangeStatus } = getActionAccess('patients', (permission) =>
+    hasPermission(user, permission),
   )
 
   const loadPatients = useCallback(async () => {
@@ -150,10 +149,8 @@ const PatientsList = () => {
           return (
             <AppActionButtons
               itemLabel={patient.name}
-              viewTo={`/patients/${patient.id}`}
               editTo={`/patients/${patient.id}/edit`}
               isInactive={isInactive}
-              canView={canView}
               canEdit={canEdit}
               canInactivate={canChangeStatus && !isInactive}
               canActivate={canChangeStatus && isInactive}
@@ -164,7 +161,7 @@ const PatientsList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, handleChangeStatus, showClinicColumn, showDoctorColumn],
+    [canEdit, canChangeStatus, handleChangeStatus, showClinicColumn, showDoctorColumn],
   )
 
   return (

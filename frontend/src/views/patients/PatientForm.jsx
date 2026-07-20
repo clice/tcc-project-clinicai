@@ -3,13 +3,13 @@
  *
  * Usado para:
  * - criar paciente;
- * - visualizar paciente;
  * - editar paciente.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
+  CAlert,
   CBadge,
   CButton,
   CButtonGroup,
@@ -83,9 +83,8 @@ const PatientForm = ({ mode = 'create' }) => {
 
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
-  const isViewMode = mode === 'view'
   const isArchiveMode = mode === 'archive'
-  const isReadOnly = isViewMode || isArchiveMode
+  const isReadOnly = isArchiveMode
 
   const roleName = getUserRole(user)
   const canCreateExam = hasPermission(user, PERMISSIONS.EXAMS_CREATE)
@@ -519,6 +518,13 @@ const PatientForm = ({ mode = 'create' }) => {
           </CButton>
         </div>
       </div>
+
+      {isEditMode && (
+        <CAlert color="info">
+          Esta tela permite alterar os dados do paciente. Revise as informações antes de selecionar
+          "Salvar".
+        </CAlert>
+      )}
 
       <CRow className="mb-4 g-4">
         <CCol xs={12}>
