@@ -41,7 +41,11 @@ DOCTOR_PERMISSIONS = [
     "ai_analysis:update",
 ]
 
-CLINIC_STAFF_PERMISSIONS = [
+CLINIC_MANAGER_PERMISSIONS = [
+    "users:create",
+    "users:read",
+    "users:update",
+    "users:change_status",
     "users:read_profile",
     "users:update_profile",
     "clinics:read_profile",
@@ -71,7 +75,7 @@ def build_role_permission_map(
     return {
         "admin_master": list(permissions.keys()),
         "doctor": DOCTOR_PERMISSIONS,
-        "clinic_staff": CLINIC_STAFF_PERMISSIONS,
+        "clinic_manager": CLINIC_MANAGER_PERMISSIONS,
     }
 
 

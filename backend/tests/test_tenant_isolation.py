@@ -27,8 +27,8 @@ def build_user(
     )
 
 
-def test_clinic_staff_patient_access_is_limited_to_own_clinic() -> None:
-    staff = build_user("clinic_staff", clinic_id=1)
+def test_clinic_manager_patient_access_is_limited_to_own_clinic() -> None:
+    staff = build_user("clinic_manager", clinic_id=1)
     own_record = SimpleNamespace(clinic_id=1, doctor_id=99)
     other_record = SimpleNamespace(clinic_id=2, doctor_id=99)
 
@@ -46,8 +46,8 @@ def test_clinic_staff_patient_access_is_limited_to_own_clinic() -> None:
     assert exc_info.value.status_code == 403
 
 
-def test_clinic_staff_cannot_access_individual_exams() -> None:
-    staff = build_user("clinic_staff", clinic_id=1)
+def test_clinic_manager_cannot_access_individual_exams() -> None:
+    staff = build_user("clinic_manager", clinic_id=1)
 
     for exam in (
         SimpleNamespace(clinic_id=1, doctor_id=99),
@@ -81,7 +81,7 @@ def test_doctor_access_is_limited_to_assigned_records(resource_kind: str) -> Non
 
 
 def test_non_admin_cannot_submit_data_for_another_clinic() -> None:
-    user = build_user("clinic_staff", clinic_id=1)
+    user = build_user("clinic_manager", clinic_id=1)
 
     ensure_user_can_access_clinic_data(current_user=user, clinic_id=1)
     with pytest.raises(HTTPException) as exc_info:

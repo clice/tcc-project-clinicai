@@ -57,7 +57,7 @@ class PermissionAction(StrEnum):
 
 class RoleName(StrEnum):
     ADMIN_MASTER = "admin_master"
-    CLINIC_STAFF = "clinic_staff"
+    CLINIC_MANAGER = "clinic_manager"
     DOCTOR = "doctor"
 
 

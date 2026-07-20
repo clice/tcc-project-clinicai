@@ -61,8 +61,8 @@ def create_exam_route(
     doctor_id: int | None = Form(default=None),
     exam_type: str = Form(...),
     exam_date: date | None = Form(default=None),
-    title: str = Form(...),
-    description: str | None = Form(default=None),
+    description: str = Form(...),
+    observations: str | None = Form(default=None),
     clinical_indication: str | None = Form(default=None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -77,8 +77,8 @@ def create_exam_route(
         doctor_id=doctor_id,
         exam_type=exam_type,
         exam_date=exam_date,
-        title=title,
         description=description,
+        observations=observations,
         clinical_indication=clinical_indication,
     )
 

@@ -26,8 +26,8 @@ class Exam(Base):
     exam_type = Column(String(80), nullable=False, index=True)
     exam_date = Column(Date, nullable=True)
 
-    title = Column(String(180), nullable=False)
-    description = Column(Text, nullable=True)
+    description = Column(String(180), nullable=False)
+    observations = Column(Text, nullable=True)
     clinical_indication = Column(Text, nullable=True)
     findings = Column(Text, nullable=True)
     conclusion = Column(Text, nullable=True)
@@ -83,6 +83,6 @@ class Exam(Base):
         Representação textual útil para debug.
         """
         return (
-            f"<Exam(id={self.id}, title='{self.title}', "
+            f"<Exam(id={self.id}, description='{self.description}', "
             f"exam_type='{self.exam_type}', patient_id={self.patient_id})>"
         )

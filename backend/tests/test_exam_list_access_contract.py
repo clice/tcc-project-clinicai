@@ -7,7 +7,7 @@ from fastapi.routing import APIRoute
 from app.main import app
 from app.modules.exams.service import build_exam_list_response
 from app.modules.role_permissions.seed import (
-    CLINIC_STAFF_PERMISSIONS,
+    CLINIC_MANAGER_PERMISSIONS,
     DOCTOR_PERMISSIONS,
 )
 
@@ -63,21 +63,21 @@ def test_list_and_detail_use_distinct_permissions() -> None:
 
 
 def test_staff_default_matrix_only_grants_listing() -> None:
-    assert "exams:list" in CLINIC_STAFF_PERMISSIONS
-    assert "exams:read" not in CLINIC_STAFF_PERMISSIONS
-    assert "exams:create" not in CLINIC_STAFF_PERMISSIONS
-    assert "exams:update" not in CLINIC_STAFF_PERMISSIONS
-    assert "exams:download" not in CLINIC_STAFF_PERMISSIONS
+    assert "exams:list" in CLINIC_MANAGER_PERMISSIONS
+    assert "exams:read" not in CLINIC_MANAGER_PERMISSIONS
+    assert "exams:create" not in CLINIC_MANAGER_PERMISSIONS
+    assert "exams:update" not in CLINIC_MANAGER_PERMISSIONS
+    assert "exams:download" not in CLINIC_MANAGER_PERMISSIONS
     assert (
         "exams:change_status"
-        not in CLINIC_STAFF_PERMISSIONS
+        not in CLINIC_MANAGER_PERMISSIONS
     )
-    assert "exams:review" not in CLINIC_STAFF_PERMISSIONS
+    assert "exams:review" not in CLINIC_MANAGER_PERMISSIONS
     assert (
         "ai_analysis:create"
-        not in CLINIC_STAFF_PERMISSIONS
+        not in CLINIC_MANAGER_PERMISSIONS
     )
-    assert "ai_analysis:read" not in CLINIC_STAFF_PERMISSIONS
+    assert "ai_analysis:read" not in CLINIC_MANAGER_PERMISSIONS
     assert "exams:list" in DOCTOR_PERMISSIONS
     assert "exams:read" in DOCTOR_PERMISSIONS
 
@@ -96,7 +96,7 @@ def test_list_response_contains_only_operational_summary() -> None:
         ),
         exam_type="colonoscopy",
         exam_date=None,
-        title="Exame",
+        description="Exame",
         analysis_in_progress=False,
         ai_analysis=SimpleNamespace(
             status=SimpleNamespace(name="completed"),
@@ -118,7 +118,7 @@ def test_list_response_contains_only_operational_summary() -> None:
         "status_display_name",
         "exam_type",
         "exam_date",
-        "title",
+        "description",
         "analysis_in_progress",
         "ai_analysis_status",
         "file_available",
@@ -126,7 +126,7 @@ def test_list_response_contains_only_operational_summary() -> None:
     }
 
     forbidden = {
-        "description",
+        "observations",
         "clinical_indication",
         "findings",
         "conclusion",

@@ -63,7 +63,7 @@ const Login = () => {
         error.message ||
         'Não foi possível realizar o login. Verifique suas credenciais.'
 
-    setError(message)
+      setError(message)
     } finally {
       setIsLoading(false)
     }
@@ -134,19 +134,21 @@ const Login = () => {
                 style={{ width: '44%' }}
               >
                 <CCardBody className="clinicai-login-brand-content">
-                  <CIcon
-                    customClassName="clinicai-login-brand-icon"
-                    icon={clinicaiSygnet}
-                    height={88}
-                    aria-label="Logo do ClinicAI"
-                  />
+                  <div className="clinicai-login-brand-lockup">
+                    <CIcon
+                      customClassName="clinicai-login-brand-icon"
+                      icon={clinicaiSygnet}
+                      height={64}
+                      aria-label="Logo do ClinicAI"
+                    />
 
-                  <h2 className="clinicai-login-brand-name">
-                    Clinic<span className="clinicai-brand-ai">AI</span>
-                  </h2>
+                    <h2 className="clinicai-login-brand-name">
+                      Clinic<span className="clinicai-brand-ai">AI</span>
+                    </h2>
+                  </div>
 
                   <p className="clinicai-login-description">
-                    Protótipo de Sistema <em>Web</em> para Gestão de Clínicas com
+                    Protótipo de Sistema Web para Gestão de Clínicas com
                     Classificação Binária de Imagens de Exames Gastrointestinais por
                     Inteligência Artificial
                   </p>

@@ -34,6 +34,7 @@ import { clinicService } from 'src/services/clinicService'
 
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
+import { getUserRole, ROLES } from 'src/utils/permissions'
 
 const emptyUser = {
   name: '',
@@ -52,6 +53,8 @@ const UserForm = ({ mode = 'create' }) => {
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
+  const isClinicManager =
+    getUserRole(currentUser) === ROLES.CLINIC_MANAGER
 
   const [form, setForm] = useState(emptyUser)
   const [roles, setRoles] = useState([])
@@ -97,10 +100,12 @@ const UserForm = ({ mode = 'create' }) => {
   }, [roles])
 
   const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Usuário'
-    if (isEditMode) return 'Editar Usuário'
-    return 'Detalhes do Usuário'
-  }, [isCreateMode, isEditMode])
+    const subject = isClinicManager ? 'Médico' : 'Usuário'
+
+    if (isCreateMode) return `Cadastrar ${subject}`
+    if (isEditMode) return `Editar ${subject}`
+    return `Detalhes do ${subject}`
+  }, [isClinicManager, isCreateMode, isEditMode])
 
   useEffect(() => {
     const loadData = async () => {
@@ -109,16 +114,45 @@ const UserForm = ({ mode = 'create' }) => {
         showError('')
         showSuccess('')
 
-        const [rolesData, statusesData, clinicsData, userData] = await Promise.all([
-          roleService.list(),
-          statusService.list(),
-          clinicService.list({ includeInactive: true }),
-          isCreateMode ? Promise.resolve(null) : userService.getById(id),
-        ])
+        let loadedRoles = []
+        let loadedStatuses = []
+        let loadedClinics = []
+        let userData = null
 
-        const loadedRoles = Array.isArray(rolesData) ? rolesData : []
-        const loadedStatuses = Array.isArray(statusesData) ? statusesData : []
-        const loadedClinics = Array.isArray(clinicsData) ? clinicsData : []
+        if (isClinicManager) {
+          const [optionsData, loadedUser] = await Promise.all([
+            userService.getDoctorManagementOptions(),
+            isCreateMode ? Promise.resolve(null) : userService.getById(id),
+          ])
+
+          loadedRoles = optionsData?.role
+            ? [optionsData.role]
+            : []
+          loadedStatuses = Array.isArray(optionsData?.statuses)
+            ? optionsData.statuses
+            : []
+          loadedClinics = optionsData?.clinic
+            ? [optionsData.clinic]
+            : []
+          userData = loadedUser
+        } else {
+          const [
+            rolesData,
+            statusesData,
+            clinicsData,
+            loadedUser,
+          ] = await Promise.all([
+            roleService.list(),
+            statusService.list(),
+            clinicService.list({ includeInactive: true }),
+            isCreateMode ? Promise.resolve(null) : userService.getById(id),
+          ])
+
+          loadedRoles = Array.isArray(rolesData) ? rolesData : []
+          loadedStatuses = Array.isArray(statusesData) ? statusesData : []
+          loadedClinics = Array.isArray(clinicsData) ? clinicsData : []
+          userData = loadedUser
+        }
 
         setRoles(loadedRoles)
         setStatuses(loadedStatuses)
@@ -146,7 +180,17 @@ const UserForm = ({ mode = 'create' }) => {
 
         setForm({
           ...emptyUser,
-          status_id: activeUserStatus ? String(activeUserStatus.id) : '',
+          role_id:
+            isClinicManager && loadedRoles[0]
+              ? String(loadedRoles[0].id)
+              : '',
+          status_id: activeUserStatus
+            ? String(activeUserStatus.id)
+            : '',
+          clinic_id:
+            isClinicManager && loadedClinics[0]
+              ? String(loadedClinics[0].id)
+              : '',
         })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar os dados do usuário.'))
@@ -156,7 +200,7 @@ const UserForm = ({ mode = 'create' }) => {
     }
 
     void loadData()
-  }, [id, isCreateMode])
+  }, [id, isClinicManager, isCreateMode])
 
   /**
    * Atualiza um campo do formulário.
@@ -277,7 +321,11 @@ const UserForm = ({ mode = 'create' }) => {
           password: form.password.trim(),
         })
 
-        showSuccess('Usuário cadastrado com sucesso.')
+        showSuccess(
+          isClinicManager
+            ? 'Médico cadastrado com sucesso.'
+            : 'Usuário cadastrado com sucesso.',
+        )
         navigate('/users')
         return
       }
@@ -289,7 +337,11 @@ const UserForm = ({ mode = 'create' }) => {
           await userService.updatePassword(id, form.password.trim())
         }
 
-        showSuccess('Usuário atualizado com sucesso.')
+        showSuccess(
+          isClinicManager
+            ? 'Médico atualizado com sucesso.'
+            : 'Usuário atualizado com sucesso.',
+        )
       }
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar o usuário.'))
@@ -302,10 +354,14 @@ const UserForm = ({ mode = 'create' }) => {
     <>
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
-          <div className="text-body-secondary">Controle de Acesso</div>
+          <div className="text-body-secondary">
+            {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
+          </div>
           <h1 className="h3 mb-0">{title}</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie os dados cadastrais e o perfil de acesso do usuário.
+            {isClinicManager
+              ? 'Gerencie os dados cadastrais do médico da sua clínica.'
+              : 'Gerencie os dados cadastrais e o perfil de acesso do usuário.'}
           </p>
         </div>
 
@@ -409,7 +465,11 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Perfil de acesso</CFormLabel>
                 <CFormSelect
                   value={form.role_id}
-                  disabled={isReadOnly || isSelfRecord}
+                  disabled={
+                    isReadOnly
+                    || isSelfRecord
+                    || isClinicManager
+                  }
                   onChange={(event) => handleRoleChange(event.target.value)}
                   required
                 >
@@ -427,7 +487,12 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Clínica</CFormLabel>
                 <CFormSelect
                   value={form.clinic_id}
-                  disabled={isReadOnly || isSelfRecord || !requiresClinic}
+                  disabled={
+                    isReadOnly
+                    || isSelfRecord
+                    || isClinicManager
+                    || !requiresClinic
+                  }
                   onChange={(event) => updateField('clinic_id', event.target.value)}
                   required={requiresClinic}
                 >

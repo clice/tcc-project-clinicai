@@ -783,7 +783,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     >
                       <div className="d-flex justify-content-between align-items-start gap-2">
                         <div className="fw-semibold">
-                          {exam.title || `Exame #${exam.id}`}
+                          {exam.description || `Exame #${exam.id}`}
                         </div>
 
                         <CBadge

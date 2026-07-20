@@ -193,7 +193,7 @@ const PatientsList = () => {
           <p className="text-body-secondary mb-0">
             {roleName === ROLES.DOCTOR
               ? 'Visualize somente os pacientes sob sua responsabilidade.'
-              : roleName === ROLES.CLINIC_STAFF
+              : roleName === ROLES.CLINIC_MANAGER
                 ? 'Visualize os pacientes vinculados à sua clínica.'
                 : 'Gerencie pacientes de todas as clínicas conforme os filtros.'}
           </p>

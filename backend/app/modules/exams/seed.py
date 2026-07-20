@@ -29,10 +29,10 @@ def get_or_create_exam(
     doctor_id: int,
     status_id: int,
     exam_type: str,
-    title: str,
+    description: str,
     asset_entry: dict,
     exam_date: date,
-    description: str,
+    observations: str,
     clinical_indication: str,
     findings: str | None = None,
     conclusion: str | None = None,
@@ -46,7 +46,7 @@ def get_or_create_exam(
         .filter(
             Exam.patient_id == patient_id,
             Exam.exam_type == exam_type,
-            Exam.title == title,
+            Exam.description == description,
         )
         .first()
     )
@@ -73,8 +73,8 @@ def get_or_create_exam(
         status_id=status_id,
         exam_type=exam_type,
         exam_date=exam_date,
-        title=title,
         description=description,
+        observations=observations,
         clinical_indication=clinical_indication,
         findings=findings,
         conclusion=conclusion,
@@ -168,12 +168,12 @@ def seed_exams(
             exam_type=definition[
                 "exam_type"
             ],
-            title=definition["title"],
+            description=definition["description"],
             asset_entry=definition[
                 "source_asset"
             ],
             exam_date=exam_date,
-            description=(
+            observations=(
                 "Exame fictício da massa acadêmica "
                 f"com imagem de referência {source_label}."
             ),

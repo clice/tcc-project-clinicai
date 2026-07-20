@@ -24,7 +24,7 @@ def build_user(role_name: str):
 @pytest.mark.parametrize(
     "role_name",
     [
-        "clinic_staff",
+        "clinic_manager",
         "admin_master",
     ],
 )

@@ -107,7 +107,7 @@ def seed_users(
             "name": "Recepção Clínica Primária",
             "email": "staff@clinicai.com",
             "cpf": "15350946056",
-            "role": "clinic_staff",
+            "role": "clinic_manager",
             "clinic": "clinic_primary",
         },
         "doctor_large": {
@@ -121,7 +121,7 @@ def seed_users(
             "name": "Recepção Hospital Cariri",
             "email": "staff.cariri@clinicai.com",
             "cpf": "27182818205",
-            "role": "clinic_staff",
+            "role": "clinic_manager",
             "clinic": "clinic_large",
         },
         "doctor_specialized": {
@@ -135,7 +135,7 @@ def seed_users(
             "name": "Recepção Centro Endoscópico",
             "email": "staff.endoscopia@clinicai.com",
             "cpf": "14142135651",
-            "role": "clinic_staff",
+            "role": "clinic_manager",
             "clinic": "clinic_specialized",
         },
     }

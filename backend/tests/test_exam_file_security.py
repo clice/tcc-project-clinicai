@@ -262,7 +262,7 @@ def _seed_download_context(db_session, physical_file: Path):
     active_patient = Status(name="active", display_name="Ativo", applies_to="patient")
     pending = Status(name="pending", display_name="Pendente", applies_to="exam")
     canceled = Status(name="canceled", display_name="Cancelado", applies_to="exam")
-    staff_role = Role(name="clinic_staff", display_name="Funcionário", permissions_initialized=True)
+    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
     clinic_a = Clinic(name="Clínica A", cnpj="11222333000181", status=active_clinic)
     clinic_b = Clinic(name="Clínica B", cnpj="11444777000161", status=active_clinic)
@@ -306,7 +306,7 @@ def _seed_download_context(db_session, physical_file: Path):
         doctor=doctor_a,
         status=pending,
         exam_type="colonoscopy",
-        title="Exame protegido",
+        description="Exame protegido",
         file_path=str(physical_file),
         file_name=physical_file.name,
         file_mime_type="image/png",

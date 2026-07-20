@@ -23,7 +23,7 @@ const _nav = [
     name: 'Dashboard',
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
   },
 
   ////////// CARE
@@ -31,14 +31,14 @@ const _nav = [
   {
     component: CNavTitle,
     name: 'Atendimento',
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
   },
   {
     component: CNavItem,
     name: 'Pacientes',
     to: '/patients',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: PERMISSIONS.PATIENTS_READ,
   },
   {
@@ -46,14 +46,14 @@ const _nav = [
     name: 'Exames',
     to: '/exams',
     icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    // O Funcionário da Clínica pode acompanhar somente a listagem
+    // O Gestor da Clínica pode acompanhar somente a listagem
     // operacional e os status dos exames da própria clínica. A abertura
     // dos detalhes e dos resultados continua protegida por exams:read.
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: PERMISSIONS.EXAMS_LIST,
     lockedOpenRoles: [
       'doctor',
-      'clinic_staff',
+      'clinic_manager',
     ],
     items: [
       {
@@ -61,7 +61,7 @@ const _nav = [
         name: 'Pendentes',
         to: '/exams?status=pending',
         badgeKey: 'pending',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
       {
@@ -69,7 +69,7 @@ const _nav = [
         name: 'Revisão',
         to: '/exams?status=awaiting_review',
         badgeKey: 'awaiting_review',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
       {
@@ -77,7 +77,7 @@ const _nav = [
         name: 'Concluídos',
         to: '/exams?status=completed',
         badgeKey: 'completed',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
       {
@@ -85,7 +85,7 @@ const _nav = [
         name: 'Com Divergência',
         to: '/exams?status=completed_with_divergence',
         badgeKey: 'completed_with_divergence',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
       {
@@ -93,7 +93,7 @@ const _nav = [
         name: 'Falha na IA',
         to: '/exams?status=failed',
         badgeKey: 'failed',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
       {
@@ -101,7 +101,7 @@ const _nav = [
         name: 'Cancelados',
         to: '/exams?status=canceled',
         badgeKey: 'canceled',
-        roles: ['admin_master', 'doctor', 'clinic_staff'],
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
         permission: PERMISSIONS.EXAMS_LIST,
       },
     ],
@@ -112,7 +112,7 @@ const _nav = [
   {
     component: CNavTitle,
     name: 'Administração',
-    roles: ['admin_master'],
+    roles: ['admin_master', 'clinic_manager'],
   },
   {
     component: CNavItem,
@@ -127,6 +127,14 @@ const _nav = [
     to: '/users',
     icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     roles: ['admin_master'],
+  },
+  {
+    component: CNavItem,
+    name: 'Médicos',
+    to: '/users',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+    roles: ['clinic_manager'],
+    permission: PERMISSIONS.USERS_READ,
   },
   {
     component: CNavItem,

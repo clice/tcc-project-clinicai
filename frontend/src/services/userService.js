@@ -79,7 +79,7 @@ export const userService = {
   },
 
   /**
-   * Atualiza a senha do próprio usuário autenticado (doctor, clinic_staff
+   * Atualiza a senha do próprio usuário autenticado (doctor, clinic_manager
    * ou admin_master), sempre exigindo a senha atual.
    */
   updateMyPassword: async (password, currentPassword) => {
@@ -109,6 +109,14 @@ export const userService = {
    */
   activate: async (id) => {
     const response = await api.patch(`/users/${id}/activate`)
+    return response.data
+  },
+
+  /**
+   * Retorna papel, status e clínica disponíveis ao gestor de médicos.
+   */
+  getDoctorManagementOptions: async () => {
+    const response = await api.get('/users/doctor-management-options')
     return response.data
   },
 

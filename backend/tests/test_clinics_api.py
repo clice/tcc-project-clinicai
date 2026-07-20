@@ -194,7 +194,7 @@ def _seed_clinic_data(db: Session) -> tuple[ClinicData, dict[str, str], dict[str
 
     exam = Exam(
         exam_type="endoscopy",
-        title="Exame preservado",
+        description="Exame preservado",
         clinic=clinic_a,
         patient=patient,
         doctor=doctor_a,

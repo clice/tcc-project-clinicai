@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_admin, require_permission
+from app.core.deps import require_permission
 from app.modules.auth.schema import TokenResponse
 from app.modules.users.schema import (
+    DoctorManagementOptionsResponse,
     UserAdminUpdate,
     UserCreate,
     UserListResponse,
@@ -18,6 +19,7 @@ from app.modules.users.service import (
     activate_user,
     change_current_user_password,
     create_user,
+    get_doctor_management_options,
     get_user_response,
     inactivate_user,
     list_users,
@@ -33,7 +35,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def create_user_route(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:create")),
 ):
     """Cria um usuário; operação exclusiva do administrador master."""
 
@@ -47,7 +49,7 @@ def list_users_route(
     role: str | None = Query(default=None),
     status: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:read")),
 ):
     """Lista usuários com filtros administrativos."""
 
@@ -80,6 +82,22 @@ def list_doctors_route(
     )
 
 
+@router.get(
+    "/doctor-management-options",
+    response_model=DoctorManagementOptionsResponse,
+)
+def get_doctor_management_options_route(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("users:read")),
+):
+    """Retorna opções mínimas para o gestor administrar médicos."""
+
+    return get_doctor_management_options(
+        db=db,
+        current_user=current_user,
+    )
+
+
 @router.get("/me", response_model=UserListResponse)
 def get_my_profile(
     db: Session = Depends(get_db),
@@ -91,6 +109,7 @@ def get_my_profile(
         db=db,
         user_id=current_user.id,
         current_user=current_user,
+        allow_self=True,
     )
 
 
@@ -128,7 +147,7 @@ def update_my_password(
 def get_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:read")),
 ):
     """Busca um usuário específico por ID."""
 
@@ -140,7 +159,7 @@ def update_user_route(
     user_id: int,
     payload: UserAdminUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:update")),
 ):
     """Atualiza parcialmente um usuário administrado."""
 
@@ -152,7 +171,7 @@ def update_user_password_route(
     user_id: int,
     payload: UserPasswordUpdate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:update")),
 ):
     """Redefine a senha de outro usuário e encerra as sessões dele."""
 
@@ -168,7 +187,7 @@ def update_user_password_route(
 def inactivate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:change_status")),
 ):
     """Inativa um usuário sem remover seu histórico."""
 
@@ -179,7 +198,7 @@ def inactivate_user_route(
 def activate_user_route(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user=Depends(require_admin),
+    current_user=Depends(require_permission("users:change_status")),
 ):
     """Ativa um usuário anteriormente inativo."""
 

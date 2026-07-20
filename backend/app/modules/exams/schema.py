@@ -23,17 +23,17 @@ class ExamBase(StrictRequestModel):
     exam_type: str = Field(..., min_length=2, max_length=80)
     exam_date: date | None = None
 
-    title: str = Field(..., min_length=3, max_length=180)
-    description: str | None = None
+    description: str = Field(..., min_length=3, max_length=180)
+    observations: str | None = None
     clinical_indication: str | None = None
 
-    @field_validator("exam_type", "title")
+    @field_validator("exam_type", "description")
     @classmethod
     def normalize_required_fields(cls, value: str) -> str:
         return normalize_required_text(value, "Campo obrigatório.")
 
     @field_validator(
-        "description",
+        "observations",
         "clinical_indication",
     )
     @classmethod
@@ -59,11 +59,11 @@ class ExamUpdate(StrictRequestModel):
     exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None
 
-    title: str | None = Field(default=None, min_length=3, max_length=180)
-    description: str | None = None
+    description: str | None = Field(default=None, min_length=3, max_length=180)
+    observations: str | None = None
     clinical_indication: str | None = None
 
-    @field_validator("exam_type", "title")
+    @field_validator("exam_type", "description")
     @classmethod
     def normalize_required_fields(cls, value: str | None) -> str | None:
         if value is None:
@@ -72,7 +72,7 @@ class ExamUpdate(StrictRequestModel):
         return normalize_required_text(value, "Campo obrigatório.")
 
     @field_validator(
-        "description",
+        "observations",
         "clinical_indication",
     )
     @classmethod
@@ -116,7 +116,7 @@ class ExamListItemResponse(BaseModel):
     status_display_name: str | None = None
     exam_type: str
     exam_date: date | None = None
-    title: str
+    description: str
     analysis_in_progress: bool = False
     ai_analysis_status: str | None = None
     file_available: bool = False
@@ -148,8 +148,8 @@ class ExamResponse(BaseModel):
     exam_type: str
     exam_date: date | None = None
 
-    title: str
-    description: str | None = None
+    description: str
+    observations: str | None = None
     clinical_indication: str | None = None
     findings: str | None = None
     conclusion: str | None = None

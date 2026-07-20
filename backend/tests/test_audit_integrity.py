@@ -134,8 +134,8 @@ def _seed_context(
             display_name="Administrador Master",
             permissions_initialized=True,
         ),
-        "clinic_staff": Role(
-            name="clinic_staff",
+        "clinic_manager": Role(
+            name="clinic_manager",
             display_name="Funcionário",
             permissions_initialized=True,
         ),
@@ -166,7 +166,7 @@ def _seed_context(
         email="staff.auditoria@example.com",
         cpf="12345678909",
         password_hash=password_hash,
-        role=roles["clinic_staff"],
+        role=roles["clinic_manager"],
         status=statuses[("active", "user")],
         clinic=clinic,
     )
@@ -192,7 +192,7 @@ def _seed_context(
         doctor=doctor,
         status=statuses[(exam_status_name, "exam")],
         exam_type="colonoscopy",
-        title="Exame de auditoria",
+        description="Exame de auditoria",
         file_path="/tmp/exame-auditoria.png",
         file_name="exame-auditoria.png",
         file_mime_type="image/png",
@@ -314,7 +314,7 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
             patient_id=context["patient"].id,
             doctor_id=context["doctor"].id,
             exam_type="colonoscopy",
-            title="Exame com upload auditado",
+            description="Exame com upload auditado",
         ),
         upload(make_png(3, 4), filename="nome-original.png"),
         context["doctor"],
@@ -483,7 +483,7 @@ def test_ai_success_failure_and_update_logs_do_not_store_raw_or_gradcam_payloads
         doctor=success["doctor"],
         status=success["statuses"][("processing", "exam")],
         exam_type="colonoscopy",
-        title="Exame com falha de IA",
+        description="Exame com falha de IA",
         file_path="/tmp/exame-falha-auditoria.png",
         file_name="exame-falha-auditoria.png",
         file_mime_type="image/png",
@@ -615,7 +615,7 @@ def test_rbac_sync_and_log_rollback_together(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     context = _seed_context(db_session)
-    target_role = context["roles"]["clinic_staff"]
+    target_role = context["roles"]["clinic_manager"]
     read_permission = Permission(
         name="patients:read",
         display_name="Ler pacientes",

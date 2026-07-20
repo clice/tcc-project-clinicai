@@ -24,7 +24,7 @@ from app.core.database import Base, SessionLocal, engine
 from app.modules import models  # noqa: F401 - registra toda a metadata
 from app.modules.permissions.catalog import OFFICIAL_PERMISSION_NAMES
 from app.modules.role_permissions.seed import (
-    CLINIC_STAFF_PERMISSIONS,
+    CLINIC_MANAGER_PERMISSIONS,
     DOCTOR_PERMISSIONS,
 )
 
@@ -125,7 +125,7 @@ EXPECTED_BOOTSTRAP_COUNTS = {
     "role_permissions": (
         len(OFFICIAL_PERMISSION_NAMES)
         + len(DOCTOR_PERMISSIONS)
-        + len(CLINIC_STAFF_PERMISSIONS)
+        + len(CLINIC_MANAGER_PERMISSIONS)
     ),
     "users": 1,
 }
@@ -481,7 +481,7 @@ def assert_demo_data() -> None:
 
         for exam in exams:
             if not exam.file_path:
-                raise AssertionError(f"Exame demo sem arquivo físico: {exam.title}.")
+                raise AssertionError(f"Exame demo sem arquivo físico: {exam.description}.")
             physical_file = resolve_safe_exam_file_path(exam.file_path)
             if not physical_file.is_file():
                 raise AssertionError(
@@ -489,7 +489,7 @@ def assert_demo_data() -> None:
                 )
             if exam.analysis_in_progress or exam.analysis_started_at is not None:
                 raise AssertionError(
-                    f"Exame demo deixou claim de análise ativo: {exam.title}."
+                    f"Exame demo deixou claim de análise ativo: {exam.description}."
                 )
 
             reviewed = exam.status.name in {
@@ -503,7 +503,7 @@ def assert_demo_data() -> None:
                 or not exam.conclusion
             ):
                 raise AssertionError(
-                    f"Revisão médica incompleta no exame demo: {exam.title}."
+                    f"Revisão médica incompleta no exame demo: {exam.description}."
                 )
 
         analyses = db.query(AIAnalysis).all()
@@ -712,7 +712,7 @@ def semantic_snapshot() -> dict[str, Any]:
             "exams": _rows(
                 db,
                 """
-                SELECT exams.title, exams.exam_type, exams.exam_date,
+                SELECT exams.description, exams.exam_type, exams.exam_date,
                        patients.cpf AS patient_cpf,
                        users.email AS doctor_email,
                        clinics.cnpj AS clinic_cnpj,
@@ -723,13 +723,13 @@ def semantic_snapshot() -> dict[str, Any]:
                 JOIN users ON users.id = exams.doctor_id
                 JOIN clinics ON clinics.id = exams.clinic_id
                 JOIN statuses ON statuses.id = exams.status_id
-                ORDER BY exams.title
+                ORDER BY exams.description
                 """,
             ),
             "ai_analysis": _rows(
                 db,
                 """
-                SELECT exams.title AS exam_title,
+                SELECT exams.description AS exam_description,
                        ai_analysis.prediction_label,
                        ai_analysis.prediction_class,
                        ai_analysis.confidence,
@@ -739,7 +739,7 @@ def semantic_snapshot() -> dict[str, Any]:
                 FROM ai_analysis
                 JOIN exams ON exams.id = ai_analysis.exam_id
                 JOIN statuses ON statuses.id = ai_analysis.status_id
-                ORDER BY exams.title
+                ORDER BY exams.description
                 """,
             ),
         }

@@ -160,3 +160,69 @@ class UserOptionResponse(BaseModel):
 
     id: int
     name: str
+
+
+class UserManagementRoleOption(BaseModel):
+    """Único papel que o gestor pode atribuir."""
+
+    id: int
+    name: str
+    display_name: str
+
+
+class UserManagementStatusOption(BaseModel):
+    """Status de usuário disponíveis no formulário de médicos."""
+
+    id: int
+    name: str
+    display_name: str
+    applies_to: str
+
+
+class UserManagementClinicOption(BaseModel):
+    """Clínica ativa vinculada ao gestor."""
+
+    id: int
+    name: str
+    status_name: str
+
+
+class DoctorManagementOptionsResponse(BaseModel):
+    """Catálogos mínimos necessários à gestão de médicos."""
+
+    role: UserManagementRoleOption
+    statuses: list[UserManagementStatusOption]
+    clinic: UserManagementClinicOption
+
+
+class UserManagementRoleOption(BaseModel):
+    """Único papel que o gestor pode atribuir."""
+
+    id: int
+    name: str
+    display_name: str
+
+
+class UserManagementStatusOption(BaseModel):
+    """Status de usuário disponíveis no formulário de médicos."""
+
+    id: int
+    name: str
+    display_name: str
+    applies_to: str
+
+
+class UserManagementClinicOption(BaseModel):
+    """Clínica ativa vinculada ao gestor."""
+
+    id: int
+    name: str
+    status_name: str
+
+
+class DoctorManagementOptionsResponse(BaseModel):
+    """Catálogos mínimos necessários à gestão de médicos."""
+
+    role: UserManagementRoleOption
+    statuses: list[UserManagementStatusOption]
+    clinic: UserManagementClinicOption

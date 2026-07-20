@@ -80,8 +80,8 @@ const emptyExam = {
   doctor_id: '',
   exam_type: '',
   exam_date: '',
-  title: '',
   description: '',
+  observations: '',
   clinical_indication: '',
   status_id: '',
   status_name: '',
@@ -105,8 +105,8 @@ const mergeExamSnapshot = (current, examData) => ({
   doctor_id: examData.doctor_id ? String(examData.doctor_id) : '',
   exam_type: examData.exam_type ?? '',
   exam_date: examData.exam_date ?? '',
-  title: examData.title ?? '',
   description: examData.description ?? '',
+  observations: examData.observations ?? '',
   clinical_indication: examData.clinical_indication ?? '',
   status_id: examData.status_id ? String(examData.status_id) : '',
   status_name: examData.status_name ?? '',
@@ -183,7 +183,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
   const canViewAiAnalysis =
-    roleName !== ROLES.CLINIC_STAFF && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
+    roleName !== ROLES.CLINIC_MANAGER && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
   const canDownloadExamFile = !isCreateMode && hasPermission(user, PERMISSIONS.EXAMS_DOWNLOAD)
 
@@ -793,7 +793,7 @@ const ExamForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (!form.title.trim()) {
+    if (!form.description.trim()) {
       showError('Informe a descrição do exame.')
       return false
     }
@@ -819,8 +819,8 @@ const ExamForm = ({ mode = 'create' }) => {
     exam_type: form.exam_type,
     exam_date: form.exam_date || null,
 
-    title: form.title.trim(),
-    description: form.description.trim() || null,
+    description: form.description.trim(),
+    observations: form.observations.trim() || null,
     clinical_indication: form.clinical_indication.trim() || null,
 
     file: selectedFile,
@@ -831,8 +831,8 @@ const ExamForm = ({ mode = 'create' }) => {
     exam_type: form.exam_type,
     exam_date: form.exam_date || null,
 
-    title: form.title.trim(),
-    description: form.description.trim() || null,
+    description: form.description.trim(),
+    observations: form.observations.trim() || null,
     clinical_indication: form.clinical_indication.trim() || null,
   })
 
@@ -1306,11 +1306,11 @@ const ExamForm = ({ mode = 'create' }) => {
               </CFormLabel>
 
               <CFormInput
-                value={form.title}
+                value={form.description}
                 placeholder="Ex: Colonoscopia de rastreamento"
                 onChange={(event) =>
                   updateField(
-                    'title',
+                    'description',
                     event.target.value,
                   )
                 }
@@ -1395,11 +1395,11 @@ const ExamForm = ({ mode = 'create' }) => {
 
                 <CFormTextarea
                   rows={5}
-                  value={form.description}
+                  value={form.observations}
                   placeholder="Informações adicionais relacionadas ao cadastro do exame."
                   onChange={(event) =>
                     updateField(
-                      'description',
+                      'observations',
                       event.target.value,
                     )
                   }
@@ -1543,7 +1543,7 @@ const ExamForm = ({ mode = 'create' }) => {
         </div>
 
         <div className="rounded bg-body-tertiary p-3">
-          {form.description?.trim() ||
+          {form.observations?.trim() ||
             'Nenhuma observação registrada.'}
         </div>
       </CCol>
@@ -1645,7 +1645,7 @@ const ExamForm = ({ mode = 'create' }) => {
             <h1 className="h3 mb-0">
               {isCreateMode
                 ? title
-                : form.title || title}
+                : form.description || title}
             </h1>
 
             {!isCreateMode &&

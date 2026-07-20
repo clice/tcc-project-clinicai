@@ -71,8 +71,12 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
 
     admin_role = Role(name="admin_master", display_name="Administrador Master", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
-    staff_role = Role(name="clinic_staff", display_name="Funcionário", permissions_initialized=True)
+    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
 
+    users_create = Permission(name="users:create", display_name="Criar usuários", module="users")
+    users_read = Permission(name="users:read", display_name="Consultar usuários", module="users")
+    users_update = Permission(name="users:update", display_name="Atualizar usuários", module="users")
+    users_change_status = Permission(name="users:change_status", display_name="Alterar status", module="users")
     read_profile = Permission(name="users:read_profile", display_name="Consultar perfil", module="users")
     update_profile = Permission(name="users:update_profile", display_name="Atualizar perfil", module="users")
     patients_read = Permission(name="patients:read", display_name="Consultar pacientes", module="patients")
@@ -89,6 +93,10 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         admin_role,
         doctor_role,
         staff_role,
+        users_create,
+        users_read,
+        users_update,
+        users_change_status,
         read_profile,
         update_profile,
         patients_read,
@@ -98,12 +106,18 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
     ])
     db.flush()
 
-    for role in (doctor_role, staff_role):
-        db.add_all([
-            RolePermission(role=role, permission=read_profile),
-            RolePermission(role=role, permission=update_profile),
-            RolePermission(role=role, permission=patients_read),
-        ])
+    db.add_all([
+        RolePermission(role=doctor_role, permission=read_profile),
+        RolePermission(role=doctor_role, permission=update_profile),
+        RolePermission(role=doctor_role, permission=patients_read),
+        RolePermission(role=staff_role, permission=users_create),
+        RolePermission(role=staff_role, permission=users_read),
+        RolePermission(role=staff_role, permission=users_update),
+        RolePermission(role=staff_role, permission=users_change_status),
+        RolePermission(role=staff_role, permission=read_profile),
+        RolePermission(role=staff_role, permission=update_profile),
+        RolePermission(role=staff_role, permission=patients_read),
+    ])
 
     admin_a = User(
         name="Admin A",
@@ -539,3 +553,162 @@ def test_password_flows_revoke_tokens_without_exposing_credentials(
         assert "current_password" not in serialized
         assert PASSWORD.lower() not in serialized
         assert NEW_PASSWORD.lower() not in serialized
+
+
+def test_clinic_manager_manages_only_doctors_from_own_clinic(
+    user_api_context: UserApiContext,
+) -> None:
+    ctx = user_api_context
+    manager_headers = ctx.staff_a_headers
+
+    options = ctx.client.get(
+        "/users/doctor-management-options",
+        headers=manager_headers,
+    )
+    assert options.status_code == 200, options.text
+    options_body = options.json()
+    assert options_body["role"] == {
+        "id": ctx.data.doctor_role_id,
+        "name": "doctor",
+        "display_name": "Médico",
+    }
+    assert options_body["clinic"]["id"] == ctx.data.clinic_a_id
+    assert options_body["clinic"]["name"] == "Clínica A"
+    assert {
+        status["name"]
+        for status in options_body["statuses"]
+    } == {"active", "inactive"}
+
+    doctor_options = ctx.client.get(
+        "/users/doctor-management-options",
+        headers=ctx.doctor_a_headers,
+    )
+    assert doctor_options.status_code == 403
+
+    own_list = ctx.client.get(
+        "/users/",
+        headers=manager_headers,
+    )
+    assert own_list.status_code == 200, own_list.text
+    own_items = own_list.json()
+    assert ctx.data.doctor_a_id in {
+        item["id"] for item in own_items
+    }
+    assert ctx.data.staff_a_id not in {
+        item["id"] for item in own_items
+    }
+    assert ctx.data.doctor_b_id not in {
+        item["id"] for item in own_items
+    }
+    assert all(
+        item["role_name"] == "doctor"
+        and item["clinic_id"] == ctx.data.clinic_a_id
+        for item in own_items
+    )
+
+    cross_clinic_list = ctx.client.get(
+        "/users/",
+        params={"clinic_id": ctx.data.clinic_b_id},
+        headers=manager_headers,
+    )
+    assert cross_clinic_list.status_code == 403
+
+    non_doctor_list = ctx.client.get(
+        "/users/",
+        params={"role": "clinic_manager"},
+        headers=manager_headers,
+    )
+    assert non_doctor_list.status_code == 403
+
+    own_doctor = ctx.client.get(
+        f"/users/{ctx.data.doctor_a_id}",
+        headers=manager_headers,
+    )
+    assert own_doctor.status_code == 200
+
+    for forbidden_user_id in (
+        ctx.data.doctor_b_id,
+        ctx.data.staff_a_id,
+        ctx.data.admin_a_id,
+    ):
+        forbidden = ctx.client.get(
+            f"/users/{forbidden_user_id}",
+            headers=manager_headers,
+        )
+        assert forbidden.status_code == 403
+
+    wrong_clinic = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            clinic_id=ctx.data.clinic_b_id,
+        ),
+        headers=manager_headers,
+    )
+    assert wrong_clinic.status_code == 403
+
+    wrong_role = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            role_id=ctx.data.staff_role_id,
+        ),
+        headers=manager_headers,
+    )
+    assert wrong_role.status_code == 403
+
+    created = ctx.client.post(
+        "/users/",
+        json=_create_payload(ctx),
+        headers=manager_headers,
+    )
+    assert created.status_code == 201, created.text
+    created_body = created.json()
+    created_id = created_body["id"]
+    assert created_body["role_name"] == "doctor"
+    assert created_body["clinic_id"] == ctx.data.clinic_a_id
+
+    updated = ctx.client.patch(
+        f"/users/{created_id}",
+        json={
+            "name": "Médico Gerenciado",
+            "phone": "(88) 98888-1111",
+        },
+        headers=manager_headers,
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["name"] == "Médico Gerenciado"
+
+    forbidden_role_change = ctx.client.patch(
+        f"/users/{created_id}",
+        json={"role_id": ctx.data.staff_role_id},
+        headers=manager_headers,
+    )
+    assert forbidden_role_change.status_code == 403
+
+    reset = ctx.client.patch(
+        f"/users/{created_id}/password",
+        json={"password": NEW_PASSWORD},
+        headers=manager_headers,
+    )
+    assert reset.status_code == 200, reset.text
+
+    inactivated = ctx.client.patch(
+        f"/users/{created_id}/inactivate",
+        headers=manager_headers,
+    )
+    assert inactivated.status_code == 200
+    assert inactivated.json()["status_name"] == "inactive"
+
+    activated = ctx.client.patch(
+        f"/users/{created_id}/activate",
+        headers=manager_headers,
+    )
+    assert activated.status_code == 200
+    assert activated.json()["status_name"] == "active"
+
+    forbidden_status_change = ctx.client.patch(
+        f"/users/{ctx.data.doctor_b_id}/inactivate",
+        headers=manager_headers,
+    )
+    assert forbidden_status_change.status_code == 403

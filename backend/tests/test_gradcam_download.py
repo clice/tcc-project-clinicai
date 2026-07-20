@@ -58,7 +58,7 @@ def seed_context(db_session, gradcam_path: Path):
         permissions_initialized=True,
     )
     staff_role = Role(
-        name="clinic_staff",
+        name="clinic_manager",
         display_name="Funcionário",
         permissions_initialized=True,
     )
@@ -107,7 +107,7 @@ def seed_context(db_session, gradcam_path: Path):
         doctor=doctor_a,
         status=awaiting_review,
         exam_type="colonoscopy",
-        title="Exame com Grad-CAM",
+        description="Exame com Grad-CAM",
         file_name="exame.png",
         file_mime_type="image/png",
     )

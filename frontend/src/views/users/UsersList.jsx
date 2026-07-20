@@ -21,7 +21,7 @@ import { userService } from 'src/services/userService'
 import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getErrorMessage } from 'src/utils/errors'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
-import { hasPermission } from 'src/utils/permissions'
+import { getUserRole, hasPermission, ROLES } from 'src/utils/permissions'
 
 const userTabs = [
   { key: 'active', label: 'Ativos' },
@@ -31,12 +31,14 @@ const userTabs = [
 const roleBadgeColors = {
   admin_master: 'danger',
   doctor: 'primary',
-  clinic_staff: 'info',
+  clinic_manager: 'info',
 }
 
 const UsersList = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useFeedback()
+  const isClinicManager =
+    getUserRole(user) === ROLES.CLINIC_MANAGER
 
   const [activeTab, setActiveTab] = useState('active')
   const [users, setUsers] = useState([])
@@ -91,10 +93,18 @@ const UsersList = () => {
 
       if (user.status_name === 'active') {
         await userService.inactivate(user.id)
-        showSuccess('Usuário inativado com sucesso.')
+        showSuccess(
+          isClinicManager
+            ? 'Médico inativado com sucesso.'
+            : 'Usuário inativado com sucesso.',
+        )
       } else {
         await userService.activate(user.id)
-        showSuccess('Usuário ativado com sucesso.')
+        showSuccess(
+          isClinicManager
+            ? 'Médico ativado com sucesso.'
+            : 'Usuário ativado com sucesso.',
+        )
       }
 
       await loadUsers()
@@ -167,10 +177,16 @@ const UsersList = () => {
     <>
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
-          <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">Usuários</h1>
+          <div className="text-body-secondary">
+            {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
+          </div>
+          <h1 className="h3 mb-0">
+            {isClinicManager ? 'Médicos' : 'Usuários'}
+          </h1>
           <p className="text-body-secondary mb-0">
-            Gerencie usuários, perfis de acesso, status e vínculo com clínicas.
+            {isClinicManager
+              ? 'Gerencie os médicos vinculados à sua clínica.'
+              : 'Gerencie usuários, perfis de acesso, status e vínculo com clínicas.'}
           </p>
         </div>
 
@@ -183,7 +199,7 @@ const UsersList = () => {
               as={Link}
               to="/users/create"
             >
-              Cadastrar Usuário
+              {isClinicManager ? 'Cadastrar Médico' : 'Cadastrar Usuário'}
             </CButton>
           </div>
         )}
@@ -206,7 +222,11 @@ const UsersList = () => {
               <AppTable
                 data={filteredUsers}
                 columns={columns}
-                emptyMessage="Nenhum usuário encontrado."
+                emptyMessage={
+                  isClinicManager
+                    ? 'Nenhum médico encontrado.'
+                    : 'Nenhum usuário encontrado.'
+                }
               />
             </>
           )}

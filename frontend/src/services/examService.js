@@ -32,10 +32,10 @@ const buildExamFormData = (payload) => {
     formData.append('exam_date', payload.exam_date)
   }
 
-  formData.append('title', payload.title)
+  formData.append('description', payload.description)
 
-  if (payload.description) {
-    formData.append('description', payload.description)
+  if (payload.observations) {
+    formData.append('observations', payload.observations)
   }
 
   if (payload.clinical_indication) {

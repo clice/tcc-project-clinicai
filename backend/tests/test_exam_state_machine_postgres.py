@@ -207,7 +207,7 @@ def _seed_exam(
             doctor=doctor,
             status=exam_statuses[status_name],
             exam_type="colonoscopy",
-            title=f"Exame concorrência {suffix}",
+            description=f"Exame concorrência {suffix}",
             file_path=f"/tmp/exam-{suffix}.jpg",
             file_name=f"exam-{suffix}.jpg",
             file_mime_type="image/jpeg",

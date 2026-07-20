@@ -27,7 +27,7 @@ const Dashboard = () => {
   const scopeDescription =
     roleName === ROLES.DOCTOR
       ? 'Indicadores dos seus pacientes e exames.'
-      : roleName === ROLES.CLINIC_STAFF
+      : roleName === ROLES.CLINIC_MANAGER
         ? 'Indicadores operacionais da sua clínica.'
         : 'Indicadores gerais da plataforma.'
 

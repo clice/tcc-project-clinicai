@@ -2,7 +2,7 @@
  * Listagem de exames.
  *
  * Médico e Administrador Master mantêm as ações clínicas autorizadas.
- * O Funcionário da Clínica não recebe coluna de ações.
+ * O Gestor da Clínica não recebe coluna de ações.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -228,7 +228,7 @@ const ExamsList = () => {
         cell: ({ getValue }) => examTypeLabels[getValue()] || getValue() || '-',
       },
       {
-        accessorKey: 'title',
+        accessorKey: 'description',
         header: 'Descrição',
       },
       ...(showDoctorColumn
@@ -300,7 +300,7 @@ const ExamsList = () => {
 
         return (
           <AppActionButtons
-            itemLabel={exam.title}
+            itemLabel={exam.description}
             viewTo={`/exams/${exam.id}`}
             editTo={`/exams/${exam.id}/edit`}
             isInactive={isCanceled}
@@ -350,7 +350,7 @@ const ExamsList = () => {
           <p className="text-body-secondary mb-0">
             {roleName === ROLES.DOCTOR
               ? 'Gerencie seus exames, a análise por IA e a revisão médica.'
-              : roleName === ROLES.CLINIC_STAFF
+              : roleName === ROLES.CLINIC_MANAGER
                 ? 'Acompanhe os exames dos pacientes vinculados à sua clínica.'
                 : 'Acompanhe os status dos exames cadastrados em todas as clínicas.'}
           </p>

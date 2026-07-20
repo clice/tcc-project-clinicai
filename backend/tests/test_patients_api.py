@@ -84,7 +84,7 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
 
     admin_role = Role(name="admin_master", display_name="Administrador Master", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
-    staff_role = Role(name="clinic_staff", display_name="Funcionário", permissions_initialized=True)
+    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
 
     permissions = [
         Permission(name="patients:create", display_name="Cadastrar pacientes", module="patients"),
@@ -272,7 +272,7 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
             doctor=doctor_a,
             status=processing_exam,
             exam_type="endoscopy",
-            title="Exame existente",
+            description="Exame existente",
         )
     )
     db.commit()

@@ -283,7 +283,7 @@ def list_patients(
 
     Escopo documentado:
     - admin_master: todos os pacientes;
-    - clinic_staff: pacientes da própria clínica;
+    - clinic_manager: pacientes da própria clínica;
     - doctor: somente pacientes sob sua responsabilidade.
     """
 

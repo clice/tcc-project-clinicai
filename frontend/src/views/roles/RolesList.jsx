@@ -77,7 +77,7 @@ const RolesList = () => {
           </p>
         </div>
         {/* Botão "Cadastrar Perfil" removido: os 3 perfis oficiais
-            (admin_master, doctor, clinic_staff) são um enum fechado no
+            (admin_master, doctor, clinic_manager) são um enum fechado no
             backend e já vêm seedados — qualquer tentativa de criação
             resultaria em duplicidade ou em um nome fora do enum. Os
             perfis existentes continuam editáveis (nome de exibição,

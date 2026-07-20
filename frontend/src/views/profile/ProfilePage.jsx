@@ -3,7 +3,7 @@
  *
  * Diferente do UserForm (que é o cadastro administrado pelo admin_master),
  * esta página é acessada por qualquer usuário logado (admin_master, doctor,
- * clinic_staff) para:
+ * clinic_manager) para:
  * - visualizar e editar os próprios dados cadastrais (nome, e-mail, telefone, CPF);
  * - trocar a própria senha, exigindo a senha atual.
  *

@@ -111,28 +111,28 @@ export const routes = [
     path: '/patients',
     name: 'Pacientes',
     element: PatientsList,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'patients:read',
   },
   {
     path: '/patients/create',
     name: 'Adicionar Paciente',
     element: CreatePatient,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'patients:create',
   },
   {
     path: '/patients/:id/edit',
     name: 'Editar Paciente',
     element: EditPatient,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'patients:update',
   },
   {
     path: '/patients/:id',
     name: 'Detalhes do Paciente',
     element: ViewPatient,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'patients:read',
   },
 
@@ -141,7 +141,7 @@ export const routes = [
     path: '/exams',
     name: 'Exames',
     element: ExamsList,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: 'exams:list',
   },
   {
@@ -169,15 +169,34 @@ export const routes = [
   /////////// SYSTEM
 
   // USERS
-  { path: '/users', name: 'Usuários', element: UsersList, roles: ['admin_master'] },
+  {
+    path: '/users',
+    name: 'Usuários',
+    element: UsersList,
+    roles: ['admin_master', 'clinic_manager'],
+    permission: 'users:read',
+  },
   {
     path: '/users/create',
     name: 'Adicionar Usuário',
     element: CreateUser,
-    roles: ['admin_master'],
+    roles: ['admin_master', 'clinic_manager'],
+    permission: 'users:create',
   },
-  { path: '/users/:id/edit', name: 'Editar Usuário', element: EditUser, roles: ['admin_master'] },
-  { path: '/users/:id', name: 'Detalhes do Usuário', element: ViewUser, roles: ['admin_master'] },
+  {
+    path: '/users/:id/edit',
+    name: 'Editar Usuário',
+    element: EditUser,
+    roles: ['admin_master', 'clinic_manager'],
+    permission: 'users:update',
+  },
+  {
+    path: '/users/:id',
+    name: 'Detalhes do Usuário',
+    element: ViewUser,
+    roles: ['admin_master', 'clinic_manager'],
+    permission: 'users:read',
+  },
 
   // AUDIT LOGS
   {

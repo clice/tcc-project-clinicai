@@ -129,7 +129,7 @@ def _seed_exam_context(db_session, *, status_name: str = "pending"):
         doctor=doctor,
         status=exam_statuses[status_name],
         exam_type="colonoscopy",
-        title="Exame CHK09",
+        description="Exame CHK09",
         file_path="placeholder.jpg",
         file_name="placeholder.jpg",
         file_mime_type="image/jpeg",
@@ -294,7 +294,7 @@ def test_final_exam_metadata_cannot_be_edited(db_session) -> None:
         update_exam(
             db_session,
             context.exam.id,
-            ExamUpdate(title="Tentativa tardia"),
+            ExamUpdate(description="Tentativa tardia"),
             context.doctor,
         )
     assert error.value.status_code == 409
@@ -335,7 +335,7 @@ def test_processing_exam_metadata_cannot_be_edited(db_session) -> None:
         update_exam(
             db_session,
             context.exam.id,
-            ExamUpdate(title="Tentativa durante processamento"),
+            ExamUpdate(description="Tentativa durante processamento"),
             context.doctor,
         )
 
@@ -353,11 +353,11 @@ def test_pending_exam_metadata_can_be_edited(
     result = update_exam(
         db_session,
         context.exam.id,
-        ExamUpdate(title="Exame pendente editado"),
+        ExamUpdate(description="Exame pendente editado"),
         context.doctor,
     )
 
-    assert result["title"] == "Exame pendente editado"
+    assert result["description"] == "Exame pendente editado"
 
 
 def test_failed_exam_metadata_cannot_be_edited(
@@ -372,7 +372,7 @@ def test_failed_exam_metadata_cannot_be_edited(
         update_exam(
             db_session,
             context.exam.id,
-            ExamUpdate(title="Tentativa após falha"),
+            ExamUpdate(description="Tentativa após falha"),
             context.doctor,
         )
 

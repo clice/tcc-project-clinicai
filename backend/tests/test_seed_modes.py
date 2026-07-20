@@ -285,7 +285,7 @@ def test_academic_demo_is_predictable_and_idempotent(
     )
     original_hash = primary_doctor.password_hash
     primary_clinic.name = "Clínica Primária Personalizada"
-    pending_exam.description = "Descrição acadêmica personalizada"
+    pending_exam.observations = "Descrição acadêmica personalizada"
     db_session.commit()
 
     for _ in range(3):
@@ -304,7 +304,7 @@ def test_academic_demo_is_predictable_and_idempotent(
     db_session.refresh(pending_exam)
     assert primary_clinic.name == "Clínica Primária Personalizada"
     assert primary_doctor.password_hash == original_hash
-    assert pending_exam.description == "Descrição acadêmica personalizada"
+    assert pending_exam.observations == "Descrição acadêmica personalizada"
 
 
 

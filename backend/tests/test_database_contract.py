@@ -1,12 +1,8 @@
 """Contrato estático de schema e migrations do CHK-03."""
 
-import importlib.util
 from pathlib import Path
 
-import sqlalchemy as sa
 from alembic.config import Config
-from alembic.migration import MigrationContext
-from alembic.operations import Operations
 from alembic.script import ScriptDirectory
 
 from app.core.database import Base
@@ -35,7 +31,7 @@ def test_alembic_has_a_single_expected_head() -> None:
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     script = ScriptDirectory.from_config(config)
 
-    assert script.get_heads() == ["e9f4a6b8c913"]
+    assert script.get_heads() == ["0001clinicai"]
 
 
 def test_fk_cascade_policy_is_explicit() -> None:
@@ -79,41 +75,3 @@ def test_every_foreign_key_column_has_an_index() -> None:
 
     assert missing == []
     assert Clinic.__table__.c.status_id.index is True
-
-
-def load_index_migration():
-    migration_path = (
-        BACKEND_ROOT
-        / "alembic"
-        / "versions"
-        / "d3e5f7a9b102_add_clinic_status_index.py"
-    )
-    spec = importlib.util.spec_from_file_location(
-        "chk03_index_migration", migration_path
-    )
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def test_chk03_index_migration_upgrades_and_downgrades() -> None:
-    engine = sa.create_engine("sqlite://")
-    metadata = sa.MetaData()
-    sa.Table(
-        "clinics",
-        metadata,
-        sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("status_id", sa.Integer, nullable=False),
-    )
-    metadata.create_all(engine)
-    migration = load_index_migration()
-
-    with engine.begin() as connection:
-        migration.op = Operations(MigrationContext.configure(connection))
-        migration.upgrade()
-        indexes = sa.inspect(connection).get_indexes("clinics")
-        assert {tuple(index["column_names"]) for index in indexes} == {("status_id",)}
-
-        migration.downgrade()
-        assert sa.inspect(connection).get_indexes("clinics") == []

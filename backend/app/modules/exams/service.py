@@ -68,13 +68,13 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
 
     Os campos de predição da IA (ai_prediction_label/ai_prediction_class)
     só são incluídos se current_user for informado e não for
-    Funcionário da Clínica — esse perfil não tem acesso a resultados
+    Gestor da Clínica — esse perfil não tem acesso a resultados
     diagnósticos (Art. 34 do CFM), mesmo agregados na listagem de exames.
     Quando current_user não é informado (uso interno), os campos vêm
     preenchidos por padrão.
     """
     role_name = current_user.role.name if current_user and current_user.role else None
-    can_see_ai_prediction = role_name != RoleName.CLINIC_STAFF.value
+    can_see_ai_prediction = role_name != RoleName.CLINIC_MANAGER.value
 
     ai_prediction_label = None
     ai_prediction_class = None
@@ -97,8 +97,8 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
         "status_display_name": exam.status.display_name if exam.status else None,
         "exam_type": exam.exam_type,
         "exam_date": exam.exam_date,
-        "title": exam.title,
         "description": exam.description,
+        "observations": exam.observations,
         "clinical_indication": exam.clinical_indication,
         "findings": exam.findings,
         "conclusion": exam.conclusion,
@@ -145,7 +145,7 @@ def build_exam_list_response(exam: Exam) -> dict:
         ),
         "exam_type": exam.exam_type,
         "exam_date": exam.exam_date,
-        "title": exam.title,
+        "description": exam.description,
         "analysis_in_progress": bool(
             exam.analysis_in_progress
         ),
@@ -386,7 +386,7 @@ def list_exam_form_options(
     if role_name == RoleName.ADMIN_MASTER.value:
         pass
 
-    elif role_name == RoleName.CLINIC_STAFF.value:
+    elif role_name == RoleName.CLINIC_MANAGER.value:
         if current_user.clinic_id is None:
             raise HTTPException(
                 status_code=403,
@@ -681,7 +681,7 @@ def list_exams(
         if clinic_id is not None:
             query = query.filter(Exam.clinic_id == clinic_id)
 
-    elif role_name == RoleName.CLINIC_STAFF.value:
+    elif role_name == RoleName.CLINIC_MANAGER.value:
         if current_user.clinic_id is None:
             raise HTTPException(
                 status_code=403,
@@ -736,7 +736,7 @@ def list_exams(
         query = query.filter(Exam.status_id == status_id)
 
     if ai_prediction_class is not None:
-        if role_name == RoleName.CLINIC_STAFF.value:
+        if role_name == RoleName.CLINIC_MANAGER.value:
             raise HTTPException(
                 status_code=403,
                 detail="Funcionário da clínica não tem permissão para filtrar por resultado da IA.",
@@ -748,13 +748,13 @@ def list_exams(
     if search:
         term = f"%{search.strip()}%"
         visible_filters = [
-            Exam.title.ilike(term),
+            Exam.description.ilike(term),
             Exam.exam_type.ilike(term),
         ]
-        if role_name != RoleName.CLINIC_STAFF.value:
+        if role_name != RoleName.CLINIC_MANAGER.value:
             visible_filters.extend(
                 [
-                    Exam.description.ilike(term),
+                    Exam.observations.ilike(term),
                     Exam.clinical_indication.ilike(term),
                     Exam.findings.ilike(term),
                     Exam.conclusion.ilike(term),
@@ -820,8 +820,8 @@ def create_exam(
         status_id=pending_status.id,
         exam_type=payload.exam_type,
         exam_date=payload.exam_date,
-        title=payload.title,
         description=payload.description,
+        observations=payload.observations,
         clinical_indication=payload.clinical_indication,
     )
 
@@ -864,7 +864,7 @@ def create_exam(
                 "transition_action": ExamTransitionAction.CREATE.value,
                 "exam_type": exam.exam_type,
                 "exam_date": exam.exam_date.isoformat() if exam.exam_date else None,
-                "title": exam.title,
+                "description": exam.description,
             },
         )
         create_audit_log(
@@ -1034,8 +1034,8 @@ def update_exam(
             if exam.exam_date
             else None
         ),
-        "title": exam.title,
         "description": exam.description,
+        "observations": exam.observations,
         "clinical_indication":
             exam.clinical_indication,
     }
@@ -1083,8 +1083,8 @@ def update_exam(
                 if exam.exam_date
                 else None
             ),
-            "title": exam.title,
             "description": exam.description,
+            "observations": exam.observations,
             "clinical_indication":
                 exam.clinical_indication,
             "image_relocated":

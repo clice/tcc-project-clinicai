@@ -164,16 +164,24 @@ body {
   text-align: center;
 }
 
-.clinicai-login-brand-icon {
-  flex: 0 0 auto;
+.clinicai-login-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
   margin-bottom: 1rem;
 }
 
+.clinicai-login-brand-icon {
+  flex: 0 0 auto;
+}
+
 .clinicai-login-brand-name {
-  margin-bottom: 1rem;
+  margin: 0;
   color: var(--clinicai-brand-contrast);
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .clinicai-login-description {

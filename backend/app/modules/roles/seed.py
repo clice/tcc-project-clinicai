@@ -48,10 +48,10 @@ def seed_roles(db: Session) -> dict[str, Role]:
             display_name="Médico",
             description="Profissional médico vinculado a uma clínica.",
         ),
-        "clinic_staff": get_or_create_role(
+        "clinic_manager": get_or_create_role(
             db,
-            name=RoleName.CLINIC_STAFF,
-            display_name="Funcionário da Clínica",
-            description="Funcionário da clínica com acesso operacional ao sistema.",
+            name=RoleName.CLINIC_MANAGER,
+            display_name="Gestor da Clínica",
+            description="Gestor responsável pela operação e pelos médicos da própria clínica.",
         ),
     }

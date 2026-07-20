@@ -10,6 +10,7 @@ from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName,
 from app.common.services import (
     apply_update_data,
     is_admin_master,
+    is_clinic_manager,
     model_dump_update,
     normalize_update_data,
 )
@@ -65,24 +66,51 @@ def check_cpf_duplicate(
         raise HTTPException(status_code=400, detail="CPF já cadastrado.")
 
 
+
 def validate_current_user_can_access_user(
     *,
     current_user: User,
     target_user: User,
+    allow_self: bool = False,
 ) -> None:
+    """Autoriza acesso administrativo ao usuário-alvo.
+
+    O administrador master pode acessar qualquer usuário. O gestor da
+    clínica pode acessar somente médicos vinculados à própria clínica.
+    """
+
+    if allow_self and current_user.id == target_user.id:
+        return
+
     if is_admin_master(current_user):
         return
+
+    if not is_clinic_manager(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Você não tem permissão para acessar este usuário.",
+        )
 
     if current_user.clinic_id is None:
         raise HTTPException(
             status_code=403,
-            detail="Usuário autenticado não está vinculado a uma clínica.",
+            detail="Gestor não está vinculado a uma clínica.",
         )
 
-    if target_user.clinic_id != current_user.clinic_id:
+    target_role_name = (
+        target_user.role.name
+        if target_user.role
+        else None
+    )
+    if (
+        target_role_name != RoleName.DOCTOR.value
+        or target_user.clinic_id != current_user.clinic_id
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Você não tem permissão para acessar este usuário.",
+            detail=(
+                "O gestor só pode acessar médicos da própria clínica."
+            ),
         )
 
 
@@ -92,27 +120,36 @@ def validate_current_user_can_manage_user_data(
     role: Role,
     clinic_id: int | None,
 ) -> None:
+    """Valida o papel e a clínica atribuídos pelo usuário autenticado."""
+
     if is_admin_master(current_user):
         return
 
-    if role.name == RoleName.ADMIN_MASTER.value:
+    if not is_clinic_manager(current_user):
         raise HTTPException(
             status_code=403,
-            detail="Você não tem permissão para criar ou alterar administrador master.",
+            detail="Você não tem permissão para gerenciar usuários.",
         )
 
     if current_user.clinic_id is None:
         raise HTTPException(
             status_code=403,
-            detail="Usuário autenticado não está vinculado a uma clínica.",
+            detail="Gestor não está vinculado a uma clínica.",
+        )
+
+    if role.name != RoleName.DOCTOR.value:
+        raise HTTPException(
+            status_code=403,
+            detail="O gestor só pode criar ou alterar usuários médicos.",
         )
 
     if clinic_id != current_user.clinic_id:
         raise HTTPException(
             status_code=403,
-            detail="Você só pode gerenciar usuários da sua própria clínica.",
+            detail=(
+                "O gestor só pode gerenciar médicos da própria clínica."
+            ),
         )
-
 
 def get_active_clinic_or_none(db: Session, clinic_id: int | None) -> Clinic | None:
     if clinic_id is None:
@@ -287,12 +324,15 @@ def get_user_response(
     db: Session,
     user_id: int,
     current_user: User,
+    *,
+    allow_self: bool = False,
 ) -> dict:
     user = get_user_by_id(db, user_id)
 
     validate_current_user_can_access_user(
         current_user=current_user,
         target_user=user,
+        allow_self=allow_self,
     )
 
     return build_user_response(user)
@@ -301,6 +341,74 @@ def get_user_response(
 # ========================================
 # MAIN METHODS
 # ========================================
+
+
+def get_doctor_management_options(
+    db: Session,
+    current_user: User,
+) -> dict:
+    """Retorna somente os catálogos necessários ao gestor de clínica."""
+
+    if not is_clinic_manager(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Opções exclusivas do gestor da clínica.",
+        )
+
+    clinic = get_active_clinic_or_none(
+        db,
+        current_user.clinic_id,
+    )
+    if clinic is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Gestor não está vinculado a uma clínica ativa.",
+        )
+
+    doctor_role = (
+        db.query(Role)
+        .filter(Role.name == RoleName.DOCTOR.value)
+        .first()
+    )
+    if doctor_role is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Perfil médico não configurado.",
+        )
+
+    statuses = (
+        db.query(Status)
+        .filter(Status.applies_to == StatusScope.USER.value)
+        .order_by(Status.display_name.asc())
+        .all()
+    )
+    if not statuses:
+        raise HTTPException(
+            status_code=500,
+            detail="Status de usuário não configurados.",
+        )
+
+    return {
+        "role": {
+            "id": doctor_role.id,
+            "name": doctor_role.name,
+            "display_name": doctor_role.display_name,
+        },
+        "statuses": [
+            {
+                "id": status.id,
+                "name": status.name,
+                "display_name": status.display_name,
+                "applies_to": status.applies_to,
+            }
+            for status in statuses
+        ],
+        "clinic": {
+            "id": clinic.id,
+            "name": clinic.name,
+            "status_name": StatusName.ACTIVE.value,
+        },
+    }
 
 
 def get_user_by_id(db: Session, user_id: int) -> User:
@@ -326,10 +434,13 @@ def create_user(
     payload: UserCreate,
     current_user: User,
 ) -> dict:
-    if not is_admin_master(current_user):
+    if not (
+        is_admin_master(current_user)
+        or is_clinic_manager(current_user)
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Apenas o administrador master pode cadastrar usuários.",
+            detail="Você não tem permissão para cadastrar usuários.",
         )
 
     email = str(payload.email).strip().lower()
@@ -412,23 +523,74 @@ def list_users(
         .join(Status, User.status_id == Status.id)
     )
 
-    if not is_admin_master(current_user):
+    if is_admin_master(current_user):
+        if clinic_id is not None:
+            query = query.filter(User.clinic_id == clinic_id)
+    elif is_clinic_manager(current_user):
         if current_user.clinic_id is None:
             raise HTTPException(
                 status_code=403,
-                detail="Usuário autenticado não está vinculado a uma clínica.",
+                detail="Gestor não está vinculado a uma clínica.",
             )
-
-        query = query.filter(User.clinic_id == current_user.clinic_id)
 
         if clinic_id is not None and clinic_id != current_user.clinic_id:
             raise HTTPException(
                 status_code=403,
-                detail="Você não tem permissão para listar usuários de outra clínica.",
+                detail=(
+                    "O gestor não pode listar médicos de outra clínica."
+                ),
             )
 
-    elif clinic_id is not None:
-        query = query.filter(User.clinic_id == clinic_id)
+        if (
+            role is not None
+            and role.strip().lower() != RoleName.DOCTOR.value
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="O gestor só pode listar usuários médicos.",
+            )
+
+        query = query.filter(
+            User.clinic_id == current_user.clinic_id,
+            Role.name == RoleName.DOCTOR.value,
+        )
+    elif (
+        current_user.role is not None
+        and current_user.role.name == RoleName.DOCTOR.value
+    ):
+        if current_user.clinic_id is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Médico não está vinculado a uma clínica.",
+            )
+
+        if clinic_id != current_user.clinic_id:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Você não tem permissão para listar médicos "
+                    "de outra clínica."
+                ),
+            )
+
+        if (
+            role is None
+            or role.strip().lower() != RoleName.DOCTOR.value
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Consulta permitida apenas para o seletor de médicos.",
+            )
+
+        query = query.filter(
+            User.clinic_id == current_user.clinic_id,
+            Role.name == RoleName.DOCTOR.value,
+        )
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Você não tem permissão para listar usuários.",
+        )
 
     if search:
         search_value = f"%{search.strip().lower()}%"
@@ -462,13 +624,21 @@ def update_user(
 ) -> dict:
     """Atualiza dados administráveis, role e clínica de um usuário."""
 
-    if not is_admin_master(current_user):
+    if not (
+        is_admin_master(current_user)
+        or is_clinic_manager(current_user)
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Apenas o administrador master pode gerenciar usuários.",
+            detail="Você não tem permissão para gerenciar usuários.",
         )
 
     user = get_user_by_id(db, user_id)
+    validate_current_user_can_access_user(
+        current_user=current_user,
+        target_user=user,
+    )
+
     update_data = normalize_update_data(model_dump_update(payload))
     if not update_data:
         return build_user_response(user)
@@ -508,8 +678,21 @@ def update_user(
             new_role_id != user.role_id or new_clinic_id != user.clinic_id
         ),
     )
-    next_role = validate_user_role_clinic_rules(db, new_role_id, new_clinic_id)
-    ensure_last_active_admin_is_preserved(db, user, next_role=next_role)
+    next_role = validate_user_role_clinic_rules(
+        db,
+        new_role_id,
+        new_clinic_id,
+    )
+    validate_current_user_can_manage_user_data(
+        current_user=current_user,
+        role=next_role,
+        clinic_id=new_clinic_id,
+    )
+    ensure_last_active_admin_is_preserved(
+        db,
+        user,
+        next_role=next_role,
+    )
 
     if "email" in update_data:
         update_data["email"] = normalized_email
@@ -622,10 +805,13 @@ def update_user_password(
         target_user=user,
     )
 
-    if not is_admin_master(current_user):
+    if not (
+        is_admin_master(current_user)
+        or is_clinic_manager(current_user)
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Apenas o administrador master pode redefinir senhas de outros usuários.",
+            detail="Você não tem permissão para redefinir esta senha.",
         )
 
     if current_user.id == user.id:
@@ -719,13 +905,21 @@ def inactivate_user(
 ) -> dict:
     """Inativa usuário, preservando ao menos um administrador ativo."""
 
-    if not is_admin_master(current_user):
+    if not (
+        is_admin_master(current_user)
+        or is_clinic_manager(current_user)
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Apenas o administrador master pode inativar usuários.",
+            detail="Você não tem permissão para inativar usuários.",
         )
 
     user = get_user_by_id(db, user_id)
+    validate_current_user_can_access_user(
+        current_user=current_user,
+        target_user=user,
+    )
+
     if user.status and user.status.name == StatusName.INACTIVE.value:
         return build_user_response(user)
 
@@ -775,13 +969,21 @@ def activate_user(
 ) -> dict:
     """Ativa usuário somente quando sua invariável role/clínica é válida."""
 
-    if not is_admin_master(current_user):
+    if not (
+        is_admin_master(current_user)
+        or is_clinic_manager(current_user)
+    ):
         raise HTTPException(
             status_code=403,
-            detail="Apenas o administrador master pode ativar usuários.",
+            detail="Você não tem permissão para ativar usuários.",
         )
 
     user = get_user_by_id(db, user_id)
+    validate_current_user_can_access_user(
+        current_user=current_user,
+        target_user=user,
+    )
+
     if user.status and user.status.name == StatusName.ACTIVE.value:
         return build_user_response(user)
 
