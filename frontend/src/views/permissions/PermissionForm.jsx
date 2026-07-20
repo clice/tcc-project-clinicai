@@ -1,11 +1,11 @@
 /**
- * Visualização e edição dos textos de uma permissão oficial.
+ * Edição dos textos de uma permissão oficial.
  *
  * Nome técnico, módulo e ação pertencem ao catálogo versionado e são sempre
  * somente leitura. Novas permissões são introduzidas por código e migration.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   CButton,
@@ -33,19 +33,12 @@ const emptyPermission = {
   description: '',
 }
 
-const PermissionForm = ({ mode = 'view' }) => {
+const PermissionForm = () => {
   const { id } = useParams()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyPermission)
   const [isSaving, setIsSaving] = useState(false)
-
-  const isReadOnly = mode === 'view'
-  const isEditMode = mode === 'edit'
-  const title = useMemo(
-    () => (isEditMode ? 'Editar Permissão' : 'Detalhes da Permissão'),
-    [isEditMode],
-  )
 
   useEffect(() => {
     const loadPermission = async () => {
@@ -80,8 +73,6 @@ const PermissionForm = ({ mode = 'view' }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (!isEditMode) return
-
     showError('')
     showSuccess('')
 
@@ -109,7 +100,7 @@ const PermissionForm = ({ mode = 'view' }) => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Configurações</div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0">Editar Permissão</h1>
           <p className="text-body-secondary mb-0">
             O catálogo técnico é versionado; apenas os textos de apresentação podem ser editados.
           </p>
@@ -127,6 +118,11 @@ const PermissionForm = ({ mode = 'view' }) => {
             Voltar
           </CButton>
         </div>
+      </div>
+
+      <div className="alert alert-info">
+        Esta tela permite alterar os textos de apresentação da permissão. Revise as informações
+        antes de selecionar “Salvar”.
       </div>
 
       <CCard>
@@ -159,7 +155,6 @@ const PermissionForm = ({ mode = 'view' }) => {
                 <CFormLabel>Nome de exibição</CFormLabel>
                 <CFormInput
                   value={form.display_name}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('display_name', event.target.value)}
                   required
                 />
@@ -169,32 +164,20 @@ const PermissionForm = ({ mode = 'view' }) => {
                 <CFormLabel>Descrição</CFormLabel>
                 <CFormInput
                   value={form.description}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('description', event.target.value)}
                 />
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton
-                  color="primary"
-                  type="submit"
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
-  
-                <CButton
-                  color="secondary"
-                  variant="outline"
-                  as={Link}
-                  to="/permissions"
-                >
-                  Cancelar
-                </CButton>
-              </div>
-            )}
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
+
+              <CButton color="secondary" variant="outline" as={Link} to="/permissions">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

@@ -1,7 +1,7 @@
 /**
  * Listagem de permissões.
  *
- * Exibe o catálogo oficial e permite visualizar ou editar seus textos.
+ * Exibe o catálogo oficial e permite editar seus textos de apresentação.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -41,7 +41,13 @@ const PermissionsList = () => {
   }, [])
 
   useEffect(() => {
-    void loadPermissions()
+    const timeoutId = window.setTimeout(() => {
+      void loadPermissions()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadPermissions])
 
   const columns = useMemo(
@@ -59,12 +65,7 @@ const PermissionsList = () => {
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/permissions/${row.original.id}`}
-            editTo={`/permissions/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/permissions/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],

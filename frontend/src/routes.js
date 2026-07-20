@@ -61,8 +61,7 @@ const EditRole = () => React.createElement(RoleForm)
 const PermissionsList = React.lazy(() => import('./views/permissions/PermissionsList'))
 const PermissionForm = React.lazy(() => import('./views/permissions/PermissionForm'))
 
-const EditPermission = () => React.createElement(PermissionForm, { mode: 'edit' })
-const ViewPermission = () => React.createElement(PermissionForm, { mode: 'view' })
+const EditPermission = () => React.createElement(PermissionForm)
 
 // STATUSES
 const StatusesList = React.lazy(() => import('./views/statuses/StatusesList'))
@@ -193,13 +192,6 @@ export const routes = [
     element: EditPermission,
     roles: ['admin_master'],
   },
-  {
-    path: '/permissions/:id',
-    name: 'Detalhes da Permissão',
-    element: ViewPermission,
-    roles: ['admin_master'],
-  },
-
   // STATUSES
   { path: '/statuses', name: 'Status', element: StatusesList, roles: ['admin_master'] },
   {
