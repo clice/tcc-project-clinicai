@@ -14,6 +14,7 @@ const backendSchema = await readProjectFile('backend/app/modules/clinics/schema.
 const backendRouter = await readProjectFile('backend/app/modules/clinics/router.py')
 const backendService = await readProjectFile('backend/app/modules/clinics/service.py')
 const clinicService = await readProjectFile('frontend/src/services/clinicService.js')
+const addressService = await readProjectFile('frontend/src/services/addressService.js')
 const clinicForm = await readProjectFile('frontend/src/views/clinics/ClinicForm.jsx')
 const clinicsList = await readProjectFile('frontend/src/views/clinics/ClinicsList.jsx')
 const frontendRoutes = await readProjectFile('frontend/src/routes.js')
@@ -124,6 +125,29 @@ assert.doesNotMatch(
   /status_id\s*:/,
   'Autoedição da clínica não deve enviar status_id',
 )
+assert.doesNotMatch(
+  clinicProfileCard,
+  /status_display_name|<CFormLabel>Status<\/CFormLabel>/,
+  'Meu Perfil não deve exibir o status da clínica.',
+)
+assert.match(addressService, /getAddressByZipCode/)
+assert.match(clinicProfileCard, /addressService\.getAddressByZipCode\(zipCode\)/)
+assert.match(clinicProfileCard, /onBlur=\{handleZipCodeBlur\}/)
+assert.match(
+  clinicProfileCard,
+  /<CCol md=\{2\}>[\s\S]*?<CFormLabel>CEP<\/CFormLabel>[\s\S]*?<CCol md=\{8\}>[\s\S]*?<CFormLabel>Endereço<\/CFormLabel>[\s\S]*?<CCol md=\{2\}>[\s\S]*?<CFormLabel>Número<\/CFormLabel>/,
+)
+assert.match(
+  clinicProfileCard,
+  /<CCol md=\{10\}>[\s\S]*?<CFormLabel>Complemento<\/CFormLabel>[\s\S]*?<CCol md=\{2\}>[\s\S]*?<CFormLabel>UF<\/CFormLabel>/,
+)
+assert.match(
+  clinicProfileCard,
+  /<CCol md=\{6\}>[\s\S]*?<CFormLabel>Bairro<\/CFormLabel>[\s\S]*?<CCol md=\{6\}>[\s\S]*?<CFormLabel>Cidade<\/CFormLabel>/,
+)
+assert.match(profilePage, /<strong>Dados Cadastrais<\/strong>/)
+assert.match(profilePage, /<strong>Alterar Senha<\/strong>/)
+assert.match(clinicProfileCard, /<strong>Minha Clínica<\/strong>/)
 
 console.log(
   'Contrato de clínicas coerente: status dedicado, perfil próprio, isolamento e efeitos auditáveis.',

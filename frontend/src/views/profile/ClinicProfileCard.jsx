@@ -13,14 +13,10 @@ import {
 } from '@coreui/react'
 
 import { useFeedback } from 'src/hooks/useFeedback'
+import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
 import { getErrorMessage } from 'src/utils/errors'
-import {
-  formatCnpjBR,
-  formatPhoneBR,
-  formatZipCodeBR,
-  onlyNumbers,
-} from 'src/utils/formatters'
+import { formatCnpjBR, formatPhoneBR, formatZipCodeBR, onlyNumbers } from 'src/utils/formatters'
 
 const emptyClinic = {
   name: '',
@@ -35,7 +31,6 @@ const emptyClinic = {
   neighborhood: '',
   city: '',
   state: '',
-  status_display_name: '',
 }
 
 const ClinicProfileCard = ({ canUpdate = false }) => {
@@ -43,6 +38,7 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
   const [form, setForm] = useState(emptyClinic)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false)
 
   useEffect(() => {
     const loadClinic = async () => {
@@ -62,7 +58,6 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
           neighborhood: clinic.neighborhood ?? '',
           city: clinic.city ?? '',
           state: clinic.state ?? '',
-          status_display_name: clinic.status_display_name ?? clinic.status_name ?? '',
         })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar os dados da clínica.'))
@@ -72,15 +67,67 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
     }
 
     loadClinic()
-  }, [])
+  }, [showError])
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
+  const clearAddressFields = () => {
+    setForm((current) => ({
+      ...current,
+      address: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+    }))
+  }
+
+  const handleZipCodeBlur = async () => {
+    if (!canUpdate) return
+
+    const zipCode = onlyNumbers(form.zip_code)
+
+    if (!zipCode || zipCode.length !== 8) {
+      return
+    }
+
+    try {
+      setIsLoadingAddress(true)
+      showError('')
+
+      clearAddressFields()
+
+      const address = await addressService.getAddressByZipCode(zipCode)
+
+      if (!address) {
+        showError('CEP não encontrado.')
+        return
+      }
+
+      setForm((current) => ({
+        ...current,
+        zip_code: formatZipCodeBR(address.zip_code),
+        address: address.address,
+        complement: address.complement,
+        neighborhood: address.neighborhood,
+        city: address.city,
+        state: address.state,
+      }))
+    } catch {
+      showError('Erro ao buscar endereço pelo CEP.')
+    } finally {
+      setIsLoadingAddress(false)
+    }
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     if (!canUpdate) return
+
+    showError('')
+    showSuccess('')
 
     if (!form.name.trim()) {
       showError('Informe o nome da clínica.')
@@ -92,6 +139,14 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
     }
     if (form.zip_code && onlyNumbers(form.zip_code).length !== 8) {
       showError('CEP inválido.')
+      return
+    }
+    if (form.phone && onlyNumbers(form.phone).length < 10) {
+      showError('Telefone inválido.')
+      return
+    }
+    if (form.mobile_phone && onlyNumbers(form.mobile_phone).length < 10) {
+      showError('Celular inválido.')
       return
     }
     if (form.state && form.state.trim().length !== 2) {
@@ -151,7 +206,7 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
   return (
     <CCard className="mb-4">
       <CCardHeader>
-        <strong>Minha clínica</strong>
+        <strong>Minha Clínica</strong>
       </CCardHeader>
       <CCardBody>
         <CForm onSubmit={handleSubmit}>
@@ -161,62 +216,70 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
               <CFormInput
                 value={form.name}
                 disabled={!canUpdate}
+                placeholder="Ex: Clínica Vida"
                 onChange={(event) => updateField('name', event.target.value)}
+                required
               />
             </CCol>
+
             <CCol md={4}>
               <CFormLabel>CNPJ</CFormLabel>
               <CFormInput
                 value={form.cnpj}
                 disabled={!canUpdate}
+                placeholder="00.000.000/0000-00"
                 onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
+                required
               />
             </CCol>
+
             <CCol md={4}>
               <CFormLabel>E-mail</CFormLabel>
               <CFormInput
                 type="email"
                 value={form.email}
                 disabled={!canUpdate}
+                placeholder="contato@clinica.com"
                 onChange={(event) => updateField('email', event.target.value)}
               />
             </CCol>
+
             <CCol md={4}>
               <CFormLabel>Telefone</CFormLabel>
               <CFormInput
                 value={form.phone}
                 disabled={!canUpdate}
+                placeholder="(00) 0000-0000"
                 onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
               />
             </CCol>
+
             <CCol md={4}>
               <CFormLabel>Celular</CFormLabel>
               <CFormInput
                 value={form.mobile_phone}
                 disabled={!canUpdate}
-                onChange={(event) =>
-                  updateField('mobile_phone', formatPhoneBR(event.target.value))
-                }
+                placeholder="(00) 00000-0000"
+                onChange={(event) => updateField('mobile_phone', formatPhoneBR(event.target.value))}
               />
             </CCol>
-            <CCol md={3}>
+
+            <CCol md={2}>
               <CFormLabel>CEP</CFormLabel>
               <CFormInput
                 value={form.zip_code}
-                disabled={!canUpdate}
-                onChange={(event) =>
-                  updateField('zip_code', formatZipCodeBR(event.target.value))
-                }
+                disabled={!canUpdate || isLoadingAddress}
+                onChange={(event) => updateField('zip_code', formatZipCodeBR(event.target.value))}
+                onBlur={handleZipCodeBlur}
+                placeholder="00000-000"
               />
             </CCol>
-            <CCol md={7}>
+
+            <CCol md={8}>
               <CFormLabel>Endereço</CFormLabel>
-              <CFormInput
-                value={form.address}
-                disabled={!canUpdate}
-                onChange={(event) => updateField('address', event.target.value)}
-              />
+              <CFormInput value={form.address} disabled />
             </CCol>
+
             <CCol md={2}>
               <CFormLabel>Número</CFormLabel>
               <CFormInput
@@ -225,44 +288,28 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
                 onChange={(event) => updateField('number', event.target.value)}
               />
             </CCol>
-            <CCol md={4}>
+
+            <CCol md={10}>
               <CFormLabel>Complemento</CFormLabel>
-              <CFormInput
-                value={form.complement}
-                disabled={!canUpdate}
-                onChange={(event) => updateField('complement', event.target.value)}
-              />
+              <CFormInput value={form.complement} disabled />
             </CCol>
-            <CCol md={4}>
-              <CFormLabel>Bairro</CFormLabel>
-              <CFormInput
-                value={form.neighborhood}
-                disabled={!canUpdate}
-                onChange={(event) => updateField('neighborhood', event.target.value)}
-              />
-            </CCol>
-            <CCol md={3}>
-              <CFormLabel>Cidade</CFormLabel>
-              <CFormInput
-                value={form.city}
-                disabled={!canUpdate}
-                onChange={(event) => updateField('city', event.target.value)}
-              />
-            </CCol>
-            <CCol md={1}>
+
+            <CCol md={2}>
               <CFormLabel>UF</CFormLabel>
-              <CFormInput
-                value={form.state}
-                disabled={!canUpdate}
-                maxLength={2}
-                onChange={(event) => updateField('state', event.target.value.toUpperCase())}
-              />
+              <CFormInput value={form.state} disabled />
             </CCol>
-            <CCol md={4}>
-              <CFormLabel>Status</CFormLabel>
-              <CFormInput value={form.status_display_name} disabled />
+
+            <CCol md={6}>
+              <CFormLabel>Bairro</CFormLabel>
+              <CFormInput value={form.neighborhood} disabled />
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel>Cidade</CFormLabel>
+              <CFormInput value={form.city} disabled />
             </CCol>
           </CRow>
+
           {canUpdate && (
             <CButton color="primary" type="submit" className="mt-4" disabled={isSaving}>
               {isSaving ? 'Salvando...' : 'Salvar dados da clínica'}
