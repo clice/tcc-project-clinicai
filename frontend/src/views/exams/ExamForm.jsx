@@ -38,21 +38,14 @@ import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'
 import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
 import ExamSummaryHeader from 'src/views/exams/ExamSummaryHeader'
 
-import {
-  examStatusDisplayLabels,
-  examTypeOptions,
-  statusColors,
-} from 'src/utils/constants'
+import { examStatusDisplayLabels, examTypeOptions, statusColors } from 'src/utils/constants'
 import {
   buildExamImagesPackageDownloadName,
   buildOriginalDownloadName,
 } from 'src/utils/examDownloadNames'
 import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
-import {
-  formatCpfBR,
-  formatDateTimeBR,
-} from 'src/utils/formatters'
+import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const allowedImageTypes = ['image/jpeg', 'image/png']
@@ -122,9 +115,7 @@ const mergeExamSnapshot = (current, examData) => ({
   ai_analysis_status: examData.ai_analysis_status ?? 'not_processed',
 })
 
-const buildPatientOptionLabel = (patient) =>
-  patient?.name ||
-  'Paciente sem nome'
+const buildPatientOptionLabel = (patient) => patient?.name || 'Paciente sem nome'
 
 const resolveAiStatus = (form, analysis) => {
   if (analysis?.status_name) return analysis.status_name
@@ -160,6 +151,9 @@ const ExamForm = ({ mode = 'create' }) => {
   const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(0)
+  const [imageRefreshKey, setImageRefreshKey] = useState(0)
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
 
   const [review, setReview] = useState({
@@ -170,18 +164,21 @@ const ExamForm = ({ mode = 'create' }) => {
   const [isReviewing, setIsReviewing] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
-  const isEditMode = mode === 'edit'
-  const isPendingView =
-    isReadOnly &&
-    ['pending', 'failed', 'canceled'].includes(
-      form.status_name,
-    )
 
   const roleName = getUserRole(user)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
+
+  const canEditExistingExam =
+    !isCreateMode &&
+    isDoctor &&
+    hasPermission(user, PERMISSIONS.EXAMS_UPDATE) &&
+    form.status_name === 'pending'
+
+  const isEditMode = canEditExistingExam
+  const isReadOnly = !isCreateMode && !isEditMode
+  const isPendingView = isReadOnly && ['pending', 'failed', 'canceled'].includes(form.status_name)
   const canViewAiAnalysis =
     roleName !== ROLES.CLINIC_MANAGER && hasPermission(user, PERMISSIONS.AI_ANALYSIS_READ)
 
@@ -190,25 +187,21 @@ const ExamForm = ({ mode = 'create' }) => {
   const canDownloadExamPackage =
     canDownloadExamFile &&
     canViewAiAnalysis &&
-    Boolean(
-      aiAnalysis?.gradcam_available,
-    ) &&
-    [
-      'awaiting_review',
-      'completed',
-      'completed_with_divergence',
-    ].includes(form.status_name)
+    Boolean(aiAnalysis?.gradcam_available) &&
+    ['awaiting_review', 'completed', 'completed_with_divergence'].includes(form.status_name)
 
   // RN09: só médico registra a conclusão clínica. RN08: só faz sentido
   // revisar um exame que já está aguardando revisão médica — outros status
   // (processando, concluído, falhou, cancelado) não admitem essa ação.
-  const canAnalyze =
-    isReadOnly &&
+  const canOfferAnalysis =
+    isDoctor &&
     hasPermission(user, PERMISSIONS.AI_ANALYSIS_CREATE) &&
     !isCreateMode &&
     form.status_name === 'pending' &&
     !form.analysis_in_progress &&
     !aiAnalysis
+
+  const canAnalyze = canOfferAnalysis && !isDirty
 
   const canReview =
     isDoctor &&
@@ -250,30 +243,15 @@ const ExamForm = ({ mode = 'create' }) => {
   const availablePatients = useMemo(
     () =>
       patients.filter((patient) => {
-        const isSelected =
-          String(patient.id) ===
-          String(form.patient_id)
+        const isSelected = String(patient.id) === String(form.patient_id)
 
-        const isAvailable =
-          patient.status_name === 'active' ||
-          isSelected
+        const isAvailable = patient.status_name === 'active' || isSelected
 
-        const belongsToDoctor =
-          !isDoctor ||
-          String(patient.doctor_id) ===
-            authenticatedDoctorId
+        const belongsToDoctor = !isDoctor || String(patient.doctor_id) === authenticatedDoctorId
 
-        return (
-          isAvailable &&
-          belongsToDoctor
-        )
+        return isAvailable && belongsToDoctor
       }),
-    [
-      authenticatedDoctorId,
-      form.patient_id,
-      isDoctor,
-      patients,
-    ],
+    [authenticatedDoctorId, form.patient_id, isDoctor, patients],
   )
 
   const selectedClinicName = useMemo(() => {
@@ -282,55 +260,33 @@ const ExamForm = ({ mode = 'create' }) => {
   }, [clinics, form.clinic_id])
 
   const selectedPatient = useMemo(
-    () =>
-      patients.find(
-        (item) =>
-          String(item.id) ===
-          String(form.patient_id),
-      ) || null,
-    [
-      patients,
-      form.patient_id,
-    ],
+    () => patients.find((item) => String(item.id) === String(form.patient_id)) || null,
+    [patients, form.patient_id],
   )
 
-  const selectedPatientName =
-    selectedPatient?.name || '-'
+  const selectedPatientName = selectedPatient?.name || '-'
 
-  const selectedPatientCpf =
-    formatCpfBR(selectedPatient?.cpf) || '-'
+  const selectedPatientCpf = formatCpfBR(selectedPatient?.cpf) || '-'
 
-  const selectedPatientAge =
-    calculateAge(
-      selectedPatient?.birth_date,
-      form.exam_date,
-    )
+  const selectedPatientAge = calculateAge(selectedPatient?.birth_date, form.exam_date)
 
   useEffect(() => {
-    setPatientSearchValue(
-      selectedPatient
-        ? buildPatientOptionLabel(
-            selectedPatient,
-          )
-        : '',
-    )
+    const timeoutId = window.setTimeout(() => {
+      setPatientSearchValue(selectedPatient ? buildPatientOptionLabel(selectedPatient) : '')
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [selectedPatient])
 
   const selectedDoctorName = useMemo(() => {
-    const doctor = doctors.find(
-      (item) =>
-        String(item.id) ===
-        String(form.doctor_id),
-    )
+    const doctor = doctors.find((item) => String(item.id) === String(form.doctor_id))
 
     return doctor?.name || '-'
   }, [doctors, form.doctor_id])
 
-  const responsibleDoctorName =
-    isDoctor
-      ? user?.name ||
-        selectedDoctorName
-      : selectedDoctorName
+  const responsibleDoctorName = isDoctor ? user?.name || selectedDoctorName : selectedDoctorName
 
   useEffect(() => {
     const loadData = async () => {
@@ -409,6 +365,8 @@ const ExamForm = ({ mode = 'create' }) => {
         const examData = await examService.getById(id)
 
         setForm((current) => mergeExamSnapshot(current, examData))
+        setSelectedFile(null)
+        setIsDirty(false)
 
         // A análise só é consultada por perfis autorizados. A ausência de
         // análise (404) continua sendo tratada como um estado normal.
@@ -418,7 +376,11 @@ const ExamForm = ({ mode = 'create' }) => {
         // Reseta o formulário de revisão a cada carregamento, pra não
         // arrastar texto de uma revisão anterior (ex: usuário voltou à
         // tela depois de já ter revisado, ou trocou de exame).
-        setReview({ findings: '', conclusion: '', has_discrepancy: false })
+        setReview({
+          findings: '',
+          conclusion: '',
+          has_discrepancy: false,
+        })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar dados do exame.'))
       } finally {
@@ -505,12 +467,7 @@ const ExamForm = ({ mode = 'create' }) => {
       } catch (err) {
         if (!isCancelled) {
           setGradcamUrl(null)
-          setGradcamError(
-            getErrorMessage(
-              err,
-              'Não foi possível carregar o mapa de atribuição.',
-            ),
-          )
+          setGradcamError(getErrorMessage(err, 'Não foi possível carregar o mapa de atribuição.'))
         }
       } finally {
         if (!isCancelled) {
@@ -573,26 +530,27 @@ const ExamForm = ({ mode = 'create' }) => {
         URL.revokeObjectURL(objectUrl)
       }
     }
-  }, [canDownloadExamFile, id])
+  }, [canDownloadExamFile, id, imageRefreshKey])
 
   useEffect(() => {
-    if (!selectedFile) {
-      setSelectedFilePreviewUrl(null)
-      return undefined
-    }
+    let objectUrl = null
 
-    const objectUrl = URL.createObjectURL(
-      selectedFile,
-    )
+    const timeoutId = window.setTimeout(() => {
+      if (!selectedFile) {
+        setSelectedFilePreviewUrl(null)
+        return
+      }
 
-    setSelectedFilePreviewUrl(
-      objectUrl,
-    )
+      objectUrl = URL.createObjectURL(selectedFile)
+      setSelectedFilePreviewUrl(objectUrl)
+    }, 0)
 
     return () => {
-      URL.revokeObjectURL(
-        objectUrl,
-      )
+      window.clearTimeout(timeoutId)
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
+      }
     }
   }, [selectedFile])
 
@@ -601,6 +559,10 @@ const ExamForm = ({ mode = 'create' }) => {
       ...current,
       [field]: value,
     }))
+
+    if (isEditMode) {
+      setIsDirty(true)
+    }
   }
 
   const handleClinicChange = (clinicId) => {
@@ -615,64 +577,41 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const handlePatientChange = (patientId) => {
-    const patient = patients.find(
-      (item) =>
-        String(item.id) ===
-        String(patientId),
-    )
+    const patient = patients.find((item) => String(item.id) === String(patientId))
 
     setForm((current) => ({
       ...current,
-      patient_id:
-        patient
-          ? String(patient.id)
+      patient_id: patient ? String(patient.id) : '',
+      clinic_id: patient?.clinic_id ? String(patient.clinic_id) : isDoctor ? current.clinic_id : '',
+      doctor_id: patient
+        ? isDoctor
+          ? authenticatedDoctorId
+          : patient.doctor_id
+            ? String(patient.doctor_id)
+            : ''
+        : isDoctor
+          ? authenticatedDoctorId
           : '',
-      clinic_id:
-        patient?.clinic_id
-          ? String(patient.clinic_id)
-          : isDoctor
-            ? current.clinic_id
-            : '',
-      doctor_id:
-        patient
-          ? isDoctor
-            ? authenticatedDoctorId
-            : patient.doctor_id
-              ? String(patient.doctor_id)
-              : ''
-          : isDoctor
-            ? authenticatedDoctorId
-            : '',
-      patient_birth_date:
-        patient?.birth_date || '',
+      patient_birth_date: patient?.birth_date || '',
     }))
+
+    if (isEditMode) {
+      setIsDirty(true)
+    }
   }
 
-  const handlePatientSearchChange = (
-    event,
-  ) => {
+  const handlePatientSearchChange = (event) => {
     const value = event.target.value
 
     setPatientSearchValue(value)
 
-    const normalizedValue =
-      value
-        .trim()
-        .toLocaleLowerCase('pt-BR')
+    const normalizedValue = value.trim().toLocaleLowerCase('pt-BR')
 
-    const matchingPatient =
-      availablePatients.find(
-        (patient) =>
-          buildPatientOptionLabel(patient)
-            .toLocaleLowerCase('pt-BR') ===
-          normalizedValue,
-      )
-
-    handlePatientChange(
-      matchingPatient
-        ? String(matchingPatient.id)
-        : '',
+    const matchingPatient = availablePatients.find(
+      (patient) => buildPatientOptionLabel(patient).toLocaleLowerCase('pt-BR') === normalizedValue,
     )
+
+    handlePatientChange(matchingPatient ? String(matchingPatient.id) : '')
   }
 
   const handleFileChange = (event) => {
@@ -680,14 +619,14 @@ const ExamForm = ({ mode = 'create' }) => {
 
     setSelectedFile(file)
 
+    if (isEditMode && file) {
+      setIsDirty(true)
+    }
+
     setForm((current) => ({
       ...current,
-      file_name:
-        file?.name ||
-        (isCreateMode ? '' : current.file_name),
-      file_mime_type:
-        file?.type ||
-        (isCreateMode ? '' : current.file_mime_type),
+      file_name: file?.name || (isCreateMode ? '' : current.file_name),
+      file_mime_type: file?.type || (isCreateMode ? '' : current.file_mime_type),
     }))
   }
 
@@ -733,25 +672,18 @@ const ExamForm = ({ mode = 'create' }) => {
     try {
       setIsPackageDownloading(true)
 
-      const blob =
-        await examService.downloadImagePackage(
-          id,
-        )
+      const blob = await examService.downloadImagePackage(id)
 
-      const objectUrl =
-        URL.createObjectURL(blob)
+      const objectUrl = URL.createObjectURL(blob)
 
-      const anchor =
-        document.createElement('a')
+      const anchor = document.createElement('a')
 
       anchor.href = objectUrl
-      anchor.download =
-        buildExamImagesPackageDownloadName({
-          examId: id,
-          patientName:
-            selectedPatientName,
-          examDate: form.exam_date,
-        })
+      anchor.download = buildExamImagesPackageDownloadName({
+        examId: id,
+        patientName: selectedPatientName,
+        examDate: form.exam_date,
+      })
 
       document.body.appendChild(anchor)
       anchor.click()
@@ -762,10 +694,7 @@ const ExamForm = ({ mode = 'create' }) => {
       }, 1000)
     } catch (err) {
       showError(
-        getErrorMessage(
-          err,
-          'Não foi possível baixar a imagem original e o mapa de atribuição.',
-        ),
+        getErrorMessage(err, 'Não foi possível baixar a imagem original e o mapa de atribuição.'),
       )
     } finally {
       setIsPackageDownloading(false)
@@ -859,16 +788,18 @@ const ExamForm = ({ mode = 'create' }) => {
 
       if (isEditMode) {
         const payload = buildUpdatePayload()
+        const shouldRefreshImage = Boolean(selectedFile)
 
         await examService.update(id, payload)
 
         if (selectedFile) {
           try {
-            await examService.replaceFile(
-              id,
-              selectedFile,
-            )
+            await examService.replaceFile(id, selectedFile)
           } catch (imageError) {
+            const updatedExam = await examService.getById(id)
+
+            setForm((current) => mergeExamSnapshot(current, updatedExam))
+
             showError(
               getErrorMessage(
                 imageError,
@@ -878,10 +809,21 @@ const ExamForm = ({ mode = 'create' }) => {
             return
           }
         }
+
+        const updatedExam = await examService.getById(id)
+
+        setForm((current) => mergeExamSnapshot(current, updatedExam))
+        setSelectedFile(null)
+        setFileInputKey((current) => current + 1)
+        setIsDirty(false)
+        setHistoryRefreshKey((current) => current + 1)
+
+        if (shouldRefreshImage) {
+          setImageRefreshKey((current) => current + 1)
+        }
       }
 
       showSuccess('Exame salvo com sucesso.')
-      navigate(`/exams/${id}`)
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar exame.'))
     } finally {
@@ -914,7 +856,10 @@ const ExamForm = ({ mode = 'create' }) => {
         setForm((current) => mergeExamSnapshot(current, updatedExam))
         setHistoryRefreshKey((current) => current + 1)
       } catch {
-        setForm((current) => ({ ...current, analysis_in_progress: false }))
+        setForm((current) => ({
+          ...current,
+          analysis_in_progress: false,
+        }))
       }
       showError(getErrorMessage(err, 'Erro ao executar a análise de IA.'))
     } finally {
@@ -923,7 +868,10 @@ const ExamForm = ({ mode = 'create' }) => {
   }
 
   const handleReviewFieldChange = (field) => (event) => {
-    setReview((prev) => ({ ...prev, [field]: event.target.value }))
+    setReview((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }))
   }
 
   const handleReviewSubmit = async (event) => {
@@ -976,10 +924,7 @@ const ExamForm = ({ mode = 'create' }) => {
     <ExamSummaryHeader
       patientName={selectedPatientName}
       patientCpf={selectedPatientCpf}
-      patientBirthDate={
-        selectedPatient?.birth_date ||
-        ''
-      }
+      patientBirthDate={selectedPatient?.birth_date || ''}
       examType={form.exam_type}
       examDate={form.exam_date}
     />
@@ -991,10 +936,7 @@ const ExamForm = ({ mode = 'create' }) => {
       aria-labelledby="medical-review-title"
       className="h-100 rounded border border-warning bg-warning-subtle p-3"
     >
-      <h2
-        id="medical-review-title"
-        className="h5 mb-3"
-      >
+      <h2 id="medical-review-title" className="h5 mb-3">
         Revisão médica
       </h2>
 
@@ -1002,77 +944,54 @@ const ExamForm = ({ mode = 'create' }) => {
         color="warning"
         className="small d-flex align-items-start gap-2"
         style={{
-          backgroundColor:
-            'rgba(var(--cui-warning-rgb), 0.12)',
-          borderColor:
-            'rgba(var(--cui-warning-rgb), 0.35)',
+          backgroundColor: 'rgba(var(--cui-warning-rgb), 0.12)',
+          borderColor: 'rgba(var(--cui-warning-rgb), 0.35)',
         }}
       >
-        <CIcon
-          icon={cilWarning}
-          className="flex-shrink-0 mt-1"
-          aria-hidden="true"
-        />
+        <CIcon icon={cilWarning} className="flex-shrink-0 mt-1" aria-hidden="true" />
 
         <span>
-          Compare a imagem original, o mapa de
-          atribuição e o resultado automatizado
-          antes de registrar os achados e a
-          conclusão médica.
+          Compare a imagem original, o mapa de atribuição e o resultado automatizado antes de
+          registrar os achados e a conclusão médica.
         </span>
       </CAlert>
 
-      <CForm
-        onSubmit={handleReviewSubmit}
-      >
+      <CForm onSubmit={handleReviewSubmit}>
         <div className="mb-3">
-          <CFormLabel htmlFor="findings">
-            Achados da revisão médica *
-          </CFormLabel>
+          <CFormLabel htmlFor="findings">Achados da revisão médica *</CFormLabel>
 
           <CFormTextarea
             id="findings"
             rows={4}
             value={review.findings}
-            onChange={handleReviewFieldChange(
-              'findings',
-            )}
+            onChange={handleReviewFieldChange('findings')}
             placeholder="Descreva os achados observados ao interpretar a imagem e o resultado automatizado."
             required
           />
         </div>
 
         <div className="mb-3">
-          <CFormLabel htmlFor="conclusion">
-            Conclusão médica *
-          </CFormLabel>
+          <CFormLabel htmlFor="conclusion">Conclusão médica *</CFormLabel>
 
           <CFormTextarea
             id="conclusion"
             rows={4}
             value={review.conclusion}
-            onChange={handleReviewFieldChange(
-              'conclusion',
-            )}
+            onChange={handleReviewFieldChange('conclusion')}
             placeholder="Registre o parecer final sobre o exame."
             required
           />
         </div>
 
         <div className="mb-3">
-          <CFormLabel>
-            Em relação à classificação
-            automatizada
-          </CFormLabel>
+          <CFormLabel>Em relação à classificação automatizada</CFormLabel>
 
           <CFormCheck
             type="radio"
             name="has_discrepancy"
             id="discrepancy-false"
             label="Confirmo o resultado sugerido pela IA"
-            checked={
-              !review.has_discrepancy
-            }
+            checked={!review.has_discrepancy}
             onChange={() =>
               setReview((current) => ({
                 ...current,
@@ -1086,9 +1005,7 @@ const ExamForm = ({ mode = 'create' }) => {
             name="has_discrepancy"
             id="discrepancy-true"
             label="Identifiquei divergência em relação ao resultado da IA"
-            checked={
-              review.has_discrepancy
-            }
+            checked={review.has_discrepancy}
             onChange={() =>
               setReview((current) => ({
                 ...current,
@@ -1098,18 +1015,10 @@ const ExamForm = ({ mode = 'create' }) => {
           />
         </div>
 
-        <CButton
-          type="submit"
-          color="warning"
-          disabled={isReviewing}
-        >
+        <CButton type="submit" color="warning" disabled={isReviewing}>
           {isReviewing ? (
             <>
-              <CSpinner
-                size="sm"
-                className="me-2"
-              />
-
+              <CSpinner size="sm" className="me-2" />
               Registrando revisão...
             </>
           ) : (
@@ -1123,86 +1032,53 @@ const ExamForm = ({ mode = 'create' }) => {
       id="revisao-medica"
       aria-labelledby="medical-review-result-title"
       className={`h-100 rounded border p-3 ${
-        form.status_name ===
-        'completed_with_divergence'
+        form.status_name === 'completed_with_divergence'
           ? 'border-dark'
           : 'border-success bg-success-subtle'
       }`}
       style={
-        form.status_name ===
-        'completed_with_divergence'
+        form.status_name === 'completed_with_divergence'
           ? {
-              backgroundColor:
-                'rgba(var(--cui-dark-rgb), 0.08)',
+              backgroundColor: 'rgba(var(--cui-dark-rgb), 0.08)',
             }
           : undefined
       }
     >
-      <h2
-        id="medical-review-result-title"
-        className="h5 mb-3"
-      >
+      <h2 id="medical-review-result-title" className="h5 mb-3">
         Resultado da revisão médica
       </h2>
 
       <div className="mb-3">
-        <div className="text-body-secondary small">
-          Achados da revisão médica
-        </div>
+        <div className="text-body-secondary small">Achados da revisão médica</div>
 
-        <div>
-          {form.findings || '-'}
-        </div>
+        <div>{form.findings || '-'}</div>
       </div>
 
       <div className="mb-3">
-        <div className="text-body-secondary small">
-          Conclusão médica
-        </div>
+        <div className="text-body-secondary small">Conclusão médica</div>
 
-        <div>
-          {form.conclusion || '-'}
-        </div>
+        <div>{form.conclusion || '-'}</div>
       </div>
 
       <div className="mb-3">
-        <div className="text-body-secondary small">
-          Desfecho
-        </div>
+        <div className="text-body-secondary small">Desfecho</div>
 
         <CBadge
-          color={
-            form.status_name ===
-            'completed_with_divergence'
-              ? 'dark'
-              : 'success'
-          }
+          color={form.status_name === 'completed_with_divergence' ? 'dark' : 'success'}
           className={
-            form.status_name ===
-            'completed_with_divergence'
-              ? undefined
-              : 'clinicai-success-badge'
+            form.status_name === 'completed_with_divergence' ? undefined : 'clinicai-success-badge'
           }
         >
-          {form.status_name ===
-          'completed_with_divergence'
-            ? 'Com divergência'
-            : 'Concluído'}
+          {form.status_name === 'completed_with_divergence' ? 'Com divergência' : 'Concluído'}
         </CBadge>
       </div>
 
       <div>
-        <div className="text-body-secondary small">
-          Revisado por
-        </div>
+        <div className="text-body-secondary small">Revisado por</div>
 
         <div>
           {form.reviewed_by_name || '-'}
-          {form.reviewed_at
-            ? ` em ${formatDateTimeBR(
-                form.reviewed_at,
-              )}`
-            : ''}
+          {form.reviewed_at ? ` em ${formatDateTimeBR(form.reviewed_at)}` : ''}
         </div>
       </div>
     </section>
@@ -1211,42 +1087,26 @@ const ExamForm = ({ mode = 'create' }) => {
   const examDataCard = (
     <CCard className="mb-4">
       <CCardHeader>
-        <strong>
-          {isCreateMode
-            ? 'Dados Cadastrais do Exame'
-            : 'Editar Dados do Exame'}
-        </strong>
+        <strong>{isCreateMode ? 'Dados Cadastrais do Exame' : 'Editar Dados do Exame'}</strong>
       </CCardHeader>
 
       <CCardBody>
         <CForm onSubmit={handleSubmit}>
           <CRow className="g-3">
             <CCol md={6}>
-              <div className="text-body-secondary small mb-1">
-                Clínica
-              </div>
+              <div className="text-body-secondary small mb-1">Clínica</div>
 
-              <div className="fw-semibold">
-                {selectedClinicName}
-              </div>
+              <div className="fw-semibold">{selectedClinicName}</div>
             </CCol>
 
             <CCol md={6}>
-              <div className="text-body-secondary small mb-1">
-                Médico responsável
-              </div>
+              <div className="text-body-secondary small mb-1">Médico responsável</div>
 
-              <div className="fw-semibold">
-                {responsibleDoctorName}
-              </div>
+              <div className="fw-semibold">{responsibleDoctorName}</div>
             </CCol>
 
             <CCol md={8}>
-              <CFormLabel
-                htmlFor="exam-patient-search"
-              >
-                Paciente
-              </CFormLabel>
+              <CFormLabel htmlFor="exam-patient-search">Paciente</CFormLabel>
 
               <CFormInput
                 id="exam-patient-search"
@@ -1256,163 +1116,126 @@ const ExamForm = ({ mode = 'create' }) => {
                 placeholder="Digite ou selecione o paciente"
                 autoComplete="off"
                 aria-autocomplete="list"
-                onChange={
-                  handlePatientSearchChange
-                }
+                onChange={handlePatientSearchChange}
                 required
               />
 
               <datalist id="exam-patient-options">
-                {availablePatients.map(
-                  (patient) => (
-                    <option
-                      key={patient.id}
-                      value={
-                        buildPatientOptionLabel(
-                          patient,
-                        )
-                      }
-                    />
-                  ),
-                )}
+                {availablePatients.map((patient) => (
+                  <option key={patient.id} value={buildPatientOptionLabel(patient)} />
+                ))}
               </datalist>
             </CCol>
 
             <CCol md={2}>
-              <div className="text-body-secondary small mb-1">
-                CPF
-              </div>
+              <div className="text-body-secondary small mb-1">CPF</div>
 
-              <div className="fw-semibold pt-2">
-                {selectedPatientCpf}
-              </div>
+              <div className="fw-semibold pt-2">{selectedPatientCpf}</div>
             </CCol>
 
             <CCol md={2}>
-              <div className="text-body-secondary small mb-1">
-                Idade
-              </div>
+              <div className="text-body-secondary small mb-1">Idade</div>
 
               <div className="fw-semibold pt-2">
-                {selectedPatientAge === '-'
-                  ? '-'
-                  : `${selectedPatientAge} anos`}
+                {selectedPatientAge === '-' ? '-' : `${selectedPatientAge} anos`}
               </div>
             </CCol>
 
             <CCol md={6}>
-              <CFormLabel>
-                Descrição
-              </CFormLabel>
+              <CFormLabel>Descrição</CFormLabel>
 
               <CFormInput
                 value={form.description}
                 placeholder="Ex: Colonoscopia de rastreamento"
-                onChange={(event) =>
-                  updateField(
-                    'description',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => updateField('description', event.target.value)}
                 required
               />
             </CCol>
 
             <CCol md={4}>
-              <CFormLabel>
-                Tipo de exame
-              </CFormLabel>
+              <CFormLabel>Tipo de exame</CFormLabel>
 
               <CFormSelect
                 value={form.exam_type}
-                onChange={(event) =>
-                  updateField(
-                    'exam_type',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => updateField('exam_type', event.target.value)}
                 required
               >
-                <option value="">
-                  Selecione...
-                </option>
+                <option value="">Selecione...</option>
 
-                {examTypeOptions.map(
-                  (option) => (
-                    <option
-                      key={option.value}
-                      value={option.value}
-                    >
-                      {option.label}
-                    </option>
-                  ),
-                )}
+                {examTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </CFormSelect>
             </CCol>
 
             <CCol md={2}>
-              <CFormLabel>
-                Data do exame
-              </CFormLabel>
+              <CFormLabel>Data do exame</CFormLabel>
 
               <CFormInput
                 type="date"
                 value={form.exam_date}
-                onChange={(event) =>
-                  updateField(
-                    'exam_date',
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => updateField('exam_date', event.target.value)}
               />
             </CCol>
 
             <CCol md={6}>
               <div className="mb-3">
-                <CFormLabel>
-                  Indicação clínica
-                </CFormLabel>
+                <CFormLabel>Indicação clínica</CFormLabel>
 
                 <CFormTextarea
                   rows={5}
-                  value={
-                    form.clinical_indication
-                  }
+                  value={form.clinical_indication}
                   placeholder="Motivo pelo qual o exame foi solicitado ou realizado."
-                  onChange={(event) =>
-                    updateField(
-                      'clinical_indication',
-                      event.target.value,
-                    )
-                  }
+                  onChange={(event) => updateField('clinical_indication', event.target.value)}
                 />
               </div>
 
               <div>
-                <CFormLabel>
-                  Observações
-                </CFormLabel>
+                <CFormLabel>Observações</CFormLabel>
 
                 <CFormTextarea
                   rows={5}
                   value={form.observations}
                   placeholder="Informações adicionais relacionadas ao cadastro do exame."
-                  onChange={(event) =>
-                    updateField(
-                      'observations',
-                      event.target.value,
-                    )
-                  }
+                  onChange={(event) => updateField('observations', event.target.value)}
                 />
               </div>
             </CCol>
 
             <CCol md={6}>
-              <CFormLabel>
-                Imagem do exame
-              </CFormLabel>
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <CFormLabel>Imagem do exame</CFormLabel>
+
+                {isEditMode && canDownloadExamFile && originalImageUrl && (
+                  <CButton
+                    color="primary"
+                    className="clinicai-btn d-inline-flex align-items-center"
+                    size="sm"
+                    type="button"
+                    onClick={handleOriginalDownload}
+                    disabled={isOriginalDownloading}
+                    title="Baixar imagem do exame"
+                    aria-label="Baixar imagem do exame"
+                  >
+                    {isOriginalDownloading ? (
+                      <>
+                        <CSpinner size="sm" className="me-2" />
+                        Baixando...
+                      </>
+                    ) : (
+                      <>
+                        <CIcon icon={cilCloudDownload} className="me-2" />
+                        Baixar
+                      </>
+                    )}
+                  </CButton>
+                )}
+              </div>
 
               <CFormInput
+                key={fileInputKey}
                 type="file"
                 accept="image/jpeg,image/png"
                 onChange={handleFileChange}
@@ -1426,19 +1249,12 @@ const ExamForm = ({ mode = 'create' }) => {
               </div>
 
               <div className="mt-3">
-                <div className="text-body-secondary small mb-2">
-                  Miniatura da imagem
-                </div>
+                <div className="text-body-secondary small mb-2">Miniatura da imagem</div>
 
-                {selectedFilePreviewUrl ||
-                (isEditMode &&
-                  originalImageUrl) ? (
+                {selectedFilePreviewUrl || (isEditMode && originalImageUrl) ? (
                   <>
                     <img
-                      src={
-                        selectedFilePreviewUrl ||
-                        originalImageUrl
-                      }
+                      src={selectedFilePreviewUrl || originalImageUrl}
                       alt={
                         selectedFilePreviewUrl
                           ? 'Miniatura da imagem selecionada'
@@ -1458,20 +1274,16 @@ const ExamForm = ({ mode = 'create' }) => {
                         : 'Imagem atualmente vinculada ao exame.'}
                     </div>
                   </>
-                ) : isEditMode &&
-                  isOriginalImageLoading ? (
+                ) : isEditMode && isOriginalImageLoading ? (
                   <div className="d-flex align-items-center justify-content-center gap-2 py-4 text-body-secondary">
                     <CSpinner size="sm" />
 
-                    <span>
-                      Carregando imagem...
-                    </span>
+                    <span>Carregando imagem...</span>
                   </div>
                 ) : (
                   <div className="rounded border bg-body-tertiary text-body-secondary text-center py-5 px-3">
                     {isEditMode
-                      ? originalImageError ||
-                        'Imagem atual não disponível.'
+                      ? originalImageError || 'Imagem atual não disponível.'
                       : 'Selecione uma imagem para visualizar a miniatura.'}
                   </div>
                 )}
@@ -1480,22 +1292,11 @@ const ExamForm = ({ mode = 'create' }) => {
           </CRow>
 
           <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-            <CButton
-              color="primary"
-              type="submit"
-              disabled={isSaving}
-            >
-              {isSaving
-                ? 'Salvando...'
-                : 'Salvar'}
+            <CButton color="primary" type="submit" disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar'}
             </CButton>
 
-            <CButton
-              color="secondary"
-              variant="outline"
-              as={Link}
-              to="/exams"
-            >
+            <CButton color="secondary" variant="outline" as={Link} to="/exams">
               Cancelar
             </CButton>
           </div>
@@ -1507,44 +1308,30 @@ const ExamForm = ({ mode = 'create' }) => {
   const examDataViewContent = (
     <CRow className="g-4">
       <CCol md={6}>
-        <div className="text-body-secondary small mb-1">
-          Clínica
-        </div>
+        <div className="text-body-secondary small mb-1">Clínica</div>
 
-        <div className="fw-semibold">
-          {selectedClinicName}
-        </div>
+        <div className="fw-semibold">{selectedClinicName}</div>
       </CCol>
 
       <CCol md={6}>
-        <div className="text-body-secondary small mb-1">
-          Médico responsável
-        </div>
+        <div className="text-body-secondary small mb-1">Médico responsável</div>
 
-        <div className="fw-semibold">
-          {selectedDoctorName}
+        <div className="fw-semibold">{selectedDoctorName}</div>
+      </CCol>
+
+      <CCol xs={12}>
+        <div className="text-body-secondary small mb-1">Indicação clínica</div>
+
+        <div className="rounded bg-body-tertiary p-3">
+          {form.clinical_indication?.trim() || 'Não informada.'}
         </div>
       </CCol>
 
       <CCol xs={12}>
-        <div className="text-body-secondary small mb-1">
-          Indicação clínica
-        </div>
+        <div className="text-body-secondary small mb-1">Observações</div>
 
         <div className="rounded bg-body-tertiary p-3">
-          {form.clinical_indication?.trim() ||
-            'Não informada.'}
-        </div>
-      </CCol>
-
-      <CCol xs={12}>
-        <div className="text-body-secondary small mb-1">
-          Observações
-        </div>
-
-        <div className="rounded bg-body-tertiary p-3">
-          {form.observations?.trim() ||
-            'Nenhuma observação registrada.'}
+          {form.observations?.trim() || 'Nenhuma observação registrada.'}
         </div>
       </CCol>
     </CRow>
@@ -1552,21 +1339,15 @@ const ExamForm = ({ mode = 'create' }) => {
 
   const examDataViewCard = (
     <CCard>
-      <CCardHeader>
-        {examSummaryHeader}
-      </CCardHeader>
+      <CCardHeader>{examSummaryHeader}</CCardHeader>
 
-      <CCardBody>
-        {examDataViewContent}
-      </CCardBody>
+      <CCardBody>{examDataViewContent}</CCardBody>
     </CCard>
   )
 
   const pendingExamCard = (
     <CCard className="mb-4">
-      <CCardHeader>
-        {examSummaryHeader}
-      </CCardHeader>
+      <CCardHeader>{examSummaryHeader}</CCardHeader>
 
       <CCardBody>
         <CRow className="g-4 align-items-start">
@@ -1642,28 +1423,13 @@ const ExamForm = ({ mode = 'create' }) => {
           <div className="text-body-secondary">Registros de Saúde</div>
 
           <div className="d-flex flex-wrap align-items-center gap-2">
-            <h1 className="h3 mb-0">
-              {isCreateMode
-                ? title
-                : form.description || title}
-            </h1>
+            <h1 className="h3 mb-0">{isCreateMode ? title : form.description || title}</h1>
 
-            {!isCreateMode &&
-              form.status_name && (
-                <CBadge
-                  color={
-                    statusColors[
-                      form.status_name
-                    ] || 'secondary'
-                  }
-                >
-                  {examStatusDisplayLabels[
-                    form.status_name
-                  ] ||
-                    form.status_display_name ||
-                    '-'}
-                </CBadge>
-              )}
+            {!isCreateMode && form.status_name && (
+              <CBadge color={statusColors[form.status_name] || 'secondary'}>
+                {examStatusDisplayLabels[form.status_name] || form.status_display_name || '-'}
+              </CBadge>
+            )}
           </div>
 
           <p className="text-body-secondary mb-0">
@@ -1676,14 +1442,19 @@ const ExamForm = ({ mode = 'create' }) => {
         </div>
 
         <div className="d-flex justify-content-center mt-4 gap-2">
-          {(canAnalyze || isAnalyzing) && (
+          {(canOfferAnalysis || isAnalyzing) && (
             <CButton
               color="primary"
               className="clinicai-btn"
               size="lg"
               type="button"
               onClick={handleAnalyze}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isDirty}
+              title={
+                isDirty
+                  ? 'Salve as alterações antes de executar a análise de IA.'
+                  : 'Executar análise de IA'
+              }
             >
               {isAnalyzing ? (
                 <>
@@ -1709,6 +1480,12 @@ const ExamForm = ({ mode = 'create' }) => {
         </div>
       </div>
 
+      {canOfferAnalysis && isDirty && (
+        <CAlert color="warning" className="mb-4">
+          Salve as alterações do exame antes de executar a análise de IA.
+        </CAlert>
+      )}
+
       {isPendingView ? (
         <>
           {pendingExamCard}
@@ -1723,9 +1500,7 @@ const ExamForm = ({ mode = 'create' }) => {
       ) : isEditMode ? (
         <>
           <CRow className="g-4">
-            <CCol lg={12}>
-              {examDataCard}
-            </CCol>
+            <CCol lg={12}>{examDataCard}</CCol>
           </CRow>
 
           <ExamHistoryCard
@@ -1737,53 +1512,29 @@ const ExamForm = ({ mode = 'create' }) => {
         </>
       ) : !isCreateMode ? (
         <>
-          <div className="mb-4">
-            {examDataViewCard}
-          </div>
+          <div className="mb-4">{examDataViewCard}</div>
 
           <ExamAiResultCard
             aiStatus={aiStatus}
             aiAnalysis={aiAnalysis}
-            canViewAiAnalysis={
-              canViewAiAnalysis
-            }
-            canDownloadExamFile={
-              canDownloadExamFile
-            }
-            canDownloadExamPackage={
-              canDownloadExamPackage
-            }
-            originalImageUrl={
-              originalImageUrl
-            }
-            originalImageError={
-              originalImageError
-            }
-            isOriginalImageLoading={
-              isOriginalImageLoading
-            }
+            canViewAiAnalysis={canViewAiAnalysis}
+            canDownloadExamFile={canDownloadExamFile}
+            canDownloadExamPackage={canDownloadExamPackage}
+            originalImageUrl={originalImageUrl}
+            originalImageError={originalImageError}
+            isOriginalImageLoading={isOriginalImageLoading}
             gradcamUrl={gradcamUrl}
-            gradcamError={
-              gradcamError
-            }
-            isGradcamLoading={
-              isGradcamLoading
-            }
-            isPackageDownloading={
-              isPackageDownloading
-            }
-            onPackageDownload={
-              handlePackageDownload
-            }
+            gradcamError={gradcamError}
+            isGradcamLoading={isGradcamLoading}
+            isPackageDownloading={isPackageDownloading}
+            onPackageDownload={handlePackageDownload}
             reviewPanel={reviewPanel}
           />
 
           <div className="mt-4">
             <ExamHistoryCard
               examId={id}
-              refreshKey={
-                historyRefreshKey
-              }
+              refreshKey={historyRefreshKey}
               collapsible
               defaultOpen={false}
             />

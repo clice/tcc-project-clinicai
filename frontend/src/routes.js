@@ -19,23 +19,40 @@ const ComingSoon = React.lazy(() => import('./views/coming-soon/ComingSoon'))
 const ClinicsList = React.lazy(() => import('./views/clinics/ClinicsList'))
 const ClinicForm = React.lazy(() => import('./views/clinics/ClinicForm'))
 
-const CreateClinic = () => React.createElement(ClinicForm, { mode: 'create' })
-const EditClinic = () => React.createElement(ClinicForm, { mode: 'edit' })
+const CreateClinic = () =>
+  React.createElement(ClinicForm, {
+    mode: 'create',
+  })
+const EditClinic = () =>
+  React.createElement(ClinicForm, {
+    mode: 'edit',
+  })
 
 // PATIENTS
 const PatientsList = React.lazy(() => import('./views/patients/PatientsList'))
 const PatientForm = React.lazy(() => import('./views/patients/PatientForm'))
 
-const CreatePatient = () => React.createElement(PatientForm, { mode: 'create' })
-const EditPatient = () => React.createElement(PatientForm, { mode: 'edit' })
+const CreatePatient = () =>
+  React.createElement(PatientForm, {
+    mode: 'create',
+  })
+const EditPatient = () =>
+  React.createElement(PatientForm, {
+    mode: 'edit',
+  })
 
 // EXAMS
 const ExamsList = React.lazy(() => import('./views/exams/ExamsList'))
 const ExamForm = React.lazy(() => import('./views/exams/ExamForm'))
 
-const CreateExam = () => React.createElement(ExamForm, { mode: 'create' })
-const EditExam = () => React.createElement(ExamForm, { mode: 'edit' })
-const ViewExam = () => React.createElement(ExamForm, { mode: 'view' })
+const CreateExam = () =>
+  React.createElement(ExamForm, {
+    mode: 'create',
+  })
+const ViewExam = () =>
+  React.createElement(ExamForm, {
+    mode: 'view',
+  })
 
 ////////// SYSTEM
 
@@ -43,8 +60,14 @@ const ViewExam = () => React.createElement(ExamForm, { mode: 'view' })
 const UsersList = React.lazy(() => import('./views/users/UsersList'))
 const UserForm = React.lazy(() => import('./views/users/UserForm'))
 
-const CreateUser = () => React.createElement(UserForm, { mode: 'create' })
-const EditUser = () => React.createElement(UserForm, { mode: 'edit' })
+const CreateUser = () =>
+  React.createElement(UserForm, {
+    mode: 'create',
+  })
+const EditUser = () =>
+  React.createElement(UserForm, {
+    mode: 'edit',
+  })
 
 // AUDIT LOGS
 const AuditLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'))
@@ -70,14 +93,31 @@ const StatusForm = React.lazy(() => import('./views/statuses/StatusForm'))
 const EditStatus = () => React.createElement(StatusForm)
 
 export const routes = [
-  { path: '/', exact: true, name: 'Home' },
-  { path: '/dashboard', name: 'Dashboard', element: Dashboard },
-  { path: '/profile', name: 'Meu Perfil', element: ProfilePage },
+  {
+    path: '/',
+    exact: true,
+    name: 'Home',
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    element: Dashboard,
+  },
+  {
+    path: '/profile',
+    name: 'Meu Perfil',
+    element: ProfilePage,
+  },
 
   ////////// ADMIN
 
   // CLINICS
-  { path: '/clinics', name: 'Clínicas', element: ClinicsList, roles: ['admin_master'] },
+  {
+    path: '/clinics',
+    name: 'Clínicas',
+    element: ClinicsList,
+    roles: ['admin_master'],
+  },
   {
     path: '/clinics/create',
     name: 'Adicionar Clínica',
@@ -131,13 +171,6 @@ export const routes = [
     permission: 'exams:create',
   },
   {
-    path: '/exams/:id/edit',
-    name: 'Editar Exame',
-    element: EditExam,
-    roles: ['doctor'],
-    permission: 'exams:update',
-  },
-  {
     path: '/exams/:id',
     name: 'Detalhes do Exame',
     element: ViewExam,
@@ -180,11 +213,26 @@ export const routes = [
   ////////// CONFIGURATIONS
 
   // ROLES
-  { path: '/roles', name: 'Perfis', element: RolesList, roles: ['admin_master'] },
-  { path: '/roles/:id/edit', name: 'Editar Perfil', element: EditRole, roles: ['admin_master'] },
+  {
+    path: '/roles',
+    name: 'Perfis',
+    element: RolesList,
+    roles: ['admin_master'],
+  },
+  {
+    path: '/roles/:id/edit',
+    name: 'Editar Perfil',
+    element: EditRole,
+    roles: ['admin_master'],
+  },
 
   // PERMISSIONS
-  { path: '/permissions', name: 'Permissões', element: PermissionsList, roles: ['admin_master'] },
+  {
+    path: '/permissions',
+    name: 'Permissões',
+    element: PermissionsList,
+    roles: ['admin_master'],
+  },
   {
     path: '/permissions/:id/edit',
     name: 'Editar Permissão',
@@ -192,7 +240,12 @@ export const routes = [
     roles: ['admin_master'],
   },
   // STATUSES
-  { path: '/statuses', name: 'Status', element: StatusesList, roles: ['admin_master'] },
+  {
+    path: '/statuses',
+    name: 'Status',
+    element: StatusesList,
+    roles: ['admin_master'],
+  },
   {
     path: '/statuses/:id/edit',
     name: 'Editar Status',

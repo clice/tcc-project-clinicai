@@ -255,16 +255,8 @@ const ExamsList = () => {
               accessorKey: 'status_display_name',
               header: 'Status',
               cell: ({ row }) => (
-                <CBadge
-                  color={
-                    statusColors[
-                      row.original.status_name
-                    ] || 'secondary'
-                  }
-                >
-                  {examStatusDisplayLabels[
-                    row.original.status_name
-                  ] ||
+                <CBadge color={statusColors[row.original.status_name] || 'secondary'}>
+                  {examStatusDisplayLabels[row.original.status_name] ||
                     row.original.status_display_name ||
                     row.original.status_name ||
                     '-'}
@@ -273,7 +265,6 @@ const ExamsList = () => {
             },
           ]
         : []),
-
     ]
 
     if (!canUseClinicalExamActions) {
@@ -301,8 +292,8 @@ const ExamsList = () => {
         return (
           <AppActionButtons
             itemLabel={exam.description}
-            viewTo={`/exams/${exam.id}`}
-            editTo={`/exams/${exam.id}/edit`}
+            viewTo={!isPending || !canEditExam ? `/exams/${exam.id}` : null}
+            editTo={`/exams/${exam.id}`}
             isInactive={isCanceled}
             canView={canView}
             canEdit={canEditExam && isPending}
@@ -372,92 +363,49 @@ const ExamsList = () => {
       </div>
 
       <CRow className="mb-4">
-        {summaryCards.map(
-          ({
-            status,
-            color,
-          }) => {
-            const isSelected =
-              statusFilter === status
+        {summaryCards.map(({ status, color }) => {
+          const isSelected = statusFilter === status
 
-            const toggleStatus = () => {
-              setSearchParams(
-                isSelected
-                  ? {}
-                  : { status },
-              )
-            }
+          const toggleStatus = () => {
+            setSearchParams(isSelected ? {} : { status })
+          }
 
-            return (
-              <CCol
-                sm={6}
-                xl={3}
-                className="mb-3 mb-xl-0"
-                key={status}
+          return (
+            <CCol sm={6} xl={3} className="mb-3 mb-xl-0" key={status}>
+              <CCard
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                className={`h-100 ${isSelected ? 'shadow-sm' : ''}`}
+                style={{
+                  borderTop: `4px solid var(--cui-${color})`,
+                }}
+                onClick={toggleStatus}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') {
+                    return
+                  }
+
+                  event.preventDefault()
+                  toggleStatus()
+                }}
               >
-                <CCard
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={
-                    isSelected
-                  }
-                  className={
-                    `h-100 ${
-                      isSelected
-                        ? 'shadow-sm'
-                        : ''
-                    }`
-                  }
-                  style={{
-                    borderTop:
-                      `4px solid var(--cui-${color})`,
-                  }}
-                  onClick={
-                    toggleStatus
-                  }
-                  onKeyDown={(
-                    event,
-                  ) => {
-                    if (
-                      event.key !==
-                        'Enter' &&
-                      event.key !== ' '
-                    ) {
-                      return
-                    }
+                <CCardBody>
+                  <div
+                    className="small fw-bold"
+                    style={{
+                      color: `var(--cui-${color})`,
+                    }}
+                  >
+                    {examStatusLabels[status]}
+                  </div>
 
-                    event.preventDefault()
-                    toggleStatus()
-                  }}
-                >
-                  <CCardBody>
-                    <div
-                      className="small fw-bold"
-                      style={{
-                        color:
-                          `var(--cui-${color})`,
-                      }}
-                    >
-                      {
-                        examStatusLabels[
-                          status
-                        ]
-                      }
-                    </div>
-
-                    <div className="fs-4 fw-semibold text-body">
-                      {
-                        tabCounts[
-                          status
-                        ] ?? 0
-                      }
-                    </div>
-                  </CCardBody>
-                </CCard>
-              </CCol>
-            )
-          },
-        )}
+                  <div className="fs-4 fw-semibold text-body">{tabCounts[status] ?? 0}</div>
+                </CCardBody>
+              </CCard>
+            </CCol>
+          )
+        })}
       </CRow>
 
       <CCard className="mb-4">
