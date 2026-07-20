@@ -109,7 +109,7 @@ assert.ok(
   'O histórico deve aparecer depois dos dados do paciente.',
 )
 assert.match(list, /ROLES\.DOCTOR/)
-assert.match(list, /ROLES\.CLINIC_STAFF/)
+assert.match(list, /ROLES\.CLINIC_MANAGER/)
 
 assert.match(
   list,

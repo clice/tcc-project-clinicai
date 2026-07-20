@@ -739,7 +739,7 @@ def list_exams(
         if role_name == RoleName.CLINIC_MANAGER.value:
             raise HTTPException(
                 status_code=403,
-                detail="Funcionário da clínica não tem permissão para filtrar por resultado da IA.",
+                detail="Gestor da clínica não tem permissão para filtrar por resultado da IA.",
             )
         query = query.join(AIAnalysis, AIAnalysis.exam_id == Exam.id).filter(
             AIAnalysis.prediction_class == ai_prediction_class

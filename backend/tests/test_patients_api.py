@@ -34,14 +34,14 @@ class PatientData:
     admin_id: int
     doctor_a_id: int
     doctor_a2_id: int
-    staff_a_id: int
+    manager_a_id: int
     doctor_b_id: int
-    staff_b_id: int
+    manager_b_id: int
     inactive_doctor_a_id: int
     doctor_inactive_clinic_id: int
     admin_role_id: int
     doctor_role_id: int
-    staff_role_id: int
+    manager_role_id: int
     clinic_a_id: int
     clinic_b_id: int
     inactive_clinic_id: int
@@ -64,9 +64,9 @@ class PatientApiContext:
     admin_headers: dict[str, str]
     doctor_a_headers: dict[str, str]
     doctor_a2_headers: dict[str, str]
-    staff_a_headers: dict[str, str]
+    manager_a_headers: dict[str, str]
     doctor_b_headers: dict[str, str]
-    staff_b_headers: dict[str, str]
+    manager_b_headers: dict[str, str]
 
 
 def _headers(user: User) -> dict[str, str]:
@@ -84,7 +84,7 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
 
     admin_role = Role(name="admin_master", display_name="Administrador Master", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
-    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
+    manager_role = Role(name="clinic_manager", display_name="Gestor", permissions_initialized=True)
 
     permissions = [
         Permission(name="patients:create", display_name="Cadastrar pacientes", module="patients"),
@@ -107,7 +107,7 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         processing_exam,
         admin_role,
         doctor_role,
-        staff_role,
+        manager_role,
         *permissions,
         clinic_a,
         clinic_b,
@@ -115,7 +115,7 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
     ])
     db.flush()
 
-    for role in (doctor_role, staff_role):
+    for role in (doctor_role, manager_role):
         db.add_all([RolePermission(role=role, permission=permission) for permission in permissions])
 
     admin = User(
@@ -144,12 +144,12 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         status=active_user,
         clinic=clinic_a,
     )
-    staff_a = User(
-        name="Funcionário A",
-        email="staff.a.pacientes@example.com",
+    manager_a = User(
+        name="Gestor A",
+        email="manager.a.pacientes@example.com",
         cpf="12345678909",
         password_hash=get_password_hash(PASSWORD),
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_a,
     )
@@ -162,12 +162,12 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         status=active_user,
         clinic=clinic_b,
     )
-    staff_b = User(
-        name="Funcionário B",
-        email="staff.b.pacientes@example.com",
+    manager_b = User(
+        name="Gestor B",
+        email="manager.b.pacientes@example.com",
         cpf="39053344705",
         password_hash=get_password_hash(PASSWORD),
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_b,
     )
@@ -193,9 +193,9 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         admin,
         doctor_a,
         doctor_a2,
-        staff_a,
+        manager_a,
         doctor_b,
-        staff_b,
+        manager_b,
         inactive_doctor_a,
         doctor_inactive_clinic,
     ])
@@ -281,22 +281,22 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         "admin": _headers(admin),
         "doctor_a": _headers(doctor_a),
         "doctor_a2": _headers(doctor_a2),
-        "staff_a": _headers(staff_a),
+        "manager_a": _headers(manager_a),
         "doctor_b": _headers(doctor_b),
-        "staff_b": _headers(staff_b),
+        "manager_b": _headers(manager_b),
     }
     data = PatientData(
         admin_id=admin.id,
         doctor_a_id=doctor_a.id,
         doctor_a2_id=doctor_a2.id,
-        staff_a_id=staff_a.id,
+        manager_a_id=manager_a.id,
         doctor_b_id=doctor_b.id,
-        staff_b_id=staff_b.id,
+        manager_b_id=manager_b.id,
         inactive_doctor_a_id=inactive_doctor_a.id,
         doctor_inactive_clinic_id=doctor_inactive_clinic.id,
         admin_role_id=admin_role.id,
         doctor_role_id=doctor_role.id,
-        staff_role_id=staff_role.id,
+        manager_role_id=manager_role.id,
         clinic_a_id=clinic_a.id,
         clinic_b_id=clinic_b.id,
         inactive_clinic_id=clinic_inactive.id,
@@ -342,9 +342,9 @@ def patient_api_context() -> Iterator[PatientApiContext]:
             admin_headers=headers["admin"],
             doctor_a_headers=headers["doctor_a"],
             doctor_a2_headers=headers["doctor_a2"],
-            staff_a_headers=headers["staff_a"],
+            manager_a_headers=headers["manager_a"],
             doctor_b_headers=headers["doctor_b"],
-            staff_b_headers=headers["staff_b"],
+            manager_b_headers=headers["manager_b"],
         )
 
     app.dependency_overrides.clear()
@@ -383,14 +383,14 @@ def test_scope_list_filters_and_cross_access(patient_api_context: PatientApiCont
         ctx.data.patient_with_exam_id,
     }
 
-    staff_rows = ctx.client.get(
+    manager_rows = ctx.client.get(
         "/patients/",
         params={"include_inactive": True},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     ).json()
-    assert ctx.data.patient_b_id not in {row["id"] for row in staff_rows}
-    assert ctx.data.patient_a1_id in {row["id"] for row in staff_rows}
-    assert ctx.data.patient_a2_id in {row["id"] for row in staff_rows}
+    assert ctx.data.patient_b_id not in {row["id"] for row in manager_rows}
+    assert ctx.data.patient_a1_id in {row["id"] for row in manager_rows}
+    assert ctx.data.patient_a2_id in {row["id"] for row in manager_rows}
 
     admin_rows = ctx.client.get(
         "/patients/",
@@ -405,12 +405,12 @@ def test_scope_list_filters_and_cross_access(patient_api_context: PatientApiCont
     ).status_code == 403
     assert ctx.client.get(
         f"/patients/{ctx.data.patient_b_id}",
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     ).status_code == 403
     assert ctx.client.get(
         "/patients/",
         params={"clinic_id": ctx.data.clinic_b_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     ).status_code == 403
     assert ctx.client.get(
         "/patients/",
@@ -540,7 +540,7 @@ def test_doctor_can_create_only_for_self_and_own_clinic(patient_api_context: Pat
     assert own.json()["doctor_id"] == ctx.data.doctor_a_id
 
 
-def test_doctor_cannot_reassign_but_staff_can_inside_clinic(patient_api_context: PatientApiContext) -> None:
+def test_doctor_cannot_reassign_but_manager_can_inside_clinic(patient_api_context: PatientApiContext) -> None:
     ctx = patient_api_context
 
     denied = ctx.client.patch(
@@ -553,7 +553,7 @@ def test_doctor_cannot_reassign_but_staff_can_inside_clinic(patient_api_context:
     reassigned = ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}",
         json={"doctor_id": ctx.data.doctor_a2_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert reassigned.status_code == 200
     assert reassigned.json()["doctor_id"] == ctx.data.doctor_a2_id
@@ -571,7 +571,7 @@ def test_doctor_cannot_reassign_but_staff_can_inside_clinic(patient_api_context:
             "clinic_id": ctx.data.clinic_b_id,
             "doctor_id": ctx.data.doctor_b_id,
         },
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert cross_clinic.status_code == 403
 
@@ -625,7 +625,7 @@ def test_reassignment_is_blocked_when_patient_has_exam(patient_api_context: Pati
     response = ctx.client.patch(
         f"/patients/{ctx.data.patient_with_exam_id}",
         json={"doctor_id": ctx.data.doctor_a2_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert response.status_code == 409
     assert "exames vinculados" in response.json()["detail"]
@@ -647,7 +647,7 @@ def test_status_is_dedicated_idempotent_and_revalidates_links(patient_api_contex
     assert ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}",
         json={"status_id": ctx.data.inactive_patient_status_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     ).status_code == 422
 
     with ctx.session_factory() as db:
@@ -655,22 +655,22 @@ def test_status_is_dedicated_idempotent_and_revalidates_links(patient_api_contex
 
     first_inactivate = ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}/inactivate",
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     second_inactivate = ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}/inactivate",
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert first_inactivate.status_code == 200
     assert second_inactivate.status_code == 200
 
     first_activate = ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}/activate",
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     second_activate = ctx.client.patch(
         f"/patients/{ctx.data.patient_a1_id}/activate",
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert first_activate.status_code == 200
     assert second_activate.status_code == 200
@@ -700,7 +700,7 @@ def test_required_fields_cannot_be_cleared(patient_api_context: PatientApiContex
         response = ctx.client.patch(
             f"/patients/{ctx.data.patient_a1_id}",
             json={field: None},
-            headers=ctx.staff_a_headers,
+            headers=ctx.manager_a_headers,
         )
         assert response.status_code == 400, (field, response.text)
 
@@ -718,7 +718,7 @@ def test_doctor_context_cannot_change_while_active_patients_exist(
 
     change_role = ctx.client.patch(
         f"/users/{ctx.data.doctor_a_id}",
-        json={"role_id": ctx.data.staff_role_id},
+        json={"role_id": ctx.data.manager_role_id},
         headers=ctx.admin_headers,
     )
     assert change_role.status_code == 409

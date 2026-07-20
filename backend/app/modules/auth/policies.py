@@ -9,7 +9,7 @@ from app.modules.users.model import User
 def validate_active_session_context(user: User) -> None:
     """Valida usuário e clínica antes de aceitar uma sessão.
 
-    Administradores master não possuem clínica. Para médicos e funcionários,
+    Administradores master não possuem clínica. Para médicos e gestores,
     a clínica vinculada também precisa existir e estar ativa. A mesma regra é
     reutilizada no login, no refresh token e em todas as rotas protegidas para
     evitar comportamentos diferentes entre os três pontos.

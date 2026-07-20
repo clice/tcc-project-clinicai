@@ -32,12 +32,12 @@ class UserData:
     admin_a_id: int
     admin_b_id: int
     doctor_a_id: int
-    staff_a_id: int
+    manager_a_id: int
     doctor_b_id: int
     inactive_doctor_id: int
     admin_role_id: int
     doctor_role_id: int
-    staff_role_id: int
+    manager_role_id: int
     active_user_status_id: int
     inactive_user_status_id: int
     active_clinic_status_id: int
@@ -55,7 +55,7 @@ class UserApiContext:
     admin_a_headers: dict[str, str]
     admin_b_headers: dict[str, str]
     doctor_a_headers: dict[str, str]
-    staff_a_headers: dict[str, str]
+    manager_a_headers: dict[str, str]
     doctor_b_headers: dict[str, str]
 
 
@@ -71,7 +71,7 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
 
     admin_role = Role(name="admin_master", display_name="Administrador Master", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
-    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
+    manager_role = Role(name="clinic_manager", display_name="Gestor", permissions_initialized=True)
 
     users_create = Permission(name="users:create", display_name="Criar usuários", module="users")
     users_read = Permission(name="users:read", display_name="Consultar usuários", module="users")
@@ -92,7 +92,7 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         inactive_clinic,
         admin_role,
         doctor_role,
-        staff_role,
+        manager_role,
         users_create,
         users_read,
         users_update,
@@ -110,13 +110,13 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         RolePermission(role=doctor_role, permission=read_profile),
         RolePermission(role=doctor_role, permission=update_profile),
         RolePermission(role=doctor_role, permission=patients_read),
-        RolePermission(role=staff_role, permission=users_create),
-        RolePermission(role=staff_role, permission=users_read),
-        RolePermission(role=staff_role, permission=users_update),
-        RolePermission(role=staff_role, permission=users_change_status),
-        RolePermission(role=staff_role, permission=read_profile),
-        RolePermission(role=staff_role, permission=update_profile),
-        RolePermission(role=staff_role, permission=patients_read),
+        RolePermission(role=manager_role, permission=users_create),
+        RolePermission(role=manager_role, permission=users_read),
+        RolePermission(role=manager_role, permission=users_update),
+        RolePermission(role=manager_role, permission=users_change_status),
+        RolePermission(role=manager_role, permission=read_profile),
+        RolePermission(role=manager_role, permission=update_profile),
+        RolePermission(role=manager_role, permission=patients_read),
     ])
 
     admin_a = User(
@@ -144,12 +144,12 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         status=active_user,
         clinic=clinic_a,
     )
-    staff_a = User(
-        name="Funcionário A",
-        email="funcionario.a@example.com",
+    manager_a = User(
+        name="Gestor A",
+        email="manager.a@example.com",
         cpf="12345678909",
         password_hash=get_password_hash(PASSWORD),
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_a,
     )
@@ -171,14 +171,14 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         status=inactive_user,
         clinic=clinic_a,
     )
-    db.add_all([admin_a, admin_b, doctor_a, staff_a, doctor_b, inactive_doctor])
+    db.add_all([admin_a, admin_b, doctor_a, manager_a, doctor_b, inactive_doctor])
     db.commit()
 
     headers = {
         "admin_a": _headers(admin_a),
         "admin_b": _headers(admin_b),
         "doctor_a": _headers(doctor_a),
-        "staff_a": _headers(staff_a),
+        "manager_a": _headers(manager_a),
         "doctor_b": _headers(doctor_b),
     }
     return (
@@ -186,12 +186,12 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
             admin_a_id=admin_a.id,
             admin_b_id=admin_b.id,
             doctor_a_id=doctor_a.id,
-            staff_a_id=staff_a.id,
+            manager_a_id=manager_a.id,
             doctor_b_id=doctor_b.id,
             inactive_doctor_id=inactive_doctor.id,
             admin_role_id=admin_role.id,
             doctor_role_id=doctor_role.id,
-            staff_role_id=staff_role.id,
+            manager_role_id=manager_role.id,
             active_user_status_id=active_user.id,
             inactive_user_status_id=inactive_user.id,
             active_clinic_status_id=active_clinic.id,
@@ -233,7 +233,7 @@ def user_api_context() -> Iterator[UserApiContext]:
             admin_a_headers=headers["admin_a"],
             admin_b_headers=headers["admin_b"],
             doctor_a_headers=headers["doctor_a"],
-            staff_a_headers=headers["staff_a"],
+            manager_a_headers=headers["manager_a"],
             doctor_b_headers=headers["doctor_b"],
         )
 
@@ -308,7 +308,7 @@ def test_email_and_cpf_are_unique_in_create_and_update(user_api_context: UserApi
     assert duplicate_cpf.json()["detail"] == "CPF já cadastrado."
 
     update = ctx.client.patch(
-        f"/users/{ctx.data.staff_a_id}",
+        f"/users/{ctx.data.manager_a_id}",
         json={"email": "MEDICO.A@EXAMPLE.COM"},
         headers=ctx.admin_a_headers,
     )
@@ -316,7 +316,7 @@ def test_email_and_cpf_are_unique_in_create_and_update(user_api_context: UserApi
 
     for required_field in ("name", "email", "cpf", "role_id"):
         invalid = ctx.client.patch(
-            f"/users/{ctx.data.staff_a_id}",
+            f"/users/{ctx.data.manager_a_id}",
             json={required_field: None},
             headers=ctx.admin_a_headers,
         )
@@ -415,7 +415,7 @@ def test_self_edit_accepts_only_profile_fields(user_api_context: UserApiContext)
     assert updated.json()["phone"] == "88988887777"
 
     for forbidden_field, value in (
-        ("role_id", ctx.data.staff_role_id),
+        ("role_id", ctx.data.manager_role_id),
         ("clinic_id", ctx.data.clinic_b_id),
         ("status_id", ctx.data.inactive_user_status_id),
     ):
@@ -504,7 +504,7 @@ def test_doctor_selector_is_minimal_and_tenant_scoped(user_api_context: UserApiC
     own = ctx.client.get(
         "/users/doctors",
         params={"clinic_id": ctx.data.clinic_a_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert own.status_code == 200, own.text
     assert own.json()
@@ -514,7 +514,7 @@ def test_doctor_selector_is_minimal_and_tenant_scoped(user_api_context: UserApiC
     other = ctx.client.get(
         "/users/doctors",
         params={"clinic_id": ctx.data.clinic_b_id},
-        headers=ctx.staff_a_headers,
+        headers=ctx.manager_a_headers,
     )
     assert other.status_code == 403
 
@@ -540,7 +540,7 @@ def test_password_flows_revoke_tokens_without_exposing_credentials(
     assert ctx.client.get("/users/me", headers=ctx.doctor_a_headers).status_code == 401
 
     reset = ctx.client.patch(
-        f"/users/{ctx.data.staff_a_id}/password",
+        f"/users/{ctx.data.manager_a_id}/password",
         json={"password": NEW_PASSWORD},
         headers=ctx.admin_a_headers,
     )
@@ -559,7 +559,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
     user_api_context: UserApiContext,
 ) -> None:
     ctx = user_api_context
-    manager_headers = ctx.staff_a_headers
+    manager_headers = ctx.manager_a_headers
 
     options = ctx.client.get(
         "/users/doctor-management-options",
@@ -594,7 +594,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
     assert ctx.data.doctor_a_id in {
         item["id"] for item in own_items
     }
-    assert ctx.data.staff_a_id not in {
+    assert ctx.data.manager_a_id not in {
         item["id"] for item in own_items
     }
     assert ctx.data.doctor_b_id not in {
@@ -628,7 +628,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
 
     for forbidden_user_id in (
         ctx.data.doctor_b_id,
-        ctx.data.staff_a_id,
+        ctx.data.manager_a_id,
         ctx.data.admin_a_id,
     ):
         forbidden = ctx.client.get(
@@ -651,7 +651,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
         "/users/",
         json=_create_payload(
             ctx,
-            role_id=ctx.data.staff_role_id,
+            role_id=ctx.data.manager_role_id,
         ),
         headers=manager_headers,
     )
@@ -681,7 +681,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
 
     forbidden_role_change = ctx.client.patch(
         f"/users/{created_id}",
-        json={"role_id": ctx.data.staff_role_id},
+        json={"role_id": ctx.data.manager_role_id},
         headers=manager_headers,
     )
     assert forbidden_role_change.status_code == 403

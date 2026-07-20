@@ -262,7 +262,7 @@ def _seed_download_context(db_session, physical_file: Path):
     active_patient = Status(name="active", display_name="Ativo", applies_to="patient")
     pending = Status(name="pending", display_name="Pendente", applies_to="exam")
     canceled = Status(name="canceled", display_name="Cancelado", applies_to="exam")
-    staff_role = Role(name="clinic_manager", display_name="Funcionário", permissions_initialized=True)
+    manager_role = Role(name="clinic_manager", display_name="Gestor", permissions_initialized=True)
     doctor_role = Role(name="doctor", display_name="Médico", permissions_initialized=True)
     clinic_a = Clinic(name="Clínica A", cnpj="11222333000181", status=active_clinic)
     clinic_b = Clinic(name="Clínica B", cnpj="11444777000161", status=active_clinic)
@@ -282,21 +282,21 @@ def _seed_download_context(db_session, physical_file: Path):
         doctor=doctor_a,
         status=active_patient,
     )
-    staff_a = User(
-        name="Staff A",
-        email="staff.upload.a@example.com",
+    manager_a = User(
+        name="Gestor A",
+        email="manager.upload.a@example.com",
         cpf="12345678909",
         password_hash="hash",
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_a,
     )
-    staff_b = User(
-        name="Staff B",
-        email="staff.upload.b@example.com",
+    manager_b = User(
+        name="Gestor B",
+        email="manager.upload.b@example.com",
         cpf="39053344705",
         password_hash="hash",
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_b,
     )
@@ -318,19 +318,19 @@ def _seed_download_context(db_session, physical_file: Path):
             active_patient,
             pending,
             canceled,
-            staff_role,
+            manager_role,
             doctor_role,
             clinic_a,
             clinic_b,
             doctor_a,
             patient,
-            staff_a,
-            staff_b,
+            manager_a,
+            manager_b,
             exam,
         ]
     )
     db_session.commit()
-    return exam, doctor_a, staff_a, staff_b
+    return exam, doctor_a, manager_a, manager_b
 
 
 def test_download_is_scoped_to_clinic_and_audited(
@@ -340,18 +340,18 @@ def test_download_is_scoped_to_clinic_and_audited(
     physical_file = isolated_upload_root / "1" / "1" / "1" / "arquivo.png"
     physical_file.parent.mkdir(parents=True)
     physical_file.write_bytes(make_png())
-    exam, doctor, staff_a, staff_b = _seed_download_context(
+    exam, doctor, manager_a, manager_b = _seed_download_context(
         db_session,
         physical_file,
     )
 
     assert_http_error(
         403,
-        lambda: download_exam_file(db_session, exam.id, staff_b),
+        lambda: download_exam_file(db_session, exam.id, manager_b),
     )
     assert_http_error(
         403,
-        lambda: download_exam_file(db_session, exam.id, staff_a),
+        lambda: download_exam_file(db_session, exam.id, manager_a),
     )
     assert db_session.query(AuditLog).filter(AuditLog.action == "download").count() == 0
 
@@ -419,7 +419,7 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
     old_file = isolated_upload_root / "1" / "1" / "1" / "antigo.png"
     old_file.parent.mkdir(parents=True)
     old_file.write_bytes(make_png())
-    exam, doctor, staff, _ = _seed_download_context(
+    exam, doctor, manager, _ = _seed_download_context(
         db_session,
         old_file,
     )
@@ -443,7 +443,7 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
                 filename="negado.png",
                 content_type="image/png",
             ),
-            staff,
+            manager,
         ),
     )
     assert old_file.exists()

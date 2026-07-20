@@ -136,7 +136,7 @@ def _seed_context(
         ),
         "clinic_manager": Role(
             name="clinic_manager",
-            display_name="Funcionário",
+            display_name="Gestor",
             permissions_initialized=True,
         ),
         "doctor": Role(
@@ -161,9 +161,9 @@ def _seed_context(
         status=statuses[("active", "user")],
         clinic=clinic,
     )
-    staff = User(
-        name="Funcionário Auditor",
-        email="staff.auditoria@example.com",
+    manager = User(
+        name="Gestor Auditor",
+        email="manager.auditoria@example.com",
         cpf="12345678909",
         password_hash=password_hash,
         role=roles["clinic_manager"],
@@ -198,7 +198,7 @@ def _seed_context(
         file_mime_type="image/png",
     )
 
-    db_session.add_all([*statuses.values(), *roles.values(), clinic, doctor, staff, admin, patient, exam])
+    db_session.add_all([*statuses.values(), *roles.values(), clinic, doctor, manager, admin, patient, exam])
     db_session.flush()
 
     if with_ai_analysis:
@@ -220,7 +220,7 @@ def _seed_context(
         "roles": roles,
         "clinic": clinic,
         "doctor": doctor,
-        "staff": staff,
+        "manager": manager,
         "admin": admin,
         "patient": patient,
         "exam": exam,
@@ -575,7 +575,7 @@ def test_patient_edit_and_log_are_not_partially_committed(
                 db_session,
                 patient_id,
                 PatientUpdate(name="Paciente não persistido"),
-                context["staff"],
+                context["manager"],
             )
 
     db_session.rollback()
@@ -593,7 +593,7 @@ def test_patient_edit_and_log_are_not_partially_committed(
         db_session,
         patient_id,
         PatientUpdate(name="Paciente persistido com log"),
-        context["staff"],
+        context["manager"],
     )
     db_session.expire_all()
     patient = db_session.get(Patient, patient_id)

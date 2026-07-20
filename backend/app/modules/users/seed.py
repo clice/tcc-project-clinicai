@@ -13,11 +13,11 @@ ACADEMIC_DEMO_PASSWORD = "clinicai123"
 
 ACADEMIC_DEMO_EMAILS = (
     "doctor@clinicai.com",
-    "staff@clinicai.com",
+    "clinic_manager@clinicai.com",
     "doctor.cariri@clinicai.com",
-    "staff.cariri@clinicai.com",
+    "manager.cariri@clinicai.com",
     "doctor.endoscopia@clinicai.com",
-    "staff.endoscopia@clinicai.com",
+    "manager@clinicai.com",
 )
 
 
@@ -93,7 +93,7 @@ def seed_users(
     *,
     admin_master: User,
 ) -> dict[str, User]:
-    """Cria um médico e um funcionário por clínica."""
+    """Cria um médico e um gestor por clínica."""
 
     definitions = {
         "doctor_primary": {
@@ -103,9 +103,9 @@ def seed_users(
             "role": "doctor",
             "clinic": "clinic_primary",
         },
-        "staff_primary": {
-            "name": "Recepção Clínica Primária",
-            "email": "staff@clinicai.com",
+        "manager_primary": {
+            "name": "Gestor Clínica Primária",
+            "email": "clinic_manager@clinicai.com",
             "cpf": "15350946056",
             "role": "clinic_manager",
             "clinic": "clinic_primary",
@@ -117,9 +117,9 @@ def seed_users(
             "role": "doctor",
             "clinic": "clinic_large",
         },
-        "staff_large": {
-            "name": "Recepção Hospital Cariri",
-            "email": "staff.cariri@clinicai.com",
+        "manager_large": {
+            "name": "Gestor Hospital Cariri",
+            "email": "manager.cariri@clinicai.com",
             "cpf": "27182818205",
             "role": "clinic_manager",
             "clinic": "clinic_large",
@@ -131,9 +131,9 @@ def seed_users(
             "role": "doctor",
             "clinic": "clinic_specialized",
         },
-        "staff_specialized": {
-            "name": "Recepção Centro Endoscópico",
-            "email": "staff.endoscopia@clinicai.com",
+        "manager_specialized": {
+            "name": "Gestão Centro Endoscópico",
+            "email": "manager@clinicai.com",
             "cpf": "14142135651",
             "role": "clinic_manager",
             "clinic": "clinic_specialized",

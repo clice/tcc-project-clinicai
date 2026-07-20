@@ -28,18 +28,18 @@ def build_user(
 
 
 def test_clinic_manager_patient_access_is_limited_to_own_clinic() -> None:
-    staff = build_user("clinic_manager", clinic_id=1)
+    manager = build_user("clinic_manager", clinic_id=1)
     own_record = SimpleNamespace(clinic_id=1, doctor_id=99)
     other_record = SimpleNamespace(clinic_id=2, doctor_id=99)
 
     ensure_user_can_access_patient(
-        current_user=staff,
+        current_user=manager,
         patient=own_record,
     )
 
     with pytest.raises(HTTPException) as exc_info:
         ensure_user_can_access_patient(
-            current_user=staff,
+            current_user=manager,
             patient=other_record,
         )
 
@@ -47,7 +47,7 @@ def test_clinic_manager_patient_access_is_limited_to_own_clinic() -> None:
 
 
 def test_clinic_manager_cannot_access_individual_exams() -> None:
-    staff = build_user("clinic_manager", clinic_id=1)
+    manager = build_user("clinic_manager", clinic_id=1)
 
     for exam in (
         SimpleNamespace(clinic_id=1, doctor_id=99),
@@ -55,7 +55,7 @@ def test_clinic_manager_cannot_access_individual_exams() -> None:
     ):
         with pytest.raises(HTTPException) as exc_info:
             ensure_user_can_access_exam(
-                current_user=staff,
+                current_user=manager,
                 exam=exam,
             )
 

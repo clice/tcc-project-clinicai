@@ -62,7 +62,7 @@ def test_list_and_detail_use_distinct_permissions() -> None:
     )
 
 
-def test_staff_default_matrix_only_grants_listing() -> None:
+def test_manager_default_matrix_only_grants_listing() -> None:
     assert "exams:list" in CLINIC_MANAGER_PERMISSIONS
     assert "exams:read" not in CLINIC_MANAGER_PERMISSIONS
     assert "exams:create" not in CLINIC_MANAGER_PERMISSIONS

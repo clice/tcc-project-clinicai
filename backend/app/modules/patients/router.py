@@ -58,7 +58,7 @@ def list_patients_route(
     """
     Lista pacientes cadastrados com filtros que não ampliam o escopo.
 
-    Administrador vê todos; funcionário vê a própria clínica; médico vê
+    Administrador vê todos; gestor vê a própria clínica; médico vê
     somente os pacientes sob sua responsabilidade.
     """
     return list_patients(

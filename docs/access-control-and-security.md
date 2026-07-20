@@ -23,7 +23,7 @@ O backend é a fonte autoritativa. Ocultar menus e botões no frontend não
 substitui a autorização da API.
 
 - `admin_master`: gerencia módulos estruturais;
-- `clinic_staff`: permanece limitado à própria clínica;
+- `clinic_manager`: permanece limitado à própria clínica;
 - `doctor`: permanece limitado aos pacientes e exames sob sua responsabilidade;
 - filtros recebidos pela API nunca ampliam o escopo institucional;
 - a revisão médica exige simultaneamente a role `doctor` e a permissão

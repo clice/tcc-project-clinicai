@@ -57,9 +57,9 @@ def seed_context(db_session, gradcam_path: Path):
         display_name="Médico",
         permissions_initialized=True,
     )
-    staff_role = Role(
+    manager_role = Role(
         name="clinic_manager",
-        display_name="Funcionário",
+        display_name="Gestor",
         permissions_initialized=True,
     )
 
@@ -84,12 +84,12 @@ def seed_context(db_session, gradcam_path: Path):
         status=active_user,
         clinic=clinic_b,
     )
-    staff_a = User(
-        name="Funcionário Grad-CAM A",
-        email="staff.gradcam.a@example.com",
+    manager_a = User(
+        name="Gestor Grad-CAM A",
+        email="manager.gradcam.a@example.com",
         cpf="12345678909",
         password_hash="hash",
-        role=staff_role,
+        role=manager_role,
         status=active_user,
         clinic=clinic_a,
     )
@@ -131,19 +131,19 @@ def seed_context(db_session, gradcam_path: Path):
             awaiting_review,
             completed_ai,
             doctor_role,
-            staff_role,
+            manager_role,
             clinic_a,
             clinic_b,
             doctor_a,
             doctor_b,
-            staff_a,
+            manager_a,
             patient,
             exam,
             analysis,
         ]
     )
     db_session.commit()
-    return exam, analysis, doctor_a, doctor_b, staff_a
+    return exam, analysis, doctor_a, doctor_b, manager_a
 
 
 def test_gradcam_preview_and_download_are_scoped_private_and_audited(
@@ -163,7 +163,7 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
         analysis,
         doctor_a,
         doctor_b,
-        staff_a,
+        manager_a,
     ) = seed_context(
         db_session,
         gradcam,
@@ -183,7 +183,7 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
         lambda: download_exam_ai_file(
             db_session,
             exam.id,
-            staff_a,
+            manager_a,
         ),
     )
 

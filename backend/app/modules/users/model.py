@@ -2,7 +2,7 @@
 Model da tabela de usuários do sistema.
 
 A tabela users armazena os usuários que acessam o ClinicAI,
-incluindo administradores, médicos e funcionários vinculados a clínicas.
+incluindo administradores, médicos e gestores vinculados a clínicas.
 """
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String

@@ -90,7 +90,7 @@ assert.ok(
 
 assert.match(
   listRoute[0],
-  /clinic_staff/,
+  /clinic_manager/,
 )
 
 assert.match(
@@ -114,7 +114,7 @@ assert.match(
 
 assert.doesNotMatch(
   createRoute[0],
-  /admin_master|clinic_staff/,
+  /admin_master|clinic_manager/,
 )
 
 const detailRoute = routes.match(
@@ -133,7 +133,7 @@ assert.match(
 
 assert.doesNotMatch(
   detailRoute[0],
-  /admin_master|clinic_staff/,
+  /admin_master|clinic_manager/,
 )
 
 assert.match(
@@ -220,8 +220,14 @@ assert.match(
   /clinic_name:\s*str \| None = None/,
 )
 
+assert.match(
+  listSchema,
+  /description:\s*str/,
+  'A listagem resumida deve expor a descrição operacional do exame.',
+)
+
 for (const forbiddenField of [
-  'description:',
+  'observations:',
   'clinical_indication:',
   'findings:',
   'conclusion:',
@@ -241,12 +247,12 @@ for (const forbiddenField of [
 
 assert.match(
   backendService,
-  /elif role_name == RoleName\.CLINIC_STAFF\.value:[\s\S]*?Exam\.clinic_id == current_user\.clinic_id/,
+  /elif role_name == RoleName\.CLINIC_MANAGER\.value:[\s\S]*?Exam\.clinic_id == current_user\.clinic_id/,
 )
 
 assert.match(
   backendService,
-  /Funcionário da clínica não tem permissão para filtrar por resultado da IA/,
+  /Gestor da clínica não tem permissão para filtrar por resultado da IA/,
 )
 
 assert.match(
@@ -269,15 +275,15 @@ assert.match(
   /return \[[\s\S]*?build_exam_list_response\(exam\) for exam in exams/,
 )
 
-const staffPermissions =
+const managerPermissions =
   roleSeed
     .split(
-      'CLINIC_STAFF_PERMISSIONS = [',
+      'CLINIC_MANAGER_PERMISSIONS = [',
     )[1]
     .split(']')[0]
 
 assert.match(
-  staffPermissions,
+  managerPermissions,
   /"exams:list"/,
 )
 
@@ -290,14 +296,14 @@ for (const forbiddenPermission of [
   'ai_analysis:read',
 ]) {
   assert.doesNotMatch(
-    staffPermissions,
+    managerPermissions,
     new RegExp(
       `"${forbiddenPermission}"`,
     ),
-    `Funcionário recebeu indevidamente ${forbiddenPermission}`,
+    `Gestor recebeu indevidamente ${forbiddenPermission}`,
   )
 }
 
 console.log(
-  'Acesso de exames aprovado: Médico recebe ações clínicas; Funcionário e Administrador recebem somente a listagem operacional.',
+  'Acesso de exames aprovado: Médico recebe ações clínicas; Gestor e Administrador recebem somente a listagem operacional.',
 )

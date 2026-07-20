@@ -2,7 +2,7 @@
 Model da tabela de perfis de acesso do sistema.
 
 A tabela roles define os perfis principais de usuários,
-como administrador master, administrador da clínica, médico e funcionário.
+como administrador master, administrador da clínica, médico e gestor.
 """
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String

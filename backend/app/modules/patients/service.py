@@ -178,7 +178,7 @@ def validate_patient_assignment_change(
 
     Política acadêmica adotada na CHK-08:
     - médico não transfere nem reatribui pacientes;
-    - funcionário pode reatribuir somente dentro da própria clínica;
+    - gestor pode reatribuir somente dentro da própria clínica;
     - administrador pode transferir entre clínicas;
     - qualquer mudança de vínculo é bloqueada quando já existe exame,
       preservando RN05/RN06 e evitando divergência histórica.

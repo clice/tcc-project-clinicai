@@ -11,14 +11,14 @@ import {
 const navigation = [
   {
     name: 'Pacientes',
-    roles: ['doctor', 'clinic_staff'],
+    roles: ['doctor', 'clinic_manager'],
     permission: 'patients:read',
   },
   {
     name: 'Exames',
     roles: [
       'doctor',
-      'clinic_staff',
+      'clinic_manager',
     ],
     permission: 'exams:list',
     items: [
@@ -26,7 +26,7 @@ const navigation = [
         name: 'Pendentes',
         roles: [
           'doctor',
-          'clinic_staff',
+          'clinic_manager',
         ],
         permission: 'exams:list',
       },
@@ -67,8 +67,8 @@ assert.deepEqual(
   ['Pacientes', 'Exames'],
 )
 
-const staffListOnlyAccess = filterFor(
-  'clinic_staff',
+const managerListOnlyAccess = filterFor(
+  'clinic_manager',
   [
     'patients:read',
     'exams:list',
@@ -76,25 +76,25 @@ const staffListOnlyAccess = filterFor(
 )
 
 assert.deepEqual(
-  staffListOnlyAccess.map(
+  managerListOnlyAccess.map(
     (item) => item.name,
   ),
   ['Pacientes', 'Exames'],
 )
 
 assert.equal(
-  staffListOnlyAccess[1].items[0].name,
+  managerListOnlyAccess[1].items[0].name,
   'Pendentes',
 )
 
-const staffWithoutExamList =
+const managerWithoutExamList =
   filterFor(
-    'clinic_staff',
+    'clinic_manager',
     ['patients:read'],
   )
 
 assert.deepEqual(
-  staffWithoutExamList.map(
+  managerWithoutExamList.map(
     (item) => item.name,
   ),
   ['Pacientes'],
@@ -102,7 +102,7 @@ assert.deepEqual(
 
 const detailsOnlyDoesNotOpenList =
   filterFor(
-    'clinic_staff',
+    'clinic_manager',
     [
       'patients:read',
       'exams:read',

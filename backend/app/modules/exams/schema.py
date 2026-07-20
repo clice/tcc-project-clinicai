@@ -166,7 +166,7 @@ class ExamResponse(BaseModel):
     file_mime_type: str | None = None
 
     # Preenchidos apenas se o exame tiver análise de IA concluída e o
-    # usuário tiver permissão de ver resultados diagnósticos (Funcionário
+    # usuário tiver permissão de ver resultados diagnósticos (Gestor
     # da Clínica nunca recebe esses dois campos preenchidos — ver
     # build_exam_response no service).
     ai_prediction_label: str | None = None

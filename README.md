@@ -243,11 +243,11 @@ O modo `academic_demo` acrescenta as contas fictícias abaixo:
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Médico — Clínica Primária | doctor@clinicai.com | clinicai123 |
-| Funcionário — Clínica Primária | staff@clinicai.com | clinicai123 |
+| Gestor — Clínica Primária | clinic_manager@clinicai.com | clinicai123 |
 | Médico — Hospital Regional Cariri | doctor.cariri@clinicai.com | clinicai123 |
-| Funcionário — Hospital Regional Cariri | staff.cariri@clinicai.com | clinicai123 |
+| Gestor — Hospital Regional Cariri | manager.cariri@clinicai.com | clinicai123 |
 | Médico — Centro Endoscópico Cariri | doctor.endoscopia@clinicai.com | clinicai123 |
-| Funcionário — Centro Endoscópico Cariri | staff.endoscopia@clinicai.com | clinicai123 |
+| Gestor — Centro Endoscópico Cariri | manager@clinicai.com | clinicai123 |
 
 Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
 ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
@@ -425,10 +425,11 @@ distingue uma role nunca inicializada de uma role configurada sem permissões.
 Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições
 administrativas permanecem como fonte da verdade.
 
-Mudanças oficiais de permissões em bancos existentes são implementadas por
-migrations de dados do Alembic. A migration `b7c1d4e2f901` introduz o marcador
-de bootstrap e revoga os privilégios legados `exams:read` e
-`ai_analysis:read` de `clinic_staff`.
+A baseline `0001clinicai` já contém o marcador de bootstrap e o catálogo
+estrutural atual. Na matriz padrão, `clinic_manager` possui acesso operacional
+à própria clínica, sem receber `exams:read` ou `ai_analysis:read`. Mudanças
+oficiais futuras em bancos existentes devem ser implementadas por novas
+migrations de dados do Alembic.
 
 Somente quando houver intenção de descartar customizações e restaurar toda a
 matriz padrão, execute manualmente:
