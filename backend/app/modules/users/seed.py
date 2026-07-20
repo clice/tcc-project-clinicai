@@ -31,6 +31,8 @@ def get_or_create_user(
     cpf: str,
     clinic_id: int | None = None,
     phone: str | None = None,
+    crm_number: str | None = None,
+    crm_uf: str | None = None,
 ) -> User:
     user = (
         db.query(User)
@@ -46,6 +48,8 @@ def get_or_create_user(
         email=email,
         cpf=cpf,
         phone=phone,
+        crm_number=crm_number,
+        crm_uf=crm_uf,
         role_id=role_id,
         status_id=status_id,
         clinic_id=clinic_id,
@@ -102,6 +106,8 @@ def seed_users(
             "cpf": "11144477735",
             "role": "doctor",
             "clinic": "clinic_primary",
+            "crm_number": "12345",
+            "crm_uf": "CE",
         },
         "manager_primary": {
             "name": "Gestor Clínica Primária",
@@ -116,6 +122,8 @@ def seed_users(
             "cpf": "31415926590",
             "role": "doctor",
             "clinic": "clinic_large",
+            "crm_number": "23456",
+            "crm_uf": "CE",
         },
         "manager_large": {
             "name": "Gestor Hospital Cariri",
@@ -130,6 +138,8 @@ def seed_users(
             "cpf": "16180339805",
             "role": "doctor",
             "clinic": "clinic_specialized",
+            "crm_number": "34567",
+            "crm_uf": "CE",
         },
         "manager_specialized": {
             "name": "Gestão Centro Endoscópico",
@@ -162,6 +172,8 @@ def seed_users(
                 "user_active"
             ].id,
             clinic_id=clinic.id,
+            crm_number=definition.get("crm_number"),
+            crm_uf=definition.get("crm_uf"),
         )
 
     return users

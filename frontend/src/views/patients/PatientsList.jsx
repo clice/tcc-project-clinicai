@@ -7,7 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CButton, CCard, CCardBody, CFormInput, CSpinner } from '@coreui/react'
+import { CButton, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppTabs from 'src/components/shared/AppTabs'
@@ -18,9 +18,8 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { patientService } from 'src/services/patientService'
 
-import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
-import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
+import { formatCpfBR, formatPhoneBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
 import { getUserRole, hasPermission, ROLES } from 'src/utils/permissions'
 
@@ -35,7 +34,6 @@ const PatientsList = () => {
 
   const [activeTab, setActiveTab] = useState('active')
   const [patients, setPatients] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   const roleName = getUserRole(user)
@@ -59,30 +57,25 @@ const PatientsList = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
-    void loadPatients()
+    const timeoutId = window.setTimeout(() => {
+      void loadPatients()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadPatients])
 
   /**
    * Separa pacientes por status para alimentar as abas.
    */
-  const filteredPatients = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR')
-
-    return patients.filter((patient) => {
-      if (patient.status_name !== activeTab) return false
-      if (!normalizedSearch) return true
-
-      return [
-        patient.name,
-        patient.cpf,
-        patient.doctor_name,
-        patient.clinic_name,
-      ].some((value) => String(value || '').toLocaleLowerCase('pt-BR').includes(normalizedSearch))
-    })
-  }, [patients, activeTab, searchTerm])
+  const filteredPatients = useMemo(
+    () => patients.filter((patient) => patient.status_name === activeTab),
+    [patients, activeTab],
+  )
 
   /**
    * Conta registros por aba.
@@ -98,34 +91,31 @@ const PatientsList = () => {
   /**
    * Mudança de status do paciente.
    */
-  const handleChangeStatus = async (patient) => {
-    try {
-      showError('')
+  const handleChangeStatus = useCallback(
+    async (patient) => {
+      try {
+        showError('')
 
-      if (patient.status_name === 'active') {
-        await patientService.inactivate(patient.id)
-        showSuccess('Paciente inativado com sucesso.')
-      } else {
-        await patientService.activate(patient.id)
-        showSuccess('Paciente ativado com sucesso.')
+        if (patient.status_name === 'active') {
+          await patientService.inactivate(patient.id)
+          showSuccess('Paciente inativado com sucesso.')
+        } else {
+          await patientService.activate(patient.id)
+          showSuccess('Paciente ativado com sucesso.')
+        }
+
+        await loadPatients()
+      } catch (err) {
+        showError(err.response?.data?.detail || 'Erro ao alterar status do paciente.')
       }
-
-      await loadPatients()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao alterar status do paciente.')
-    }
-  }
+    },
+    [loadPatients, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Paciente' },
       { accessorKey: 'cpf', header: 'CPF', cell: ({ getValue }) => formatCpfBR(getValue()) || '-' },
-      {
-        accessorKey: 'birth_date',
-        header: 'Idade',
-        cell: ({ getValue }) => calculateAge(getValue()),
-      },
-      { accessorKey: 'sex', header: 'Sexo', cell: ({ getValue }) => formatSex(getValue()) },
       {
         accessorKey: 'phone',
         header: 'Telefone',
@@ -174,14 +164,7 @@ const PatientsList = () => {
         },
       },
     ],
-    [
-      canView,
-      canEdit,
-      canChangeStatus,
-      loadPatients,
-      showClinicColumn,
-      showDoctorColumn,
-    ],
+    [canView, canEdit, canChangeStatus, handleChangeStatus, showClinicColumn, showDoctorColumn],
   )
 
   return (
@@ -222,14 +205,6 @@ const PatientsList = () => {
             </div>
           ) : (
             <>
-              {/* <CFormInput
-                className="mb-3"
-                type="search"
-                value={searchTerm}
-                placeholder="Buscar por paciente, CPF, médico ou clínica"
-                aria-label="Buscar pacientes"
-                onChange={(event) => setSearchTerm(event.target.value)}
-              /> */}
               <AppTabs
                 tabs={patientTabs}
                 counts={tabCounts}

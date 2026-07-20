@@ -130,9 +130,11 @@ def build_exam_list_response(exam: Exam) -> dict:
         "clinic_name": (
             exam.clinic.name if exam.clinic else None
         ),
+        "patient_id": exam.patient_id,
         "patient_name": (
             exam.patient.name if exam.patient else None
         ),
+        "doctor_id": exam.doctor_id,
         "doctor_name": (
             exam.doctor.name if exam.doctor else None
         ),

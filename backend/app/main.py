@@ -5,9 +5,10 @@ Responsável por criar a instância da API, configurar CORS
 e registrar as rotas do sistema.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.common.request_context import bind_request_audit_context
 from app.core.config import settings
 
 from app.modules.routes import register_routes
@@ -35,6 +36,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def attach_request_audit_context(
+    request: Request,
+    call_next,
+):
+    """Disponibiliza metadados HTTP para auditorias da requisição."""
+
+    with bind_request_audit_context(
+        ip_address=(
+            request.client.host
+            if request.client
+            else None
+        ),
+        user_agent=request.headers.get(
+            "user-agent"
+        ),
+    ):
+        return await call_next(request)
 
 
 # ==================================================

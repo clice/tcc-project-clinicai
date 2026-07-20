@@ -125,7 +125,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
         "exam_awaiting_review": get_or_create_status(
             db,
             name=StatusName.AWAITING_REVIEW,
-            display_name="Aguardando Revisão Médica",
+            display_name="Aguardando Revisão",
             applies_to=StatusScope.EXAM,
             description="Análise de IA concluída, aguardando revisão do médico.",
         ),
@@ -139,7 +139,7 @@ def seed_statuses(db: Session) -> dict[str, Status]:
         "exam_completed_with_divergence": get_or_create_status(
             db,
             name=StatusName.COMPLETED_WITH_DIVERGENCE,
-            display_name="Concluído com Divergência",
+            display_name="Com Divergência",
             applies_to=StatusScope.EXAM,
             description="Exame concluído. Médico identificou divergência em relação à análise da IA.",
         ),

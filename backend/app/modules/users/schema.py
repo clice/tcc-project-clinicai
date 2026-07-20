@@ -8,6 +8,8 @@ from app.common.schemas import StrictRequestModel
 from app.common.validators import (
     normalize_email,
     normalize_optional_email,
+    normalize_crm_number,
+    normalize_crm_uf,
     normalize_phone,
     normalize_required_text,
     validate_cpf,
@@ -22,8 +24,9 @@ class UserBase(StrictRequestModel):
     email: EmailStr = Field(...)
     cpf: str = Field(..., max_length=14)
     phone: str | None = Field(default=None, max_length=20)
+    crm_number: str | None = Field(default=None, max_length=10)
+    crm_uf: str | None = Field(default=None, max_length=2)
     role_id: int
-    status_id: int
     clinic_id: int | None = None
 
     @field_validator("name")
@@ -48,6 +51,16 @@ class UserBase(StrictRequestModel):
     def normalize_phone_field(cls, value: str | None) -> str | None:
         return normalize_phone(value)
 
+    @field_validator("crm_number")
+    @classmethod
+    def normalize_crm_number_field(cls, value: str | None) -> str | None:
+        return normalize_crm_number(value)
+
+    @field_validator("crm_uf")
+    @classmethod
+    def normalize_crm_uf_field(cls, value: str | None) -> str | None:
+        return normalize_crm_uf(value)
+
 
 class UserCreate(UserBase):
     """Payload administrativo para criação de usuário."""
@@ -67,6 +80,8 @@ class UserProfileUpdate(StrictRequestModel):
     email: EmailStr | None = None
     cpf: str | None = Field(default=None, max_length=14)
     phone: str | None = Field(default=None, max_length=20)
+    crm_number: str | None = Field(default=None, max_length=10)
+    crm_uf: str | None = Field(default=None, max_length=2)
 
     @field_validator("name")
     @classmethod
@@ -91,6 +106,16 @@ class UserProfileUpdate(StrictRequestModel):
     @classmethod
     def normalize_phone_field(cls, value: str | None) -> str | None:
         return normalize_phone(value)
+
+    @field_validator("crm_number")
+    @classmethod
+    def normalize_crm_number_field(cls, value: str | None) -> str | None:
+        return normalize_crm_number(value)
+
+    @field_validator("crm_uf")
+    @classmethod
+    def normalize_crm_uf_field(cls, value: str | None) -> str | None:
+        return normalize_crm_uf(value)
 
 
 class UserAdminUpdate(UserProfileUpdate):
@@ -135,6 +160,8 @@ class UserResponse(BaseModel):
     email: str
     cpf: str
     phone: str | None = None
+    crm_number: str | None = None
+    crm_uf: str | None = None
     role_id: int
     status_id: int
     clinic_id: int | None = None
@@ -170,15 +197,6 @@ class UserManagementRoleOption(BaseModel):
     display_name: str
 
 
-class UserManagementStatusOption(BaseModel):
-    """Status de usuário disponíveis no formulário de médicos."""
-
-    id: int
-    name: str
-    display_name: str
-    applies_to: str
-
-
 class UserManagementClinicOption(BaseModel):
     """Clínica ativa vinculada ao gestor."""
 
@@ -191,38 +209,4 @@ class DoctorManagementOptionsResponse(BaseModel):
     """Catálogos mínimos necessários à gestão de médicos."""
 
     role: UserManagementRoleOption
-    statuses: list[UserManagementStatusOption]
-    clinic: UserManagementClinicOption
-
-
-class UserManagementRoleOption(BaseModel):
-    """Único papel que o gestor pode atribuir."""
-
-    id: int
-    name: str
-    display_name: str
-
-
-class UserManagementStatusOption(BaseModel):
-    """Status de usuário disponíveis no formulário de médicos."""
-
-    id: int
-    name: str
-    display_name: str
-    applies_to: str
-
-
-class UserManagementClinicOption(BaseModel):
-    """Clínica ativa vinculada ao gestor."""
-
-    id: int
-    name: str
-    status_name: str
-
-
-class DoctorManagementOptionsResponse(BaseModel):
-    """Catálogos mínimos necessários à gestão de médicos."""
-
-    role: UserManagementRoleOption
-    statuses: list[UserManagementStatusOption]
     clinic: UserManagementClinicOption

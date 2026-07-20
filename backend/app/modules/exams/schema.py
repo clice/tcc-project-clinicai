@@ -109,7 +109,9 @@ class ExamListItemResponse(BaseModel):
     id: int
     clinic_id: int
     clinic_name: str | None = None
+    patient_id: int
     patient_name: str | None = None
+    doctor_id: int | None = None
     doctor_name: str | None = None
     status_id: int
     status_name: str | None = None

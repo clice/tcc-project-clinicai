@@ -11,8 +11,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   CAlert,
+  CBadge,
   CButton,
-  CButtonGroup,
   CCard,
   CCardBody,
   CCardHeader,
@@ -29,9 +29,11 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { userService } from 'src/services/userService'
 import { roleService } from 'src/services/roleService'
-import { statusService } from 'src/services/statusService'
 import { clinicService } from 'src/services/clinicService'
+import { patientService } from 'src/services/patientService'
+import { examService } from 'src/services/examService'
 
+import { statusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
 import { getUserRole, ROLES } from 'src/utils/permissions'
@@ -41,25 +43,55 @@ const emptyUser = {
   email: '',
   cpf: '',
   phone: '',
+  crm_number: '',
+  crm_uf: '',
   role_id: '',
-  status_id: '',
   clinic_id: '',
   password: '',
   confirmPassword: '',
 }
+
+const brazilianStates = [
+  'AC',
+  'AL',
+  'AP',
+  'AM',
+  'BA',
+  'CE',
+  'DF',
+  'ES',
+  'GO',
+  'MA',
+  'MT',
+  'MS',
+  'MG',
+  'PA',
+  'PB',
+  'PR',
+  'PE',
+  'PI',
+  'RJ',
+  'RN',
+  'RS',
+  'RO',
+  'RR',
+  'SC',
+  'SP',
+  'SE',
+  'TO',
+]
 
 const UserForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
-  const isClinicManager =
-    getUserRole(currentUser) === ROLES.CLINIC_MANAGER
+  const isClinicManager = getUserRole(currentUser) === ROLES.CLINIC_MANAGER
 
   const [form, setForm] = useState(emptyUser)
   const [roles, setRoles] = useState([])
-  const [statuses, setStatuses] = useState([])
   const [clinics, setClinics] = useState([])
+  const [doctorPatients, setDoctorPatients] = useState([])
   const [isSaving, setIsSaving] = useState(false)
 
   const isReadOnly = mode === 'view'
@@ -72,13 +104,11 @@ const UserForm = ({ mode = 'create' }) => {
     [roles, form.role_id],
   )
 
-  const requiresClinic = useMemo(() => {
-    return selectedRole?.name && selectedRole.name !== 'admin_master'
-  }, [selectedRole])
+  const isDoctorRole = selectedRole?.name === ROLES.DOCTOR
 
-  const userStatuses = useMemo(() => {
-    return statuses.filter((status) => status.applies_to === 'user')
-  }, [statuses])
+  const requiresClinic = useMemo(() => {
+    return selectedRole?.name && selectedRole.name !== ROLES.ADMIN_MASTER
+  }, [selectedRole])
 
   const availableClinics = useMemo(() => {
     const selectedClinicId = String(form.clinic_id)
@@ -115,7 +145,6 @@ const UserForm = ({ mode = 'create' }) => {
         showSuccess('')
 
         let loadedRoles = []
-        let loadedStatuses = []
         let loadedClinics = []
         let userData = null
 
@@ -125,37 +154,22 @@ const UserForm = ({ mode = 'create' }) => {
             isCreateMode ? Promise.resolve(null) : userService.getById(id),
           ])
 
-          loadedRoles = optionsData?.role
-            ? [optionsData.role]
-            : []
-          loadedStatuses = Array.isArray(optionsData?.statuses)
-            ? optionsData.statuses
-            : []
-          loadedClinics = optionsData?.clinic
-            ? [optionsData.clinic]
-            : []
+          loadedRoles = optionsData?.role ? [optionsData.role] : []
+          loadedClinics = optionsData?.clinic ? [optionsData.clinic] : []
           userData = loadedUser
         } else {
-          const [
-            rolesData,
-            statusesData,
-            clinicsData,
-            loadedUser,
-          ] = await Promise.all([
+          const [rolesData, clinicsData, loadedUser] = await Promise.all([
             roleService.list(),
-            statusService.list(),
             clinicService.list({ includeInactive: true }),
             isCreateMode ? Promise.resolve(null) : userService.getById(id),
           ])
 
           loadedRoles = Array.isArray(rolesData) ? rolesData : []
-          loadedStatuses = Array.isArray(statusesData) ? statusesData : []
           loadedClinics = Array.isArray(clinicsData) ? clinicsData : []
           userData = loadedUser
         }
 
         setRoles(loadedRoles)
-        setStatuses(loadedStatuses)
         setClinics(loadedClinics)
 
         if (userData) {
@@ -164,8 +178,9 @@ const UserForm = ({ mode = 'create' }) => {
             email: userData.email ?? '',
             cpf: formatCpfBR(userData.cpf ?? ''),
             phone: formatPhoneBR(userData.phone ?? ''),
+            crm_number: userData.crm_number ?? '',
+            crm_uf: userData.crm_uf ?? '',
             role_id: userData.role_id ? String(userData.role_id) : '',
-            status_id: userData.status_id ? String(userData.status_id) : '',
             clinic_id: userData.clinic_id ? String(userData.clinic_id) : '',
             password: '',
             confirmPassword: '',
@@ -174,23 +189,10 @@ const UserForm = ({ mode = 'create' }) => {
           return
         }
 
-        const activeUserStatus = loadedStatuses.find(
-          (status) => status.name === 'active' && status.applies_to === 'user',
-        )
-
         setForm({
           ...emptyUser,
-          role_id:
-            isClinicManager && loadedRoles[0]
-              ? String(loadedRoles[0].id)
-              : '',
-          status_id: activeUserStatus
-            ? String(activeUserStatus.id)
-            : '',
-          clinic_id:
-            isClinicManager && loadedClinics[0]
-              ? String(loadedClinics[0].id)
-              : '',
+          role_id: isClinicManager && loadedRoles[0] ? String(loadedRoles[0].id) : '',
+          clinic_id: isClinicManager && loadedClinics[0] ? String(loadedClinics[0].id) : '',
         })
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar os dados do usuário.'))
@@ -200,7 +202,59 @@ const UserForm = ({ mode = 'create' }) => {
     }
 
     void loadData()
-  }, [id, isClinicManager, isCreateMode])
+  }, [id, isClinicManager, isCreateMode, showError, showSuccess, startLoading, stopLoading])
+
+  useEffect(() => {
+    if (isCreateMode || !id || !isDoctorRole) {
+      return undefined
+    }
+
+    let isCancelled = false
+
+    const loadDoctorPatients = async () => {
+      try {
+        const [patientsData, examsData] = await Promise.all([
+          patientService.list({
+            doctorId: id,
+            includeInactive: true,
+          }),
+          examService.list({
+            doctorId: id,
+            includeInactive: true,
+          }),
+        ])
+
+        if (isCancelled) return
+
+        const examsByPatient = (Array.isArray(examsData) ? examsData : []).reduce(
+          (counts, exam) => {
+            const patientId = String(exam.patient_id)
+            counts[patientId] = (counts[patientId] || 0) + 1
+            return counts
+          },
+          {},
+        )
+
+        setDoctorPatients(
+          (Array.isArray(patientsData) ? patientsData : []).map((patient) => ({
+            ...patient,
+            exam_count: examsByPatient[String(patient.id)] || 0,
+          })),
+        )
+      } catch (err) {
+        if (!isCancelled) {
+          setDoctorPatients([])
+          showError(getErrorMessage(err, 'Não foi possível carregar os pacientes do médico.'))
+        }
+      }
+    }
+
+    void loadDoctorPatients()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [id, isCreateMode, isDoctorRole, showError])
 
   /**
    * Atualiza um campo do formulário.
@@ -220,6 +274,8 @@ const UserForm = ({ mode = 'create' }) => {
       ...current,
       role_id: value,
       clinic_id: nextRequiresClinic ? current.clinic_id : '',
+      crm_number: role?.name === ROLES.DOCTOR ? current.crm_number : '',
+      crm_uf: role?.name === ROLES.DOCTOR ? current.crm_uf : '',
     }))
   }
 
@@ -249,8 +305,8 @@ const UserForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (!form.role_id || (isCreateMode && !form.status_id)) {
-      showError(isCreateMode ? 'Preencha o perfil de acesso e o status.' : 'Preencha o perfil de acesso.')
+    if (!form.role_id) {
+      showError('Preencha o perfil de acesso.')
       return false
     }
 
@@ -259,17 +315,33 @@ const UserForm = ({ mode = 'create' }) => {
       return false
     }
 
+    if (isDoctorRole && !form.crm_number.trim()) {
+      showError('Informe o CRM do médico.')
+      return false
+    }
+
+    if (isDoctorRole && !form.crm_uf) {
+      showError('Selecione a UF do CRM.')
+      return false
+    }
+
     if (isCreateMode && !form.password.trim()) {
       showError('Informe a senha do usuário.')
       return false
     }
 
-    if ((isCreateMode || form.password || form.confirmPassword) && form.password.trim().length < 8) {
+    if (
+      (isCreateMode || form.password || form.confirmPassword) &&
+      form.password.trim().length < 8
+    ) {
       showError('A senha deve ter no mínimo 8 caracteres.')
       return false
     }
 
-    if ((isCreateMode || form.password || form.confirmPassword) && form.password !== form.confirmPassword) {
+    if (
+      (isCreateMode || form.password || form.confirmPassword) &&
+      form.password !== form.confirmPassword
+    ) {
       showError('Senha e confirmação de senha não coincidem.')
       return false
     }
@@ -282,19 +354,20 @@ const UserForm = ({ mode = 'create' }) => {
     email: form.email.trim().toLowerCase(),
     cpf: onlyNumbers(form.cpf) || null,
     phone: onlyNumbers(form.phone) || null,
+    crm_number: isDoctorRole ? onlyNumbers(form.crm_number) || null : null,
+    crm_uf: isDoctorRole ? form.crm_uf || null : null,
   })
 
   const buildCreatePayload = () => ({
     ...buildProfilePayload(),
     role_id: Number(form.role_id),
-    status_id: Number(form.status_id),
     clinic_id: requiresClinic ? Number(form.clinic_id) : null,
   })
 
   const buildAdminUpdatePayload = () => {
     const payload = buildProfilePayload()
 
-    if (!isSelfRecord) {
+    if (!isSelfRecord && !isClinicManager) {
       payload.role_id = Number(form.role_id)
       payload.clinic_id = requiresClinic ? Number(form.clinic_id) : null
     }
@@ -322,9 +395,7 @@ const UserForm = ({ mode = 'create' }) => {
         })
 
         showSuccess(
-          isClinicManager
-            ? 'Médico cadastrado com sucesso.'
-            : 'Usuário cadastrado com sucesso.',
+          isClinicManager ? 'Médico cadastrado com sucesso.' : 'Usuário cadastrado com sucesso.',
         )
         navigate('/users')
         return
@@ -338,9 +409,7 @@ const UserForm = ({ mode = 'create' }) => {
         }
 
         showSuccess(
-          isClinicManager
-            ? 'Médico atualizado com sucesso.'
-            : 'Usuário atualizado com sucesso.',
+          isClinicManager ? 'Médico atualizado com sucesso.' : 'Usuário atualizado com sucesso.',
         )
       }
     } catch (err) {
@@ -379,17 +448,17 @@ const UserForm = ({ mode = 'create' }) => {
         </div>
       </div>
 
-      {isEditMode && !isSelfRecord && (
+      {isEditMode && !isSelfRecord && !isClinicManager && (
         <CAlert color="warning">
-          Alterar o perfil de acesso ou a clínica encerra as sessões ativas do usuário.
-          O status deve ser alterado somente pelos botões Ativar/Inativar da listagem.
+          Alterar o perfil de acesso ou a clínica encerra as sessões ativas do usuário. O status
+          deve ser alterado somente pelos botões Ativar/Inativar da listagem.
         </CAlert>
       )}
 
       {isEditMode && isSelfRecord && (
         <CAlert color="info">
-          Perfil, clínica, status e senha da própria conta não podem ser alterados nesta tela.
-          Use “Meu Perfil” para atualizar seus dados ou sua senha.
+          Perfil, clínica, status e senha da própria conta não podem ser alterados nesta tela. Use
+          “Meu Perfil” para atualizar seus dados ou sua senha.
         </CAlert>
       )}
 
@@ -401,7 +470,7 @@ const UserForm = ({ mode = 'create' }) => {
         <CCardBody>
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
-              <CCol md={8}>
+              <CCol md={isClinicManager ? 12 : 8}>
                 <CFormLabel>Nome</CFormLabel>
                 <CFormInput
                   value={form.name}
@@ -411,18 +480,81 @@ const UserForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={4}>
-                <CFormLabel>E-mail</CFormLabel>
-                <CFormInput
-                  type="email"
-                  value={form.email}
-                  disabled={isReadOnly}
-                  onChange={(event) => updateField('email', event.target.value)}
-                  required
-                />
-              </CCol>
+              {!isClinicManager && (
+                <CCol md={4}>
+                  <CFormLabel>Perfil de acesso</CFormLabel>
+                  <CFormSelect
+                    value={form.role_id}
+                    disabled={isReadOnly || isSelfRecord}
+                    onChange={(event) => handleRoleChange(event.target.value)}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {sortedRoles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.display_name || role.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+              )}
 
-              <CCol md={4}>
+              {!isClinicManager && requiresClinic && (
+                <CCol md={isDoctorRole ? 6 : 12}>
+                  <CFormLabel>Clínica</CFormLabel>
+                  <CFormSelect
+                    value={form.clinic_id}
+                    disabled={isReadOnly || isSelfRecord}
+                    onChange={(event) => updateField('clinic_id', event.target.value)}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {availableClinics.map((clinic) => (
+                      <option key={clinic.id} value={clinic.id}>
+                        {clinic.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+              )}
+
+              {isDoctorRole && (
+                <>
+                  <CCol md={isClinicManager ? 8 : 4}>
+                    <CFormLabel>CRM</CFormLabel>
+                    <CFormInput
+                      value={form.crm_number}
+                      disabled={isReadOnly}
+                      inputMode="numeric"
+                      maxLength={10}
+                      onChange={(event) =>
+                        updateField('crm_number', onlyNumbers(event.target.value) || '')
+                      }
+                      placeholder="Número do CRM"
+                      required
+                    />
+                  </CCol>
+
+                  <CCol md={isClinicManager ? 4 : 2}>
+                    <CFormLabel>UF do CRM</CFormLabel>
+                    <CFormSelect
+                      value={form.crm_uf}
+                      disabled={isReadOnly}
+                      onChange={(event) => updateField('crm_uf', event.target.value)}
+                      required
+                    >
+                      <option value="">Selecione...</option>
+                      {brazilianStates.map((state) => (
+                        <option key={state} value={state}>
+                          {state}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </CCol>
+                </>
+              )}
+
+              <CCol md={6}>
                 <CFormLabel>CPF</CFormLabel>
                 <CFormInput
                   value={form.cpf}
@@ -433,7 +565,7 @@ const UserForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={4}>
+              <CCol md={6}>
                 <CFormLabel>Telefone</CFormLabel>
                 <CFormInput
                   value={form.phone}
@@ -443,72 +575,20 @@ const UserForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={4}>
-                <CFormLabel>Status</CFormLabel>
-                <CFormSelect
-                  value={form.status_id}
-                  disabled={isReadOnly || isEditMode}
-                  onChange={(event) => updateField('status_id', event.target.value)}
+              <CCol md={!isReadOnly && (!isEditMode || !isSelfRecord) ? 4 : 12}>
+                <CFormLabel>E-mail</CFormLabel>
+                <CFormInput
+                  type="email"
+                  value={form.email}
+                  disabled={isReadOnly}
+                  onChange={(event) => updateField('email', event.target.value)}
                   required
-                >
-                  <option value="">Selecione...</option>
-
-                  {userStatuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.display_name || status.name}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>Perfil de acesso</CFormLabel>
-                <CFormSelect
-                  value={form.role_id}
-                  disabled={
-                    isReadOnly
-                    || isSelfRecord
-                    || isClinicManager
-                  }
-                  onChange={(event) => handleRoleChange(event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-
-                  {sortedRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.display_name || role.name}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>Clínica</CFormLabel>
-                <CFormSelect
-                  value={form.clinic_id}
-                  disabled={
-                    isReadOnly
-                    || isSelfRecord
-                    || isClinicManager
-                    || !requiresClinic
-                  }
-                  onChange={(event) => updateField('clinic_id', event.target.value)}
-                  required={requiresClinic}
-                >
-                  <option value="">{requiresClinic ? 'Selecione...' : ''}</option>
-
-                  {availableClinics.map((clinic) => (
-                    <option key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </option>
-                  ))}
-                </CFormSelect>
+                />
               </CCol>
 
               {!isReadOnly && (!isEditMode || !isSelfRecord) && (
                 <>
-                  <CCol md={6}>
+                  <CCol md={4}>
                     <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
                     <CFormInput
                       type="password"
@@ -520,7 +600,7 @@ const UserForm = ({ mode = 'create' }) => {
                     />
                   </CCol>
 
-                  <CCol md={6}>
+                  <CCol md={4}>
                     <CFormLabel>
                       {isCreateMode ? 'Confirmar senha' : 'Confirmar nova senha'}
                     </CFormLabel>
@@ -540,7 +620,9 @@ const UserForm = ({ mode = 'create' }) => {
                 <div className="border rounded p-3 bg-body-tertiary">
                   <div className="fw-semibold mb-1">Permissões do usuário</div>
                   <div className="text-body-secondary small">
-                    As permissões são definidas automaticamente pelo perfil de acesso selecionado.
+                    {isClinicManager
+                      ? 'O perfil Médico e a clínica são definidos automaticamente.'
+                      : 'As permissões são definidas automaticamente pelo perfil de acesso selecionado.'}
                   </div>
                 </div>
               </CCol>
@@ -548,20 +630,11 @@ const UserForm = ({ mode = 'create' }) => {
 
             {!isReadOnly && (
               <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton
-                  color="primary"
-                  type="submit"
-                  disabled={isSaving}
-                >
+                <CButton color="primary" type="submit" disabled={isSaving}>
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-  
-                <CButton
-                  color="secondary"
-                  variant="outline"
-                  as={Link}
-                  to="/users"
-                >
+
+                <CButton color="secondary" variant="outline" as={Link} to="/users">
                   Cancelar
                 </CButton>
               </div>
@@ -569,6 +642,69 @@ const UserForm = ({ mode = 'create' }) => {
           </CForm>
         </CCardBody>
       </CCard>
+
+      {!isCreateMode && isDoctorRole && (
+        <CCard className="mt-4">
+          <CCardHeader>
+            <strong>Pacientes ({doctorPatients.length})</strong>
+          </CCardHeader>
+
+          <CCardBody
+            style={{
+              maxHeight: '420px',
+              overflowY: 'auto',
+            }}
+            tabIndex={0}
+            aria-label="Pacientes vinculados ao médico"
+          >
+            {doctorPatients.length === 0 ? (
+              <div className="text-body-secondary">Nenhum paciente vinculado a este médico.</div>
+            ) : (
+              <CRow className="g-3">
+                {doctorPatients.map((patient) => (
+                  <CCol key={patient.id} xs={12} md={6} lg={4}>
+                    <CCard className="h-100 border shadow-sm">
+                      <CCardBody className="d-flex flex-column p-3">
+                        <div className="d-flex justify-content-between align-items-start gap-2">
+                          <div className="fw-semibold">{patient.name}</div>
+
+                          <CBadge color={statusColors[patient.status_name] || 'secondary'}>
+                            {patient.status_display_name ||
+                              (patient.status_name === 'active' ? 'Ativo' : 'Inativo')}
+                          </CBadge>
+                        </div>
+
+                        <div className="text-body-secondary small mt-3">
+                          CPF: {formatCpfBR(patient.cpf)}
+                        </div>
+
+                        <div className="text-body-secondary small mt-1">
+                          Telefone: {formatPhoneBR(patient.phone) || 'Não informado'}
+                        </div>
+
+                        <div className="text-body-secondary small mt-1">
+                          Exames: {patient.exam_count}
+                        </div>
+
+                        <CButton
+                          color="primary"
+                          variant="outline"
+                          size="sm"
+                          className="clinicai-soft-action mt-2 pt-2"
+                          as={Link}
+                          to={`/patients/${patient.id}`}
+                        >
+                          Ver paciente
+                        </CButton>
+                      </CCardBody>
+                    </CCard>
+                  </CCol>
+                ))}
+              </CRow>
+            )}
+          </CCardBody>
+        </CCard>
+      )}
     </>
   )
 }

@@ -5,11 +5,13 @@ Contém as regras de negócio relacionadas aos logs de auditoria.
 """
 
 import re
+from datetime import date, datetime, time, timedelta, timezone
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.constants import AuditAction, AuditEntity
+from app.common.request_context import get_request_audit_context
 from app.common.services import enum_to_value, is_admin_master
 from app.modules.audit_logs.model import AuditLog
 from app.modules.users.model import User
@@ -166,6 +168,16 @@ def create_audit_log(
     Por padrão, não faz commit separado.
     Assim, o log participa da mesma transação do service que chamou.
     """
+    request_ip_address, request_user_agent = (
+        get_request_audit_context()
+    )
+
+    if ip_address is None:
+        ip_address = request_ip_address
+
+    if user_agent is None:
+        user_agent = request_user_agent
+
     audit_log = AuditLog(
         user_id=user_id,
         clinic_id=clinic_id,
@@ -196,6 +208,8 @@ def _query_audit_logs(
     entity: str | None = None,
     entity_id: int | None = None,
     action: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> dict:
@@ -227,6 +241,36 @@ def _query_audit_logs(
     if action is not None:
         query = query.filter(AuditLog.action == action)
 
+    if (
+        date_from is not None
+        and date_to is not None
+        and date_from > date_to
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A data inicial não pode ser posterior à data final.",
+        )
+
+    if date_from is not None:
+        start_at = datetime.combine(
+            date_from,
+            time.min,
+            tzinfo=timezone.utc,
+        )
+        query = query.filter(
+            AuditLog.created_at >= start_at
+        )
+
+    if date_to is not None:
+        end_exclusive = datetime.combine(
+            date_to + timedelta(days=1),
+            time.min,
+            tzinfo=timezone.utc,
+        )
+        query = query.filter(
+            AuditLog.created_at < end_exclusive
+        )
+
     total = query.count()
 
     logs = (
@@ -252,6 +296,8 @@ def list_audit_logs(
     user_id: int | None = None,
     entity: str | None = None,
     action: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> dict:
@@ -269,6 +315,8 @@ def list_audit_logs(
         user_id=user_id,
         entity=entity,
         action=action,
+        date_from=date_from,
+        date_to=date_to,
         limit=limit,
         offset=offset,
     )

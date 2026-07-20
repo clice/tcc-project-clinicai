@@ -107,6 +107,8 @@ def upgrade() -> None:
     sa.Column('email', sa.String(length=150), nullable=False),
     sa.Column('cpf', sa.String(length=11), nullable=False),
     sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('crm_number', sa.String(length=10), nullable=True),
+    sa.Column('crm_uf', sa.String(length=2), nullable=True),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('token_version', sa.Integer(), server_default='0', nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
@@ -118,7 +120,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['clinic_id'], ['clinics.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
     sa.ForeignKeyConstraint(['status_id'], ['statuses.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('crm_uf', 'crm_number', name='uq_users_crm_uf_number')
     )
     op.create_index(op.f('ix_users_clinic_id'), 'users', ['clinic_id'], unique=False)
     op.create_index(op.f('ix_users_cpf'), 'users', ['cpf'], unique=True)

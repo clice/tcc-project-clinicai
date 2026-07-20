@@ -50,76 +50,49 @@ assert.match(patientService, /clinic_id: clinicId \|\| undefined/)
 assert.match(patientService, /doctor_id: doctorId \|\| undefined/)
 
 assert.match(form, /if \(isCreateMode \|\| !isDoctor\)/)
-assert.match(form, /status_display_name \|\| form\.status_name/)
+assert.doesNotMatch(
+  form,
+  /<CFormLabel>Status<\/CFormLabel>/,
+  'O status do paciente deve ser alterado somente pela listagem.',
+)
 
 assert.equal(
-  (
-    form.match(
-      /<CCol xs=\{12\}>/g,
-    ) || []
-  ).length,
+  (form.match(/<CCol xs=\{12\}>/g) || []).length,
   2,
   'Dados e histórico devem ocupar toda a largura.',
 )
 
-assert.doesNotMatch(
-  form,
-  /lg=\{isCreateMode \|\| !hasPatientExams \? 12 : 8\}/,
-)
+assert.doesNotMatch(form, /lg=\{isCreateMode \|\| !hasPatientExams \? 12 : 8\}/)
 
-assert.doesNotMatch(
-  form,
-  /<CCol lg=\{4\}>/,
-)
+assert.doesNotMatch(form, /<CCol lg=\{4\}>/)
 
-assert.match(
-  form,
-  /maxHeight:\s*'420px'/,
-)
+assert.match(form, /maxHeight:\s*'420px'/)
 
-assert.match(
-  form,
-  /overflowY:\s*'auto'/,
-)
+assert.match(form, /overflowY:\s*'auto'/)
 
-assert.match(
-  form,
-  /tabIndex=\{0\}/,
-)
+assert.match(form, /tabIndex=\{0\}/)
 
-assert.match(
-  form,
-  /aria-label="Histórico de exames do paciente"/,
-)
+assert.match(form, /aria-label="Histórico de exames do paciente"/)
 
-const patientDataPosition =
-  form.indexOf(
-    '<strong>Dados do Paciente</strong>',
-  )
+assert.match(form, /PERMISSIONS\.EXAMS_LIST/)
+assert.match(form, /const canListExams/)
+assert.match(form, /Histórico de Exames \(\{patientExams\.length\}\)/)
+assert.match(form, /\{isDoctor && canReadExams && \([\s\S]*?to=\{`\/exams\/\$\{exam\.id\}`\}/)
 
-const patientHistoryPosition =
-  form.indexOf(
-    '<strong>Histórico de Exames</strong>',
-  )
+const patientDataPosition = form.indexOf('<strong>Dados do Paciente</strong>')
+
+const patientHistoryPosition = form.indexOf('<strong>Histórico de Exames (')
 
 assert.ok(
-  patientDataPosition >= 0 &&
-    patientHistoryPosition >
-      patientDataPosition,
+  patientDataPosition >= 0 && patientHistoryPosition > patientDataPosition,
   'O histórico deve aparecer depois dos dados do paciente.',
 )
 assert.match(list, /ROLES\.DOCTOR/)
 assert.match(list, /ROLES\.CLINIC_MANAGER/)
 
-assert.match(
-  list,
-  /const showDoctorColumn = roleName !== ROLES\.DOCTOR/,
-)
+assert.match(list, /const showDoctorColumn = roleName !== ROLES\.DOCTOR/)
 
-assert.match(
-  list,
-  /const showClinicColumn = roleName === ROLES\.ADMIN_MASTER/,
-)
+assert.match(list, /const showClinicColumn = roleName === ROLES\.ADMIN_MASTER/)
 
 assert.match(
   list,
@@ -133,10 +106,32 @@ assert.match(
 
 assert.match(
   list,
-  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*loadPatients,\s*showClinicColumn,\s*showDoctorColumn,?\s*\]/,
+  /\[\s*canView,\s*canEdit,\s*canChangeStatus,\s*handleChangeStatus,\s*showClinicColumn,\s*showDoctorColumn,?\s*\]/,
 )
-assert.match(list, /Buscar por paciente, CPF, médico ou clínica/)
+assert.doesNotMatch(
+  list,
+  /type="search"/,
+  'A listagem de pacientes não deve exibir o campo de busca removido.',
+)
+
+assert.match(
+  form,
+  /<CCol key=\{exam\.id\} xs=\{12\} md=\{6\} lg=\{4\}>/,
+  'O histórico deve exibir três cards por linha em telas grandes.',
+)
+
+assert.match(
+  form,
+  /\{isDoctor && canReadExams && \(/,
+  'Somente o médico pode receber a ação de abrir o exame no histórico.',
+)
+
+assert.doesNotMatch(
+  form,
+  /\{canReadExams && \(/,
+  'A permissão isolada de leitura não deve expor a ação clínica.',
+)
 
 console.log(
-  'Contrato de pacientes coerente: escopo, vínculos, colunas por perfil, status, filtros e histórico em largura total validados.',
+  'Contrato de pacientes coerente: escopo, vínculos, status e histórico contado com acesso não clínico do gestor validados.',
 )

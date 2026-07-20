@@ -5,7 +5,7 @@
  * visualização, edição e cadastro sem depender do banco.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CAlert, CBadge, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
@@ -25,29 +25,38 @@ const StatusesList = () => {
 
   const canManage = canManageStatuses(user)
 
-  const loadStatuses = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError('')
+  useEffect(() => {
+    let isCurrentRequest = true
 
-      const data = await statusService.list()
-      setStatuses(data)
-    } catch {
-      setError('Erro ao carregar os status.')
-    } finally {
-      setIsLoading(false)
+    statusService
+      .list()
+      .then((data) => {
+        if (!isCurrentRequest) return
+
+        setStatuses(data)
+        setError('')
+      })
+      .catch(() => {
+        if (!isCurrentRequest) return
+
+        setError('Erro ao carregar os status.')
+      })
+      .finally(() => {
+        if (isCurrentRequest) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isCurrentRequest = false
     }
   }, [])
-
-  useEffect(() => {
-    loadStatuses()
-  }, [loadStatuses])
 
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Nome técnico' },
-      { accessorKey: 'display_name', header: 'Nome de exibição' },
       { accessorKey: 'applies_to', header: 'Aplicado em' },
+      { accessorKey: 'display_name', header: 'Nome de exibição' },
       { accessorKey: 'description', header: 'Descrição' },
       {
         id: 'actions',
@@ -89,7 +98,7 @@ const StatusesList = () => {
 
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <AppTable data={statuses} columns={columns} placeholder="Filtrar status" />

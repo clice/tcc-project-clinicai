@@ -5,8 +5,9 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilFile,
+  cilDescription,
   cilHospital,
+  cilMedicalCross,
   cilPeople,
   cilSettings,
   cilShieldAlt,
@@ -45,16 +46,13 @@ const _nav = [
     component: CNavGroup,
     name: 'Exames',
     to: '/exams',
-    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
     // O Gestor da Clínica pode acompanhar somente a listagem
     // operacional e os status dos exames da própria clínica. A abertura
     // dos detalhes e dos resultados continua protegida por exams:read.
     roles: ['admin_master', 'doctor', 'clinic_manager'],
     permission: PERMISSIONS.EXAMS_LIST,
-    lockedOpenRoles: [
-      'doctor',
-      'clinic_manager',
-    ],
+    lockedOpenRoles: ['doctor', 'clinic_manager'],
     items: [
       {
         component: CNavItem,
@@ -132,7 +130,7 @@ const _nav = [
     component: CNavItem,
     name: 'Médicos',
     to: '/users',
-    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
     roles: ['clinic_manager'],
     permission: PERMISSIONS.USERS_READ,
   },

@@ -139,6 +139,8 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         name="Médico A",
         email="medico.a@example.com",
         cpf="16899535009",
+        crm_number="11111",
+        crm_uf="CE",
         password_hash=get_password_hash(PASSWORD),
         role=doctor_role,
         status=active_user,
@@ -157,6 +159,8 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         name="Médico B",
         email="medico.b@example.com",
         cpf="98765432100",
+        crm_number="22222",
+        crm_uf="CE",
         password_hash=get_password_hash(PASSWORD),
         role=doctor_role,
         status=active_user,
@@ -166,6 +170,8 @@ def _seed_users(db: Session) -> tuple[UserData, dict[str, dict[str, str]]]:
         name="Médico Inativo",
         email="medico.inativo@example.com",
         cpf="39053344705",
+        crm_number="33333",
+        crm_uf="CE",
         password_hash=get_password_hash(PASSWORD),
         role=doctor_role,
         status=inactive_user,
@@ -248,9 +254,10 @@ def _create_payload(ctx: UserApiContext, **overrides) -> dict:
         "email": "novo.medico@example.com",
         "cpf": "86288366757",
         "phone": "(88) 99999-0000",
+        "crm_number": "45678",
+        "crm_uf": "CE",
         "password": PASSWORD,
         "role_id": ctx.data.doctor_role_id,
-        "status_id": ctx.data.active_user_status_id,
         "clinic_id": ctx.data.clinic_a_id,
     }
     payload.update(overrides)
@@ -277,6 +284,10 @@ def test_admin_crud_normalization_and_safe_response(user_api_context: UserApiCon
     assert body["email"] == "novo.medico@example.com"
     assert body["cpf"] == "86288366757"
     assert body["phone"] == "88999990000"
+    assert body["crm_number"] == "45678"
+    assert body["crm_uf"] == "CE"
+    assert body["status_id"] == ctx.data.active_user_status_id
+    assert body["status_name"] == "active"
     assert {"password", "password_hash", "token_version"}.isdisjoint(body)
 
     listed = ctx.client.get("/users/", headers=ctx.admin_a_headers)
@@ -287,6 +298,94 @@ def test_admin_crud_normalization_and_safe_response(user_api_context: UserApiCon
     assert fetched.status_code == 200
     assert fetched.json()["clinic_name"] == "Clínica A"
     assert {"password", "password_hash", "token_version"}.isdisjoint(fetched.json())
+
+
+def test_create_rejects_client_status_and_enforces_doctor_crm(
+    user_api_context: UserApiContext,
+) -> None:
+    ctx = user_api_context
+
+    supplied_status = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            status_id=ctx.data.inactive_user_status_id,
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert supplied_status.status_code == 422
+
+    missing_crm = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            crm_number=None,
+            crm_uf=None,
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert missing_crm.status_code == 400
+    assert (
+        missing_crm.json()["detail"]
+        == "CRM e UF do CRM são obrigatórios para médicos."
+    )
+
+    invalid_uf = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            crm_uf="XX",
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert invalid_uf.status_code == 422
+
+    crm_for_manager = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            role_id=ctx.data.manager_role_id,
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert crm_for_manager.status_code == 400
+    assert (
+        crm_for_manager.json()["detail"]
+        == "CRM deve ser informado somente para usuários médicos."
+    )
+
+
+def test_crm_is_unique_per_uf(
+    user_api_context: UserApiContext,
+) -> None:
+    ctx = user_api_context
+
+    duplicate = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            crm_number="11111",
+            crm_uf="CE",
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert duplicate.status_code == 400
+    assert duplicate.json()["detail"] == "CRM já cadastrado nesta UF."
+
+    another_uf = ctx.client.post(
+        "/users/",
+        json=_create_payload(
+            ctx,
+            email="crm.outra.uf@example.com",
+            cpf="15350946056",
+            crm_number="11111",
+            crm_uf="PE",
+        ),
+        headers=ctx.admin_a_headers,
+    )
+    assert another_uf.status_code == 201, another_uf.text
+    assert another_uf.json()["crm_number"] == "11111"
+    assert another_uf.json()["crm_uf"] == "PE"
 
 
 def test_email_and_cpf_are_unique_in_create_and_update(user_api_context: UserApiContext) -> None:
@@ -343,7 +442,12 @@ def test_role_clinic_invariants_are_enforced_by_api(user_api_context: UserApiCon
 
     promoted = ctx.client.patch(
         f"/users/{ctx.data.doctor_a_id}",
-        json={"role_id": ctx.data.admin_role_id, "clinic_id": None},
+        json={
+            "role_id": ctx.data.admin_role_id,
+            "clinic_id": None,
+            "crm_number": None,
+            "crm_uf": None,
+        },
         headers=ctx.admin_a_headers,
     )
     assert promoted.status_code == 200, promoted.text
@@ -359,7 +463,12 @@ def test_role_clinic_invariants_are_enforced_by_api(user_api_context: UserApiCon
 
     demoted = ctx.client.patch(
         f"/users/{ctx.data.admin_b_id}",
-        json={"role_id": ctx.data.doctor_role_id, "clinic_id": ctx.data.clinic_b_id},
+        json={
+            "role_id": ctx.data.doctor_role_id,
+            "clinic_id": ctx.data.clinic_b_id,
+            "crm_number": "44444",
+            "crm_uf": "CE",
+        },
         headers=ctx.admin_a_headers,
     )
     assert demoted.status_code == 200, demoted.text
@@ -574,10 +683,7 @@ def test_clinic_manager_manages_only_doctors_from_own_clinic(
     }
     assert options_body["clinic"]["id"] == ctx.data.clinic_a_id
     assert options_body["clinic"]["name"] == "Clínica A"
-    assert {
-        status["name"]
-        for status in options_body["statuses"]
-    } == {"active", "inactive"}
+    assert "statuses" not in options_body
 
     doctor_options = ctx.client.get(
         "/users/doctor-management-options",

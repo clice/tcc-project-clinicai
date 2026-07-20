@@ -67,6 +67,54 @@ def check_cpf_duplicate(
 
 
 
+def check_crm_duplicate(
+    db: Session,
+    crm_number: str | None,
+    crm_uf: str | None,
+    ignore_user_id: int | None = None,
+) -> None:
+    """Garante unicidade da inscrição médica dentro da mesma UF."""
+
+    if crm_number is None or crm_uf is None:
+        return
+
+    query = db.query(User).filter(
+        User.crm_number == crm_number,
+        User.crm_uf == crm_uf,
+    )
+
+    if ignore_user_id is not None:
+        query = query.filter(User.id != ignore_user_id)
+
+    if query.first():
+        raise HTTPException(
+            status_code=400,
+            detail="CRM já cadastrado nesta UF.",
+        )
+
+
+def validate_role_crm_rules(
+    role: Role,
+    crm_number: str | None,
+    crm_uf: str | None,
+) -> None:
+    """Exige CRM completo somente para usuários médicos."""
+
+    is_doctor = role.name == RoleName.DOCTOR.value
+
+    if is_doctor and (crm_number is None or crm_uf is None):
+        raise HTTPException(
+            status_code=400,
+            detail="CRM e UF do CRM são obrigatórios para médicos.",
+        )
+
+    if not is_doctor and (crm_number is not None or crm_uf is not None):
+        raise HTTPException(
+            status_code=400,
+            detail="CRM deve ser informado somente para usuários médicos.",
+        )
+
+
 def validate_current_user_can_access_user(
     *,
     current_user: User,
@@ -242,16 +290,10 @@ def ensure_doctor_has_no_active_patients(
 def validate_user_business_rules(
     db: Session,
     role_id: int,
-    status_id: int,
     clinic_id: int | None,
 ) -> Role:
-    """Valida status de usuário e a invariável role/clínica na criação."""
+    """Valida a invariável entre perfil de acesso e clínica na criação."""
 
-    get_status_by_id_and_applies_to(
-        db=db,
-        status_id=status_id,
-        applies_to=StatusScope.USER.value,
-    )
     return validate_user_role_clinic_rules(db, role_id, clinic_id)
 
 
@@ -306,6 +348,8 @@ def build_user_response(user: User) -> dict:
         "email": user.email,
         "cpf": user.cpf,
         "phone": user.phone,
+        "crm_number": user.crm_number,
+        "crm_uf": user.crm_uf,
         "role_id": user.role_id,
         "status_id": user.status_id,
         "clinic_id": user.clinic_id,
@@ -376,33 +420,12 @@ def get_doctor_management_options(
             detail="Perfil médico não configurado.",
         )
 
-    statuses = (
-        db.query(Status)
-        .filter(Status.applies_to == StatusScope.USER.value)
-        .order_by(Status.display_name.asc())
-        .all()
-    )
-    if not statuses:
-        raise HTTPException(
-            status_code=500,
-            detail="Status de usuário não configurados.",
-        )
-
     return {
         "role": {
             "id": doctor_role.id,
             "name": doctor_role.name,
             "display_name": doctor_role.display_name,
         },
-        "statuses": [
-            {
-                "id": status.id,
-                "name": status.name,
-                "display_name": status.display_name,
-                "applies_to": status.applies_to,
-            }
-            for status in statuses
-        ],
         "clinic": {
             "id": clinic.id,
             "name": clinic.name,
@@ -451,14 +474,29 @@ def create_user(
     role = validate_user_business_rules(
         db=db,
         role_id=payload.role_id,
-        status_id=payload.status_id,
         clinic_id=payload.clinic_id,
     )
-
     validate_current_user_can_manage_user_data(
         current_user=current_user,
         role=role,
         clinic_id=payload.clinic_id,
+    )
+
+    validate_role_crm_rules(
+        role=role,
+        crm_number=payload.crm_number,
+        crm_uf=payload.crm_uf,
+    )
+    check_crm_duplicate(
+        db=db,
+        crm_number=payload.crm_number,
+        crm_uf=payload.crm_uf,
+    )
+
+    active_status = get_status_by_name_and_applies_to(
+        db=db,
+        name=StatusName.ACTIVE.value,
+        applies_to=StatusScope.USER.value,
     )
 
     user = User(
@@ -466,8 +504,10 @@ def create_user(
         email=email,
         cpf=payload.cpf,
         phone=payload.phone,
+        crm_number=payload.crm_number,
+        crm_uf=payload.crm_uf,
         role_id=payload.role_id,
-        status_id=payload.status_id,
+        status_id=active_status.id,
         clinic_id=payload.clinic_id,
         password_hash=get_password_hash(payload.password),
     )
@@ -490,6 +530,8 @@ def create_user(
             "email": user.email,
             "cpf": user.cpf,
             "phone": user.phone,
+            "crm_number": user.crm_number,
+            "crm_uf": user.crm_uf,
             "role_id": user.role_id,
             "status_id": user.status_id,
             "clinic_id": user.clinic_id,
@@ -654,6 +696,8 @@ def update_user(
     new_name = update_data.get("name", user.name)
     new_email = update_data.get("email", user.email)
     new_cpf = update_data.get("cpf", user.cpf)
+    new_crm_number = update_data.get("crm_number", user.crm_number)
+    new_crm_uf = update_data.get("crm_uf", user.crm_uf)
     new_role_id = update_data.get("role_id", user.role_id)
     new_clinic_id = update_data.get("clinic_id", user.clinic_id)
 
@@ -688,6 +732,17 @@ def update_user(
         role=next_role,
         clinic_id=new_clinic_id,
     )
+    validate_role_crm_rules(
+        role=next_role,
+        crm_number=new_crm_number,
+        crm_uf=new_crm_uf,
+    )
+    check_crm_duplicate(
+        db=db,
+        crm_number=new_crm_number,
+        crm_uf=new_crm_uf,
+        ignore_user_id=user_id,
+    )
     ensure_last_active_admin_is_preserved(
         db,
         user,
@@ -702,6 +757,8 @@ def update_user(
         "email": user.email,
         "cpf": user.cpf,
         "phone": user.phone,
+        "crm_number": user.crm_number,
+        "crm_uf": user.crm_uf,
         "role_id": user.role_id,
         "clinic_id": user.clinic_id,
     }
@@ -765,11 +822,29 @@ def update_current_user_profile(
             raise HTTPException(status_code=400, detail="CPF é obrigatório.")
         check_cpf_duplicate(db, update_data["cpf"], ignore_user_id=user.id)
 
+    if "crm_number" in update_data or "crm_uf" in update_data:
+        new_crm_number = update_data.get("crm_number", user.crm_number)
+        new_crm_uf = update_data.get("crm_uf", user.crm_uf)
+
+        validate_role_crm_rules(
+            role=user.role,
+            crm_number=new_crm_number,
+            crm_uf=new_crm_uf,
+        )
+        check_crm_duplicate(
+            db=db,
+            crm_number=new_crm_number,
+            crm_uf=new_crm_uf,
+            ignore_user_id=user.id,
+        )
+
     old_data = {
         "name": user.name,
         "email": user.email,
         "cpf": user.cpf,
         "phone": user.phone,
+        "crm_number": user.crm_number,
+        "crm_uf": user.crm_uf,
     }
     apply_update_data(user, update_data)
 

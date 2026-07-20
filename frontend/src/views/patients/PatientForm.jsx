@@ -21,8 +21,6 @@ import {
   CFormInput,
   CFormLabel,
   CFormSelect,
-  CListGroup,
-  CListGroupItem,
   CRow,
 } from '@coreui/react'
 
@@ -35,11 +33,7 @@ import { patientService } from 'src/services/patientService'
 import { clinicService } from 'src/services/clinicService'
 import { userService } from 'src/services/userService'
 
-import {
-  examStatusDisplayLabels,
-  examTypeLabels,
-  statusColors,
-} from 'src/utils/constants'
+import { examStatusDisplayLabels, examTypeLabels, statusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import {
   formatCpfBR,
@@ -48,12 +42,7 @@ import {
   formatZipCodeBR,
   onlyNumbers,
 } from 'src/utils/formatters'
-import {
-  getUserRole,
-  hasPermission,
-  PERMISSIONS,
-  ROLES,
-} from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const emptyPatient = {
   clinic_id: '',
@@ -99,14 +88,9 @@ const PatientForm = ({ mode = 'create' }) => {
   const isReadOnly = isViewMode || isArchiveMode
 
   const roleName = getUserRole(user)
-  const canCreateExam = hasPermission(
-    user,
-    PERMISSIONS.EXAMS_CREATE,
-  )
-  const canReadExams = hasPermission(
-    user,
-    PERMISSIONS.EXAMS_READ,
-  )
+  const canCreateExam = hasPermission(user, PERMISSIONS.EXAMS_CREATE)
+  const canListExams = hasPermission(user, PERMISSIONS.EXAMS_LIST)
+  const canReadExams = hasPermission(user, PERMISSIONS.EXAMS_READ)
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
   const isDoctor = roleName === ROLES.DOCTOR
   const hasPatientExams = patientExams.length > 0
@@ -135,24 +119,27 @@ const PatientForm = ({ mode = 'create' }) => {
     }))
   }
 
-  const loadDoctorsByClinic = useCallback(async (clinicId) => {
-    if (!clinicId) {
-      setDoctors([])
-      return
-    }
+  const loadDoctorsByClinic = useCallback(
+    async (clinicId) => {
+      if (!clinicId) {
+        setDoctors([])
+        return
+      }
 
-    try {
-      setIsLoadingDoctors(true)
+      try {
+        setIsLoadingDoctors(true)
 
-      const data = await userService.listDoctorsByClinic(clinicId)
-      setDoctors(Array.isArray(data) ? data : [])
-    } catch (err) {
-      setDoctors([])
-      showError(getErrorMessage(err, 'Erro ao carregar dados do paciente.'))
-    } finally {
-      setIsLoadingDoctors(false)
-    }
-  }, [])
+        const data = await userService.listDoctorsByClinic(clinicId)
+        setDoctors(Array.isArray(data) ? data : [])
+      } catch (err) {
+        setDoctors([])
+        showError(getErrorMessage(err, 'Erro ao carregar dados do paciente.'))
+      } finally {
+        setIsLoadingDoctors(false)
+      }
+    },
+    [showError],
+  )
 
   useEffect(() => {
     const loadData = async () => {
@@ -229,11 +216,14 @@ const PatientForm = ({ mode = 'create' }) => {
     user?.id,
     user?.name,
     loadDoctorsByClinic,
+    showError,
+    showSuccess,
+    startLoading,
+    stopLoading,
   ])
 
   useEffect(() => {
-    if (isCreateMode || !id || !canReadExams) {
-      setPatientExams([])
+    if (isCreateMode || !id || !canListExams) {
       return undefined
     }
 
@@ -248,23 +238,14 @@ const PatientForm = ({ mode = 'create' }) => {
 
         if (isCancelled) return
 
-        const exams = Array.isArray(data)
-          ? [...data]
-          : []
+        const exams = Array.isArray(data) ? [...data] : []
 
         exams.sort((firstExam, secondExam) => {
-          const firstDate =
-            firstExam.exam_date ||
-            firstExam.created_at ||
-            ''
+          const firstDate = firstExam.exam_date || firstExam.created_at || ''
 
-          const secondDate =
-            secondExam.exam_date ||
-            secondExam.created_at ||
-            ''
+          const secondDate = secondExam.exam_date || secondExam.created_at || ''
 
-          const dateComparison =
-            secondDate.localeCompare(firstDate)
+          const dateComparison = secondDate.localeCompare(firstDate)
 
           if (dateComparison !== 0) {
             return dateComparison
@@ -277,12 +258,7 @@ const PatientForm = ({ mode = 'create' }) => {
       } catch (err) {
         if (!isCancelled) {
           setPatientExams([])
-          showError(
-            getErrorMessage(
-              err,
-              'Não foi possível carregar os exames do paciente.',
-            ),
-          )
+          showError(getErrorMessage(err, 'Não foi possível carregar os exames do paciente.'))
         }
       }
     }
@@ -292,7 +268,7 @@ const PatientForm = ({ mode = 'create' }) => {
     return () => {
       isCancelled = true
     }
-  }, [canReadExams, id, isCreateMode])
+  }, [canListExams, id, isCreateMode, showError])
 
   const validateForm = () => {
     const cpf = onlyNumbers(form.cpf)
@@ -376,7 +352,10 @@ const PatientForm = ({ mode = 'create' }) => {
       complement: String(patient.complement ?? '').trim() || null,
       neighborhood: String(patient.neighborhood ?? '').trim() || null,
       city: String(patient.city ?? '').trim() || null,
-      state: String(patient.state ?? '').trim().toUpperCase() || null,
+      state:
+        String(patient.state ?? '')
+          .trim()
+          .toUpperCase() || null,
     }
 
     if (!isDoctor) {
@@ -385,9 +364,7 @@ const PatientForm = ({ mode = 'create' }) => {
     }
 
     return Object.fromEntries(
-      Object.entries(payload).filter(
-        ([field, value]) => value !== originalPayload[field],
-      ),
+      Object.entries(payload).filter(([field, value]) => value !== originalPayload[field]),
     )
   }
 
@@ -553,7 +530,7 @@ const PatientForm = ({ mode = 'create' }) => {
             <CCardBody>
               <CForm onSubmit={handleSubmit}>
                 <CRow className="g-3">
-                  <CCol md={6}>
+                  <CCol md={9}>
                     <CFormLabel>Nome</CFormLabel>
                     <CFormInput
                       value={form.name}
@@ -584,7 +561,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     />
                   </CCol>
 
-                  <CCol md={4}>
+                  <CCol md={3}>
                     <CFormLabel>Sexo</CFormLabel>
                     <CFormSelect
                       value={form.sex}
@@ -599,7 +576,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     </CFormSelect>
                   </CCol>
 
-                  <CCol md={4}>
+                  <CCol md={3}>
                     <CFormLabel>Telefone</CFormLabel>
                     <CFormInput
                       value={form.phone}
@@ -609,7 +586,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     />
                   </CCol>
 
-                  <CCol md={4}>
+                  <CCol md={3}>
                     <CFormLabel>E-mail</CFormLabel>
                     <CFormInput
                       type="email"
@@ -677,17 +654,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     )}
                   </CCol>
 
-                  {!isCreateMode && (
-                    <CCol md={4}>
-                      <CFormLabel>Status</CFormLabel>
-                      <CFormInput
-                        value={form.status_display_name || form.status_name || '-'}
-                        disabled
-                      />
-                    </CCol>
-                  )}
-
-                  <CCol md={4}>
+                  <CCol md={2}>
                     <CFormLabel>CEP</CFormLabel>
                     <CFormInput
                       value={form.zip_code}
@@ -705,7 +672,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CFormInput value={form.address} disabled />
                   </CCol>
 
-                  <CCol md={4}>
+                  <CCol md={2}>
                     <CFormLabel>Número</CFormLabel>
                     <CFormInput
                       value={form.number}
@@ -714,12 +681,17 @@ const PatientForm = ({ mode = 'create' }) => {
                     />
                   </CCol>
 
-                  <CCol md={8}>
+                  <CCol md={10}>
                     <CFormLabel>Complemento</CFormLabel>
                     <CFormInput value={form.complement} disabled />
                   </CCol>
 
-                  <CCol md={4}>
+                  <CCol md={2}>
+                    <CFormLabel>UF</CFormLabel>
+                    <CFormInput value={form.state} disabled maxLength={2} />
+                  </CCol>
+
+                  <CCol md={6}>
                     <CFormLabel>Bairro</CFormLabel>
                     <CFormInput value={form.neighborhood} disabled />
                   </CCol>
@@ -728,29 +700,15 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CFormLabel>Cidade</CFormLabel>
                     <CFormInput value={form.city} disabled />
                   </CCol>
-
-                  <CCol md={2}>
-                    <CFormLabel>UF</CFormLabel>
-                    <CFormInput value={form.state} disabled maxLength={2} />
-                  </CCol>
                 </CRow>
 
                 {!isReadOnly && (
                   <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                    <CButton
-                      color="primary"
-                      type="submit"
-                      disabled={isSaving}
-                    >
+                    <CButton color="primary" type="submit" disabled={isSaving}>
                       {isSaving ? 'Salvando...' : 'Salvar'}
                     </CButton>
-      
-                    <CButton
-                      color="secondary"
-                      variant="outline"
-                      as={Link}
-                      to="/patients"
-                    >
+
+                    <CButton color="secondary" variant="outline" as={Link} to="/patients">
                       Cancelar
                     </CButton>
                   </div>
@@ -764,7 +722,7 @@ const PatientForm = ({ mode = 'create' }) => {
           <CCol xs={12}>
             <CCard>
               <CCardHeader>
-                <strong>Histórico de Exames</strong>
+                <strong>Histórico de Exames ({patientExams.length})</strong>
               </CCardHeader>
 
               <CCardBody
@@ -775,55 +733,50 @@ const PatientForm = ({ mode = 'create' }) => {
                 tabIndex={0}
                 aria-label="Histórico de exames do paciente"
               >
-                <CListGroup flush>
+                <CRow className="g-3">
                   {patientExams.map((exam) => (
-                    <CListGroupItem
-                      key={exam.id}
-                      className="px-0"
-                    >
-                      <div className="d-flex justify-content-between align-items-start gap-2">
-                        <div className="fw-semibold">
-                          {exam.description || `Exame #${exam.id}`}
-                        </div>
+                    <CCol key={exam.id} xs={12} md={6} lg={4}>
+                      <CCard className="h-100 border shadow-sm">
+                        <CCardBody className="d-flex flex-column p-3">
+                          <div className="d-flex justify-content-between align-items-start gap-2">
+                            <div className="fw-semibold">
+                              {exam.description || `Exame #${exam.id}`}
+                            </div>
 
-                        <CBadge
-                          color={
-                            statusColors[
-                              exam.status_name
-                            ] || 'secondary'
-                          }
-                        >
-                          {examStatusDisplayLabels[
-                            exam.status_name
-                          ] ||
-                            exam.status_display_name ||
-                            'Status não informado'}
-                        </CBadge>
-                      </div>
+                            <CBadge color={statusColors[exam.status_name] || 'secondary'}>
+                              {examStatusDisplayLabels[exam.status_name] ||
+                                exam.status_display_name ||
+                                'Status não informado'}
+                            </CBadge>
+                          </div>
 
-                      <div className="text-body-secondary small mt-2">
-                        {examTypeLabels[exam.exam_type] ||
-                          exam.exam_type ||
-                          'Tipo não informado'}
-                      </div>
+                          <div className="text-body-secondary small mt-3">
+                            {examTypeLabels[exam.exam_type] ||
+                              exam.exam_type ||
+                              'Tipo não informado'}
+                          </div>
 
-                      <div className="text-body-secondary small">
-                        Data do exame: {formatDateBR(exam.exam_date)}
-                      </div>
+                          <div className="text-body-secondary small mt-1">
+                            Data do exame: {formatDateBR(exam.exam_date)}
+                          </div>
 
-                      <CButton
-                        color="primary"
-                        variant="outline"
-                        size="sm"
-                        className="clinicai-soft-action mt-3"
-                        as={Link}
-                        to={`/exams/${exam.id}`}
-                      >
-                        Abrir exame
-                      </CButton>
-                    </CListGroupItem>
+                          {isDoctor && canReadExams && (
+                            <CButton
+                              color="primary"
+                              variant="outline"
+                              size="sm"
+                              className="clinicai-soft-action mt-2 pt-2"
+                              as={Link}
+                              to={`/exams/${exam.id}`}
+                            >
+                              Abrir exame
+                            </CButton>
+                          )}
+                        </CCardBody>
+                      </CCard>
+                    </CCol>
                   ))}
-                </CListGroup>
+                </CRow>
               </CCardBody>
             </CCard>
           </CCol>

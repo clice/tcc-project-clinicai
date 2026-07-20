@@ -37,8 +37,7 @@ const roleBadgeColors = {
 const UsersList = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useFeedback()
-  const isClinicManager =
-    getUserRole(user) === ROLES.CLINIC_MANAGER
+  const isClinicManager = getUserRole(user) === ROLES.CLINIC_MANAGER
 
   const [activeTab, setActiveTab] = useState('active')
   const [users, setUsers] = useState([])
@@ -60,10 +59,16 @@ const UsersList = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
-    void loadUsers()
+    const timeoutId = window.setTimeout(() => {
+      void loadUsers()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadUsers])
 
   /**
@@ -87,31 +92,30 @@ const UsersList = () => {
   /**
    * Mudança de status do usuário.
    */
-  const handleChangeStatus = async (user) => {
-    try {
-      showError('')
+  const handleChangeStatus = useCallback(
+    async (user) => {
+      try {
+        showError('')
 
-      if (user.status_name === 'active') {
-        await userService.inactivate(user.id)
-        showSuccess(
-          isClinicManager
-            ? 'Médico inativado com sucesso.'
-            : 'Usuário inativado com sucesso.',
-        )
-      } else {
-        await userService.activate(user.id)
-        showSuccess(
-          isClinicManager
-            ? 'Médico ativado com sucesso.'
-            : 'Usuário ativado com sucesso.',
-        )
+        if (user.status_name === 'active') {
+          await userService.inactivate(user.id)
+          showSuccess(
+            isClinicManager ? 'Médico inativado com sucesso.' : 'Usuário inativado com sucesso.',
+          )
+        } else {
+          await userService.activate(user.id)
+          showSuccess(
+            isClinicManager ? 'Médico ativado com sucesso.' : 'Usuário ativado com sucesso.',
+          )
+        }
+
+        await loadUsers()
+      } catch (err) {
+        showError(err.response?.data?.detail || 'Erro ao alterar status do usuário.')
       }
-
-      await loadUsers()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao alterar status do usuário.')
-    }
-  }
+    },
+    [isClinicManager, loadUsers, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
@@ -125,21 +129,29 @@ const UsersList = () => {
           return value ? formatCpfBR(value) : '-'
         },
       },
-      {
-        accessorKey: 'role_display_name',
-        header: 'Perfil',
-        cell: ({ getValue, row }) => {
-          const label = getValue() || row.original.role_name || '-'
-          const roleName = row.original.role_name
+      ...(!isClinicManager
+        ? [
+            {
+              accessorKey: 'role_display_name',
+              header: 'Perfil',
+              cell: ({ getValue, row }) => {
+                const label = getValue() || row.original.role_name || '-'
+                const roleName = row.original.role_name
 
-          return <CBadge color={roleBadgeColors[roleName] || 'secondary'}>{label}</CBadge>
-        },
-      },
-      {
-        accessorKey: 'clinic_name',
-        header: 'Clínica',
-        cell: ({ getValue }) => getValue() || '-',
-      },
+                return <CBadge color={roleBadgeColors[roleName] || 'secondary'}>{label}</CBadge>
+              },
+            },
+          ]
+        : []),
+      ...(!isClinicManager
+        ? [
+            {
+              accessorKey: 'clinic_name',
+              header: 'Clínica',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
       {
         accessorKey: 'last_access_at',
         header: 'Último acesso',
@@ -170,7 +182,7 @@ const UsersList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadUsers, user?.id],
+    [canView, canEdit, canChangeStatus, handleChangeStatus, isClinicManager, user?.id],
   )
 
   return (
@@ -180,9 +192,7 @@ const UsersList = () => {
           <div className="text-body-secondary">
             {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
           </div>
-          <h1 className="h3 mb-0">
-            {isClinicManager ? 'Médicos' : 'Usuários'}
-          </h1>
+          <h1 className="h3 mb-0">{isClinicManager ? 'Médicos' : 'Usuários'}</h1>
           <p className="text-body-secondary mb-0">
             {isClinicManager
               ? 'Gerencie os médicos vinculados à sua clínica.'
@@ -223,9 +233,7 @@ const UsersList = () => {
                 data={filteredUsers}
                 columns={columns}
                 emptyMessage={
-                  isClinicManager
-                    ? 'Nenhum médico encontrado.'
-                    : 'Nenhum usuário encontrado.'
+                  isClinicManager ? 'Nenhum médico encontrado.' : 'Nenhum usuário encontrado.'
                 }
               />
             </>

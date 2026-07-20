@@ -5,7 +5,7 @@ A tabela users armazena os usuários que acessam o ClinicAI,
 incluindo administradores, médicos e gestores vinculados a clínicas.
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -19,6 +19,14 @@ class User(Base):
 
     __tablename__ = "users"
 
+    __table_args__ = (
+        UniqueConstraint(
+            "crm_uf",
+            "crm_number",
+            name="uq_users_crm_uf_number",
+        ),
+    )
+
     # Chave primária
     id = Column(Integer, primary_key=True, index=True)
 
@@ -27,6 +35,8 @@ class User(Base):
     email = Column(String(150), unique=True, nullable=False, index=True)
     cpf = Column(String(11), unique=True, nullable=False, index=True)
     phone = Column(String(20), nullable=True)
+    crm_number = Column(String(10), nullable=True)
+    crm_uf = Column(String(2), nullable=True)
 
     # Segurança
     password_hash = Column(String(255), nullable=False)
