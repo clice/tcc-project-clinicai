@@ -3,7 +3,6 @@
  *
  * Usado para:
  * - criar usuário;
- * - visualizar usuário;
  * - editar usuário.
  */
 
@@ -94,7 +93,6 @@ const UserForm = ({ mode = 'create' }) => {
   const [doctorPatients, setDoctorPatients] = useState([])
   const [isSaving, setIsSaving] = useState(false)
 
-  const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
   const isSelfRecord = !isCreateMode && String(currentUser?.id) === String(id)
@@ -132,10 +130,8 @@ const UserForm = ({ mode = 'create' }) => {
   const title = useMemo(() => {
     const subject = isClinicManager ? 'Médico' : 'Usuário'
 
-    if (isCreateMode) return `Cadastrar ${subject}`
-    if (isEditMode) return `Editar ${subject}`
-    return `Detalhes do ${subject}`
-  }, [isClinicManager, isCreateMode, isEditMode])
+    return isCreateMode ? `Cadastrar ${subject}` : `Editar ${subject}`
+  }, [isClinicManager, isCreateMode])
 
   useEffect(() => {
     const loadData = async () => {
@@ -378,8 +374,6 @@ const UserForm = ({ mode = 'create' }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (isReadOnly) return
-
     showError('')
     showSuccess('')
 
@@ -448,6 +442,13 @@ const UserForm = ({ mode = 'create' }) => {
         </div>
       </div>
 
+      {isEditMode && (
+        <CAlert color="info">
+          Esta tela permite alterar os dados do usuário. Revise as informações antes de selecionar
+          “Salvar”.
+        </CAlert>
+      )}
+
       {isEditMode && !isSelfRecord && !isClinicManager && (
         <CAlert color="warning">
           Alterar o perfil de acesso ou a clínica encerra as sessões ativas do usuário. O status
@@ -474,7 +475,6 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Nome</CFormLabel>
                 <CFormInput
                   value={form.name}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('name', event.target.value)}
                   required
                 />
@@ -485,7 +485,7 @@ const UserForm = ({ mode = 'create' }) => {
                   <CFormLabel>Perfil de acesso</CFormLabel>
                   <CFormSelect
                     value={form.role_id}
-                    disabled={isReadOnly || isSelfRecord}
+                    disabled={isSelfRecord}
                     onChange={(event) => handleRoleChange(event.target.value)}
                     required
                   >
@@ -504,7 +504,7 @@ const UserForm = ({ mode = 'create' }) => {
                   <CFormLabel>Clínica</CFormLabel>
                   <CFormSelect
                     value={form.clinic_id}
-                    disabled={isReadOnly || isSelfRecord}
+                    disabled={isSelfRecord}
                     onChange={(event) => updateField('clinic_id', event.target.value)}
                     required
                   >
@@ -524,7 +524,6 @@ const UserForm = ({ mode = 'create' }) => {
                     <CFormLabel>CRM</CFormLabel>
                     <CFormInput
                       value={form.crm_number}
-                      disabled={isReadOnly}
                       inputMode="numeric"
                       maxLength={10}
                       onChange={(event) =>
@@ -539,7 +538,6 @@ const UserForm = ({ mode = 'create' }) => {
                     <CFormLabel>UF do CRM</CFormLabel>
                     <CFormSelect
                       value={form.crm_uf}
-                      disabled={isReadOnly}
                       onChange={(event) => updateField('crm_uf', event.target.value)}
                       required
                     >
@@ -558,7 +556,6 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>CPF</CFormLabel>
                 <CFormInput
                   value={form.cpf}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
                   placeholder="000.000.000-00"
                   required
@@ -569,24 +566,22 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Telefone</CFormLabel>
                 <CFormInput
                   value={form.phone}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                   placeholder="(88) 99999-9999"
                 />
               </CCol>
 
-              <CCol md={!isReadOnly && (!isEditMode || !isSelfRecord) ? 4 : 12}>
+              <CCol md={!isEditMode || !isSelfRecord ? 4 : 12}>
                 <CFormLabel>E-mail</CFormLabel>
                 <CFormInput
                   type="email"
                   value={form.email}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('email', event.target.value)}
                   required
                 />
               </CCol>
 
-              {!isReadOnly && (!isEditMode || !isSelfRecord) && (
+              {(!isEditMode || !isSelfRecord) && (
                 <>
                   <CCol md={4}>
                     <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
@@ -628,17 +623,15 @@ const UserForm = ({ mode = 'create' }) => {
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton color="primary" type="submit" disabled={isSaving}>
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
 
-                <CButton color="secondary" variant="outline" as={Link} to="/users">
-                  Cancelar
-                </CButton>
-              </div>
-            )}
+              <CButton color="secondary" variant="outline" as={Link} to="/users">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

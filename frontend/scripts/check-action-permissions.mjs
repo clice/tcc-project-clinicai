@@ -38,7 +38,6 @@ const componentExpectations = {
   ],
   'src/views/users/UsersList.jsx': [
     '{canCreate &&',
-    'canView={canView}',
     'canEdit={canEdit}',
     'canInactivate={canChangeStatus',
   ],

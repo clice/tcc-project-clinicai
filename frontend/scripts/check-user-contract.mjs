@@ -10,14 +10,17 @@ const projectDirectory = path.resolve(scriptDirectory, '..', '..')
 const readProjectFile = (relativePath) =>
   readFile(path.join(projectDirectory, relativePath), 'utf8')
 
-const [router, schema, service, form, list, userService] = await Promise.all([
-  readProjectFile('backend/app/modules/users/router.py'),
-  readProjectFile('backend/app/modules/users/schema.py'),
-  readProjectFile('backend/app/modules/users/service.py'),
-  readProjectFile('frontend/src/views/users/UserForm.jsx'),
-  readProjectFile('frontend/src/views/users/UsersList.jsx'),
-  readProjectFile('frontend/src/services/userService.js'),
-])
+const [router, schema, service, form, list, userService, frontendRoutes, actionPermissions] =
+  await Promise.all([
+    readProjectFile('backend/app/modules/users/router.py'),
+    readProjectFile('backend/app/modules/users/schema.py'),
+    readProjectFile('backend/app/modules/users/service.py'),
+    readProjectFile('frontend/src/views/users/UserForm.jsx'),
+    readProjectFile('frontend/src/views/users/UsersList.jsx'),
+    readProjectFile('frontend/src/services/userService.js'),
+    readProjectFile('frontend/src/routes.js'),
+    readProjectFile('frontend/src/utils/actionPermissions.mjs'),
+  ])
 
 assert.match(router, /payload: UserSelfUpdate[\s\S]*?update_current_user_profile/)
 assert.match(router, /payload: UserAdminUpdate[\s\S]*?update_user\(/)
@@ -84,6 +87,38 @@ assert.match(
   /\{isDoctorRole \? 'Dados do Médico' : 'Dados do Usuário'\}/,
   'O título dos dados deve acompanhar o perfil do usuário exibido.',
 )
+
+assert.doesNotMatch(frontendRoutes, /const ViewUser/)
+assert.doesNotMatch(
+  frontendRoutes,
+  /path:\s*['"]\/users\/:id['"]/,
+  'A rota exclusiva de visualização de usuário deve permanecer removida.',
+)
+assert.doesNotMatch(
+  list,
+  /viewTo=\{`\/users\/\$\{selectedUser\.id\}`\}/,
+  'A lista de usuários não deve oferecer ação separada de visualização.',
+)
+assert.doesNotMatch(list, /canView=\{canView\}/)
+assert.match(list, /editTo=\{`\/users\/\$\{selectedUser\.id\}\/edit`\}/)
+assert.match(
+  form,
+  /Esta tela permite alterar os dados do usuário\./,
+  'A edição deve informar que o salvamento altera os dados.',
+)
+assert.doesNotMatch(form, /mode === ['"]view['"]/)
+assert.doesNotMatch(form, /\bisReadOnly\b/)
+
+const userActionsBody = actionPermissions.match(
+  /users:\s*Object\.freeze\(\{([\s\S]*?)\}\),\s*exams:/,
+)?.[1]
+assert.ok(userActionsBody, 'A matriz de ações de usuários não foi localizada.')
+assert.doesNotMatch(
+  userActionsBody,
+  /canView/,
+  'Usuários não devem manter uma ação separada de visualização.',
+)
+assert.match(userActionsBody, /canEdit:\s*['"]users:update['"]/)
 
 console.log(
   'Contrato de usuários coerente: status ativo interno, CRM médico, vínculos, autoedição e pacientes associados validados.',

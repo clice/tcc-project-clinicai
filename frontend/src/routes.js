@@ -45,7 +45,6 @@ const UserForm = React.lazy(() => import('./views/users/UserForm'))
 
 const CreateUser = () => React.createElement(UserForm, { mode: 'create' })
 const EditUser = () => React.createElement(UserForm, { mode: 'edit' })
-const ViewUser = () => React.createElement(UserForm, { mode: 'view' })
 
 // AUDIT LOGS
 const AuditLogsList = React.lazy(() => import('./views/audit-logs/AuditLogsList'))
@@ -173,14 +172,6 @@ export const routes = [
     roles: ['admin_master', 'clinic_manager'],
     permission: 'users:update',
   },
-  {
-    path: '/users/:id',
-    name: 'Detalhes do Usuário',
-    element: ViewUser,
-    roles: ['admin_master', 'clinic_manager'],
-    permission: 'users:read',
-  },
-
   // AUDIT LOGS
   {
     path: '/audit-logs',

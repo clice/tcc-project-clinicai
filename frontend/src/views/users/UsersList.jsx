@@ -2,7 +2,7 @@
  * Listagem de usuários.
  *
  * Exibe os usuários cadastrados no sistema e permite acessar
- * visualização, edição e cadastro.
+ * edição e cadastro.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -43,7 +43,7 @@ const UsersList = () => {
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess('users', (permission) =>
+  const { canCreate, canEdit, canChangeStatus } = getActionAccess('users', (permission) =>
     hasPermission(user, permission),
   )
 
@@ -160,10 +160,8 @@ const UsersList = () => {
           return (
             <AppActionButtons
               itemLabel={selectedUser.name}
-              viewTo={`/users/${selectedUser.id}`}
               editTo={`/users/${selectedUser.id}/edit`}
               isInactive={isInactive}
-              canView={canView}
               canEdit={canEdit}
               canInactivate={canChangeStatus && !isInactive && selectedUser.id !== user?.id}
               canActivate={canChangeStatus && isInactive}
@@ -174,7 +172,7 @@ const UsersList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, handleChangeStatus, isClinicManager, user?.id],
+    [canEdit, canChangeStatus, handleChangeStatus, isClinicManager, user?.id],
   )
 
   return (
