@@ -279,7 +279,6 @@ def test_admin_crud_and_normalization(clinic_api_context: ClinicApiContext) -> N
         "neighborhood": " Centro ",
         "city": " Barbalha ",
         "state": "ce",
-        "status_id": ctx.data.active_clinic_status_id,
     }
 
     created = ctx.client.post("/clinics/", json=payload, headers=ctx.admin_headers)
@@ -342,7 +341,6 @@ def test_duplicate_cnpj_and_case_insensitive_email_are_rejected(
         "name": "Clínica Duplicada",
         "cnpj": "45.997.418/0001-53",
         "email": "Duplicada@Example.com",
-        "status_id": ctx.data.active_clinic_status_id,
     }
     first = ctx.client.post("/clinics/", json=base, headers=ctx.admin_headers)
     assert first.status_code == 201, first.text
@@ -369,22 +367,22 @@ def test_duplicate_cnpj_and_case_insensitive_email_are_rejected(
     assert duplicate_email.json()["detail"] == "E-mail já cadastrado."
 
 
-def test_clinic_status_scope_and_logical_deletion_contract(
+def test_create_rejects_client_status_and_uses_logical_deletion(
     clinic_api_context: ClinicApiContext,
 ) -> None:
     ctx = clinic_api_context
 
-    wrong_scope = ctx.client.post(
+    supplied_status = ctx.client.post(
         "/clinics/",
         json={
-            "name": "Clínica com status incorreto",
+            "name": "Clínica com status fornecido",
             "cnpj": "04.252.011/0001-10",
             "status_id": ctx.data.active_user_status_id,
         },
         headers=ctx.admin_headers,
     )
-    assert wrong_scope.status_code == 400
-    assert wrong_scope.json()["detail"] == "Status inválido para clinic."
+    assert supplied_status.status_code == 422
+    assert supplied_status.json()["detail"][0]["type"] == "extra_forbidden"
 
     # O CRUD de clínicas usa exclusão lógica por status; DELETE físico não é exposto.
     delete_response = ctx.client.delete(
@@ -416,7 +414,6 @@ def test_invalid_cnpj_contact_or_address_returns_422(
         "phone": "(88) 3333-4444",
         "zip_code": "63.180-000",
         "state": "CE",
-        "status_id": ctx.data.active_clinic_status_id,
         field: value,
     }
     response = ctx.client.post("/clinics/", json=payload, headers=ctx.admin_headers)
@@ -578,8 +575,7 @@ def test_non_admin_cannot_use_admin_clinic_operations(
             json={
                 "name": "Clínica Indevida",
                 "cnpj": "04.252.011/0001-10",
-                "status_id": ctx.data.active_clinic_status_id,
-            },
+                    },
             headers=ctx.doctor_b_headers,
         ),
         ctx.client.patch(

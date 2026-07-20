@@ -79,6 +79,12 @@ assert.match(
   'Os pacientes do médico devem aparecer em uma galeria de três colunas.',
 )
 
+assert.match(
+  form,
+  /\{isDoctorRole \? 'Dados do Médico' : 'Dados do Usuário'\}/,
+  'O título dos dados deve acompanhar o perfil do usuário exibido.',
+)
+
 console.log(
   'Contrato de usuários coerente: status ativo interno, CRM médico, vínculos, autoedição e pacientes associados validados.',
 )

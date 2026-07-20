@@ -132,6 +132,18 @@ assert.doesNotMatch(
   'A permissão isolada de leitura não deve expor a ação clínica.',
 )
 
+assert.match(
+  form,
+  /\{patient\?\.status_name === 'active' && isDoctor && canCreateExam && \(/,
+  'Somente médicos podem receber a ação de cadastrar exame pelo paciente.',
+)
+
+assert.doesNotMatch(
+  form,
+  /\{patient\?\.status_name === 'active' && canCreateExam && \(/,
+  'A permissão isolada de criação não deve expor a ação ao administrador.',
+)
+
 console.log(
   'Contrato de pacientes coerente: escopo, vínculos, status e histórico contado com acesso não clínico do gestor validados.',
 )

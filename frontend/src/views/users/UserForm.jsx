@@ -462,9 +462,9 @@ const UserForm = ({ mode = 'create' }) => {
         </CAlert>
       )}
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardHeader>
-          <strong>Dados do Usuário</strong>
+          <strong>{isClinicManager ? 'Dados do Médico' : 'Dados do Usuário'}</strong>
         </CCardHeader>
 
         <CCardBody>
@@ -644,7 +644,7 @@ const UserForm = ({ mode = 'create' }) => {
       </CCard>
 
       {!isCreateMode && isDoctorRole && (
-        <CCard className="mt-4">
+        <CCard className="mb-4">
           <CCardHeader>
             <strong>Pacientes ({doctorPatients.length})</strong>
           </CCardHeader>

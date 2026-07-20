@@ -19,7 +19,6 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CFormTextarea,
   CRow,
 } from '@coreui/react'
@@ -28,15 +27,9 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
-import { statusService } from 'src/services/statusService'
 
 import { getErrorMessage } from 'src/utils/errors'
-import {
-  formatCnpjBR,
-  formatPhoneBR,
-  formatZipCodeBR,
-  onlyNumbers,
-} from 'src/utils/formatters'
+import { formatCnpjBR, formatPhoneBR, formatZipCodeBR, onlyNumbers } from 'src/utils/formatters'
 
 const emptyClinic = {
   name: '',
@@ -51,7 +44,6 @@ const emptyClinic = {
   neighborhood: '',
   city: '',
   state: '',
-  status_id: '',
 }
 
 const ClinicForm = ({ mode = 'create' }) => {
@@ -60,7 +52,6 @@ const ClinicForm = ({ mode = 'create' }) => {
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyClinic)
-  const [statuses, setStatuses] = useState([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingAddress, setIsLoadingAddress] = useState(false)
 
@@ -80,17 +71,6 @@ const ClinicForm = ({ mode = 'create' }) => {
         startLoading()
         showError('')
 
-        const statusData = await statusService.list()
-
-        /**
-         * O backend valida que a clínica use apenas status com applies_to = clinic.
-         */
-        setStatuses(
-          Array.isArray(statusData)
-            ? statusData.filter((status) => status.applies_to === 'clinic')
-            : [],
-        )
-
         if (!isCreateMode) {
           const clinicData = await clinicService.getById(id)
 
@@ -99,9 +79,7 @@ const ClinicForm = ({ mode = 'create' }) => {
             cnpj: clinicData.cnpj ? formatCnpjBR(clinicData.cnpj) : '',
             email: clinicData.email ?? '',
             phone: clinicData.phone ? formatPhoneBR(clinicData.phone) : '',
-            mobile_phone: clinicData.mobile_phone
-              ? formatPhoneBR(clinicData.mobile_phone)
-              : '',
+            mobile_phone: clinicData.mobile_phone ? formatPhoneBR(clinicData.mobile_phone) : '',
             zip_code: clinicData.zip_code ? formatZipCodeBR(clinicData.zip_code) : '',
             address: clinicData.address ?? '',
             number: clinicData.number ?? '',
@@ -109,7 +87,6 @@ const ClinicForm = ({ mode = 'create' }) => {
             neighborhood: clinicData.neighborhood ?? '',
             city: clinicData.city ?? '',
             state: clinicData.state ?? '',
-            status_id: clinicData.status_id ?? '',
           })
         }
       } catch (err) {
@@ -120,7 +97,7 @@ const ClinicForm = ({ mode = 'create' }) => {
     }
 
     loadPageData()
-  }, [id, isCreateMode])
+  }, [id, isCreateMode, showError, startLoading, stopLoading])
 
   /**
    * Atualiza um campo do formulário.
@@ -143,11 +120,6 @@ const ClinicForm = ({ mode = 'create' }) => {
 
     if (onlyNumbers(form.cnpj).length !== 14) {
       showError('Informe um CNPJ válido.')
-      return false
-    }
-
-    if (isCreateMode && !form.status_id) {
-      showError('Selecione o status da clínica.')
       return false
     }
 
@@ -224,31 +196,20 @@ const ClinicForm = ({ mode = 'create' }) => {
   /**
    * Monta o payload no formato esperado pela API.
    */
-  const buildPayload = () => {
-    const status = statuses.find((item) => String(item.id) === String(form.status_id))
-
-    return {
-      name: form.name.trim(),
-      cnpj: onlyNumbers(form.cnpj),
-      email: form.email.trim().toLowerCase() || null,
-      phone: onlyNumbers(form.phone) || null,
-      mobile_phone: onlyNumbers(form.mobile_phone) || null,
-      zip_code: onlyNumbers(form.zip_code) || null,
-      address: form.address.trim() || null,
-      number: form.number.trim() || null,
-      complement: form.complement.trim() || null,
-      neighborhood: form.neighborhood.trim() || null,
-      city: form.city.trim() || null,
-      state: form.state.trim().toUpperCase() || null,
-      ...(isCreateMode
-        ? {
-            status_id: Number(form.status_id),
-            status_name: status?.name ?? null,
-            status_display_name: status?.display_name ?? null,
-          }
-        : {}),
-    }
-  }
+  const buildPayload = () => ({
+    name: form.name.trim(),
+    cnpj: onlyNumbers(form.cnpj),
+    email: form.email.trim().toLowerCase() || null,
+    phone: onlyNumbers(form.phone) || null,
+    mobile_phone: onlyNumbers(form.mobile_phone) || null,
+    zip_code: onlyNumbers(form.zip_code) || null,
+    address: form.address.trim() || null,
+    number: form.number.trim() || null,
+    complement: form.complement.trim() || null,
+    neighborhood: form.neighborhood.trim() || null,
+    city: form.city.trim() || null,
+    state: form.state.trim().toUpperCase() || null,
+  })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -302,10 +263,10 @@ const ClinicForm = ({ mode = 'create' }) => {
           >
             Voltar
           </CButton>
-        </div> 
+        </div>
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados da Clínica</strong>
         </CCardHeader>
@@ -324,7 +285,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={2}>
+              <CCol md={4}>
                 <CFormLabel>CNPJ</CFormLabel>
                 <CFormInput
                   value={form.cnpj}
@@ -333,24 +294,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                   onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
                   required
                 />
-              </CCol>
-
-              <CCol md={2}>
-                <CFormLabel>Status</CFormLabel>
-                <CFormSelect
-                  value={form.status_id}
-                  disabled={!isCreateMode}
-                  onChange={(event) => updateField('status_id', event.target.value)}
-                  required={isCreateMode}
-                >
-                  <option value="">Selecione...</option>
-
-                  {statuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.display_name}
-                    </option>
-                  ))}
-                </CFormSelect>
               </CCol>
 
               <CCol md={4}>
@@ -386,14 +329,12 @@ const ClinicForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={3}>
+              <CCol md={2}>
                 <CFormLabel>CEP</CFormLabel>
                 <CFormInput
                   value={form.zip_code}
                   disabled={isReadOnly || isLoadingAddress}
-                  onChange={(event) =>
-                    updateField('zip_code', formatZipCodeBR(event.target.value))
-                  }
+                  onChange={(event) => updateField('zip_code', formatZipCodeBR(event.target.value))}
                   onBlur={handleZipCodeBlur}
                   placeholder="00000-000"
                 />
@@ -404,7 +345,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormInput value={form.address} disabled />
               </CCol>
 
-              <CCol md={1}>
+              <CCol md={2}>
                 <CFormLabel>Número</CFormLabel>
                 <CFormInput
                   value={form.number}
@@ -413,24 +354,24 @@ const ClinicForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={6}>
+              <CCol md={10}>
                 <CFormLabel>Complemento</CFormLabel>
                 <CFormInput value={form.complement} disabled />
               </CCol>
 
               <CCol md={2}>
+                <CFormLabel>UF</CFormLabel>
+                <CFormInput value={form.state} disabled />
+              </CCol>
+
+              <CCol md={6}>
                 <CFormLabel>Bairro</CFormLabel>
                 <CFormInput value={form.neighborhood} disabled />
               </CCol>
 
-              <CCol md={2}>
+              <CCol md={6}>
                 <CFormLabel>Cidade</CFormLabel>
                 <CFormInput value={form.city} disabled />
-              </CCol>
-
-              <CCol md={2}>
-                <CFormLabel>UF</CFormLabel>
-                <CFormInput value={form.state} disabled />
               </CCol>
 
               <CCol md={12}>
@@ -445,20 +386,11 @@ const ClinicForm = ({ mode = 'create' }) => {
 
             {!isReadOnly && (
               <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
-                <CButton
-                  color="primary"
-                  type="submit"
-                  disabled={isSaving}
-                >
+                <CButton color="primary" type="submit" disabled={isSaving}>
                   {isSaving ? 'Salvando...' : 'Salvar'}
                 </CButton>
-  
-                <CButton
-                  color="secondary"
-                  variant="outline"
-                  as={Link}
-                  to="/clinics"
-                >
+
+                <CButton color="secondary" variant="outline" as={Link} to="/clinics">
                   Cancelar
                 </CButton>
               </div>

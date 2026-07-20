@@ -22,7 +22,6 @@ from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.statuses.service import (
-    get_status_by_id_and_applies_to,
     get_status_by_name_and_applies_to,
 )
 from app.modules.users.model import User
@@ -183,9 +182,9 @@ def create_clinic(
     """
     Cria uma nova clínica.
     """
-    get_status_by_id_and_applies_to(
+    active_status = get_status_by_name_and_applies_to(
         db=db,
-        status_id=payload.status_id,
+        name=StatusName.ACTIVE.value,
         applies_to=StatusScope.CLINIC.value,
     )
 
@@ -197,6 +196,7 @@ def create_clinic(
 
     data = payload.model_dump()
     data["email"] = str(payload.email) if payload.email else None
+    data["status_id"] = active_status.id
 
     clinic = Clinic(**data)
 

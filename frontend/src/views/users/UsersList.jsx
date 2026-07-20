@@ -121,14 +121,6 @@ const UsersList = () => {
     () => [
       { accessorKey: 'name', header: 'Nome' },
       { accessorKey: 'email', header: 'E-mail' },
-      {
-        accessorKey: 'cpf',
-        header: 'CPF',
-        cell: ({ getValue }) => {
-          const value = getValue()
-          return value ? formatCpfBR(value) : '-'
-        },
-      },
       ...(!isClinicManager
         ? [
             {

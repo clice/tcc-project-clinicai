@@ -495,7 +495,7 @@ const PatientForm = ({ mode = 'create' }) => {
         </div>
 
         <div className="d-flex justify-content-center mt-4 gap-2">
-          {patient?.status_name === 'active' && canCreateExam && (
+          {patient?.status_name === 'active' && isDoctor && canCreateExam && (
             <CButton
               color="primary"
               size="lg"

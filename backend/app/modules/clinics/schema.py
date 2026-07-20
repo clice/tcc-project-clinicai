@@ -40,8 +40,6 @@ class ClinicBase(StrictRequestModel):
     city: str | None = Field(default=None, max_length=100)
     state: str | None = Field(default=None, min_length=2, max_length=2)
 
-    status_id: int
-    
     @field_validator("name")
     @classmethod
     def normalize_name(cls, value: str) -> str:
