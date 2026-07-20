@@ -1,12 +1,11 @@
 /**
- * Listagem de statuses.
+ * Listagem do catálogo oficial de status.
  *
- * Exibe os statuses cadastrados no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * Permite editar os textos dos status previamente definidos pelo sistema.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { CAlert, CBadge, CCard, CCardBody, CSpinner } from '@coreui/react'
+import { CAlert, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -63,12 +62,7 @@ const StatusesList = () => {
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/statuses/${row.original.id}`}
-            editTo={`/statuses/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/statuses/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],

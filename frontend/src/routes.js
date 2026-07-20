@@ -67,8 +67,7 @@ const EditPermission = () => React.createElement(PermissionForm)
 const StatusesList = React.lazy(() => import('./views/statuses/StatusesList'))
 const StatusForm = React.lazy(() => import('./views/statuses/StatusForm'))
 
-const EditStatus = () => React.createElement(StatusForm, { mode: 'edit' })
-const ViewStatus = () => React.createElement(StatusForm, { mode: 'view' })
+const EditStatus = () => React.createElement(StatusForm)
 
 export const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -198,12 +197,6 @@ export const routes = [
     path: '/statuses/:id/edit',
     name: 'Editar Status',
     element: EditStatus,
-    roles: ['admin_master'],
-  },
-  {
-    path: '/statuses/:id',
-    name: 'Detalhes do Status',
-    element: ViewStatus,
     roles: ['admin_master'],
   },
 ]
