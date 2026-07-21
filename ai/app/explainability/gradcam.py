@@ -64,7 +64,10 @@ def generate_gradcam_from_bytes(image_bytes: bytes, *, domain: str) -> str | Non
     target_layers = [model.layer4[-1]]
     cam = GradCAM(model=model, target_layers=target_layers)
     grayscale_cam = cam(input_tensor=input_tensor)[0]
-    visualization = show_cam_on_image(rgb_image, grayscale_cam, use_rgb=True)
+    visualization = build_attribution_visualization(
+        image_array,
+        grayscale_cam,
+    )
 
     output_path = GRADCAM_DIR / f"{uuid4()}.jpg"
     written = cv2.imwrite(
@@ -270,30 +273,168 @@ def combine_branch_cams(
     ).astype(np.float32)
 
 
-def _prepare_rgb_image(
+def _prepare_processed_image(
     image_bytes: bytes,
 ) -> np.ndarray:
-    """Prepara a imagem visual usada na sobreposição do mapa."""
+    """Obtém a ROI pré-processada sem alterar sua proporção visual."""
 
     image = Image.open(
         BytesIO(image_bytes)
     ).convert("RGB")
 
-    processed_array = preprocess_for_training(
+    return preprocess_for_training(
         np.asarray(image)
     )
 
-    resized = cv2.resize(
-        processed_array,
-        TARGET_IMAGE_SIZE,
-        interpolation=cv2.INTER_LINEAR,
+
+def crop_attribution_to_visual_roi(
+    processed_image: np.ndarray,
+    attribution_map: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Remove bordas escuras apenas da representação visual.
+
+    A entrada usada pelo modelo permanece inalterada. A imagem e o mapa
+    restaurado são recortados pelos mesmos limites para preservar o
+    alinhamento espacial da atribuição.
+    """
+
+    if attribution_map.shape != processed_image.shape[:2]:
+        raise ValueError(
+            "O mapa restaurado deve possuir as dimensões da imagem."
+        )
+
+    intensity = processed_image.max(
+        axis=2
+    )
+
+    content_mask = (
+        intensity > 20
+    ).astype(np.uint8)
+
+    closing_kernel = np.ones(
+        (11, 11),
+        dtype=np.uint8,
+    )
+
+    content_mask = cv2.morphologyEx(
+        content_mask,
+        cv2.MORPH_CLOSE,
+        closing_kernel,
+    )
+
+    (
+        component_count,
+        _labels,
+        statistics,
+        _centroids,
+    ) = cv2.connectedComponentsWithStats(
+        content_mask,
+        8,
+    )
+
+    if component_count <= 1:
+        return processed_image, attribution_map
+
+    component = 1 + int(
+        np.argmax(
+            statistics[
+                1:,
+                cv2.CC_STAT_AREA,
+            ]
+        )
+    )
+
+    x, y, width, height, area = (
+        int(value)
+        for value in statistics[component]
+    )
+
+    image_area = float(
+        processed_image.shape[0]
+        * processed_image.shape[1]
+    )
+
+    if area / image_area < 0.20:
+        return processed_image, attribution_map
+
+    row_slice = slice(
+        y,
+        y + height,
+    )
+    column_slice = slice(
+        x,
+        x + width,
     )
 
     return (
-        resized.astype(np.float32)
+        processed_image[
+            row_slice,
+            column_slice,
+        ],
+        attribution_map[
+            row_slice,
+            column_slice,
+        ],
+    )
+
+
+def build_attribution_visualization(
+    processed_image: np.ndarray,
+    attribution_map: np.ndarray,
+) -> np.ndarray:
+    """
+    Sobrepõe o mapa sobre a área endoscópica sem deformação visual.
+
+    O modelo continua recebendo a entrada configurada em TARGET_IMAGE_SIZE.
+    Somente a representação visual restaura a proporção e remove as bordas
+    escuras residuais do pré-processamento replicado de Viana.
+    """
+
+    if (
+        processed_image.ndim != 3
+        or processed_image.shape[2] != 3
+    ):
+        raise ValueError(
+            "A imagem processada deve possuir três canais RGB."
+        )
+
+    if attribution_map.ndim != 2:
+        raise ValueError(
+            "O mapa de atribuição deve possuir duas dimensões."
+        )
+
+    height, width = processed_image.shape[:2]
+
+    restored_map = cv2.resize(
+        attribution_map,
+        (width, height),
+        interpolation=cv2.INTER_LINEAR,
+    )
+
+    restored_map = np.clip(
+        restored_map,
+        0.0,
+        1.0,
+    ).astype(np.float32)
+
+    visual_image, visual_map = (
+        crop_attribution_to_visual_roi(
+            processed_image,
+            restored_map,
+        )
+    )
+
+    rgb_image = (
+        visual_image.astype(np.float32)
         / 255.0
     )
 
+    return show_cam_on_image(
+        rgb_image,
+        visual_map,
+        use_rgb=True,
+    )
 
 def _resolve_target_layers():
     """Resolve as camadas espaciais dos três modelos-base."""
@@ -596,14 +737,17 @@ def generate_ensemble_attribution_from_bytes(
                 ),
             )
 
-        rgb_image = _prepare_rgb_image(
-            image_bytes
+        processed_image = (
+            _prepare_processed_image(
+                image_bytes
+            )
         )
 
-        visualization = show_cam_on_image(
-            rgb_image,
-            combined_cam,
-            use_rgb=True,
+        visualization = (
+            build_attribution_visualization(
+                processed_image,
+                combined_cam,
+            )
         )
 
         destination = Path(
