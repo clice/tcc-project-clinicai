@@ -8,7 +8,7 @@
  * - redirecionar para o dashboard.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   CAlert,
@@ -29,6 +29,7 @@ import { cilLockLocked, cilUser } from '@coreui/icons'
 
 import { clinicaiSygnet } from 'src/assets/brand/clinicaiSygnet'
 import { useAuth } from 'src/hooks/useAuth'
+import { getErrorMessage } from 'src/utils/errors'
 
 const Login = () => {
   const { login } = useAuth()
@@ -41,6 +42,10 @@ const Login = () => {
 
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    document.title = 'ClinicAI | Login'
+  }, [])
 
   const updateField = (field, value) => {
     setForm((currentForm) => ({
@@ -58,12 +63,9 @@ const Login = () => {
       await login(form.email, form.password)
       navigate('/dashboard')
     } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        error.message ||
-        'Não foi possível realizar o login. Verifique suas credenciais.'
-
-      setError(message)
+      setError(
+        getErrorMessage(error, 'Não foi possível realizar o login. Verifique suas credenciais.'),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -79,7 +81,9 @@ const Login = () => {
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
-                    <p className="text-body-secondary">Entre com sua conta para acessar o ClinicAI</p>
+                    <p className="text-body-secondary">
+                      Entre com sua conta para acessar o ClinicAI
+                    </p>
 
                     {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -148,9 +152,8 @@ const Login = () => {
                   </div>
 
                   <p className="clinicai-login-description">
-                    Protótipo de Sistema Web para Gestão de Clínicas com
-                    Classificação Binária de Imagens de Exames Gastrointestinais por
-                    Inteligência Artificial
+                    Protótipo de Sistema Web para Gestão de Clínicas com Classificação Binária de
+                    Imagens de Exames Gastrointestinais por Inteligência Artificial
                   </p>
                 </CCardBody>
               </CCard>

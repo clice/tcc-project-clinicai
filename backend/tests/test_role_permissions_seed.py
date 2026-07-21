@@ -9,6 +9,7 @@ from app.core.database import Base
 from app.modules.permissions.model import Permission
 from app.modules.role_permissions.model import RolePermission
 from app.modules.role_permissions.seed import (
+    ADMIN_MASTER_RESTRICTED_PERMISSIONS,
     reconcile_role_permissions,
     seed_role_permissions,
 )
@@ -185,3 +186,20 @@ def test_explicit_reconciliation_restores_default_matrix() -> None:
     assert doctor_result.added == 1
     assert doctor_result.removed == 0
     assert "exams:download" in permission_names_for(db, doctor)
+
+def test_admin_master_keeps_exam_list_without_clinical_permissions() -> None:
+    db = make_session()
+    roles, permissions = add_catalog(db)
+
+    seed_role_permissions(db, roles, permissions)
+
+    admin_permissions = permission_names_for(db, roles["admin_master"])
+
+    assert "exams:list" in admin_permissions
+    assert ADMIN_MASTER_RESTRICTED_PERMISSIONS.isdisjoint(admin_permissions)
+
+    reconcile_role_permissions(db, roles, permissions)
+
+    reconciled_permissions = permission_names_for(db, roles["admin_master"])
+    assert "exams:list" in reconciled_permissions
+    assert ADMIN_MASTER_RESTRICTED_PERMISSIONS.isdisjoint(reconciled_permissions)

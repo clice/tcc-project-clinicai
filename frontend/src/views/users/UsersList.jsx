@@ -111,7 +111,7 @@ const UsersList = () => {
 
         await loadUsers()
       } catch (err) {
-        showError(err.response?.data?.detail || 'Erro ao alterar status do usuário.')
+        showError(getErrorMessage(err, 'Erro ao alterar status do usuário.'))
       }
     },
     [isClinicManager, loadUsers, showError, showSuccess],
@@ -182,7 +182,9 @@ const UsersList = () => {
           <div className="text-body-secondary">
             {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
           </div>
-          <h1 className="h3 mb-0 clinicai-page-title">{isClinicManager ? 'Médicos' : 'Usuários'}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">
+            {isClinicManager ? 'Médicos' : 'Usuários'}
+          </h1>
           <p className="text-body-secondary mb-0">
             {isClinicManager
               ? 'Gerencie os médicos vinculados à sua clínica.'

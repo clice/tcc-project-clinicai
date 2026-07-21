@@ -28,9 +28,7 @@ const AppTabs = ({ activeTab, counts = {}, onChange, tabs = [] }) => {
               color="secondary"
               shape="rounded-pill"
               className={`ms-2 ${
-                activeTab === tab.key
-                  ? 'clinicai-tab-badge-active'
-                  : 'clinicai-tab-badge-inactive'
+                activeTab === tab.key ? 'clinicai-tab-badge-active' : 'clinicai-tab-badge-inactive'
               }`}
             >
               {counts[tab.key] ?? 0}

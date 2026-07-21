@@ -30,7 +30,6 @@ const requiredListFragments = [
   'canCancel={canChangeStatus && (isProcessing || isPending)}',
   'canUseClinicalExamActions',
   'roleName === ROLES.DOCTOR',
-  'roleName === ROLES.ADMIN_MASTER',
   'if (!canUseClinicalExamActions)',
   'Baixar imagem original e Mapa Grad-CAM',
   'Baixar imagem original',
@@ -56,27 +55,16 @@ if (
 }
 
 if (
-  !card.includes(
-    "'Mapa de atribuição composto'",
-  ) ||
-  !card.includes(
-    "'Mapa Grad-CAM (ResNet-50)'",
-  ) ||
+  !card.includes("'Mapa de atribuição composto'") ||
+  !card.includes("'Mapa Grad-CAM (ResNet-50)'") ||
   !card.includes('onPackageDownload') ||
   !card.includes('cilCloudDownload') ||
-  !card.includes('cilPrint') ||
-  !card.includes(
-    'title="Baixar imagem original e mapa de atribuição"',
-  ) ||
+  !card.includes('title="Baixar imagem original e mapa de atribuição"') ||
   card.includes('Baixar imagem e mapa') ||
   card.includes('onOriginalDownload') ||
   card.includes('onGradcamDownload') ||
-  !form.includes(
-    'buildExamImagesPackageDownloadName',
-  ) ||
-  !form.includes(
-    'downloadImagePackage',
-  )
+  !form.includes('buildExamImagesPackageDownloadName') ||
+  !form.includes('downloadImagePackage')
 ) {
   throw new Error(
     'O detalhe deve distinguir o mapa composto do legado e disponibilizar somente o pacote conjunto.',
@@ -102,6 +90,24 @@ if (
   !backendService.includes('imagens-exame-')
 ) {
   throw new Error('Contrato do pacote ZIP não está completo no backend.')
+}
+
+const gradcamAuthorizationSection = backendService
+  .split('def get_authorized_gradcam_file(', 2)[1]
+  .split('def build_gradcam_download_filename(', 1)[0]
+
+const packageAuthorizationSection = backendService
+  .split('def download_exam_images_package(', 2)[1]
+  .split('return StreamingResponse(', 1)[0]
+
+if (
+  !gradcamAuthorizationSection?.includes('validate_user_is_doctor_for_exam_action(') ||
+  gradcamAuthorizationSection.includes('RoleName.ADMIN_MASTER.value') ||
+  !packageAuthorizationSection?.includes('validate_user_is_doctor_for_exam_action(') ||
+  packageAuthorizationSection.includes('RoleName.ADMIN_MASTER.value') ||
+  !packageAuthorizationSection.includes('user_has_permission(')
+) {
+  throw new Error('Grad-CAM e pacote ZIP devem ser restritos internamente ao perfil médico.')
 }
 
 console.log('Matriz de ações, downloads e Mapa Grad-CAM validada.')

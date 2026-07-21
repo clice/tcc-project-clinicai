@@ -24,9 +24,7 @@ const DashboardCards = ({ roleName, counts, isLoading }) => {
           <CCard className="mb-3 h-100">
             <CCardBody>
               <div className="text-body-secondary small">{label}</div>
-              <div className="fs-3 fw-semibold">
-                {isLoading ? <CSpinner size="sm" /> : value}
-              </div>
+              <div className="fs-3 fw-semibold">{isLoading ? <CSpinner size="sm" /> : value}</div>
             </CCardBody>
           </CCard>
         </CCol>

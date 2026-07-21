@@ -105,7 +105,7 @@ const PatientsList = () => {
 
         await loadPatients()
       } catch (err) {
-        showError(err.response?.data?.detail || 'Erro ao alterar status do paciente.')
+        showError(getErrorMessage(err, 'Erro ao alterar status do paciente.'))
       }
     },
     [loadPatients, showError, showSuccess],

@@ -13,7 +13,8 @@ const ComingSoon = () => {
       <CCardBody>
         <CCardTitle>Módulo em desenvolvimento</CCardTitle>
         <CCardText>
-          Esta área já faz parte do planejamento do ClinicAI, mas ainda será implementada nas próximas etapas.
+          Esta área já faz parte do planejamento do ClinicAI, mas ainda será implementada nas
+          próximas etapas.
         </CCardText>
       </CCardBody>
     </CCard>

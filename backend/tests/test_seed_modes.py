@@ -17,6 +17,7 @@ from app.modules.academic_demo_assets import (
 from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.clinics.model import Clinic
+from app.modules.clinics.seed import ACADEMIC_DEMO_CLINICS
 from app.modules.exams import file_storage as exam_file_storage
 from app.modules.exams.file_storage import resolve_safe_exam_file_path
 from app.modules.exams.model import Exam
@@ -32,19 +33,20 @@ EXPECTED_CLINIC_KEYS = {
     "clinic_primary",
     "clinic_large",
     "clinic_specialized",
+    "clinic_inactive",
 }
 EXPECTED_STATUS_COUNTS = {
-    "awaiting_review": 18,
-    "canceled": 3,
-    "completed": 52,
-    "completed_with_divergence": 2,
+    "awaiting_review": 22,
+    "canceled": 6,
+    "completed": 44,
+    "completed_with_divergence": 6,
     "failed": 6,
-    "pending": 9,
+    "pending": 6,
 }
 EXPECTED_ANALYSIS_EXAM_STATUS_COUNTS = {
-    "awaiting_review": 18,
-    "completed": 52,
-    "completed_with_divergence": 2,
+    "awaiting_review": 22,
+    "completed": 44,
+    "completed_with_divergence": 6,
 }
 EXPECTED_ATTRIBUTION_KEYS = {
     "attribution_method",
@@ -158,8 +160,8 @@ def test_academic_demo_is_predictable_and_idempotent(
     db_session.commit()
 
     assert set(demo.clinics) == EXPECTED_CLINIC_KEYS
-    assert len(demo.clinics) == 3
-    assert len(demo.users) == 7
+    assert len(demo.clinics) == 4
+    assert len(demo.users) == 13
     assert len(demo.patients) == 30
     assert len(demo.exams) == 90
     assert len(demo.ai_analyses) == 72
@@ -177,13 +179,44 @@ def test_academic_demo_is_predictable_and_idempotent(
     }
     assert invalid_demo_cpfs == {}
 
+    user_status_counts = Counter(
+        user.status.name for user in demo.users.values()
+    )
+    assert user_status_counts == Counter({"active": 8, "inactive": 5})
+
+    inactive_role_counts = Counter(
+        user.role.name
+        for user in demo.users.values()
+        if user.status.name == "inactive"
+    )
+    assert inactive_role_counts == Counter(
+        {"doctor": 2, "clinic_manager": 2, "admin_master": 1}
+    )
+
+    patient_status_counts = Counter(
+        patient.status.name for patient in demo.patients.values()
+    )
+    assert patient_status_counts == Counter({"active": 24, "inactive": 6})
+
     patients_by_clinic = Counter(
         patient.clinic_id for patient in demo.patients.values()
     )
     exams_by_clinic = Counter(exam.clinic_id for exam in demo.exams.values())
-    clinic_ids = {clinic.id for clinic in demo.clinics.values()}
-    assert patients_by_clinic == Counter({clinic_id: 10 for clinic_id in clinic_ids})
-    assert exams_by_clinic == Counter({clinic_id: 30 for clinic_id in clinic_ids})
+    active_clinic_ids = {
+        clinic.id
+        for key, clinic in demo.clinics.items()
+        if key != "clinic_inactive"
+    }
+    inactive_clinic_id = demo.clinics["clinic_inactive"].id
+
+    assert patients_by_clinic == Counter(
+        {clinic_id: 10 for clinic_id in active_clinic_ids}
+    )
+    assert exams_by_clinic == Counter(
+        {clinic_id: 30 for clinic_id in active_clinic_ids}
+    )
+    assert patients_by_clinic[inactive_clinic_id] == 0
+    assert exams_by_clinic[inactive_clinic_id] == 0
 
     exams_by_patient = Counter(exam.patient_id for exam in demo.exams.values())
     assert set(exams_by_patient.values()) == {3}
@@ -199,21 +232,19 @@ def test_academic_demo_is_predictable_and_idempotent(
     status_counts = Counter(exam.status.name for exam in demo.exams.values())
     assert dict(sorted(status_counts.items())) == EXPECTED_STATUS_COUNTS
 
-    monthly_counts: dict[int, Counter[str]] = defaultdict(Counter)
-    for exam in demo.exams.values():
-        monthly_counts[exam.clinic_id][exam.exam_date.strftime("%Y-%m")] += 1
-    assert set(monthly_counts) == clinic_ids
-    assert all(
-        dict(sorted(months.items()))
-        == {
-            "2026-02": 5,
-            "2026-03": 5,
-            "2026-04": 5,
-            "2026-05": 5,
-            "2026-06": 5,
-            "2026-07": 5,
+    monthly_counts = Counter(
+        exam.exam_date.strftime("%Y-%m")
+        for exam in demo.exams.values()
+    )
+    assert monthly_counts == Counter(
+        {
+            "2026-02": 12,
+            "2026-03": 16,
+            "2026-04": 13,
+            "2026-05": 18,
+            "2026-06": 14,
+            "2026-07": 17,
         }
-        for months in monthly_counts.values()
     )
 
     for exam in demo.exams.values():
@@ -240,7 +271,7 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert sum(
         exam.status.name in {"completed", "completed_with_divergence"}
         for exam in demo.exams.values()
-    ) == 54
+    ) == 50
 
     label_counts = Counter(
         analysis.prediction_label for analysis in demo.ai_analyses.values()
@@ -283,9 +314,14 @@ def test_academic_demo_is_predictable_and_idempotent(
         for exam in demo.exams.values()
         if exam.clinic_id == primary_clinic.id and exam.status.name == "pending"
     )
+    analysis = next(iter(demo.ai_analyses.values()))
+    expected_model_version = analysis.model_version
+    expected_confidence = analysis.confidence
     original_hash = primary_doctor.password_hash
     primary_clinic.name = "Clínica Primária Personalizada"
     pending_exam.observations = "Descrição acadêmica personalizada"
+    analysis.model_version = "versao-antiga"
+    analysis.confidence = 0.01
     db_session.commit()
 
     for _ in range(3):
@@ -293,8 +329,8 @@ def test_academic_demo_is_predictable_and_idempotent(
         seed_academic_demo(db_session, bootstrap)
         db_session.commit()
 
-    assert count(db_session, Clinic) == 3
-    assert count(db_session, User) == 7
+    assert count(db_session, Clinic) == 4
+    assert count(db_session, User) == 13
     assert count(db_session, Patient) == 30
     assert count(db_session, Exam) == 90
     assert count(db_session, AIAnalysis) == 72
@@ -302,10 +338,14 @@ def test_academic_demo_is_predictable_and_idempotent(
     db_session.refresh(primary_clinic)
     db_session.refresh(primary_doctor)
     db_session.refresh(pending_exam)
-    assert primary_clinic.name == "Clínica Primária Personalizada"
+    db_session.refresh(analysis)
+    assert primary_clinic.name == ACADEMIC_DEMO_CLINICS["clinic_primary"]["name"]
     assert primary_doctor.password_hash == original_hash
-    assert pending_exam.observations == "Descrição acadêmica personalizada"
-
+    assert pending_exam.observations.startswith(
+        "Exame fictício da massa acadêmica"
+    )
+    assert analysis.model_version == expected_model_version
+    assert analysis.confidence == expected_confidence
 
 
 def test_database_contract_accepts_academic_demo(
@@ -329,6 +369,58 @@ def test_database_contract_accepts_academic_demo(
 
     database_contract.assert_demo_data()
 
+
+def test_database_contract_accepts_external_records_with_demo(
+    db_session: Session,
+    isolated_demo_uploads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.maintenance import database_contract
+
+    bootstrap = bootstrap_reference_data(db_session)
+    db_session.commit()
+
+    db_session.add(
+        Clinic(
+            name="Clínica externa legítima",
+            cnpj="99888777000166",
+            email="externa@example.com",
+            status_id=bootstrap.statuses["clinic_active"].id,
+        )
+    )
+    db_session.commit()
+    seed_academic_demo(db_session, bootstrap)
+    db_session.commit()
+
+    monkeypatch.setattr(database_contract, "SessionLocal", lambda: db_session)
+    database_contract.assert_demo_data()
+
+
+def test_demo_collision_rolls_back_without_partial_records(
+    db_session: Session,
+) -> None:
+    bootstrap = bootstrap_reference_data(db_session)
+    db_session.commit()
+
+    db_session.add(
+        Clinic(
+            name="Clínica externa conflitante",
+            cnpj="88777666000155",
+            email=ACADEMIC_DEMO_CLINICS["clinic_large"]["email"],
+            status_id=bootstrap.statuses["clinic_active"].id,
+        )
+    )
+    db_session.commit()
+
+    with pytest.raises(RuntimeError, match="Colisão da massa acadêmica"):
+        seed_academic_demo(db_session, bootstrap)
+    db_session.rollback()
+
+    assert count(db_session, Clinic) == 1
+    assert count(db_session, User) == 1
+    assert count(db_session, Patient) == 0
+    assert count(db_session, Exam) == 0
+    assert count(db_session, AIAnalysis) == 0
 
 
 def test_demo_phase_can_be_rolled_back_without_partial_clinics(

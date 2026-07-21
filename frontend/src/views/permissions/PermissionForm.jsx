@@ -130,7 +130,7 @@ const PermissionForm = () => {
           <strong>Dados da Permissão</strong>
         </CCardHeader>
 
-        <CCardBody>
+        <CCardBody className="mb-4">
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
               <CCol md={4}>

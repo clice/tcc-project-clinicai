@@ -11,12 +11,7 @@ export const userService = {
   /**
    * Lista usuários.
    */
-  list: async ({
-    search = '',
-    clinicId = '',
-    role = '',
-    status = '',
-  } = {}) => {
+  list: async ({ search = '', clinicId = '', role = '', status = '' } = {}) => {
     const response = await api.get('/users/', {
       params: {
         search: search || undefined,
@@ -131,5 +126,5 @@ export const userService = {
     })
 
     return Array.isArray(response.data) ? response.data : []
-  }
+  },
 }

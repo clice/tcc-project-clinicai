@@ -51,7 +51,10 @@ assert.match(routes, /path: ['"]\/statuses\/:id\/edit['"]/)
 assert.doesNotMatch(statusList, /viewTo=|canView=/)
 assert.match(statusList, /editTo=\{`\/statuses\/\$\{row\.original\.id\}\/edit`\}/)
 assert.doesNotMatch(statusForm, /\bisReadOnly\b|\bisEditMode\b|mode === ['"]view['"]/)
-assert.match(statusForm, /<h1 className="h3 mb-0">Editar Status<\/h1>/)
+assert.match(
+  statusForm,
+  /<h1[^>]*className=["'][^"']*\bclinicai-page-title\b[^"']*["'][^>]*>Editar Status<\/h1>/,
+)
 assert.match(
   statusForm,
   /<CFormLabel>Nome técnico<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/,

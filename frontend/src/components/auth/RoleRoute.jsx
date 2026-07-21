@@ -15,19 +15,13 @@ const RoleRoute = ({ children, allowedRoles = [], requiredPermission = null }) =
   const { user } = useAuth()
   const roleName = getUserRole(user)
 
-  const roleAllowed =
-    !allowedRoles ||
-    allowedRoles.length === 0 ||
-    allowedRoles.includes(roleName)
+  const roleAllowed = !allowedRoles || allowedRoles.length === 0 || allowedRoles.includes(roleName)
 
   if (!roleAllowed) {
     return <Navigate to="/dashboard" replace />
   }
 
-  if (
-    requiredPermission &&
-    !hasPermission(user, requiredPermission)
-  ) {
+  if (requiredPermission && !hasPermission(user, requiredPermission)) {
     return <Navigate to="/dashboard" replace />
   }
 

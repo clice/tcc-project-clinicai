@@ -51,7 +51,7 @@ def get_or_create_ai_analysis(
     status_id: int,
     definition: dict,
 ) -> AIAnalysis:
-    """Cria uma análise sem alterar registro existente."""
+    """Reconcilia a análise acadêmica vinculada ao exame."""
 
     existing = (
         db.query(AIAnalysis)
@@ -60,9 +60,6 @@ def get_or_create_ai_analysis(
         )
         .first()
     )
-
-    if existing:
-        return existing
 
     analysis = definition["analysis"]
     source = definition["source_asset"]
@@ -75,43 +72,29 @@ def get_or_create_ai_analysis(
         for field in ATTRIBUTION_FIELDS
     }
 
-    ai_analysis = AIAnalysis(
-        exam_id=exam.id,
-        status_id=status_id,
-        prediction_label=str(
-            analysis["prediction_label"]
-        ),
-        prediction_class=int(
-            analysis["prediction_class"]
-        ),
-        confidence=float(
-            analysis["confidence"]
-        ),
-        model_name=str(
-            analysis["model_name"]
-        ),
-        model_version=str(
-            analysis["model_version"]
-        ),
-        gradcam_path=str(gradcam_path),
-        processing_time_ms=int(
-            analysis["processing_time_ms"]
-        ),
-        ai_notes=(
-            "Predição real do Ensemble Stacking "
-            "sobre ativo acadêmico de referência "
-            f"{source['label']}; sem finalidade clínica."
-        ),
-        raw_response=json.dumps(
-            attribution_payload,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-            allow_nan=False,
-        ),
-    )
+    ai_analysis = existing or AIAnalysis(exam_id=exam.id)
+    if existing is None:
+        db.add(ai_analysis)
 
-    db.add(ai_analysis)
+    ai_analysis.status_id = status_id
+    ai_analysis.prediction_label = str(analysis["prediction_label"])
+    ai_analysis.prediction_class = int(analysis["prediction_class"])
+    ai_analysis.confidence = float(analysis["confidence"])
+    ai_analysis.model_name = str(analysis["model_name"])
+    ai_analysis.model_version = str(analysis["model_version"])
+    ai_analysis.gradcam_path = str(gradcam_path)
+    ai_analysis.processing_time_ms = int(analysis["processing_time_ms"])
+    ai_analysis.ai_notes = (
+        "Predição real do Ensemble Stacking sobre ativo acadêmico de "
+        f"referência {source['label']}; sem finalidade clínica."
+    )
+    ai_analysis.raw_response = json.dumps(
+        attribution_payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
     db.flush()
     db.refresh(ai_analysis)
 

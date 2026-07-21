@@ -10,7 +10,6 @@ from datetime import (
 from sqlalchemy.orm import Session
 
 from app.modules.academic_demo_assets import (
-    exam_asset_target,
     get_demo_exam_definitions,
     install_exam_asset,
 )
@@ -39,7 +38,7 @@ def get_or_create_exam(
     reviewed_by_id: int | None = None,
     reviewed_at: datetime | None = None,
 ) -> Exam:
-    """Cria um exame demo sem alterar registro existente."""
+    """Reconcilia um exame pela identidade paciente/tipo/descrição."""
 
     exam = (
         db.query(Exam)
@@ -51,40 +50,26 @@ def get_or_create_exam(
         .first()
     )
 
-    if exam:
-        expected_path = exam_asset_target(
-            exam,
-            asset_entry,
-        ).resolve(strict=False)
+    if exam is None:
+        exam = Exam(
+            patient_id=patient_id,
+            exam_type=exam_type,
+            description=description,
+        )
+        db.add(exam)
 
-        if exam.file_path == str(expected_path):
-            install_exam_asset(
-                exam,
-                asset_entry,
-                assign_fields=False,
-            )
-
-        return exam
-
-    exam = Exam(
-        clinic_id=clinic_id,
-        patient_id=patient_id,
-        doctor_id=doctor_id,
-        status_id=status_id,
-        exam_type=exam_type,
-        exam_date=exam_date,
-        description=description,
-        observations=observations,
-        clinical_indication=clinical_indication,
-        findings=findings,
-        conclusion=conclusion,
-        reviewed_by_id=reviewed_by_id,
-        reviewed_at=reviewed_at,
-        analysis_in_progress=False,
-        analysis_started_at=None,
-    )
-
-    db.add(exam)
+    exam.clinic_id = clinic_id
+    exam.doctor_id = doctor_id
+    exam.status_id = status_id
+    exam.exam_date = exam_date
+    exam.observations = observations
+    exam.clinical_indication = clinical_indication
+    exam.findings = findings
+    exam.conclusion = conclusion
+    exam.reviewed_by_id = reviewed_by_id
+    exam.reviewed_at = reviewed_at
+    exam.analysis_in_progress = False
+    exam.analysis_started_at = None
     db.flush()
 
     install_exam_asset(

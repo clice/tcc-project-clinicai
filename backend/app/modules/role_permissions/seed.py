@@ -19,6 +19,22 @@ from app.modules.role_permissions.model import RolePermission
 from app.modules.roles.model import Role
 
 
+ADMIN_MASTER_RESTRICTED_PERMISSIONS = frozenset(
+    {
+        "exams:create",
+        "exams:read",
+        "exams:update",
+        "exams:upload",
+        "exams:download",
+        "exams:change_status",
+        "exams:review",
+        "ai_analysis:create",
+        "ai_analysis:read",
+        "ai_analysis:update",
+    }
+)
+
+
 DOCTOR_PERMISSIONS = [
     "users:read_profile",
     "users:update_profile",
@@ -73,7 +89,11 @@ def build_role_permission_map(
     """Monta a matriz padrão usada no primeiro bootstrap e no comando manual."""
 
     return {
-        "admin_master": list(permissions.keys()),
+        "admin_master": [
+            permission_name
+            for permission_name in permissions
+            if permission_name not in ADMIN_MASTER_RESTRICTED_PERMISSIONS
+        ],
         "doctor": DOCTOR_PERMISSIONS,
         "clinic_manager": CLINIC_MANAGER_PERMISSIONS,
     }

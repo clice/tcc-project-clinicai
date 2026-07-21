@@ -8,31 +8,20 @@ const parseCalendarDate = (value) => {
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) return null
 
-    return new Date(
-      value.getFullYear(),
-      value.getMonth(),
-      value.getDate(),
-    )
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate())
   }
 
   const stringValue = String(value)
-  const dateOnlyMatch = stringValue.match(
-    /^(\d{4})-(\d{2})-(\d{2})$/,
-  )
+  const dateOnlyMatch = stringValue.match(/^(\d{4})-(\d{2})-(\d{2})$/)
 
   if (dateOnlyMatch) {
-    const [, yearText, monthText, dayText] =
-      dateOnlyMatch
+    const [, yearText, monthText, dayText] = dateOnlyMatch
     const year = Number(yearText)
     const month = Number(monthText) - 1
     const day = Number(dayText)
     const date = new Date(year, month, day)
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month ||
-      date.getDate() !== day
-    ) {
+    if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
       return null
     }
 
@@ -52,10 +41,7 @@ const parseCalendarDate = (value) => {
  * Quando a referência não é fornecida, mantém o comportamento
  * de calcular a idade atual.
  */
-export const calculateAge = (
-  birthDate,
-  referenceDate = new Date(),
-) => {
+export const calculateAge = (birthDate, referenceDate = new Date()) => {
   const birth = parseCalendarDate(birthDate)
   const reference = parseCalendarDate(referenceDate)
 
@@ -63,20 +49,10 @@ export const calculateAge = (
     return '-'
   }
 
-  let age =
-    reference.getFullYear() -
-    birth.getFullYear()
-  const monthDifference =
-    reference.getMonth() -
-    birth.getMonth()
+  let age = reference.getFullYear() - birth.getFullYear()
+  const monthDifference = reference.getMonth() - birth.getMonth()
 
-  if (
-    monthDifference < 0 ||
-    (
-      monthDifference === 0 &&
-      reference.getDate() < birth.getDate()
-    )
-  ) {
+  if (monthDifference < 0 || (monthDifference === 0 && reference.getDate() < birth.getDate())) {
     age -= 1
   }
 

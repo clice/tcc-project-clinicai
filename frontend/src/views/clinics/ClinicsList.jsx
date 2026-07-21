@@ -111,7 +111,7 @@ const ClinicsList = () => {
 
         await loadClinics()
       } catch (err) {
-        showError(err.response?.data?.detail || 'Erro ao alterar status da clínica.')
+        showError(getErrorMessage(err, 'Erro ao alterar status da clínica.'))
       }
     },
     [loadClinics, showError, showSuccess],

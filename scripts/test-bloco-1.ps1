@@ -56,11 +56,11 @@ Invoke-CheckedCommand 'Aplicando as migrations' {
 Invoke-CheckedCommand 'Executando os testes do backend' {
     docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
 }
-Invoke-CheckedCommand 'Validando o contrato do fluxo de exames' {
+Invoke-CheckedCommand 'Validando os contratos do fluxo de exames' {
     docker compose run --rm --no-deps `
         -v "${RepositoryRoot}:/workspace:ro" `
         frontend `
-        node /workspace/frontend/scripts/check-exam-state-contract.mjs
+        npm --prefix /workspace/frontend run check:exams
 }
 Invoke-CheckedCommand 'Validando a navegação e as permissões' {
     docker compose run --rm --no-deps frontend npm run check:navigation

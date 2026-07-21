@@ -45,12 +45,7 @@ const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar
-          className="clinicai-user-avatar"
-          color="primary"
-          textColor="white"
-          size="md"
-        >
+        <CAvatar className="clinicai-user-avatar" color="primary" textColor="white" size="md">
           <CIcon icon={cilUser} />
         </CAvatar>
       </CDropdownToggle>

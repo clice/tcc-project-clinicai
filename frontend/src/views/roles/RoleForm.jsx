@@ -203,7 +203,7 @@ const RoleForm = () => {
         selecionar “Salvar”.
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados do Perfil</strong>
         </CCardHeader>
@@ -246,9 +246,10 @@ const RoleForm = () => {
 
                 {isAdminMasterRole && (
                   <div className="alert alert-info small mb-3">
-                    <b>Acesso total:</b> o Administrador Master tem acesso irrestrito ao sistema por
-                    padrão. Esta matriz é somente leitura porque desmarcar itens aqui não reduz o
-                    acesso efetivo desse perfil.
+                    <b>Acesso administrativo amplo:</b> o Administrador Master gerencia os recursos
+                    administrativos do sistema. A matriz é somente leitura, mas esse perfil não pode
+                    executar ações clínicas nem acessar detalhes, imagens ou resultados médicos dos
+                    exames.
                   </div>
                 )}
 

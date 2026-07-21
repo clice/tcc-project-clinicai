@@ -51,11 +51,11 @@ run_step "Aplicando as migrations" \
   docker compose run --rm --no-deps --entrypoint alembic backend upgrade head
 run_step "Executando os testes do backend" \
   docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
-run_step "Validando o contrato do fluxo de exames" \
+run_step "Validando os contratos do fluxo de exames" \
   docker compose run --rm --no-deps \
     -v "$REPOSITORY_ROOT:/workspace:ro" \
     frontend \
-    node /workspace/frontend/scripts/check-exam-state-contract.mjs
+    npm --prefix /workspace/frontend run check:exams
 run_step "Validando a navegação e as permissões" \
   docker compose run --rm --no-deps frontend npm run check:navigation
 run_step "Gerando o build de produção do frontend" \

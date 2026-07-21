@@ -221,6 +221,13 @@ const ExamForm = ({ mode = 'create' }) => {
     return 'Detalhes do Exame'
   }, [isCreateMode, isEditMode])
 
+  useEffect(() => {
+    if (isLoading) return
+
+    const examTitle = isCreateMode ? title : form.description || title
+    document.title = `ClinicAI | Exames | ${examTitle}`
+  }, [form.description, isCreateMode, isLoading, title])
+
   const activeClinics = useMemo(() => {
     const selectedClinicId = String(form.clinic_id)
 
@@ -1186,7 +1193,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   <CFormLabel>Indicação clínica</CFormLabel>
 
                   <CFormTextarea
-                    rows={3}
+                    rows={2}
                     value={form.clinical_indication}
                     placeholder="Motivo pelo qual o exame foi solicitado ou realizado."
                     onChange={(event) => updateField('clinical_indication', event.target.value)}
@@ -1197,7 +1204,7 @@ const ExamForm = ({ mode = 'create' }) => {
                   <CFormLabel>Observações</CFormLabel>
 
                   <CFormTextarea
-                    rows={3}
+                    rows={2}
                     value={form.observations}
                     placeholder="Informações adicionais relacionadas ao cadastro do exame."
                     onChange={(event) => updateField('observations', event.target.value)}
@@ -1422,7 +1429,9 @@ const ExamForm = ({ mode = 'create' }) => {
           <div className="text-body-secondary">Registros de Saúde</div>
 
           <div className="d-flex flex-wrap align-items-center gap-2">
-            <h1 className="h3 mb-0 clinicai-page-title">{isCreateMode ? title : form.description || title}</h1>
+            <h1 className="h3 mb-0 clinicai-page-title">
+              {isCreateMode ? title : form.description || title}
+            </h1>
 
             {!isCreateMode && form.status_name && (
               <CBadge color={statusColors[form.status_name] || 'secondary'}>

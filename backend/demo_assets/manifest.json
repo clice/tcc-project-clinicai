@@ -3,7 +3,7 @@
     {
       "doctor_key": "doctor_primary",
       "key": "clinic_primary",
-      "name": "Clínica Primária"
+      "name": "ClinicAI Endoscopia Especializada"
     },
     {
       "doctor_key": "doctor_large",
@@ -21,11 +21,11 @@
     "clinics": 3,
     "exams_per_clinic": 30,
     "patients_per_clinic": 10,
-    "period_end": "2026-07-16",
+    "period_end": "2026-07-26",
     "period_start": "2026-02-02",
     "purpose": "academic_demonstration",
     "real_source_prediction_divergences": 2,
-    "reviewed_exams": 54,
+    "reviewed_exams": 50,
     "source_abnormal": 45,
     "source_images": 90,
     "source_normal": 45
@@ -71,7 +71,7 @@
         "processing_time_ms": 368
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 01",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-02",
@@ -132,10 +132,10 @@
         "processing_time_ms": 331
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 02",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-02-07",
+      "exam_date": "2026-02-08",
       "exam_key": "clinic_primary_exam_02",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_02",
@@ -193,17 +193,17 @@
         "processing_time_ms": 344
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-02-12",
+      "exam_date": "2026-02-15",
       "exam_key": "clinic_primary_exam_03",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_03",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -213,7 +213,7 @@
         "sha256": "a49e7d9e7c5745d6d5acddacbf01ceeac4597737ecd71c24704db4318e494897",
         "size_bytes": 190383
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -254,14 +254,18 @@
         "processing_time_ms": 373
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-02-17",
+      "exam_date": "2026-03-02",
       "exam_key": "clinic_primary_exam_04",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -270,15 +274,15 @@
         "sha256": "88c5109556691c50102afd534de40572e95d9c20251a7f9ec635fd242eac4914",
         "size_bytes": 209512
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-02-22",
+      "exam_date": "2026-02-21",
       "exam_key": "clinic_primary_exam_05",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_05",
@@ -332,10 +336,10 @@
         "processing_time_ms": 389
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 06",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-03-02",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-06",
       "exam_key": "clinic_primary_exam_06",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_06",
@@ -393,10 +397,10 @@
         "processing_time_ms": 921
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 07",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-03-07",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-11",
       "exam_key": "clinic_primary_exam_07",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_07",
@@ -454,18 +458,14 @@
         "processing_time_ms": 714
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 08",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-03-12",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-16",
       "exam_key": "clinic_primary_exam_08",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -474,7 +474,7 @@
         "sha256": "927653c436c9ea121138510fe2097261876cfa2b73845edb3d142608ea9791b4",
         "size_bytes": 426674
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -515,10 +515,10 @@
         "processing_time_ms": 411
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 09",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-03-17",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-21",
       "exam_key": "clinic_primary_exam_09",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_09",
@@ -536,9 +536,9 @@
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 10",
-      "doctor_key": "doctor_primary",
+      "doctor_key": "doctor_primary_secondary",
       "exam_date": "2026-03-22",
       "exam_key": "clinic_primary_exam_10",
       "exam_type": "colonoscopy",
@@ -593,10 +593,10 @@
         "processing_time_ms": 430
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-04-02",
+      "exam_date": "2026-04-06",
       "exam_key": "clinic_primary_exam_11",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_01",
@@ -654,17 +654,17 @@
         "processing_time_ms": 895
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-04-07",
+      "exam_date": "2026-04-12",
       "exam_key": "clinic_primary_exam_12",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_02",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -674,7 +674,7 @@
         "sha256": "3facdedd6dbf606c11291031cece65bfb5f8c0c867ab341b9b67e78f7858ec6f",
         "size_bytes": 993716
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -715,18 +715,14 @@
         "processing_time_ms": 676
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 13",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-04-12",
+      "exam_date": "2026-04-18",
       "exam_key": "clinic_primary_exam_13",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_03",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -735,7 +731,7 @@
         "sha256": "ce9d00816adcbe66767a528b504e2eecaefd2cefceec6d785950def1318e8344",
         "size_bytes": 789859
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -776,14 +772,18 @@
         "processing_time_ms": 392
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-04-17",
+      "exam_date": "2026-05-04",
       "exam_key": "clinic_primary_exam_14",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -792,15 +792,15 @@
         "sha256": "208fd69b4db49f51f6dce6b9747813dcf66066359467a14b14c081a0cdb75578",
         "size_bytes": 206606
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-04-22",
+      "exam_date": "2026-04-20",
       "exam_key": "clinic_primary_exam_15",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_05",
@@ -854,10 +854,10 @@
         "processing_time_ms": 548
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 16",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-05-02",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-09",
       "exam_key": "clinic_primary_exam_16",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_06",
@@ -915,10 +915,10 @@
         "processing_time_ms": 1553
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 17",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-05-07",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-13",
       "exam_key": "clinic_primary_exam_17",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_07",
@@ -976,18 +976,14 @@
         "processing_time_ms": 1322
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 18",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-05-12",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-17",
       "exam_key": "clinic_primary_exam_18",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -996,7 +992,7 @@
         "sha256": "66960cd066a284ec6dc854a21b99e57c8a3e2a435d4986da6ad37c8d6aced5f6",
         "size_bytes": 930649
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -1037,10 +1033,10 @@
         "processing_time_ms": 377
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 19",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-05-17",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-21",
       "exam_key": "clinic_primary_exam_19",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_09",
@@ -1058,10 +1054,10 @@
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 20",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-05-22",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-04-26",
       "exam_key": "clinic_primary_exam_20",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_10",
@@ -1115,10 +1111,10 @@
         "processing_time_ms": 1095
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-06-02",
+      "exam_date": "2026-06-05",
       "exam_key": "clinic_primary_exam_21",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_01",
@@ -1176,10 +1172,10 @@
         "processing_time_ms": 841
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-06-07",
+      "exam_date": "2026-06-11",
       "exam_key": "clinic_primary_exam_22",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_02",
@@ -1237,18 +1233,14 @@
         "processing_time_ms": 1331
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-06-12",
+      "exam_date": "2026-06-16",
       "exam_key": "clinic_primary_exam_23",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_03",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -1257,7 +1249,7 @@
         "sha256": "cc81b4392625e41109d4cb5d801c6c5bd41ee035b7134716ab54c77f3b20f359",
         "size_bytes": 523652
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -1298,14 +1290,18 @@
         "processing_time_ms": 931
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-06-17",
+      "exam_date": "2026-07-02",
       "exam_key": "clinic_primary_exam_24",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -1314,15 +1310,15 @@
         "sha256": "e5171d1a7724b10a42ed6fc7fbc1af7f42ef68af61a0acebd55b2bdd7de2412c",
         "size_bytes": 474198
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-06-22",
+      "exam_date": "2026-05-26",
       "exam_key": "clinic_primary_exam_25",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_05",
@@ -1376,10 +1372,10 @@
         "processing_time_ms": 2057
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 26",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-07-02",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-06",
       "exam_key": "clinic_primary_exam_26",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_06",
@@ -1437,10 +1433,10 @@
         "processing_time_ms": 633
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 27",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-07-05",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-11",
       "exam_key": "clinic_primary_exam_27",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_07",
@@ -1498,18 +1494,14 @@
         "processing_time_ms": 1470
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 28",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-07-08",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-15",
       "exam_key": "clinic_primary_exam_28",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_08",
-      "review": {
-        "agrees_with_ai": false,
-        "review_notes": "Revisão demonstrativa divergente: o rótulo de referência da base foi abnormal e a IA predisse normal.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -1518,7 +1510,7 @@
         "sha256": "f58c478b646aac20c6ad5675a9d7d47c6d97cdbb50aacb6dffcf56cd98dcfab1",
         "size_bytes": 610510
       },
-      "status": "completed_with_divergence"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -1559,10 +1551,10 @@
         "processing_time_ms": 524
       },
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Colonoscopia demonstrativa 29",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-07-11",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-20",
       "exam_key": "clinic_primary_exam_29",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_09",
@@ -1580,10 +1572,10 @@
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
-      "clinic_name": "Clínica Primária",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 30",
-      "doctor_key": "doctor_primary",
-      "exam_date": "2026-07-14",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-06-26",
       "exam_key": "clinic_primary_exam_30",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_10",
@@ -1596,7 +1588,7 @@
         "sha256": "ba2a65fe062db58365f3f39c505d7efe4ed7c0d1c506559f9ac878966c4b8ad8",
         "size_bytes": 207928
       },
-      "status": "pending"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -1640,7 +1632,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 01",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-02-03",
+      "exam_date": "2026-02-04",
       "exam_key": "clinic_large_exam_01",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_01",
@@ -1701,7 +1693,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 02",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-02-08",
+      "exam_date": "2026-02-10",
       "exam_key": "clinic_large_exam_02",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_02",
@@ -1762,15 +1754,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-02-13",
+      "exam_date": "2026-02-17",
       "exam_key": "clinic_large_exam_03",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_03",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -1779,7 +1767,7 @@
         "sha256": "03bbe1819967b3df0afd1b975f2bc84c40353e8983290a2c6954b2c76a0d5581",
         "size_bytes": 163954
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -1823,11 +1811,15 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-02-18",
+      "exam_date": "2026-03-03",
       "exam_key": "clinic_large_exam_04",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -1836,7 +1828,7 @@
         "sha256": "2173c5b401958661f093e4e7c92444739a9e443fe8f25517609ec1d5c9a647a6",
         "size_bytes": 674314
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -1901,7 +1893,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-03-03",
+      "exam_date": "2026-03-08",
       "exam_key": "clinic_large_exam_06",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_06",
@@ -1962,7 +1954,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-03-08",
+      "exam_date": "2026-03-13",
       "exam_key": "clinic_large_exam_07",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_07",
@@ -2023,15 +2015,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-03-13",
+      "exam_date": "2026-03-18",
       "exam_key": "clinic_large_exam_08",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -2040,7 +2028,7 @@
         "sha256": "8d9d973a495e18e981ec6bda40c6bb14d641e5cd4dce683bd93d4bdab90dd68d",
         "size_bytes": 734231
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -2084,11 +2072,15 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-03-18",
+      "exam_date": "2026-04-02",
       "exam_key": "clinic_large_exam_09",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_09",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -2097,7 +2089,7 @@
         "sha256": "6bfe690ec660677821ea6779cf5a01ef493dc084d2dd25165640939e526af8e2",
         "size_bytes": 879332
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -2105,7 +2097,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-03-23",
+      "exam_date": "2026-03-24",
       "exam_key": "clinic_large_exam_10",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_10",
@@ -2162,7 +2154,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-04-03",
+      "exam_date": "2026-04-08",
       "exam_key": "clinic_large_exam_11",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_01",
@@ -2223,15 +2215,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-04-08",
+      "exam_date": "2026-04-14",
       "exam_key": "clinic_large_exam_12",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_02",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -2240,7 +2228,7 @@
         "sha256": "a63038ec9338e2e2b6b6a0a1a04f5689bcbb08884be515fdc15db464bb5ea27e",
         "size_bytes": 180035
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -2284,7 +2272,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 13",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-04-13",
+      "exam_date": "2026-05-02",
       "exam_key": "clinic_large_exam_13",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_03",
@@ -2345,11 +2333,15 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-04-18",
+      "exam_date": "2026-05-06",
       "exam_key": "clinic_large_exam_14",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -2358,7 +2350,7 @@
         "sha256": "e7dc62d8850979301e9f7b65e6ebeb34b1774133b1ee84683d720c17c40b17bc",
         "size_bytes": 204234
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -2366,7 +2358,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-04-23",
+      "exam_date": "2026-04-22",
       "exam_key": "clinic_large_exam_15",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_05",
@@ -2379,7 +2371,7 @@
         "sha256": "1eb81160ed645ae0eb83e329f2cfb07958a357f1bd4e441f8753183cf34960bd",
         "size_bytes": 163829
       },
-      "status": "failed"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -2423,7 +2415,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-05-03",
+      "exam_date": "2026-05-10",
       "exam_key": "clinic_large_exam_16",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_06",
@@ -2484,7 +2476,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-05-08",
+      "exam_date": "2026-05-14",
       "exam_key": "clinic_large_exam_17",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_07",
@@ -2545,15 +2537,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-05-13",
+      "exam_date": "2026-05-18",
       "exam_key": "clinic_large_exam_18",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -2562,7 +2550,7 @@
         "sha256": "fee7ab61b8ed51fba01de09774056891c6a8a13c7e8e14dbae5ad7f319ab7129",
         "size_bytes": 193016
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -2606,11 +2594,15 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-05-18",
+      "exam_date": "2026-06-02",
       "exam_key": "clinic_large_exam_19",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_09",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -2619,7 +2611,7 @@
         "sha256": "59afed551c37ea91dbecb3603ef4392bfbe30e82000f8747fa9c87388e7034e4",
         "size_bytes": 147254
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -2640,7 +2632,7 @@
         "sha256": "64cfbbe27a8dc674cd26d5f43f708bddfce67d8cbcff7346841b0a6e1301d933",
         "size_bytes": 804958
       },
-      "status": "pending"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -2684,7 +2676,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-06-03",
+      "exam_date": "2026-06-07",
       "exam_key": "clinic_large_exam_21",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_01",
@@ -2745,7 +2737,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-06-08",
+      "exam_date": "2026-06-13",
       "exam_key": "clinic_large_exam_22",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_02",
@@ -2806,15 +2798,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-06-13",
+      "exam_date": "2026-06-18",
       "exam_key": "clinic_large_exam_23",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_03",
-      "review": {
-        "agrees_with_ai": false,
-        "review_notes": "Revisão demonstrativa divergente: o rótulo de referência da base foi abnormal e a IA predisse normal.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -2823,7 +2811,7 @@
         "sha256": "1dcd7b25a28b38c2dd3cd9a66b9f780902c4a34ee76dd2891f16d3f4142ff95a",
         "size_bytes": 658033
       },
-      "status": "completed_with_divergence"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -2867,11 +2855,15 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-06-18",
+      "exam_date": "2026-07-03",
       "exam_key": "clinic_large_exam_24",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -2880,7 +2872,7 @@
         "sha256": "8ff2d90633ca128a20aa34ac2c60eec8a3c7060552786953663378808e07f71b",
         "size_bytes": 168436
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -2888,7 +2880,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-06-23",
+      "exam_date": "2026-06-22",
       "exam_key": "clinic_large_exam_25",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_05",
@@ -2901,7 +2893,7 @@
         "sha256": "46c2628b86310d8a17779dd587fc75d086a3dce2684a100d1e75655f040fbdcf",
         "size_bytes": 679964
       },
-      "status": "pending"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -2945,7 +2937,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 26",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-07-03",
+      "exam_date": "2026-07-08",
       "exam_key": "clinic_large_exam_26",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_06",
@@ -3006,7 +2998,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 27",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-07-06",
+      "exam_date": "2026-07-12",
       "exam_key": "clinic_large_exam_27",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_07",
@@ -3067,15 +3059,11 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 28",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-07-09",
+      "exam_date": "2026-07-17",
       "exam_key": "clinic_large_exam_28",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -3084,7 +3072,7 @@
         "sha256": "7c74c2294b8fe415c3e481027b33a677b650ec874a329dd690726fd8ffdf48b4",
         "size_bytes": 164052
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -3128,7 +3116,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-07-12",
+      "exam_date": "2026-07-21",
       "exam_key": "clinic_large_exam_29",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_large_patient_09",
@@ -3149,7 +3137,7 @@
       "clinic_name": "Hospital Regional Cariri",
       "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_large",
-      "exam_date": "2026-07-15",
+      "exam_date": "2026-07-24",
       "exam_key": "clinic_large_exam_30",
       "exam_type": "endoscopy",
       "patient_key": "clinic_large_patient_10",
@@ -3162,7 +3150,7 @@
         "sha256": "be0c3b7dd5eb400dc15589bb2512e855a9d5c7f78e16f315d7a4b355a0179d28",
         "size_bytes": 149358
       },
-      "status": "pending"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -3206,7 +3194,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 01",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-02-04",
+      "exam_date": "2026-02-06",
       "exam_key": "clinic_specialized_exam_01",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_01",
@@ -3267,7 +3255,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 02",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-02-09",
+      "exam_date": "2026-02-12",
       "exam_key": "clinic_specialized_exam_02",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_02",
@@ -3328,15 +3316,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-02-14",
+      "exam_date": "2026-02-19",
       "exam_key": "clinic_specialized_exam_03",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_03",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -3345,7 +3329,7 @@
         "sha256": "c26f3ae1656c7195ed5cb4985ee2fca6722209c3afc75134d76370f9011b3d7a",
         "size_bytes": 159636
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -3389,11 +3373,15 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-02-19",
+      "exam_date": "2026-03-05",
       "exam_key": "clinic_specialized_exam_04",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -3402,7 +3390,7 @@
         "sha256": "2050c8f8a8660693b833e87bb70ff70615114dfc6e3eb156874157b2df04c187",
         "size_bytes": 589289
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -3410,7 +3398,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-02-24",
+      "exam_date": "2026-02-26",
       "exam_key": "clinic_specialized_exam_05",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_05",
@@ -3423,7 +3411,7 @@
         "sha256": "f7931ce3f69235c24be16c88f7c1e54b088ae1cac4f34b36b5d9feda2660d6a4",
         "size_bytes": 209692
       },
-      "status": "canceled"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -3467,7 +3455,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-03-04",
+      "exam_date": "2026-03-10",
       "exam_key": "clinic_specialized_exam_06",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_06",
@@ -3528,14 +3516,14 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-03-09",
+      "exam_date": "2026-03-14",
       "exam_key": "clinic_specialized_exam_07",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_07",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "normal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -3545,7 +3533,7 @@
         "sha256": "8b085992fcb5b74939ffd8e200d8655cacb40fcc912059b59be146b3e7392bf7",
         "size_bytes": 170653
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -3589,15 +3577,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-03-14",
+      "exam_date": "2026-03-19",
       "exam_key": "clinic_specialized_exam_08",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -3606,7 +3590,7 @@
         "sha256": "111ee7657456cefb33cabadbddcecc1781fa5ab42294f632cf8db89b0a94d3eb",
         "size_bytes": 887327
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -3650,11 +3634,15 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-03-19",
+      "exam_date": "2026-04-04",
       "exam_key": "clinic_specialized_exam_09",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_09",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -3663,7 +3651,7 @@
         "sha256": "b90747d0d1fe8e78a11ca00cd952c9f56cbfbb505f6ade3e29962a3158b3179a",
         "size_bytes": 457695
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -3671,7 +3659,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-03-24",
+      "exam_date": "2026-03-26",
       "exam_key": "clinic_specialized_exam_10",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_10",
@@ -3684,7 +3672,7 @@
         "sha256": "4d789b4eff6cd068b3bfa59275f9fa1c49f9604b269f4ef3c337cefc2408493f",
         "size_bytes": 514453
       },
-      "status": "failed"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -3728,7 +3716,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-04-04",
+      "exam_date": "2026-04-10",
       "exam_key": "clinic_specialized_exam_11",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_01",
@@ -3789,15 +3777,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-04-09",
+      "exam_date": "2026-04-16",
       "exam_key": "clinic_specialized_exam_12",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_02",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -3806,7 +3790,7 @@
         "sha256": "507806c2a663096ed7a4003a2c52e67c78fad084e0a90c8bdaed29c29e20e56b",
         "size_bytes": 188714
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -3850,7 +3834,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 13",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-04-14",
+      "exam_date": "2026-05-03",
       "exam_key": "clinic_specialized_exam_13",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_03",
@@ -3911,11 +3895,15 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-04-19",
+      "exam_date": "2026-05-07",
       "exam_key": "clinic_specialized_exam_14",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -3924,7 +3912,7 @@
         "sha256": "019c8edfa43f4b559d31044f9bd42f872aea724e0c90a84438e6ad070a77de56",
         "size_bytes": 618878
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -3945,7 +3933,7 @@
         "sha256": "b401f738869371f9d204e01ec1c8b0611fe98dfcd32eae08a6d160c2987def3b",
         "size_bytes": 174579
       },
-      "status": "failed"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -3989,7 +3977,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-05-04",
+      "exam_date": "2026-05-11",
       "exam_key": "clinic_specialized_exam_16",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_06",
@@ -4050,14 +4038,14 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-05-09",
+      "exam_date": "2026-05-16",
       "exam_key": "clinic_specialized_exam_17",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_07",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -4067,7 +4055,7 @@
         "sha256": "c3ffb283899ec636b3c78110596c55e36f33d2a2b886e069356aa2fd57afd610",
         "size_bytes": 1043080
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -4111,15 +4099,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-05-14",
+      "exam_date": "2026-05-20",
       "exam_key": "clinic_specialized_exam_18",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "normal",
@@ -4128,7 +4112,7 @@
         "sha256": "ef4e65e18eeb7a2e147750e95a766ccc87579238c1073b7cd38933becba4f2ef",
         "size_bytes": 552107
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -4172,11 +4156,15 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-05-19",
+      "exam_date": "2026-06-03",
       "exam_key": "clinic_specialized_exam_19",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_09",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -4185,7 +4173,7 @@
         "sha256": "0d0f4e227c1fd217beb0f9f70fcfadc4b314fdce5a8ed181e4c41b8e31ed9965",
         "size_bytes": 155871
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -4250,7 +4238,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-06-04",
+      "exam_date": "2026-06-09",
       "exam_key": "clinic_specialized_exam_21",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_01",
@@ -4311,14 +4299,14 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-06-09",
+      "exam_date": "2026-06-14",
       "exam_key": "clinic_specialized_exam_22",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_02",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "normal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -4328,7 +4316,7 @@
         "sha256": "f0a44fa69b726775d875955d99e0b7f3fbe7143d2e3b54268c2dd905b2ab679d",
         "size_bytes": 204822
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -4372,15 +4360,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-06-14",
+      "exam_date": "2026-06-20",
       "exam_key": "clinic_specialized_exam_23",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_03",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -4389,7 +4373,7 @@
         "sha256": "5629b8bc4aeaac1e150c797ee45491de436cbd2b52f926f7b607420aa701eff2",
         "size_bytes": 156996
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -4433,11 +4417,15 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-06-19",
+      "exam_date": "2026-07-05",
       "exam_key": "clinic_specialized_exam_24",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_04",
-      "review": null,
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -4446,7 +4434,7 @@
         "sha256": "df265d4fcabfa78f813002d40882228a253cb9899fce9335ed21b8e8f2bdc0b8",
         "size_bytes": 125236
       },
-      "status": "awaiting_review"
+      "status": "completed"
     },
     {
       "analysis": null,
@@ -4467,7 +4455,7 @@
         "sha256": "089eaf943ae848fcad629e6abb8c9a1538a2d56025675bcd2909e3dd842451c0",
         "size_bytes": 904291
       },
-      "status": "pending"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -4511,7 +4499,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 26",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-07-04",
+      "exam_date": "2026-07-09",
       "exam_key": "clinic_specialized_exam_26",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_06",
@@ -4572,14 +4560,14 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 27",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-07-07",
+      "exam_date": "2026-07-14",
       "exam_key": "clinic_specialized_exam_27",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_07",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "normal"
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
       },
       "source_asset": {
         "kind": "exam_image",
@@ -4589,7 +4577,7 @@
         "sha256": "2fade61222724e5fbcce6ba42ba20ac173f4b32f1f84778ed3e15c78ac19d384",
         "size_bytes": 398839
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -4633,15 +4621,11 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 28",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-07-10",
+      "exam_date": "2026-07-18",
       "exam_key": "clinic_specialized_exam_28",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_08",
-      "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
-        "reviewed_label": "abnormal"
-      },
+      "review": null,
       "source_asset": {
         "kind": "exam_image",
         "label": "abnormal",
@@ -4650,7 +4634,7 @@
         "sha256": "aa2d2afe798072c7782411b509b27c54cd6834bdeba31c1c6f19a0cc4143d688",
         "size_bytes": 189259
       },
-      "status": "completed"
+      "status": "awaiting_review"
     },
     {
       "analysis": {
@@ -4694,7 +4678,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-07-13",
+      "exam_date": "2026-07-23",
       "exam_key": "clinic_specialized_exam_29",
       "exam_type": "colonoscopy",
       "patient_key": "clinic_specialized_patient_09",
@@ -4715,7 +4699,7 @@
       "clinic_name": "Centro Endoscópico Cariri",
       "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_specialized",
-      "exam_date": "2026-07-16",
+      "exam_date": "2026-07-26",
       "exam_key": "clinic_specialized_exam_30",
       "exam_type": "endoscopy",
       "patient_key": "clinic_specialized_patient_10",

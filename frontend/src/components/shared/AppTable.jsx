@@ -55,7 +55,7 @@ export default function AppTable({
     () => ({
       filterFn: 'includesString',
     }),
-    []
+    [],
   )
 
   const table = useReactTable({
@@ -100,10 +100,7 @@ export default function AppTable({
           )}
         </CCol>
 
-        <CCol
-          md={6}
-          className="d-flex justify-content-md-end justify-content-start"
-        >
+        <CCol md={6} className="d-flex justify-content-md-end justify-content-start">
           <CFormInput
             type="number"
             min={1}
@@ -134,13 +131,13 @@ export default function AppTable({
                       >
                         {header.isPlaceholder ? null : (
                           <div
-                            onClick={header.column.getCanSort()
-                              ? header.column.getToggleSortingHandler()
-                              : undefined}
+                            onClick={
+                              header.column.getCanSort()
+                                ? header.column.getToggleSortingHandler()
+                                : undefined
+                            }
                             style={{
-                              cursor: header.column.getCanSort()
-                                ? 'pointer'
-                                : 'default',
+                              cursor: header.column.getCanSort() ? 'pointer' : 'default',
                               userSelect: 'none',
                               display: 'flex',
                               alignItems: 'center',
@@ -149,19 +146,10 @@ export default function AppTable({
                             }}
                           >
                             <span>
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                              {flexRender(header.column.columnDef.header, header.getContext())}
                             </span>
 
-                            <span>
-                              {sorted === 'asc'
-                                ? '▲'
-                                : sorted === 'desc'
-                                ? '▼'
-                                : '↕'}
-                            </span>
+                            <span>{sorted === 'asc' ? '▲' : sorted === 'desc' ? '▼' : '↕'}</span>
                           </div>
                         )}
                       </CTableHeaderCell>
@@ -193,10 +181,7 @@ export default function AppTable({
                       key={cell.id}
                       style={{ width: cell.column.columnDef.meta?.width }}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </CTableDataCell>
                   ))}
                 </CTableRow>

@@ -143,7 +143,7 @@ const StatusForm = () => {
         de selecionar “Salvar”.
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados do Status</strong>
         </CCardHeader>

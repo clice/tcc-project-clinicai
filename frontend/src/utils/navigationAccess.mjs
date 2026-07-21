@@ -9,17 +9,11 @@ export const filterNavigationByAccess = (items, { roleName, hasPermission = () =
   return items
     .map((item) => {
       // Role e permissão são cumulativas quando ambas são declaradas.
-      const roleAllowed =
-        !item.roles ||
-        item.roles.includes(roleName)
+      const roleAllowed = !item.roles || item.roles.includes(roleName)
 
-      const permissionAllowed =
-        !item.permission ||
-        hasPermission(item.permission)
+      const permissionAllowed = !item.permission || hasPermission(item.permission)
 
-      const allowed =
-        roleAllowed &&
-        permissionAllowed
+      const allowed = roleAllowed && permissionAllowed
 
       if (!allowed) {
         return null

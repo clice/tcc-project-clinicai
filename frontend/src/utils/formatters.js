@@ -28,6 +28,32 @@ export const formatCpfBR = (value = '') => {
 }
 
 /**
+ * Valida CNPJ pelos dígitos verificadores oficiais.
+ */
+export const isValidCnpj = (value = '') => {
+  const numbers = onlyNumbers(value)
+
+  if (numbers.length !== 14 || /^(\d)\1+$/.test(numbers)) {
+    return false
+  }
+
+  const calculateDigit = (length, weights) => {
+    const sum = numbers
+      .slice(0, length)
+      .split('')
+      .reduce((total, digit, index) => total + Number(digit) * weights[index], 0)
+
+    const remainder = sum % 11
+    return remainder < 2 ? 0 : 11 - remainder
+  }
+
+  const firstDigit = calculateDigit(12, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+  const secondDigit = calculateDigit(13, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+
+  return numbers.endsWith(`${firstDigit}${secondDigit}`)
+}
+
+/**
  * Formata CNPJ:
  * 00000000000000 -> 00.000.000/0000-00
  */

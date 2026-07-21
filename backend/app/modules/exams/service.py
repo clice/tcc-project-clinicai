@@ -1428,6 +1428,10 @@ def get_authorized_gradcam_file(
 ):
     """Resolve o Mapa Grad-CAM após validar perfil, escopo e caminho."""
 
+    validate_user_is_doctor_for_exam_action(
+        current_user=current_user,
+    )
+
     exam = get_exam_model_by_id(
         db=db,
         exam_id=exam_id,
@@ -1437,24 +1441,6 @@ def get_authorized_gradcam_file(
         current_user=current_user,
         exam=exam,
     )
-
-    role_name = (
-        current_user.role.name
-        if current_user.role
-        else None
-    )
-
-    if role_name not in {
-        RoleName.ADMIN_MASTER.value,
-        RoleName.DOCTOR.value,
-    }:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Somente médicos e o administrador podem "
-                "acessar o resultado visual da IA."
-            ),
-        )
 
     analysis = exam.ai_analysis
 
@@ -1673,32 +1659,13 @@ def download_exam_images_package(
 ):
     """Baixa a imagem original e o Mapa Grad-CAM em um ZIP."""
 
-    role_name = (
-        current_user.role.name
-        if current_user.role
-        else None
+    validate_user_is_doctor_for_exam_action(
+        current_user=current_user,
     )
 
-    # TODO(revisão futura de RBAC): retirar o bypass clínico do
-    # admin_master e deixar imagens/detalhes exclusivamente para médicos.
-    if role_name not in {
-        RoleName.ADMIN_MASTER.value,
-        RoleName.DOCTOR.value,
-    }:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "Somente médicos e o administrador podem "
-                "baixar as imagens do exame."
-            ),
-        )
-
-    if (
-        role_name != RoleName.ADMIN_MASTER.value
-        and not user_has_permission(
-            current_user,
-            "ai_analysis:read",
-        )
+    if not user_has_permission(
+        current_user,
+        "ai_analysis:read",
     ):
         raise HTTPException(
             status_code=403,

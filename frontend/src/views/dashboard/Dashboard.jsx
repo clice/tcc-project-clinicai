@@ -7,18 +7,13 @@ import { getUserRole, ROLES } from 'src/utils/permissions'
 import AdminAiMetrics from './AdminAiMetrics'
 import DashboardCards from './DashboardCards'
 import DashboardCharts from './DashboardCharts'
-import {
-  buildLastSixMonths,
-  calculateConcordance,
-  countExamsByStatus,
-} from './dashboardData'
+import { buildLastSixMonths, calculateConcordance, countExamsByStatus } from './dashboardData'
 import { useDashboardData } from './useDashboardData'
 
 const Dashboard = () => {
   const { user } = useAuth()
   const roleName = getUserRole(user)
-  const { exams, summary, aiMetrics, isLoading, error, isAdminMaster } =
-    useDashboardData(roleName)
+  const { exams, summary, aiMetrics, isLoading, error, isAdminMaster } = useDashboardData(roleName)
 
   const statusCounts = useMemo(() => countExamsByStatus(exams), [exams])
   const monthlyData = useMemo(() => buildLastSixMonths(exams), [exams])
@@ -44,7 +39,9 @@ const Dashboard = () => {
       <DashboardCards roleName={roleName} counts={summary} isLoading={isLoading} />
 
       {isLoading ? (
-        <div className="d-flex justify-content-center py-5"><CSpinner /></div>
+        <div className="d-flex justify-content-center py-5">
+          <CSpinner />
+        </div>
       ) : (
         <DashboardCharts
           counts={statusCounts}

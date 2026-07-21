@@ -7,7 +7,6 @@
 import api from 'src/services/api'
 
 export const clinicService = {
-
   /**
    * Busca a clínica vinculada ao usuário autenticado.
    */

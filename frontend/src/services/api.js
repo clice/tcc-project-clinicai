@@ -9,12 +9,7 @@
 
 import axios from 'axios'
 
-import {
-  clearAuthStorage,
-  getRefreshToken,
-  getToken,
-  setAuthTokens,
-} from 'src/utils/token'
+import { clearAuthStorage, getRefreshToken, getToken, setAuthTokens } from 'src/utils/token'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -145,4 +140,3 @@ api.interceptors.response.use(
 )
 
 export default api
-

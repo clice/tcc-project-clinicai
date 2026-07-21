@@ -24,7 +24,8 @@
     "check:patients": "node scripts/check-patient-contract.mjs",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite"
+    "start": "vite",
+    "check:exams": "node scripts/check-exam-download-matrix.mjs && node scripts/check-exam-edit-contract.mjs && node scripts/check-exam-form-layout.mjs && node scripts/check-exam-list-access.mjs && node scripts/check-exam-review-layout.mjs"
   },
   "dependencies": {
     "@coreui/chartjs": "^4.2.0",

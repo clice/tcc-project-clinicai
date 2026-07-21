@@ -40,7 +40,7 @@ def seed_roles(db: Session) -> dict[str, Role]:
             db,
             name=RoleName.ADMIN_MASTER,
             display_name="Administrador Master",
-            description="Administrador com acesso total ao sistema.",
+            description="Administrador da estrutura do sistema, sem acesso aos detalhes clínicos, às imagens, às análises de IA ou à revisão médica dos exames.",
         ),
         "doctor": get_or_create_role(
             db,

@@ -11,36 +11,19 @@ import {
   CSpinner,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilCloudDownload,
-  cilPrint,
-} from '@coreui/icons'
+import { cilCloudDownload } from '@coreui/icons'
 
-import {
-  aiStatusColors,
-  aiStatusLabels,
-  predictionLabels,
-} from 'src/utils/constants'
+import { aiStatusColors, aiStatusLabels, predictionLabels } from 'src/utils/constants'
 
 const modelDisplayNames = {
-  ensemble_stacking:
-    'ClinicAI ES Gastrointestinal',
-  clinicai_stacking:
-    'ClinicAI ES Gastrointestinal',
+  ensemble_stacking: 'ClinicAI ES Gastrointestinal',
+  clinicai_stacking: 'ClinicAI ES Gastrointestinal',
 }
 
-const getModelDisplayName = (
-  modelName,
-) =>
-  modelDisplayNames[modelName] ||
-  modelName ||
-  '-'
+const getModelDisplayName = (modelName) => modelDisplayNames[modelName] || modelName || '-'
 
 const formatConfidence = (value) => {
-  if (
-    value === undefined ||
-    value === null
-  ) {
+  if (value === undefined || value === null) {
     return '-'
   }
 
@@ -62,16 +45,10 @@ const contributionScaleStyle = {
     'linear-gradient(90deg, #000080 0%, #0066ff 25%, #00ffff 45%, #ffff00 70%, #ff0000 100%)',
 }
 
-const ENSEMBLE_ATTRIBUTION_METHOD =
-  'weighted_base_gradcam_oriented_by_ensemble_stacking_v1'
+const ENSEMBLE_ATTRIBUTION_METHOD = 'weighted_base_gradcam_oriented_by_ensemble_stacking_v1'
 
-const formatAttributionWeight = (
-  value,
-) => {
-  if (
-    typeof value !== 'number' ||
-    !Number.isFinite(value)
-  ) {
+const formatAttributionWeight = (value) => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return '-'
   }
 
@@ -94,65 +71,42 @@ const ExamAiResultCard = ({
   onPackageDownload,
   reviewPanel = null,
 }) => {
-  const hasAttributionMap = Boolean(
-    aiAnalysis?.gradcam_available,
-  )
+  const hasAttributionMap = Boolean(aiAnalysis?.gradcam_available)
 
-  const isEnsembleAttribution =
-    aiAnalysis?.attribution_method ===
-    ENSEMBLE_ATTRIBUTION_METHOD
+  const isEnsembleAttribution = aiAnalysis?.attribution_method === ENSEMBLE_ATTRIBUTION_METHOD
 
-  const attributionWeights =
-    aiAnalysis?.attribution_branch_weights
+  const attributionWeights = aiAnalysis?.attribution_branch_weights
 
-  const mapTitle =
-    isEnsembleAttribution
-      ? 'Mapa de atribuição composto'
-      : aiAnalysis
-        ? 'Mapa Grad-CAM (ResNet-50)'
-        : 'Mapa de atribuição'
+  const mapTitle = isEnsembleAttribution
+    ? 'Mapa de atribuição composto'
+    : aiAnalysis
+      ? 'Mapa Grad-CAM (ResNet-50)'
+      : 'Mapa de atribuição'
 
-  const mapName =
-    isEnsembleAttribution
-      ? 'mapa de atribuição composto'
-      : 'Mapa Grad-CAM legado da ResNet-50'
+  const mapName = isEnsembleAttribution
+    ? 'mapa de atribuição composto'
+    : 'Mapa Grad-CAM legado da ResNet-50'
 
-  const statusLabel =
-    aiStatusLabels[aiStatus] ||
-    aiStatus ||
-    '-'
+  const statusLabel = aiStatusLabels[aiStatus] || aiStatus || '-'
 
   return (
     <CCard>
       <CCardHeader>
-        <strong>
-          Análise Automatizada e Revisão Médica
-        </strong>
+        <strong>Análise Automatizada e Revisão Médica</strong>
       </CCardHeader>
 
       <CCardBody>
         <div className="position-relative">
           <CRow className="g-4 align-items-stretch">
             <CCol lg={6}>
-              <section
-                aria-labelledby="original-image-title"
-                className="h-100 d-flex flex-column"
-              >
-                <h2
-                  id="original-image-title"
-                  className="h6 mb-3"
-                >
+              <section aria-labelledby="original-image-title" className="h-100 d-flex flex-column">
+                <h2 id="original-image-title" className="h6 mb-3">
                   Imagem original
                 </h2>
 
                 {!canDownloadExamFile ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
-                    Você não possui permissão
-                    para acessar a imagem
-                    original.
+                  <CAlert color="secondary" className="mb-0">
+                    Você não possui permissão para acessar a imagem original.
                   </CAlert>
                 ) : isOriginalImageLoading ? (
                   <div
@@ -161,10 +115,7 @@ const ExamAiResultCard = ({
                   >
                     <CSpinner size="sm" />
 
-                    <span>
-                      Carregando imagem
-                      original...
-                    </span>
+                    <span>Carregando imagem original...</span>
                   </div>
                 ) : originalImageUrl ? (
                   <div className="text-center">
@@ -176,12 +127,8 @@ const ExamAiResultCard = ({
                     />
                   </div>
                 ) : (
-                  <CAlert
-                    color="warning"
-                    className="mb-0"
-                  >
-                    {originalImageError ||
-                      'Imagem original não disponível.'}
+                  <CAlert color="warning" className="mb-0">
+                    {originalImageError || 'Imagem original não disponível.'}
                   </CAlert>
                 )}
               </section>
@@ -192,29 +139,17 @@ const ExamAiResultCard = ({
                 aria-labelledby="attribution-image-title"
                 className="h-100 d-flex flex-column"
               >
-                <h2
-                  id="attribution-image-title"
-                  className="h6 mb-3"
-                >
+                <h2 id="attribution-image-title" className="h6 mb-3">
                   {mapTitle}
                 </h2>
 
                 {!canViewAiAnalysis ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
-                    Você não possui permissão
-                    para acessar o mapa de
-                    atribuição.
+                  <CAlert color="secondary" className="mb-0">
+                    Você não possui permissão para acessar o mapa de atribuição.
                   </CAlert>
                 ) : !hasAttributionMap ? (
-                  <CAlert
-                    color="secondary"
-                    className="mb-0"
-                  >
-                    Este exame não possui{' '}
-                    {mapName} disponível.
+                  <CAlert color="secondary" className="mb-0">
+                    Este exame não possui {mapName} disponível.
                   </CAlert>
                 ) : isGradcamLoading ? (
                   <div
@@ -223,9 +158,7 @@ const ExamAiResultCard = ({
                   >
                     <CSpinner size="sm" />
 
-                    <span>
-                      Carregando {mapName}...
-                    </span>
+                    <span>Carregando {mapName}...</span>
                   </div>
                 ) : gradcamUrl ? (
                   <div className="text-center">
@@ -241,27 +174,16 @@ const ExamAiResultCard = ({
                     />
                   </div>
                 ) : (
-                  <CAlert
-                    color="warning"
-                    className="mb-0"
-                  >
-                    {gradcamError ||
-                      `${mapTitle} não disponível.`}
+                  <CAlert color="warning" className="mb-0">
+                    {gradcamError || `${mapTitle} não disponível.`}
                   </CAlert>
                 )}
-
               </section>
             </CCol>
           </CRow>
-
         </div>
 
-        {(canDownloadExamPackage ||
-          (
-            canViewAiAnalysis &&
-            hasAttributionMap &&
-            gradcamUrl
-          )) && (
+        {(canDownloadExamPackage || (canViewAiAnalysis && hasAttributionMap && gradcamUrl)) && (
           <CRow className="g-3 mt-1 mb-4 align-items-center">
             {canDownloadExamPackage && (
               <CCol lg={6}>
@@ -281,19 +203,13 @@ const ExamAiResultCard = ({
                   >
                     {isPackageDownloading ? (
                       <>
-                        <CSpinner
-                          size="sm"
-                          className="me-2"
-                        />
+                        <CSpinner size="sm" className="me-2" />
 
                         <span>Baixando...</span>
                       </>
                     ) : (
                       <>
-                        <CIcon
-                          icon={cilCloudDownload}
-                          className="me-2"
-                        />
+                        <CIcon icon={cilCloudDownload} className="me-2" />
 
                         <span>Baixar imagens</span>
                       </>
@@ -303,205 +219,108 @@ const ExamAiResultCard = ({
               </CCol>
             )}
 
-            {canViewAiAnalysis &&
-              hasAttributionMap &&
-              gradcamUrl && (
-                <CCol
-                  lg={6}
-                  className={
-                    canDownloadExamPackage
-                      ? undefined
-                      : 'ms-lg-auto'
-                  }
-                >
-                  <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                    <div className="small fw-semibold">
-                      Escala do mapa de
-                      atribuição
-                    </div>
+            {canViewAiAnalysis && hasAttributionMap && gradcamUrl && (
+              <CCol lg={6} className={canDownloadExamPackage ? undefined : 'ms-lg-auto'}>
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                  <div className="small fw-semibold">Escala do mapa de atribuição</div>
 
-                    <div className="small text-body-secondary">
-                      Intensidade de atribuição
-                      relativa
-                    </div>
+                  <div className="small text-body-secondary">
+                    Intensidade de atribuição relativa
                   </div>
+                </div>
 
-                  <div
-                    className="rounded border"
-                    style={
-                      contributionScaleStyle
-                    }
-                    role="img"
-                    aria-label="Escala de azul para vermelho representando menor e maior intensidade relativa"
-                  />
+                <div
+                  className="rounded border"
+                  style={contributionScaleStyle}
+                  role="img"
+                  aria-label="Escala de azul para vermelho representando menor e maior intensidade relativa"
+                />
 
-                  <div className="d-flex justify-content-between gap-3 small text-body-secondary mt-1">
-                    <span>
-                      Menor intensidade
-                    </span>
+                <div className="d-flex justify-content-between gap-3 small text-body-secondary mt-1">
+                  <span>Menor intensidade</span>
 
-                    <span>
-                      Maior intensidade
-                    </span>
-                  </div>
-                </CCol>
-              )}
+                  <span>Maior intensidade</span>
+                </div>
+              </CCol>
+            )}
           </CRow>
         )}
 
         <hr className="my-4" />
 
         <CRow className="g-4 align-items-stretch">
-          <CCol
-            lg={
-              reviewPanel
-                ? 6
-                : 12
-            }
-          >
-            <section
-              aria-labelledby="analysis-data-title"
-              className="h-100"
-            >
-              <h2
-                id="analysis-data-title"
-                className="h5 mb-3"
-              >
+          <CCol lg={reviewPanel ? 6 : 12}>
+            <section aria-labelledby="analysis-data-title" className="h-100">
+              <h2 id="analysis-data-title" className="h5 mb-3">
                 Dados da análise
               </h2>
 
               {!canViewAiAnalysis ? (
-                <CAlert
-                  color="secondary"
-                  className="mb-0"
-                >
-                  Você não possui permissão para
-                  visualizar o resultado
-                  automatizado da análise.
+                <CAlert color="secondary" className="mb-0">
+                  Você não possui permissão para visualizar o resultado automatizado da análise.
                 </CAlert>
               ) : (
                 <>
-                  <CAlert
-                    color="info"
-                    className="small"
-                  >
+                  <CAlert color="info" className="small">
                     <div className="mb-2">
-                      <strong>
-                        Uso do resultado:
-                      </strong>{' '}
-                      Este resultado é gerado
-                      automaticamente para apoio à
-                      análise. Ele pode conter erros
-                      e não substitui a avaliação do
+                      <strong>Uso do resultado:</strong> Este resultado é gerado automaticamente
+                      para apoio à análise. Ele pode conter erros e não substitui a avaliação do
                       profissional responsável.
                     </div>
 
                     <div>
-                      <strong>
-                        Sobre o mapa:
-                      </strong>{' '}
+                      <strong>Sobre o mapa:</strong>{' '}
                       {isEnsembleAttribution ? (
                         <>
-                          A classificação e a
-                          confiança são produzidas
-                          pelo Ensemble Stacking. O
-                          mapa de atribuição composto
-                          combina os mapas Grad-CAM
-                          da ResNet-50,
-                          EfficientNet-B4 e PVTv2-B2,
-                          ponderados pelas evidências
-                          locais do metaclassificador
-                          para a classe final prevista.
-                          As cores representam
-                          atribuição relativa, e não
-                          risco, gravidade,
-                          causalidade ou probabilidade
+                          A classificação e a confiança são produzidas pelo Ensemble Stacking. O
+                          mapa de atribuição composto combina os mapas Grad-CAM da ResNet-50,
+                          EfficientNet-B4 e PVTv2-B2, ponderados pelas evidências locais do
+                          metaclassificador para a classe final prevista. As cores representam
+                          atribuição relativa, e não risco, gravidade, causalidade ou probabilidade
                           clínica.
                         </>
                       ) : (
                         <>
-                          Este é um Mapa Grad-CAM
-                          legado gerado separadamente
-                          pela ResNet-50. Ele não
-                          explica sozinho a decisão
-                          completa do Ensemble
-                          Stacking.
+                          Este é um Mapa Grad-CAM legado gerado separadamente pela ResNet-50. Ele
+                          não explica sozinho a decisão completa do Ensemble Stacking.
                         </>
                       )}
                     </div>
 
-                    {isEnsembleAttribution &&
-                      attributionWeights && (
-                        <div className="mt-2">
-                          <strong>
-                            Pesos locais da
-                            composição:
-                          </strong>{' '}
-                          ResNet-50{' '}
-                          {formatAttributionWeight(
-                            attributionWeights.resnet50,
-                          )}
-                          ; EfficientNet-B4{' '}
-                          {formatAttributionWeight(
-                            attributionWeights.efficientnet_b4,
-                          )}
-                          ; PVTv2-B2{' '}
-                          {formatAttributionWeight(
-                            attributionWeights.pvt_v2_b2,
-                          )}
-                          .
-                        </div>
-                      )}
+                    {isEnsembleAttribution && attributionWeights && (
+                      <div className="mt-2">
+                        <strong>Pesos locais da composição:</strong> ResNet-50{' '}
+                        {formatAttributionWeight(attributionWeights.resnet50)}; EfficientNet-B4{' '}
+                        {formatAttributionWeight(attributionWeights.efficientnet_b4)}; PVTv2-B2{' '}
+                        {formatAttributionWeight(attributionWeights.pvt_v2_b2)}.
+                      </div>
+                    )}
                   </CAlert>
 
                   <CRow className="g-3">
                     <CCol md={4}>
-                      <div className="text-body-secondary small">
-                        Status da análise
-                      </div>
+                      <div className="text-body-secondary small">Status da análise</div>
 
                       <CBadge
-                        color={
-                          aiStatusColors[
-                            aiStatus
-                          ] || 'secondary'
-                        }
-                        className={
-                          aiStatus === 'completed'
-                            ? 'clinicai-success-badge'
-                            : undefined
-                        }
+                        color={aiStatusColors[aiStatus] || 'secondary'}
+                        className={aiStatus === 'completed' ? 'clinicai-success-badge' : undefined}
                       >
                         {statusLabel}
                       </CBadge>
                     </CCol>
 
                     <CCol md={4}>
-                      <div className="text-body-secondary small">
-                        Predição
-                      </div>
+                      <div className="text-body-secondary small">Predição</div>
 
                       {aiAnalysis ? (
                         <CBadge
-                          color={
-                            aiAnalysis.prediction_class ===
-                            1
-                              ? 'danger'
-                              : 'success'
-                          }
+                          color={aiAnalysis.prediction_class === 1 ? 'danger' : 'success'}
                           className={
-                            aiAnalysis.prediction_class ===
-                            1
-                              ? undefined
-                              : 'clinicai-success-badge'
+                            aiAnalysis.prediction_class === 1 ? undefined : 'clinicai-success-badge'
                           }
                         >
-                          {predictionLabels[
-                            aiAnalysis
-                              .prediction_label
-                          ] ||
-                            aiAnalysis
-                              .prediction_label ||
+                          {predictionLabels[aiAnalysis.prediction_label] ||
+                            aiAnalysis.prediction_label ||
                             '-'}
                         </CBadge>
                       ) : (
@@ -510,52 +329,31 @@ const ExamAiResultCard = ({
                     </CCol>
 
                     <CCol md={4}>
-                      <div className="text-body-secondary small">
-                        Confiança
-                      </div>
+                      <div className="text-body-secondary small">Confiança</div>
 
-                      <strong>
-                        {formatConfidence(
-                          aiAnalysis?.confidence,
-                        )}
-                      </strong>
+                      <strong>{formatConfidence(aiAnalysis?.confidence)}</strong>
                     </CCol>
                   </CRow>
 
                   <CRow className="g-3 mt-1">
                     <CCol md={6}>
-                      <div className="text-body-secondary small">
-                        Modelo utilizado
-                      </div>
+                      <div className="text-body-secondary small">Modelo utilizado</div>
 
-                      <div>
-                        {getModelDisplayName(
-                          aiAnalysis?.model_name,
-                        )}
-                      </div>
+                      <div>{getModelDisplayName(aiAnalysis?.model_name)}</div>
                     </CCol>
 
                     <CCol md={3}>
-                      <div className="text-body-secondary small">
-                        Versão
-                      </div>
+                      <div className="text-body-secondary small">Versão</div>
 
-                      <div>
-                        {aiAnalysis?.model_version ||
-                          '-'}
-                      </div>
+                      <div>{aiAnalysis?.model_version || '-'}</div>
                     </CCol>
 
                     <CCol md={3}>
-                      <div className="text-body-secondary small">
-                        Tempo de processamento
-                      </div>
+                      <div className="text-body-secondary small">Tempo de processamento</div>
 
                       <div>
-                        {aiAnalysis?.processing_time_ms !==
-                          null &&
-                        aiAnalysis?.processing_time_ms !==
-                          undefined
+                        {aiAnalysis?.processing_time_ms !== null &&
+                        aiAnalysis?.processing_time_ms !== undefined
                           ? `${aiAnalysis.processing_time_ms} ms`
                           : '-'}
                       </div>
@@ -568,62 +366,37 @@ const ExamAiResultCard = ({
                         Observações técnicas da IA
                       </div>
 
-                      <div className="rounded bg-body-tertiary p-3">
-                        {aiAnalysis.ai_notes}
-                      </div>
+                      <div className="rounded bg-body-tertiary p-3">{aiAnalysis.ai_notes}</div>
                     </div>
                   )}
 
-                  {aiStatus === 'processing' &&
-                    !aiAnalysis && (
-                      <CAlert
-                        color="info"
-                        className="d-flex align-items-center gap-2 mt-4 mb-0"
-                      >
-                        <CSpinner size="sm" />
+                  {aiStatus === 'processing' && !aiAnalysis && (
+                    <CAlert color="info" className="d-flex align-items-center gap-2 mt-4 mb-0">
+                      <CSpinner size="sm" />
 
-                        <span>
-                          A análise está sendo
-                          executada. Uma segunda
-                          execução permanece
-                          bloqueada.
-                        </span>
-                      </CAlert>
-                    )}
+                      <span>
+                        A análise está sendo executada. Uma segunda execução permanece bloqueada.
+                      </span>
+                    </CAlert>
+                  )}
 
-                  {aiStatus === 'failed' &&
-                    !aiAnalysis && (
-                      <CAlert
-                        color="danger"
-                        className="mt-4 mb-0"
-                      >
-                        A análise falhou. Restaure o
-                        exame antes de realizar uma
-                        nova tentativa.
-                      </CAlert>
-                    )}
+                  {aiStatus === 'failed' && !aiAnalysis && (
+                    <CAlert color="danger" className="mt-4 mb-0">
+                      A análise falhou. Restaure o exame antes de realizar uma nova tentativa.
+                    </CAlert>
+                  )}
 
-                  {aiStatus !== 'processing' &&
-                    aiStatus !== 'failed' &&
-                    !aiAnalysis && (
-                      <CAlert
-                        color="secondary"
-                        className="mt-4 mb-0"
-                      >
-                        Este exame ainda não possui
-                        análise de IA vinculada.
-                      </CAlert>
-                    )}
+                  {aiStatus !== 'processing' && aiStatus !== 'failed' && !aiAnalysis && (
+                    <CAlert color="secondary" className="mt-4 mb-0">
+                      Este exame ainda não possui análise de IA vinculada.
+                    </CAlert>
+                  )}
                 </>
               )}
             </section>
           </CCol>
 
-          {reviewPanel && (
-            <CCol lg={6}>
-              {reviewPanel}
-            </CCol>
-          )}
+          {reviewPanel && <CCol lg={6}>{reviewPanel}</CCol>}
         </CRow>
       </CCardBody>
     </CCard>

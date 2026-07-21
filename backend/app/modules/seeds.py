@@ -6,9 +6,9 @@ statuses, roles, permissions, matriz de role-permissions e usuário administrati
 O modo ``academic_demo`` executa o mesmo bootstrap e, em uma transação separada,
 acrescenta somente clínicas, usuários, pacientes, exames e análises fictícios.
 
-Evoluções oficiais de bancos já existentes pertencem a migrations Alembic. Os
-seeds não reconciliam textos editáveis nem a matriz administrativa após o
-primeiro bootstrap.
+Evoluções oficiais do schema pertencem a migrations Alembic. O bootstrap não
+sobrescreve configurações administrativas; a massa acadêmica, por sua vez,
+reconcilia apenas os registros identificados pelas chaves reservadas do dataset.
 """
 
 from __future__ import annotations

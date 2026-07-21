@@ -29,7 +29,13 @@ import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
 
 import { getErrorMessage } from 'src/utils/errors'
-import { formatCnpjBR, formatPhoneBR, formatZipCodeBR, onlyNumbers } from 'src/utils/formatters'
+import {
+  formatCnpjBR,
+  formatPhoneBR,
+  formatZipCodeBR,
+  isValidCnpj,
+  onlyNumbers,
+} from 'src/utils/formatters'
 
 const emptyClinic = {
   name: '',
@@ -116,7 +122,7 @@ const ClinicForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (onlyNumbers(form.cnpj).length !== 14) {
+    if (!isValidCnpj(form.cnpj)) {
       showError('Informe um CNPJ válido.')
       return false
     }
@@ -231,7 +237,7 @@ const ClinicForm = ({ mode = 'create' }) => {
         showSuccess('Clínica atualizada com sucesso.')
       }
     } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao salvar clínica.')
+      showError(getErrorMessage(err, 'Erro ao salvar clínica.'))
     } finally {
       setIsSaving(false)
     }

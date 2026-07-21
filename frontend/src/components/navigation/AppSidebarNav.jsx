@@ -7,10 +7,7 @@ import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
-export const AppSidebarNav = ({
-  items,
-  roleName = null,
-}) => {
+export const AppSidebarNav = ({ items, roleName = null }) => {
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -25,11 +22,7 @@ export const AppSidebarNav = ({
         {badge && (
           <CBadge
             color={badge.color}
-            className={`ms-auto ${
-              badge.color === 'completed'
-                ? 'clinicai-success-badge'
-                : ''
-            }`}
+            className={`ms-auto ${badge.color === 'completed' ? 'clinicai-success-badge' : ''}`}
             size="sm"
           >
             {badge.text}
@@ -60,57 +53,24 @@ export const AppSidebarNav = ({
   }
 
   const navGroup = (item, index) => {
-    const {
-      component,
-      name,
-      icon,
-      items,
-      to,
-      lockedOpenRoles = [],
-      ...rest
-    } = item
+    const { component, name, icon, items, to, lockedOpenRoles = [], ...rest } = item
 
     const Component = component
 
-    const isLockedOpen =
-      lockedOpenRoles.includes(
-        roleName,
-      )
+    const isLockedOpen = lockedOpenRoles.includes(roleName)
 
-    const groupProperties =
-      isLockedOpen
-        ? {
-            ...rest,
-            visible: true,
-            onVisibleChange: () => {},
-          }
-        : rest
+    const groupProperties = isLockedOpen
+      ? {
+          ...rest,
+          visible: true,
+          onVisibleChange: () => {},
+        }
+      : rest
 
     return (
-      <Component
-        compact
-        as="div"
-        key={index}
-        toggler={
-          navLink(name, icon)
-        }
-        {...groupProperties}
-      >
-        {items?.map(
-          (
-            childItem,
-            childIndex,
-          ) =>
-            childItem.items
-              ? navGroup(
-                  childItem,
-                  childIndex,
-                )
-              : navItem(
-                  childItem,
-                  childIndex,
-                  true,
-                ),
+      <Component compact as="div" key={index} toggler={navLink(name, icon)} {...groupProperties}>
+        {items?.map((childItem, childIndex) =>
+          childItem.items ? navGroup(childItem, childIndex) : navItem(childItem, childIndex, true),
         )}
       </Component>
     )
@@ -125,8 +85,6 @@ export const AppSidebarNav = ({
 }
 
 AppSidebarNav.propTypes = {
-  items: PropTypes.arrayOf(
-    PropTypes.any,
-  ).isRequired,
+  items: PropTypes.arrayOf(PropTypes.any).isRequired,
   roleName: PropTypes.string,
 }

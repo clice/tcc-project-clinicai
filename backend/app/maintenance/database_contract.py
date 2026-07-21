@@ -24,6 +24,7 @@ from app.core.database import Base, SessionLocal, engine
 from app.modules import models  # noqa: F401 - registra toda a metadata
 from app.modules.permissions.catalog import OFFICIAL_PERMISSION_NAMES
 from app.modules.role_permissions.seed import (
+    ADMIN_MASTER_RESTRICTED_PERMISSIONS,
     CLINIC_MANAGER_PERMISSIONS,
     DOCTOR_PERMISSIONS,
 )
@@ -123,7 +124,7 @@ EXPECTED_BOOTSTRAP_COUNTS = {
     "roles": 3,
     "permissions": len(OFFICIAL_PERMISSION_NAMES),
     "role_permissions": (
-        len(OFFICIAL_PERMISSION_NAMES)
+        len(OFFICIAL_PERMISSION_NAMES - ADMIN_MASTER_RESTRICTED_PERMISSIONS)
         + len(DOCTOR_PERMISSIONS)
         + len(CLINIC_MANAGER_PERMISSIONS)
     ),
@@ -132,8 +133,8 @@ EXPECTED_BOOTSTRAP_COUNTS = {
 
 EXPECTED_DEMO_COUNTS = {
     **EXPECTED_BOOTSTRAP_COUNTS,
-    "clinics": 3,
-    "users": 7,
+    "clinics": 4,
+    "users": 13,
     "patients": 30,
     "exams": 90,
     "ai_analysis": 72,
@@ -372,10 +373,15 @@ def assert_demo_data() -> None:
 
     from app.core.config import settings
     from app.core.security import verify_password
+    from app.modules.academic_demo_assets import get_demo_exam_definitions
     from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
     from app.modules.ai_analysis.model import AIAnalysis
+    from app.modules.clinics.model import Clinic
+    from app.modules.clinics.seed import ACADEMIC_DEMO_CLINICS
     from app.modules.exams.file_storage import resolve_safe_exam_file_path
     from app.modules.exams.model import Exam
+    from app.modules.patients.model import Patient
+    from app.modules.patients.seed import get_demo_patient_definitions
     from app.modules.users.seed import (
         ACADEMIC_DEMO_EMAILS,
         ACADEMIC_DEMO_PASSWORD,
@@ -383,16 +389,24 @@ def assert_demo_data() -> None:
 
     db = SessionLocal()
     try:
-        counts = table_counts(db)
-        mismatches = {
-            table: {"actual": counts[table], "expected": expected}
-            for table, expected in EXPECTED_DEMO_COUNTS.items()
-            if counts[table] != expected
-        }
-        if mismatches:
-            raise AssertionError(f"Contagens acadêmicas divergentes: {mismatches}")
-
         from app.modules.users.model import User
+
+        expected_cnpjs = {
+            definition["cnpj"]
+            for definition in ACADEMIC_DEMO_CLINICS.values()
+        }
+        clinics = (
+            db.query(Clinic)
+            .filter(Clinic.cnpj.in_(expected_cnpjs))
+            .all()
+        )
+        clinics_by_cnpj = {clinic.cnpj: clinic for clinic in clinics}
+        if set(clinics_by_cnpj) != expected_cnpjs:
+            raise AssertionError("As quatro clínicas acadêmicas não foram criadas.")
+        clinics_by_key = {
+            key: clinics_by_cnpj[definition["cnpj"]]
+            for key, definition in ACADEMIC_DEMO_CLINICS.items()
+        }
 
         expected_emails = set(ACADEMIC_DEMO_EMAILS) | {
             settings.bootstrap_admin_email
@@ -405,7 +419,7 @@ def assert_demo_data() -> None:
         )
         if {row.email for row in rows} != expected_emails:
             raise AssertionError(
-                "As sete contas esperadas não foram criadas."
+                "As treze contas esperadas não foram criadas."
             )
 
         admin = next(
@@ -423,57 +437,89 @@ def assert_demo_data() -> None:
             if not verify_password(ACADEMIC_DEMO_PASSWORD, row.password_hash):
                 raise AssertionError(f"Senha acadêmica inesperada para {row.email}.")
 
-        inconsistent_patients = (
-            db.execute(
-                sa.text(
-                    """
-                SELECT patients.id
-                FROM patients
-                JOIN users ON users.id = patients.doctor_id
-                WHERE patients.clinic_id <> users.clinic_id
-                """
-                )
+        patient_definitions = get_demo_patient_definitions()
+        expected_patient_cpfs = {
+            definition["cpf"] for definition in patient_definitions.values()
+        }
+        clinic_ids = {clinic.id for clinic in clinics}
+        patient_candidates = (
+            db.query(Patient)
+            .filter(
+                Patient.clinic_id.in_(clinic_ids),
+                Patient.cpf.in_(expected_patient_cpfs),
             )
-            .scalars()
             .all()
         )
+        patient_lookup = {
+            (patient.clinic_id, patient.cpf): patient
+            for patient in patient_candidates
+        }
+        patients_by_key = {}
+        for key, definition in patient_definitions.items():
+            identity = (
+                clinics_by_key[definition["clinic_key"]].id,
+                definition["cpf"],
+            )
+            patient = patient_lookup.get(identity)
+            if patient is None:
+                raise AssertionError(f"Paciente acadêmico ausente: {key}.")
+            patients_by_key[key] = patient
+
+        inconsistent_patients = [
+            patient.id
+            for patient in patients_by_key.values()
+            if patient.doctor.clinic_id != patient.clinic_id
+        ]
         if inconsistent_patients:
             raise AssertionError(
                 f"Pacientes demo vinculados a médico de outra clínica: {inconsistent_patients}"
             )
 
-        inconsistent_exams = (
-            db.execute(
-                sa.text(
-                    """
-                SELECT exams.id
-                FROM exams
-                JOIN patients ON patients.id = exams.patient_id
-                JOIN users ON users.id = exams.doctor_id
-                WHERE exams.clinic_id <> patients.clinic_id
-                   OR exams.clinic_id <> users.clinic_id
-                """
-                )
-            )
-            .scalars()
+        exam_definitions = get_demo_exam_definitions()
+        expected_exam_identities = {
+            (
+                patients_by_key[definition["patient_key"]].id,
+                definition["exam_type"],
+                definition["description"],
+            ): definition["exam_key"]
+            for definition in exam_definitions
+        }
+        exam_candidates = (
+            db.query(Exam)
+            .filter(Exam.patient_id.in_({item.id for item in patients_by_key.values()}))
             .all()
         )
+        exams_by_key: dict[str, Exam] = {}
+        for exam in exam_candidates:
+            identity = (exam.patient_id, exam.exam_type, exam.description)
+            exam_key = expected_exam_identities.get(identity)
+            if exam_key is None:
+                continue
+            if exam_key in exams_by_key:
+                raise AssertionError(f"Exame acadêmico duplicado: {exam_key}.")
+            exams_by_key[exam_key] = exam
+        if set(exams_by_key) != {
+            definition["exam_key"] for definition in exam_definitions
+        }:
+            raise AssertionError("Os 90 exames acadêmicos não foram encontrados.")
+
+        exams = list(exams_by_key.values())
+        inconsistent_exams = [
+            exam.id
+            for exam in exams
+            if exam.clinic_id != exam.patient.clinic_id
+            or exam.clinic_id != exam.doctor.clinic_id
+        ]
         if inconsistent_exams:
             raise AssertionError(
                 f"Exames demo com vínculos cruzados: {inconsistent_exams}"
             )
 
-        exams = db.query(Exam).all()
         exam_status_counts = Counter(exam.status.name for exam in exams)
-        expected_exam_status_counts = {
-            "pending": 9,
-            "awaiting_review": 18,
-            "completed": 52,
-            "completed_with_divergence": 2,
-            "failed": 6,
-            "canceled": 3,
-        }
-        if dict(exam_status_counts) != expected_exam_status_counts:
+        expected_exam_status_counts = Counter(
+            definition["status"] for definition in exam_definitions
+        )
+        if exam_status_counts != expected_exam_status_counts:
             raise AssertionError(
                 "Distribuição de estados dos exames divergente: "
                 f"{dict(exam_status_counts)} != {expected_exam_status_counts}."
@@ -506,9 +552,30 @@ def assert_demo_data() -> None:
                     f"Revisão médica incompleta no exame demo: {exam.description}."
                 )
 
-        analyses = db.query(AIAnalysis).all()
+        analyses = (
+            db.query(AIAnalysis)
+            .filter(AIAnalysis.exam_id.in_({exam.id for exam in exams}))
+            .all()
+        )
+        expected_analysis_count = sum(
+            definition.get("analysis") is not None
+            for definition in exam_definitions
+        )
+        if len(analyses) != expected_analysis_count:
+            raise AssertionError(
+                f"Quantidade de análises acadêmicas divergente: {len(analyses)}."
+            )
+        analysis_definitions = {
+            definition["exam_key"]: definition["analysis"]
+            for definition in exam_definitions
+            if definition.get("analysis") is not None
+        }
+        expected_label_counts = Counter(
+            definition["prediction_label"]
+            for definition in analysis_definitions.values()
+        )
         label_counts = Counter(item.prediction_label for item in analyses)
-        if dict(label_counts) != {"normal": 38, "abnormal": 34}:
+        if label_counts != expected_label_counts:
             raise AssertionError(
                 f"Distribuição de predições divergente: {dict(label_counts)}."
             )
@@ -516,25 +583,31 @@ def assert_demo_data() -> None:
         analysis_exam_status_counts = Counter(
             item.exam.status.name for item in analyses
         )
-        expected_analysis_exam_status_counts = {
-            "awaiting_review": 18,
-            "completed": 52,
-            "completed_with_divergence": 2,
-        }
-        if dict(analysis_exam_status_counts) != expected_analysis_exam_status_counts:
+        expected_analysis_exam_status_counts = Counter(
+            definition["status"]
+            for definition in exam_definitions
+            if definition.get("analysis") is not None
+        )
+        if analysis_exam_status_counts != expected_analysis_exam_status_counts:
             raise AssertionError(
                 "Estados dos exames com análise divergentes: "
                 f"{dict(analysis_exam_status_counts)}."
             )
 
+        exam_key_by_id = {
+            exam.id: exam_key for exam_key, exam in exams_by_key.items()
+        }
         for analysis in analyses:
+            expected_analysis = analysis_definitions[
+                exam_key_by_id[analysis.exam_id]
+            ]
             if analysis.status.name != "completed":
                 raise AssertionError(
                     f"Análise acadêmica não concluída: {analysis.id}."
                 )
             if (
-                analysis.model_name != "ensemble_stacking"
-                or analysis.model_version != "0.1.1"
+                analysis.model_name != expected_analysis["model_name"]
+                or analysis.model_version != expected_analysis["model_version"]
             ):
                 raise AssertionError(
                     "Modelo acadêmico divergente: "

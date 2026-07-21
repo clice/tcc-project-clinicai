@@ -12,13 +12,35 @@ from app.modules.users.model import User
 ACADEMIC_DEMO_PASSWORD = "clinicai123"
 
 ACADEMIC_DEMO_EMAILS = (
-    "doctor@clinicai.com",
-    "clinic_manager@clinicai.com",
+    "medico@clinicai.com",
+    "gestor@clinicai.com",
+    "lucas.andrade@clinicai.com",
     "doctor.cariri@clinicai.com",
     "manager.cariri@clinicai.com",
     "doctor.endoscopia@clinicai.com",
     "manager@clinicai.com",
+    "renato.moura@clinicai.com",
+    "paula.freire@clinicai.com",
+    "gestor.inativo.cariri@clinicai.com",
+    "gestor.inativo.endoscopia@clinicai.com",
+    "admin.inativo@clinicai.com",
 )
+
+
+def _build_demo_cpf(base: int) -> str:
+    """Gera CPF fictício válido para usuários acadêmicos."""
+
+    digits = f"{base:09d}"
+
+    for initial_weight in (10, 11):
+        total = sum(
+            int(character) * (initial_weight - index)
+            for index, character in enumerate(digits)
+        )
+        remainder = (total * 10) % 11
+        digits += str(0 if remainder == 10 else remainder)
+
+    return digits
 
 
 def get_or_create_user(
@@ -33,32 +55,57 @@ def get_or_create_user(
     phone: str | None = None,
     crm_number: str | None = None,
     crm_uf: str | None = None,
+    reconcile: bool = False,
 ) -> User:
-    user = (
+    user_by_email = (
         db.query(User)
         .filter(User.email == email)
         .first()
     )
 
-    if user:
-        return user
+    if not reconcile:
+        if user_by_email:
+            return user_by_email
+        user = None
+    else:
+        user_by_cpf = (
+            db.query(User)
+            .filter(User.cpf == cpf)
+            .first()
+        )
+        if (
+            user_by_email is not None
+            and user_by_cpf is not None
+            and user_by_email.id != user_by_cpf.id
+        ):
+            raise RuntimeError(
+                "Colisão da massa acadêmica: e-mail e CPF pertencem "
+                "a usuários diferentes."
+            )
+        if user_by_email is not None and user_by_cpf is None:
+            raise RuntimeError(
+                "Colisão da massa acadêmica: o e-mail reservado "
+                f"{email!r} pertence a outro CPF."
+            )
+        user = user_by_cpf
 
-    user = User(
-        name=name,
-        email=email,
-        cpf=cpf,
-        phone=phone,
-        crm_number=crm_number,
-        crm_uf=crm_uf,
-        role_id=role_id,
-        status_id=status_id,
-        clinic_id=clinic_id,
-        password_hash=get_password_hash(
-            password
-        ),
-    )
+    if user is None:
+        user = User(
+            email=email,
+            cpf=cpf,
+            password_hash=get_password_hash(password),
+        )
+        db.add(user)
 
-    db.add(user)
+    user.name = name
+    user.email = email
+    user.cpf = cpf
+    user.phone = phone
+    user.crm_number = crm_number
+    user.crm_uf = crm_uf
+    user.role_id = role_id
+    user.status_id = status_id
+    user.clinic_id = clinic_id
     db.flush()
     db.refresh(user)
 
@@ -97,21 +144,30 @@ def seed_users(
     *,
     admin_master: User,
 ) -> dict[str, User]:
-    """Cria um médico e um gestor por clínica."""
+    """Cria usuários ativos e inativos da demonstração acadêmica."""
 
     definitions = {
         "doctor_primary": {
             "name": "Dr. João Silva",
-            "email": "doctor@clinicai.com",
+            "email": "medico@clinicai.com",
             "cpf": "11144477735",
             "role": "doctor",
             "clinic": "clinic_primary",
             "crm_number": "12345",
             "crm_uf": "CE",
         },
+        "doctor_primary_secondary": {
+            "name": "Dr. Lucas Andrade",
+            "email": "lucas.andrade@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_001),
+            "role": "doctor",
+            "clinic": "clinic_primary",
+            "crm_number": "45678",
+            "crm_uf": "CE",
+        },
         "manager_primary": {
-            "name": "Gestor Clínica Primária",
-            "email": "clinic_manager@clinicai.com",
+            "name": "Gestor ClinicAI Endoscopia Especializada",
+            "email": "gestor@clinicai.com",
             "cpf": "15350946056",
             "role": "clinic_manager",
             "clinic": "clinic_primary",
@@ -148,6 +204,50 @@ def seed_users(
             "role": "clinic_manager",
             "clinic": "clinic_specialized",
         },
+        "doctor_inactive_archive": {
+            "name": "Dr. Renato Moura",
+            "email": "renato.moura@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_002),
+            "role": "doctor",
+            "clinic": "clinic_inactive",
+            "status": "user_inactive",
+            "crm_number": "56789",
+            "crm_uf": "CE",
+        },
+        "doctor_inactive_primary": {
+            "name": "Dra. Paula Freire",
+            "email": "paula.freire@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_003),
+            "role": "doctor",
+            "clinic": "clinic_primary",
+            "status": "user_inactive",
+            "crm_number": "67890",
+            "crm_uf": "CE",
+        },
+        "manager_inactive_large": {
+            "name": "Gestor Inativo Hospital Cariri",
+            "email": "gestor.inativo.cariri@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_004),
+            "role": "clinic_manager",
+            "clinic": "clinic_large",
+            "status": "user_inactive",
+        },
+        "manager_inactive_specialized": {
+            "name": "Gestor Inativo Centro Endoscópico",
+            "email": "gestor.inativo.endoscopia@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_005),
+            "role": "clinic_manager",
+            "clinic": "clinic_specialized",
+            "status": "user_inactive",
+        },
+        "admin_master_inactive": {
+            "name": "Administrador Master Inativo",
+            "email": "admin.inativo@clinicai.com",
+            "cpf": _build_demo_cpf(810_000_006),
+            "role": "admin_master",
+            "clinic": None,
+            "status": "user_inactive",
+        },
     }
 
     users = {
@@ -155,9 +255,8 @@ def seed_users(
     }
 
     for key, definition in definitions.items():
-        clinic = clinics[
-            definition["clinic"]
-        ]
+        clinic_key = definition.get("clinic")
+        clinic = clinics.get(clinic_key) if clinic_key else None
 
         users[key] = get_or_create_user(
             db=db,
@@ -169,11 +268,12 @@ def seed_users(
                 definition["role"]
             ].id,
             status_id=statuses[
-                "user_active"
+                definition.get("status", "user_active")
             ].id,
-            clinic_id=clinic.id,
+            clinic_id=clinic.id if clinic else None,
             crm_number=definition.get("crm_number"),
             crm_uf=definition.get("crm_uf"),
+            reconcile=True,
         )
 
     return users

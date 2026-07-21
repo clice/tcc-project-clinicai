@@ -522,7 +522,7 @@ const PatientForm = ({ mode = 'create' }) => {
       {isEditMode && (
         <CAlert color="info">
           Esta tela permite alterar os dados do paciente. Revise as informações antes de selecionar
-          "Salvar".
+          &quot;Salvar&quot;.
         </CAlert>
       )}
 

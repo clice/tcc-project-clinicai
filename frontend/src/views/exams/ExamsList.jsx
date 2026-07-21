@@ -1,13 +1,13 @@
 /**
  * Listagem de exames.
  *
- * Médico e Administrador Master mantêm as ações clínicas autorizadas.
- * O Gestor da Clínica não recebe coluna de ações.
+ * Somente o Médico recebe ações clínicas.
+ * Administrador Master e Gestor da Clínica recebem acesso operacional à listagem.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { CBadge, CButton, CCard, CCardBody, CCol, CRow, CSpinner } from '@coreui/react'
+import { CAlert, CBadge, CButton, CCard, CCardBody, CCol, CRow, CSpinner } from '@coreui/react'
 import { cilDescription } from '@coreui/icons'
 
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -81,6 +81,8 @@ const ExamsList = () => {
   const roleName = getUserRole(user)
 
   const canUseClinicalExamActions = roleName === ROLES.DOCTOR
+  const hasOperationalExamAccess =
+    roleName === ROLES.ADMIN_MASTER || roleName === ROLES.CLINIC_MANAGER
   const showDoctorColumn = roleName !== ROLES.DOCTOR
   const showClinicColumn = roleName === ROLES.ADMIN_MASTER
 
@@ -322,6 +324,7 @@ const ExamsList = () => {
             downloadTitle={
               requiresPackage ? 'Baixar imagem original e Mapa Grad-CAM' : 'Baixar imagem original'
             }
+            canDownload={canDownloadCurrentStatus}
             canCancel={canChangeStatus && (isProcessing || isPending)}
             canRestore={canChangeStatus && (isCanceled || isFailed)}
             canInactivate={false}
@@ -427,6 +430,14 @@ const ExamsList = () => {
           )
         })}
       </CRow>
+
+      {hasOperationalExamAccess && (
+        <CAlert color="info" className="mb-4">
+          Este perfil possui acesso exclusivamente operacional à listagem de exames. Informações
+          clínicas, imagens, resultados da análise por IA e ações médicas permanecem restritos aos
+          médicos responsáveis.
+        </CAlert>
+      )}
 
       <CCard className="mb-4">
         <CCardBody>

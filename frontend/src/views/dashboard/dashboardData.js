@@ -35,11 +35,9 @@ export const buildLastSixMonths = (exams, referenceDate = new Date()) => {
   const months = Array.from({ length: 6 }, (_, index) => {
     const date = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - (5 - index), 1)
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
-      .format(date)
-      .replace('.', '')
+    const label = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(date).replace('.', '')
 
-    return { key, label, completed: 0, divergence: 0 }
+    return { key, label, completed: 0, divergence: 0, failed: 0, canceled: 0 }
   })
 
   const byKey = new Map(months.map((month) => [month.key, month]))
@@ -51,6 +49,8 @@ export const buildLastSixMonths = (exams, referenceDate = new Date()) => {
 
     if (exam.status_name === 'completed') bucket.completed += 1
     if (exam.status_name === 'completed_with_divergence') bucket.divergence += 1
+    if (exam.status_name === 'failed') bucket.failed += 1
+    if (exam.status_name === 'canceled') bucket.canceled += 1
   })
 
   return months

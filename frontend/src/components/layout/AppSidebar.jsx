@@ -79,11 +79,7 @@ const AppSidebar = () => {
       <CSidebarHeader className="clinicai-sidebar-header">
         <CSidebarBrand className="clinicai-sidebar-brand" to="/dashboard">
           <span className="sidebar-brand-full clinicai-brand-full">
-            <CIcon
-              customClassName="clinicai-brand-icon"
-              icon={clinicaiSygnet}
-              height={42}
-            />
+            <CIcon customClassName="clinicai-brand-icon" icon={clinicaiSygnet} height={42} />
             <span className="clinicai-brand-name">
               Clinic<span className="clinicai-brand-ai">AI</span>
             </span>
@@ -102,10 +98,7 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav
-        items={filteredNavigation}
-        roleName={roleName}
-      />
+      <AppSidebarNav items={filteredNavigation} roleName={roleName} />
     </CSidebar>
   )
 }
