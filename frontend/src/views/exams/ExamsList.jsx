@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CBadge, CButton, CCard, CCardBody, CCol, CRow, CSpinner } from '@coreui/react'
+import { cilDescription } from '@coreui/icons'
 
 import AppActionButtons from 'src/components/shared/AppActionButtons'
 import AppTable from 'src/components/shared/AppTable'
@@ -293,12 +294,31 @@ const ExamsList = () => {
           <AppActionButtons
             itemLabel={exam.description}
             viewTo={!isPending || !canEditExam ? `/exams/${exam.id}` : null}
+            viewTitle={statusFilter === 'awaiting_review' ? 'Revisar' : 'Visualizar'}
+            viewColor={
+              statusFilter === 'awaiting_review'
+                ? 'warning'
+                : statusFilter === 'pending'
+                  ? 'info'
+                  : statusFilter === 'failed'
+                    ? 'danger'
+                    : statusFilter === 'completed'
+                      ? 'success'
+                      : statusFilter === 'completed_with_divergence'
+                        ? 'dark'
+                        : 'secondary'
+            }
+            viewIcon={cilDescription}
+            viewIconClassName={
+              ['completed', 'failed'].includes(statusFilter) ? 'text-white' : undefined
+            }
             editTo={`/exams/${exam.id}`}
+            editColor={isPending ? 'info' : 'primary'}
+            editIcon={isPending ? cilDescription : undefined}
             isInactive={isCanceled}
             canView={canView}
             canEdit={canEditExam && isPending}
             canUpload={false}
-            canDownload={canDownloadCurrentStatus}
             downloadTitle={
               requiresPackage ? 'Baixar imagem original e Mapa Grad-CAM' : 'Baixar imagem original'
             }
@@ -335,7 +355,7 @@ const ExamsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">
+          <h1 className="h3 mb-0 clinicai-page-title">
             {statusFilter ? `Exames: ${examStatusLabels[statusFilter] || statusFilter}` : 'Exames'}
           </h1>
           <p className="text-body-secondary mb-0">
