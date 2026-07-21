@@ -16,8 +16,8 @@ from app.common.access_control import (
 )
 from app.common.constants import AuditAction, AuditEntity, StatusName, StatusScope
 from app.common.services import apply_update_data, model_dump_update
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.exams.model import Exam
 from app.modules.exams.state_machine import (

@@ -14,8 +14,8 @@ from app.modules.academic_demo_assets import (
     get_demo_manifest,
     verify_bundled_demo_assets,
 )
-from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
-from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analyses.file_storage import resolve_safe_gradcam_path
+from app.modules.ai_analyses.model import AIAnalysis
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.seed import ACADEMIC_DEMO_CLINICS
 from app.modules.exams import file_storage as exam_file_storage

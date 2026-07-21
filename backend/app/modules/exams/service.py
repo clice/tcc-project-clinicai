@@ -26,14 +26,14 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
-from app.modules.ai_analysis.client import AIServiceError, request_prediction
-from app.modules.ai_analysis.file_storage import (
+from app.modules.ai_analyses.client import AIServiceError, request_prediction
+from app.modules.ai_analyses.file_storage import (
     resolve_safe_gradcam_path,
     serialize_gradcam_path,
 )
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisCreate
-from app.modules.ai_analysis.service import build_ai_analysis_response, create_ai_analysis
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import AIAnalysisCreate
+from app.modules.ai_analyses.service import build_ai_analysis_response, create_ai_analysis
 from app.modules.audit_logs.service import create_audit_log, list_entity_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam

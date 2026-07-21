@@ -12,7 +12,7 @@ from app.modules.academic_demo_assets import (
     bundled_gradcam_path,
     get_demo_exam_definitions,
 )
-from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analyses.model import AIAnalysis
 from app.modules.exams.model import Exam
 from app.modules.statuses.model import Status
 

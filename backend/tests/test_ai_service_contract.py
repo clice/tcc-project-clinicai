@@ -11,9 +11,9 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from app.modules.ai_analysis import client as ai_client
-from app.modules.ai_analysis import service as ai_analysis_service
-from app.modules.ai_analysis.client import (
+from app.modules.ai_analyses import client as ai_client
+from app.modules.ai_analyses import service as ai_analysis_service
+from app.modules.ai_analyses.client import (
     AIServiceResponseError,
     AIServiceTimeoutError,
     AIServiceUnavailableError,

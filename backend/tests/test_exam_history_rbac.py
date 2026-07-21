@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from fastapi.routing import APIRoute
 
-from app.modules.ai_analysis.service import create_ai_analysis
+from app.modules.ai_analyses.service import create_ai_analysis
 from app.modules.exams.router import router as exams_router
 from app.modules.exams.schema import ExamHistoryResponse
 from app.modules.exams.service import get_exam_history

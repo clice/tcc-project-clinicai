@@ -13,12 +13,12 @@ from fastapi import HTTPException, UploadFile
 from starlette.datastructures import Headers
 
 from app.core.security import get_password_hash
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import (
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import (
     AIAnalysisCreate,
     AIAnalysisUpdate,
 )
-from app.modules.ai_analysis.service import (
+from app.modules.ai_analyses.service import (
     create_ai_analysis,
     update_ai_analysis,
 )

@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 from fastapi import HTTPException
 
-from app.modules.ai_analysis import file_storage as ai_file_storage
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisResponse
+from app.modules.ai_analyses import file_storage as ai_file_storage
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import AIAnalysisResponse
 from app.modules.audit_logs.model import AuditLog
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam

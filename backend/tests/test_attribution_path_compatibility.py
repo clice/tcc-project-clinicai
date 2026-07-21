@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from fastapi import HTTPException
 
-from app.modules.ai_analysis import (
+from app.modules.ai_analyses import (
     file_storage,
 )
 

@@ -10,9 +10,9 @@ import pytest
 from fastapi import HTTPException
 
 from app.common.constants import StatusName
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisCreate
-from app.modules.ai_analysis.service import create_ai_analysis
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import AIAnalysisCreate
+from app.modules.ai_analyses.service import create_ai_analysis
 from app.modules.audit_logs.model import AuditLog
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam

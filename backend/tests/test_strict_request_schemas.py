@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
+from app.modules.ai_analyses.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.auth.schema import RefreshTokenRequest
 from app.modules.clinics.schema import ClinicCreate, ClinicUpdate
 from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamUpdate

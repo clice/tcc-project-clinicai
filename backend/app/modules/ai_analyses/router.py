@@ -9,13 +9,13 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_admin, require_doctor_permission
-from app.modules.ai_analysis.schema import (
+from app.modules.ai_analyses.schema import (
     AIAnalysisCreate,
     AIAnalysisResponse,
     AIAnalysisUpdate,
     AIMetricsResponse,
 )
-from app.modules.ai_analysis.service import (
+from app.modules.ai_analyses.service import (
     create_ai_analysis,
     get_ai_analysis_by_exam_id,
     get_ai_analysis_by_id,

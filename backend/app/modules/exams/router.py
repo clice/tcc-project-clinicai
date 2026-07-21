@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import require_doctor_permission, require_permission
-from app.modules.ai_analysis.schema import AIAnalysisResponse
+from app.modules.ai_analyses.schema import AIAnalysisResponse
 from app.modules.exams.schema import (
     ExamCreate,
     ExamListItemResponse,

@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import joinedload, sessionmaker
 
-from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analyses.model import AIAnalysis
 from app.modules.audit_logs.model import AuditLog
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
