@@ -11,7 +11,7 @@ import {
   cilPeople,
   cilSettings,
   cilShieldAlt,
-  cilSpeedometer,
+  cilBarChart,
   cilUser,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
@@ -23,7 +23,7 @@ const _nav = [
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
+    icon: <CIcon icon={cilBarChart} customClassName="nav-icon" />,
     roles: ['admin_master', 'doctor', 'clinic_manager'],
   },
 

@@ -35,7 +35,7 @@ const Dashboard = () => {
     <>
       <div className="mb-4">
         <div className="text-body-secondary">Visão geral</div>
-        <h1 className="h3 mb-0">Dashboard</h1>
+        <h1 className="h3 mb-0 clinicai-page-title">Dashboard</h1>
         <p className="text-body-secondary mb-0">{scopeDescription}</p>
       </div>
 
