@@ -7,7 +7,6 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { CSpinner } from '@coreui/react'
 
 import 'src/scss/style.scss'
-import 'src/scss/examples.scss'
 
 // Provider
 import { AuthProvider } from 'src/contexts/AuthContext'

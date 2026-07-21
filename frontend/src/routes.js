@@ -10,8 +10,6 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 // PROFILE
 const ProfilePage = React.lazy(() => import('./views/profile/ProfilePage'))
 
-// COMING SOON
-const ComingSoon = React.lazy(() => import('./views/coming-soon/ComingSoon'))
 
 ////////// ADMIN
 
