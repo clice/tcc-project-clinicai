@@ -55,3 +55,17 @@ selecionado não constitui avaliação formal do modelo, validação clínica,
 estimativa de desempenho científico nem alegação diagnóstica. Trata-se apenas
 de um subconjunto demonstrativo escolhido para exercitar os fluxos do sistema,
 inclusive dois casos reais de divergência entre origem e predição.
+
+## Regeneração dos mapas
+
+O script `scripts/regenerate_demo_gradcams.py` recria os 72 mapas em uma
+área de staging. A classificação continua usando a entrada quadrada e o
+pré-processamento replicado de Viana. Somente a representação visual restaura
+a proporção original e recorta, em conjunto, a imagem e o mapa pela maior
+região endoscópica contínua. Dessa forma, barras escuras residuais e metadados
+laterais são removidos sem alterar a entrada, a classe ou a confiança do
+modelo.
+
+O regenerador valida classe, confiança, dimensões, tamanho e SHA-256 antes
+de produzir o novo `manifest.json`. Os arquivos oficiais somente devem ser
+substituídos após a conferência completa do staging.

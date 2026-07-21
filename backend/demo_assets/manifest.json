@@ -61,8 +61,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/032e1815-45bd-4a82-bbb7-98aedc04c96e_gradcam.jpg",
-          "sha256": "dad84d46ade65e0c4ae21bb8ce4177770bd41f1e71453187177bb0e75455c09a",
-          "size_bytes": 16691
+          "sha256": "ddb35a963f47560401a1eda1322e3a8e6b9577f1ab4c72e5256b5587e652b9d8",
+          "size_bytes": 80344
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -72,6 +72,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 01",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-02",
       "exam_key": "clinic_primary_exam_01",
@@ -90,8 +91,7 @@
         "sha256": "50c70ae525cdfe6facd279a11feb2f64972f8fac53d6db0fd99d0ed46d527772",
         "size_bytes": 206136
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 01"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -122,8 +122,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03adaef7-3900-4624-9ffa-6df25d1ee70c_gradcam.jpg",
-          "sha256": "6d0c1998877a68db36c2b41f7db6d80fe07b1432eb4dc1866f610bb8d1b35508",
-          "size_bytes": 16609
+          "sha256": "62c4a00c3be28202ec149e46b5e1744df29b06ff29638c0153d224921d0b1eb4",
+          "size_bytes": 80885
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -133,6 +133,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 02",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-07",
       "exam_key": "clinic_primary_exam_02",
@@ -151,8 +152,7 @@
         "sha256": "ec4dc2e0207db5b9a075eebb5788eb900feb847c8796abea2842ee9276cc857f",
         "size_bytes": 199569
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 02"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -183,8 +183,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03b32e65-b829-4257-8eb1-b3f3c224f3ac_gradcam.jpg",
-          "sha256": "14d01f8c57ea88ef4718428ad3977e7963aac201ff7e2f183b4dab9b21e13476",
-          "size_bytes": 17182
+          "sha256": "6146be09e46d335166632d2cd3fa83585838db546cab36bed2912ae52d178a15",
+          "size_bytes": 79208
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -194,6 +194,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-12",
       "exam_key": "clinic_primary_exam_03",
@@ -212,8 +213,7 @@
         "sha256": "a49e7d9e7c5745d6d5acddacbf01ceeac4597737ecd71c24704db4318e494897",
         "size_bytes": 190383
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 03"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -244,8 +244,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/02dcedf1-c0bd-4ef4-b072-ea8f11da6a1d_gradcam.jpg",
-          "sha256": "702a5abc62a77604e022690075499af6ef514f0d374ae4ed06506427a5bc8b63",
-          "size_bytes": 17847
+          "sha256": "7769f2a16c421e7e7de6739a6e1ce59e36bb2c013275251d3cf5df595578697f",
+          "size_bytes": 85798
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -255,6 +255,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-17",
       "exam_key": "clinic_primary_exam_04",
@@ -269,13 +270,13 @@
         "sha256": "88c5109556691c50102afd534de40572e95d9c20251a7f9ec635fd242eac4914",
         "size_bytes": 209512
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 04"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-02-22",
       "exam_key": "clinic_primary_exam_05",
@@ -290,8 +291,7 @@
         "sha256": "8a4e1a874e85768edf9c53cfe107fcadcd6b4c7ec7e666f9033b7c88e37ce68f",
         "size_bytes": 187733
       },
-      "status": "canceled",
-      "description": "Colonoscopia demonstrativa 05"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -322,8 +322,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03eb7061-0329-405a-a4b6-d629cf01baad_gradcam.jpg",
-          "sha256": "5b904a6202f09476ae9605f57a045f815435c741e7d203aa94c15161e994f2eb",
-          "size_bytes": 18993
+          "sha256": "80b6ef696de39b953e7a6e4487d83cd446d31a2f38a0063a8313c7ed532fa089",
+          "size_bytes": 88478
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -333,6 +333,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-03-02",
       "exam_key": "clinic_primary_exam_06",
@@ -351,8 +352,7 @@
         "sha256": "2a26caaa3d54363be79f1c3553c6f59ced36b58fbaa29467520f142ac0e3ec84",
         "size_bytes": 194567
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 06"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -383,8 +383,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2bef68d0-afdf-4dd9-8724-513d2bf356ad_gradcam.jpg",
-          "sha256": "0ad2d3f0d5fa4d8c87590675f3e4bf0e72690c3d8485a2f8069ef182f1f75914",
-          "size_bytes": 16072
+          "sha256": "212d135d3f6b96c8e7721ad484caaa8ad805daf41e643a11c6e0ccfd913aedd6",
+          "size_bytes": 260821
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -394,6 +394,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-03-07",
       "exam_key": "clinic_primary_exam_07",
@@ -412,8 +413,7 @@
         "sha256": "956979bd4ac6f09221a4fde078ebda2e033b86ecdee01de6f20bb151a552c501",
         "size_bytes": 522412
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 07"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -444,8 +444,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2c3eb894-3a67-4cf4-bc75-9bd7442c9709_gradcam.jpg",
-          "sha256": "07d69e2a1c4c00737ef7088d9854b00d1b8e940501c65578ff0beaccee6e90a8",
-          "size_bytes": 13257
+          "sha256": "0c2d2b73c9a034d87ae1a95aa107723e5ea55533246b2cc0f5892be64534c936",
+          "size_bytes": 232001
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -455,6 +455,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-03-12",
       "exam_key": "clinic_primary_exam_08",
@@ -473,8 +474,7 @@
         "sha256": "927653c436c9ea121138510fe2097261876cfa2b73845edb3d142608ea9791b4",
         "size_bytes": 426674
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 08"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -505,8 +505,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/02f88968-7b55-468b-ae66-a0458c7d874f_gradcam.jpg",
-          "sha256": "f6a863170c558cdff3704fa329adcaf5fcd27942388a74fcc8b6b6f7ac3d7bf5",
-          "size_bytes": 15914
+          "sha256": "849d2b2e553009e85bfa986884902820a4f5c36d2051c8045854e0752850c4ca",
+          "size_bytes": 76912
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -516,6 +516,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-03-17",
       "exam_key": "clinic_primary_exam_09",
@@ -530,13 +531,13 @@
         "sha256": "028e31cb115d7bcbfbeb774c5ee381dd8df6e7462067bd2a546e9cddbe9d1a95",
         "size_bytes": 174458
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 09"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-03-22",
       "exam_key": "clinic_primary_exam_10",
@@ -551,8 +552,7 @@
         "sha256": "b0575e2e00d925a9bd9546a2346d1b425ce1474bdfc1c853fef73a146670fad3",
         "size_bytes": 155980
       },
-      "status": "failed",
-      "description": "Colonoscopia demonstrativa 10"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -583,8 +583,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2c923b19-3c0f-4cbf-b7ec-004a9319bca2_gradcam.jpg",
-          "sha256": "30b49253dc0df1a2a73530ae43c660a3e33c9d49bc99aa1a1d98734409c36808",
-          "size_bytes": 13789
+          "sha256": "837a52200de5c111b1ead3ab40bfbeaa2cfc27f150657e9876e65db2d69ec394",
+          "size_bytes": 198370
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -594,6 +594,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-04-02",
       "exam_key": "clinic_primary_exam_11",
@@ -612,8 +613,7 @@
         "sha256": "deda27de7e217a1cbb1b4d28af5ce8f579c8ee170edb0e9de36430a2b281ceab",
         "size_bytes": 536970
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 11"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -644,8 +644,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3ad256a5-baae-4f9a-a808-44fc492a4839_gradcam.jpg",
-          "sha256": "93283cd6606eb7c6470d1a51193e7e3c7622288f058dab0bd8620060d588cd3e",
-          "size_bytes": 22124
+          "sha256": "8380ec4cf87b76955496a09b19e43f16bedf89808884529b5e3b5ad2d1af6650",
+          "size_bytes": 397432
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -655,6 +655,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-04-07",
       "exam_key": "clinic_primary_exam_12",
@@ -673,8 +674,7 @@
         "sha256": "3facdedd6dbf606c11291031cece65bfb5f8c0c867ab341b9b67e78f7858ec6f",
         "size_bytes": 993716
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 12"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -705,8 +705,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3b2a2f84-2974-433d-95ef-30de7fb2a228_gradcam.jpg",
-          "sha256": "545329d131f59960d0b53ead6830b94e49bb76eae11fed0de29b10e80ee9f4e1",
-          "size_bytes": 19872
+          "sha256": "4c0b8f7eed9264ddc2ab612a5df1907fc38c9355d37caf8ad863e1036b174410",
+          "size_bytes": 314326
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -716,6 +716,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 13",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-04-12",
       "exam_key": "clinic_primary_exam_13",
@@ -734,8 +735,7 @@
         "sha256": "ce9d00816adcbe66767a528b504e2eecaefd2cefceec6d785950def1318e8344",
         "size_bytes": 789859
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 13"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -766,8 +766,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/032a3076-c75c-4089-a57c-1b19e5f6589e_gradcam.jpg",
-          "sha256": "998a3b637ce86002514f478a5be5ed553323904e47c1a149b573d5bfaf18548d",
-          "size_bytes": 18043
+          "sha256": "01391002b5f282a079af8963c685b4df864ed44ff0edf44037d40048121b739f",
+          "size_bytes": 85915
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -777,6 +777,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-04-17",
       "exam_key": "clinic_primary_exam_14",
@@ -791,13 +792,13 @@
         "sha256": "208fd69b4db49f51f6dce6b9747813dcf66066359467a14b14c081a0cdb75578",
         "size_bytes": 206606
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 14"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-04-22",
       "exam_key": "clinic_primary_exam_15",
@@ -812,8 +813,7 @@
         "sha256": "02b6da5e67069c9d29bc472728c52a979ca124834b0b696ef0d11413686b9fa0",
         "size_bytes": 180691
       },
-      "status": "failed",
-      "description": "Endoscopia demonstrativa 15"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -844,8 +844,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/85b99115-d334-4a40-a60c-98017e6e4fc3_gradcam.jpg",
-          "sha256": "863d3a90a75d68f16644bb4886466da956d69f2f611b33ab25cf28d428ebac79",
-          "size_bytes": 13891
+          "sha256": "5e55654ea1851739f90d215619f08eacea4eed5c607b16c4f328dd1416ae62cf",
+          "size_bytes": 67816
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -855,6 +855,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-05-02",
       "exam_key": "clinic_primary_exam_16",
@@ -873,8 +874,7 @@
         "sha256": "91d9a7b832ebcc2be0fa1205b5ef2ac9002c4e8ca203faddbdb876e7f840a139",
         "size_bytes": 172434
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 16"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -905,8 +905,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/85ca4da2-a727-49cf-b436-be431d57f294_gradcam.jpg",
-          "sha256": "0ded55a702b0b73b6210fc279141021abb9c61073cd1b7feb4fdb9b647c68456",
-          "size_bytes": 16681
+          "sha256": "2f895b7840a4ea0d737e945152463394a8bea1b643e481560dcf9018c0c86309",
+          "size_bytes": 267151
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -916,6 +916,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-05-07",
       "exam_key": "clinic_primary_exam_17",
@@ -934,8 +935,7 @@
         "sha256": "02b8a4988f79035131b538277375e7fcd3c980527720ba67ba2bd35395a76334",
         "size_bytes": 645429
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 17"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -966,8 +966,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/87d5f55a-465e-4c4b-beaf-e3aa08fa87ef_gradcam.jpg",
-          "sha256": "aea77820f72b6a38d7fe02f3d8b5a0db12af377f494de1147cee323cbdb3b3e6",
-          "size_bytes": 21168
+          "sha256": "117561717b0c9a3aea37eb01fa0a8f87609c49f292c87b0acc9887065fe0b2c9",
+          "size_bytes": 379166
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -977,6 +977,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-05-12",
       "exam_key": "clinic_primary_exam_18",
@@ -995,8 +996,7 @@
         "sha256": "66960cd066a284ec6dc854a21b99e57c8a3e2a435d4986da6ad37c8d6aced5f6",
         "size_bytes": 930649
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 18"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1027,8 +1027,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/76594c04-8899-4982-b973-5e484a98789c_gradcam.jpg",
-          "sha256": "0602258b46c7d5a02a0fbfd8434f8ddbd31de191b053c62a3cf781c09cfe56c3",
-          "size_bytes": 17765
+          "sha256": "bd80be898ab7c4f8abdfb95da143036f3fb1f61bd174797b7799b658b5cace9c",
+          "size_bytes": 83367
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1038,6 +1038,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-05-17",
       "exam_key": "clinic_primary_exam_19",
@@ -1052,13 +1053,13 @@
         "sha256": "fd626323262e7fde11c583085e3dc3e7f282ed29728d7fc853a76fc721d80094",
         "size_bytes": 197388
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 19"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 20",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-05-22",
       "exam_key": "clinic_primary_exam_20",
@@ -1073,8 +1074,7 @@
         "sha256": "200825a0389d11d117d69ee7c606982cfabbc8d81b53bfc4de49313a587ec23f",
         "size_bytes": 183210
       },
-      "status": "pending",
-      "description": "Colonoscopia demonstrativa 20"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -1105,8 +1105,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/88bac517-668e-42ed-979b-785c52c599bb_gradcam.jpg",
-          "sha256": "27180c63acbcf0f01f229c25a0c2740c0a53d83063450c121e2dfc2e85d75fc5",
-          "size_bytes": 12278
+          "sha256": "5aff8ef96b2534bf42cefbc96d96ce1d8a02fb6b8c2422e4a5ce33918728d623",
+          "size_bytes": 227155
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1116,6 +1116,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-06-02",
       "exam_key": "clinic_primary_exam_21",
@@ -1134,8 +1135,7 @@
         "sha256": "3397c97102b63c7787b0afb9a49e67652ae9989821d07325663653733b983778",
         "size_bytes": 442961
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 21"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1166,8 +1166,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f0bc5ab-981c-41fb-8f8e-d4b5dd88a337_gradcam.jpg",
-          "sha256": "bf7ea4e6b7f647df6e62b5f75b3ab08216547e81a59310c0f968e88ede1f6c0f",
-          "size_bytes": 13215
+          "sha256": "0b2d9f663e03871806026b4dcd422a4440d33b3cf9b906279992097d26f878bd",
+          "size_bytes": 237937
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1177,6 +1177,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-06-07",
       "exam_key": "clinic_primary_exam_22",
@@ -1195,8 +1196,7 @@
         "sha256": "67e81e8656dac2c96be01e95b813de276e316514fb2176109f5f3d9f1062288a",
         "size_bytes": 458195
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 22"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1227,8 +1227,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f8b5d47-f221-4012-a2dc-e989c8b36ff0_gradcam.jpg",
-          "sha256": "934e98e3ccf14f343a28f96b8c45a36904ea77de32e4af26b6860edd21ad9686",
-          "size_bytes": 15672
+          "sha256": "df006f113074f1f4e57a1e4f517053db43b6ed7bb303dd00f9cf053195cc030b",
+          "size_bytes": 226597
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1238,6 +1238,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-06-12",
       "exam_key": "clinic_primary_exam_23",
@@ -1256,8 +1257,7 @@
         "sha256": "cc81b4392625e41109d4cb5d801c6c5bd41ee035b7134716ab54c77f3b20f359",
         "size_bytes": 523652
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 23"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1288,8 +1288,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/820bb90d-3a37-4b1a-8498-56a385ccc69d_gradcam.jpg",
-          "sha256": "980679debecfb915c8db091e9811d06a1e32ba30db0458dca77636c8b814c710",
-          "size_bytes": 14570
+          "sha256": "58657956d44230cffc0104e47627b511d66f7c748f974f0523ef4f522b93ff3e",
+          "size_bytes": 252393
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1299,6 +1299,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-06-17",
       "exam_key": "clinic_primary_exam_24",
@@ -1313,13 +1314,13 @@
         "sha256": "e5171d1a7724b10a42ed6fc7fbc1af7f42ef68af61a0acebd55b2bdd7de2412c",
         "size_bytes": 474198
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 24"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-06-22",
       "exam_key": "clinic_primary_exam_25",
@@ -1334,8 +1335,7 @@
         "sha256": "4516ec5a59a38f1128d5874f7613216a3ba2c9271898a0f4b289cd6ae2efba3f",
         "size_bytes": 220776
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 25"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -1366,8 +1366,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8fffbd0c-11a5-4a62-a4d4-053046f617ab_gradcam.jpg",
-          "sha256": "a19ede65c50dc34bac834a7da4d8c34ce6cde9e89341b219a156445d878f6217",
-          "size_bytes": 15322
+          "sha256": "b79b4d7be1297b2a76598dc82b14e8cedbd03051a8d34a103abf7c8bd5b90269",
+          "size_bytes": 195382
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1377,6 +1377,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 26",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-07-02",
       "exam_key": "clinic_primary_exam_26",
@@ -1395,8 +1396,7 @@
         "sha256": "50af1c79191e7f954da2f81fcae60ce4efa01595aeb06d134d80540c712a5584",
         "size_bytes": 502384
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 26"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1427,8 +1427,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/90d76564-923d-4f7a-8552-2205f9b95909_gradcam.jpg",
-          "sha256": "43d96794def368b6bfb7545609d1405fc2c3e8e12235555dbff0b46b1fead1c1",
-          "size_bytes": 20687
+          "sha256": "dbb78be8e7644e4107e8a5b26caaa438f215e295a439e801a3e87cc2ecb96ea9",
+          "size_bytes": 104151
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1438,6 +1438,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 27",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-07-05",
       "exam_key": "clinic_primary_exam_27",
@@ -1456,8 +1457,7 @@
         "sha256": "4a0bc8175fa04ad75c5c5b85a470e03a1b6f31d497772e2b0702a7b9ab05b4d5",
         "size_bytes": 235350
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 27"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1488,8 +1488,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/55866948-68f1-430b-875b-953fc91c6dc6_gradcam.jpg",
-          "sha256": "dc5a44e09429334cba43a5e18189efa057ab5f6d4235b083892ddde851abe2d4",
-          "size_bytes": 16653
+          "sha256": "9e9dce723f5ba3471573fc25007939fa6330932231e9cd285b49f1ed356408d8",
+          "size_bytes": 259103
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1499,6 +1499,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 28",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-07-08",
       "exam_key": "clinic_primary_exam_28",
@@ -1517,8 +1518,7 @@
         "sha256": "f58c478b646aac20c6ad5675a9d7d47c6d97cdbb50aacb6dffcf56cd98dcfab1",
         "size_bytes": 610510
       },
-      "status": "completed_with_divergence",
-      "description": "Colonoscopia demonstrativa 28"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -1549,8 +1549,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8513d335-0b58-43eb-8668-f6f836d1c8c1_gradcam.jpg",
-          "sha256": "832695ffc809b95c4f929eb044376e32df3525c31687a52d9740c42d1c95896a",
-          "size_bytes": 17743
+          "sha256": "b2bcf2354577f00c438fde5d4f3e4b8879ef5e40199c5eb688ba049f56ec8869",
+          "size_bytes": 87967
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1560,6 +1560,7 @@
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-07-11",
       "exam_key": "clinic_primary_exam_29",
@@ -1574,13 +1575,13 @@
         "sha256": "d47cbda61bfcf0bdce02ab375703a56c9318ce9936520dd710b8ae85cdf74d48",
         "size_bytes": 188283
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 29"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_primary",
       "clinic_name": "Clínica Primária",
+      "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_primary",
       "exam_date": "2026-07-14",
       "exam_key": "clinic_primary_exam_30",
@@ -1595,8 +1596,7 @@
         "sha256": "ba2a65fe062db58365f3f39c505d7efe4ed7c0d1c506559f9ac878966c4b8ad8",
         "size_bytes": 207928
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 30"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -1627,8 +1627,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3ed83478-0f49-400e-9e75-080aefd04205_gradcam.jpg",
-          "sha256": "252113112d8ef6ae216f7a31cfd1d4662a527dce7317ca6b723e6e318b55ad6d",
-          "size_bytes": 17313
+          "sha256": "472e4a9e0246beaaec7f18d97f84db374de45191e5a252c34d7cd7083b486ea0",
+          "size_bytes": 76556
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1638,6 +1638,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 01",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-03",
       "exam_key": "clinic_large_exam_01",
@@ -1656,8 +1657,7 @@
         "sha256": "07aee90530302a2ac62ae1931b68003e901e61edbfb04f3f3a487559369112a3",
         "size_bytes": 157814
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 01"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1688,8 +1688,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f14fa3b-7342-42ea-a1c8-5d09d437c404_gradcam.jpg",
-          "sha256": "a701ea07bdc938fff85198a6a3dd556aa8148b919e553a61947e85e43e5a8df6",
-          "size_bytes": 18550
+          "sha256": "386ee6a2a8932b86c224716d34e257b30504c7f686967ca32f006b36b24bbf32",
+          "size_bytes": 87439
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1699,6 +1699,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 02",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-08",
       "exam_key": "clinic_large_exam_02",
@@ -1717,8 +1718,7 @@
         "sha256": "9584dc458e73ac0f5d46f51f2ec153d9059de42e0bcf99f9df4914c071d6026d",
         "size_bytes": 209838
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 02"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1749,8 +1749,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f3eacce-e63b-45f4-a890-ade671eb1135_gradcam.jpg",
-          "sha256": "28d8ff4b6524b66654bb962929e8465c2a8cf2a44f7dc681e9ac12806cb33989",
-          "size_bytes": 15388
+          "sha256": "fb0644594f42e916a71e0abde99fe90a726d99e86f8612892e3e5ebc96fc97a7",
+          "size_bytes": 74810
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1760,6 +1760,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-13",
       "exam_key": "clinic_large_exam_03",
@@ -1778,8 +1779,7 @@
         "sha256": "03bbe1819967b3df0afd1b975f2bc84c40353e8983290a2c6954b2c76a0d5581",
         "size_bytes": 163954
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 03"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1810,8 +1810,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3c0cda87-4530-4d04-a58c-fb290ecb0139_gradcam.jpg",
-          "sha256": "5e2250a56e793008ffe936fffa5082b13bc812f2be6c52ed3b200b8d0050d3e0",
-          "size_bytes": 15674
+          "sha256": "033cf07f53f538448b94187e7cd35fb3a7b770c0c48626d3f33b4684aadc3a3d",
+          "size_bytes": 271422
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1821,6 +1821,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-18",
       "exam_key": "clinic_large_exam_04",
@@ -1835,13 +1836,13 @@
         "sha256": "2173c5b401958661f093e4e7c92444739a9e443fe8f25517609ec1d5c9a647a6",
         "size_bytes": 674314
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 04"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-23",
       "exam_key": "clinic_large_exam_05",
@@ -1856,8 +1857,7 @@
         "sha256": "5e3fcb5144dd68de472c69d436c17c4db64912acc01784390bc2116ddae71163",
         "size_bytes": 522277
       },
-      "status": "canceled",
-      "description": "Colonoscopia demonstrativa 05"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -1888,8 +1888,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f7c1c00-6f4d-42dc-a97a-e36e04037664_gradcam.jpg",
-          "sha256": "d1a49728d5edaabaee9c02f382f545086895770f3c271311d82233cf63abc5a2",
-          "size_bytes": 18929
+          "sha256": "869d86f888e6ee8c3f8aac0a6cbe0c162e0570b97c51ef2da84ebf7967ee7291",
+          "size_bytes": 89161
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1899,6 +1899,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-03",
       "exam_key": "clinic_large_exam_06",
@@ -1917,8 +1918,7 @@
         "sha256": "e241cbb8f1e84e6a81d4dcd61d06aa9530226844ecddfb3300bbd09ce416e7b6",
         "size_bytes": 178989
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 06"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -1949,8 +1949,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/4c944674-3dfa-417d-915c-a69a1c30704d_gradcam.jpg",
-          "sha256": "bd870c97218a4e0716d204b3fd3631f336e03f86a3dc94d39df2125d379ceabb",
-          "size_bytes": 15976
+          "sha256": "2e4a4cbe156236510f22cf4c81249ad4212fed745ce5f1a762bfe481e02e6db1",
+          "size_bytes": 79695
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -1960,6 +1960,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-08",
       "exam_key": "clinic_large_exam_07",
@@ -1978,8 +1979,7 @@
         "sha256": "7cd40f9acfc4861af7eeae78ea2d5fb9fbacd8327b80942b954add5a3029eef8",
         "size_bytes": 182714
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 07"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2010,8 +2010,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7a85bcd3-b3c8-42a3-a0f5-565609cbb44c_gradcam.jpg",
-          "sha256": "b91bfc1e8f5c121721ab73ea089ea8901a90f35df9a1e7f6547f518a20f54509",
-          "size_bytes": 16774
+          "sha256": "baaf9dc590fc56d81ef777f65b5bb7ff3fe7e8935cf4060c6795acb18a3e2875",
+          "size_bytes": 286254
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2021,6 +2021,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-13",
       "exam_key": "clinic_large_exam_08",
@@ -2039,8 +2040,7 @@
         "sha256": "8d9d973a495e18e981ec6bda40c6bb14d641e5cd4dce683bd93d4bdab90dd68d",
         "size_bytes": 734231
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 08"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2071,8 +2071,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3c0f73a8-5755-4a9d-94b1-2f540b8109e3_gradcam.jpg",
-          "sha256": "daa8ba53042c9e6a4249f30028987f1abb26b786f5603aa11c5bef3b5fcf0abc",
-          "size_bytes": 19970
+          "sha256": "61a1140285d67ca968dcdd5febaf5d1250ddc6e8f9b43efd63039cb03120bfda",
+          "size_bytes": 331651
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2082,6 +2082,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-18",
       "exam_key": "clinic_large_exam_09",
@@ -2096,13 +2097,13 @@
         "sha256": "6bfe690ec660677821ea6779cf5a01ef493dc084d2dd25165640939e526af8e2",
         "size_bytes": 879332
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 09"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-23",
       "exam_key": "clinic_large_exam_10",
@@ -2117,8 +2118,7 @@
         "sha256": "5d01af4f815d4a51fe1353efefda2a80b4f66fa9f9d701431d2fd8691efd8485",
         "size_bytes": 643429
       },
-      "status": "failed",
-      "description": "Colonoscopia demonstrativa 10"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -2149,8 +2149,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7ac3a14e-fe8e-4bc3-b01e-a33cf9fc96c2_gradcam.jpg",
-          "sha256": "21a640cb6abb17c80569b185360057722199197b2ec40c1e2c00fb7a4c4a7210",
-          "size_bytes": 14828
+          "sha256": "ac0f162523b7d41c9cb59edbf5c01bf747ac8477a71a0c2fcabd11d62df9af47",
+          "size_bytes": 246777
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2160,6 +2160,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-03",
       "exam_key": "clinic_large_exam_11",
@@ -2178,8 +2179,7 @@
         "sha256": "8de0bf476e20bd69facee991bcf29cabd88fa8d67ee90ed349dd409a9515c05e",
         "size_bytes": 478872
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 11"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2210,8 +2210,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7c015078-9f75-48d3-87bb-79ea92630a74_gradcam.jpg",
-          "sha256": "a85ddb152ee00a99d532e14e078c23eab96ed502bda0681b7b01816c065fc62b",
-          "size_bytes": 12873
+          "sha256": "b95d43c5f9b20da92565c4a0c539f3aa574ddc38a638044c133e9d9ed5334f0b",
+          "size_bytes": 66910
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2221,6 +2221,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-08",
       "exam_key": "clinic_large_exam_12",
@@ -2239,8 +2240,7 @@
         "sha256": "a63038ec9338e2e2b6b6a0a1a04f5689bcbb08884be515fdc15db464bb5ea27e",
         "size_bytes": 180035
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 12"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2271,8 +2271,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7ca978f1-93fe-4ea6-8a94-106f48c8e01a_gradcam.jpg",
-          "sha256": "09ee1cabd271d0bb3a7f73c49c9670cb4584e317daefbfc34f36678703ece6b9",
-          "size_bytes": 20553
+          "sha256": "76b394d5597f23f0368c02416ceb8f25af7be12f7b21ed6ea377bbd1bf63920b",
+          "size_bytes": 326493
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2282,6 +2282,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 13",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-13",
       "exam_key": "clinic_large_exam_13",
@@ -2300,8 +2301,7 @@
         "sha256": "23f6a28b91755d6532ee7d04d8de766366c9d3fa7b2c6c196c6bf0f72ef6159b",
         "size_bytes": 838112
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 13"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2332,8 +2332,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3e078f14-f99d-42d3-8ab4-426af1ac119f_gradcam.jpg",
-          "sha256": "9106c31889ab0daeac4df39ad45589365721a5782fac4c56b2929b0ec6d472fa",
-          "size_bytes": 17625
+          "sha256": "7c9b4d463d1225a8137b41a59b681589f58c1d3e425b50d68e262006bd2d0193",
+          "size_bytes": 82423
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2343,6 +2343,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-18",
       "exam_key": "clinic_large_exam_14",
@@ -2357,13 +2358,13 @@
         "sha256": "e7dc62d8850979301e9f7b65e6ebeb34b1774133b1ee84683d720c17c40b17bc",
         "size_bytes": 204234
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 14"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-23",
       "exam_key": "clinic_large_exam_15",
@@ -2378,8 +2379,7 @@
         "sha256": "1eb81160ed645ae0eb83e329f2cfb07958a357f1bd4e441f8753183cf34960bd",
         "size_bytes": 163829
       },
-      "status": "failed",
-      "description": "Endoscopia demonstrativa 15"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -2410,8 +2410,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94eced16-7a89-4b32-a92b-3670f59c0a62_gradcam.jpg",
-          "sha256": "e6d5d469e642dc49dc72e6a65bf3bb714bbc191099e404a2510e2582cf867b1b",
-          "size_bytes": 15751
+          "sha256": "e02a2c616d084df2abe40f1ae0e67faa24f6100f1c0405fa9d85ad5466f57efe",
+          "size_bytes": 77291
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2421,6 +2421,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-03",
       "exam_key": "clinic_large_exam_16",
@@ -2439,8 +2440,7 @@
         "sha256": "aa0994324425fb763cba45bdce994e45fbfe80d25ed6d91b0918ad01e2d89554",
         "size_bytes": 178433
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 16"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2471,8 +2471,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9625b393-0496-41bc-a829-8d7d7edd3d37_gradcam.jpg",
-          "sha256": "7430457693d4147975d3ef5baf1f919cdc15d02734fd1f416aec75c9c9c22e94",
-          "size_bytes": 18802
+          "sha256": "4555da59e9bdfc3ce529fb82f860bba90feb184284482994563f74a0a62ad1f7",
+          "size_bytes": 87547
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2482,6 +2482,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-08",
       "exam_key": "clinic_large_exam_17",
@@ -2500,8 +2501,7 @@
         "sha256": "2e8baede725e87199409eebed37dd58eb4e4766a36072234a2c35b6e6a5ac2a0",
         "size_bytes": 192220
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 17"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2532,8 +2532,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/98631a86-77cc-4aaf-91e8-be0d3b9ae3d0_gradcam.jpg",
-          "sha256": "c3ae8cb160970916086e3f86c7783d6853feaeef4d87b8bd2381ff3e3458f542",
-          "size_bytes": 17681
+          "sha256": "a99907830fe68ddd4ce665622b55690eda5abe3a8fb57c5aa186b8a5d52bf83b",
+          "size_bytes": 80901
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2543,6 +2543,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-13",
       "exam_key": "clinic_large_exam_18",
@@ -2561,8 +2562,7 @@
         "sha256": "fee7ab61b8ed51fba01de09774056891c6a8a13c7e8e14dbae5ad7f319ab7129",
         "size_bytes": 193016
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 18"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2593,8 +2593,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94a5709e-0b95-45cf-9529-dab11496823a_gradcam.jpg",
-          "sha256": "6cc7921c23b2d70aeef94b6982fa4ffe7eb80038875f4af61e1828af03e6218d",
-          "size_bytes": 15206
+          "sha256": "b80b876e4c2c47e5ba1ca69ff76c072f9730d6ee1bebe24d8d7285200f06cdb0",
+          "size_bytes": 71285
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2604,6 +2604,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-18",
       "exam_key": "clinic_large_exam_19",
@@ -2618,13 +2619,13 @@
         "sha256": "59afed551c37ea91dbecb3603ef4392bfbe30e82000f8747fa9c87388e7034e4",
         "size_bytes": 147254
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 19"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 20",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-23",
       "exam_key": "clinic_large_exam_20",
@@ -2639,8 +2640,7 @@
         "sha256": "64cfbbe27a8dc674cd26d5f43f708bddfce67d8cbcff7346841b0a6e1301d933",
         "size_bytes": 804958
       },
-      "status": "pending",
-      "description": "Colonoscopia demonstrativa 20"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -2671,8 +2671,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/995f90a6-1d87-4d29-b6d7-4f9e09558497_gradcam.jpg",
-          "sha256": "76086c7d69e958a9cf0ed650cde930cbb86fb10ee7fa8f6e5af70018f169e520",
-          "size_bytes": 19259
+          "sha256": "f0aa9532f541b0cfa18de2ee16ef3118c6e1e9b893b22020f0ad57c1d28dc480",
+          "size_bytes": 86836
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2682,6 +2682,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-03",
       "exam_key": "clinic_large_exam_21",
@@ -2700,8 +2701,7 @@
         "sha256": "f58738d1da2cf9f8b2dc0da586c23aa35928f59a75f58737393076e4f004269e",
         "size_bytes": 209679
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 21"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2732,8 +2732,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9a6f4254-3cf2-4922-87f8-0e70293780df_gradcam.jpg",
-          "sha256": "78deada1e88b2bf00da667243d37b61b18905df71f05565033b4a02c0137a198",
-          "size_bytes": 16805
+          "sha256": "c53a3f5398e86d5462efcd6bb11f978b6a3f2178db8488c9101bcbf686534559",
+          "size_bytes": 79609
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2743,6 +2743,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-08",
       "exam_key": "clinic_large_exam_22",
@@ -2761,8 +2762,7 @@
         "sha256": "872dae085be12574c096e4facd7c846a8c8024342ad17ac7c30b5797de6287ea",
         "size_bytes": 159679
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 22"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2793,8 +2793,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f7ec633-bde3-4923-8921-d06c4a356afd_gradcam.jpg",
-          "sha256": "35b1a0a10ef6db2df382098761bcae3da4bb0361b2d3571f71c326839994cbc2",
-          "size_bytes": 16598
+          "sha256": "c4d32a21aac2640447e6bd33d4a6d41953a021c0fbc20b1868a272e6e05f4e87",
+          "size_bytes": 276032
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2804,6 +2804,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-13",
       "exam_key": "clinic_large_exam_23",
@@ -2822,8 +2823,7 @@
         "sha256": "1dcd7b25a28b38c2dd3cd9a66b9f780902c4a34ee76dd2891f16d3f4142ff95a",
         "size_bytes": 658033
       },
-      "status": "completed_with_divergence",
-      "description": "Colonoscopia demonstrativa 23"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
@@ -2854,8 +2854,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94a9e2e3-e972-43a4-9958-142cad87f38c_gradcam.jpg",
-          "sha256": "adf93ae6f78b29042a49fc2f6ccf12ee080c691b8faa1d0ebfdd3b1b42b98db1",
-          "size_bytes": 18745
+          "sha256": "1b6d5ddfb47404523addddcc0cb1ff471a00413a3ea30be63bc55a29908fc256",
+          "size_bytes": 79432
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2865,6 +2865,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-18",
       "exam_key": "clinic_large_exam_24",
@@ -2879,13 +2880,13 @@
         "sha256": "8ff2d90633ca128a20aa34ac2c60eec8a3c7060552786953663378808e07f71b",
         "size_bytes": 168436
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 24"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-23",
       "exam_key": "clinic_large_exam_25",
@@ -2900,8 +2901,7 @@
         "sha256": "46c2628b86310d8a17779dd587fc75d086a3dce2684a100d1e75655f040fbdcf",
         "size_bytes": 679964
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 25"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -2932,8 +2932,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9abc35de-a9ad-4983-be5c-4f83c60f4710_gradcam.jpg",
-          "sha256": "f8ff23fc4eec065ba59ba9579b523487d4aa03737757b374fc1a412b98306ad5",
-          "size_bytes": 18544
+          "sha256": "17bdec6ef3429f93a20dfffc9d628103cf3df03052240fa60fce4306f897fdcb",
+          "size_bytes": 87370
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -2943,6 +2943,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 26",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-03",
       "exam_key": "clinic_large_exam_26",
@@ -2961,8 +2962,7 @@
         "sha256": "0dfd42a2c3ab67f01ff6e646d53cb62ec009750c46bbd6cad3bb7cd2348567a2",
         "size_bytes": 223913
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 26"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -2993,8 +2993,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9ae87823-cd0e-4309-aef4-71ff1a43902c_gradcam.jpg",
-          "sha256": "cf1499f3f8449d091b360dda1fececdb0004febf90c9a029256cf0906acac9a4",
-          "size_bytes": 16123
+          "sha256": "937738605a0831363494c342ec3c4773b3b6b10155e738d6a198ca1a0a6cb64c",
+          "size_bytes": 75887
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3004,6 +3004,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 27",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-06",
       "exam_key": "clinic_large_exam_27",
@@ -3022,8 +3023,7 @@
         "sha256": "7629eb176e7dabe042957faa2a5068de7125967c0bb760e9cc3b135f7cd9abea",
         "size_bytes": 166945
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 27"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3054,8 +3054,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9b69ae9c-9df1-4953-a750-3ff7927018b4_gradcam.jpg",
-          "sha256": "d8db4d060c7e31c967ed2906bb8fcc2260ac80c17353379154766c28007340f2",
-          "size_bytes": 15844
+          "sha256": "e2429516d2f99ba25514204d235bfc8a92f6701630097f444320f0cf82dbb557",
+          "size_bytes": 70558
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3065,6 +3065,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 28",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-09",
       "exam_key": "clinic_large_exam_28",
@@ -3083,8 +3084,7 @@
         "sha256": "7c74c2294b8fe415c3e481027b33a677b650ec874a329dd690726fd8ffdf48b4",
         "size_bytes": 164052
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 28"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3115,8 +3115,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94aaec39-2b33-4c51-b4f0-11c70f4cd7b5_gradcam.jpg",
-          "sha256": "667b9afce150d43cbd3778c36e74cac7ebee7cd61c167341a941e138a982f13d",
-          "size_bytes": 16031
+          "sha256": "3a21526d97b579ab7994657c18456472d50076d3b302a6cfc79fa6acff9216a1",
+          "size_bytes": 73338
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3126,6 +3126,7 @@
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-12",
       "exam_key": "clinic_large_exam_29",
@@ -3140,13 +3141,13 @@
         "sha256": "52a41cbc6af2b0b589221ee5186a0d13d557972074c204c18491b6bf5b046dc4",
         "size_bytes": 161991
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 29"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-15",
       "exam_key": "clinic_large_exam_30",
@@ -3161,8 +3162,7 @@
         "sha256": "be0c3b7dd5eb400dc15589bb2512e855a9d5c7f78e16f315d7a4b355a0179d28",
         "size_bytes": 149358
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 30"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -3193,8 +3193,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8990a6e0-41ee-4159-92cb-eb9748396aca_gradcam.jpg",
-          "sha256": "706863e875edf0377534a970c8a1b2ec7d5fbf27b7a7c99772f08e02d8275e3b",
-          "size_bytes": 14369
+          "sha256": "47eae80c06f82220e8fee92beeab8e797565b98bf610ab2ff1a896601eda5683",
+          "size_bytes": 240650
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3204,6 +3204,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 01",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-02-04",
       "exam_key": "clinic_specialized_exam_01",
@@ -3222,8 +3223,7 @@
         "sha256": "0ea9665404db8a0ec469ce71dd3ae9f16200f6ab4a5e078dbeb2271dd1c54769",
         "size_bytes": 457460
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 01"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3254,8 +3254,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a98d59d6-8d81-4a17-89da-0974dcf69314_gradcam.jpg",
-          "sha256": "df02e6678006c0d2b0060d9335e0833e1a32dfaf2ca8cde9089ce13fe93fb94e",
-          "size_bytes": 16070
+          "sha256": "2c1d1623d014676572c3ec48477956ae4a194ac4c5a47d1e4b98d31ff772f828",
+          "size_bytes": 72228
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3265,6 +3265,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 02",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-02-09",
       "exam_key": "clinic_specialized_exam_02",
@@ -3283,8 +3284,7 @@
         "sha256": "d86ca2c74a69c69779c259d8a5e956d934c1412241d1c32c91d1f59e1029c52c",
         "size_bytes": 141107
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 02"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3315,8 +3315,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/aa3978e4-6885-4919-88bc-bede64743e00_gradcam.jpg",
-          "sha256": "c2cdedf2f328d417dabe59b851c1c983dc480d917f4e5f28fcf6658983a0d2f3",
-          "size_bytes": 15471
+          "sha256": "d5acd2e86ddabeca56825b6ba3d0ffc42f0c5fc7c64b0303f3274493b53b9e54",
+          "size_bytes": 70621
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3326,6 +3326,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-02-14",
       "exam_key": "clinic_specialized_exam_03",
@@ -3344,8 +3345,7 @@
         "sha256": "c26f3ae1656c7195ed5cb4985ee2fca6722209c3afc75134d76370f9011b3d7a",
         "size_bytes": 159636
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 03"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3376,8 +3376,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8710bd86-02d1-40d9-b373-fa7e753578e9_gradcam.jpg",
-          "sha256": "c1dc1dfd2b01813db047e2392698ac15864d97f9cd35e746a08ecc2e6f2732b2",
-          "size_bytes": 14719
+          "sha256": "ce4e8d309b374242397e67f66d7b4d64d3722aa5dcaf4d88c780d9f1d233f9bb",
+          "size_bytes": 237107
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3387,6 +3387,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-02-19",
       "exam_key": "clinic_specialized_exam_04",
@@ -3401,13 +3402,13 @@
         "sha256": "2050c8f8a8660693b833e87bb70ff70615114dfc6e3eb156874157b2df04c187",
         "size_bytes": 589289
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 04"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-02-24",
       "exam_key": "clinic_specialized_exam_05",
@@ -3422,8 +3423,7 @@
         "sha256": "f7931ce3f69235c24be16c88f7c1e54b088ae1cac4f34b36b5d9feda2660d6a4",
         "size_bytes": 209692
       },
-      "status": "canceled",
-      "description": "Colonoscopia demonstrativa 05"
+      "status": "canceled"
     },
     {
       "analysis": {
@@ -3454,8 +3454,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/aa73426e-5f8a-4a97-9dba-aa0c654b64f6_gradcam.jpg",
-          "sha256": "52ac193153648773b03538d83b339e4b2030b070554a314b2bb62d7daa509119",
-          "size_bytes": 18138
+          "sha256": "071fe237a2a31832232bcf08ac45db5daa5d2f9519f56d98d8d2cb9ccbf9eced",
+          "size_bytes": 94076
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3465,6 +3465,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-03-04",
       "exam_key": "clinic_specialized_exam_06",
@@ -3483,8 +3484,7 @@
         "sha256": "6eb5373b5e8c7a8f32f6ef8aff7275c62b82efcf391e6956d1bd44ce006397c5",
         "size_bytes": 196516
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 06"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3515,8 +3515,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/ad337369-7968-4eef-a761-d06eab0d1ae2_gradcam.jpg",
-          "sha256": "bd5f48d57603f432ddec6acdd3a57995bdacfbf7ec8c3dca287610f233dff932",
-          "size_bytes": 16485
+          "sha256": "eed790e060edb17719f36bc828666fdf4c28066715ae2035cd786ae63838a2a0",
+          "size_bytes": 75074
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3526,6 +3526,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-03-09",
       "exam_key": "clinic_specialized_exam_07",
@@ -3544,8 +3545,7 @@
         "sha256": "8b085992fcb5b74939ffd8e200d8655cacb40fcc912059b59be146b3e7392bf7",
         "size_bytes": 170653
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 07"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3576,8 +3576,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/ad879312-1a6e-4c89-b72c-25d0629fc0c4_gradcam.jpg",
-          "sha256": "533385e87612855f7489ad59e75bd5fbad106eb6251ab018c41b5d0f3fb9d732",
-          "size_bytes": 19239
+          "sha256": "3b80f876b63cbd4aa3915698d28bbaa50625df3c754fc5b47c9bce76aa9b2652",
+          "size_bytes": 349014
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3587,6 +3587,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-03-14",
       "exam_key": "clinic_specialized_exam_08",
@@ -3605,8 +3606,7 @@
         "sha256": "111ee7657456cefb33cabadbddcecc1781fa5ab42294f632cf8db89b0a94d3eb",
         "size_bytes": 887327
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 08"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3637,8 +3637,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/882f9f9d-f941-4e08-986d-d78d8a268697_gradcam.jpg",
-          "sha256": "f0f5483733b717611e66ae1bdfc1dd29595e42e0c20d1fe6e04e14a31a2e820d",
-          "size_bytes": 13881
+          "sha256": "ff914af9049ffadff093080fcc44efbc87ff58156f5ca6e1498c344162528cc4",
+          "size_bytes": 185368
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3648,6 +3648,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-03-19",
       "exam_key": "clinic_specialized_exam_09",
@@ -3662,13 +3663,13 @@
         "sha256": "b90747d0d1fe8e78a11ca00cd952c9f56cbfbb505f6ade3e29962a3158b3179a",
         "size_bytes": 457695
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 09"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-03-24",
       "exam_key": "clinic_specialized_exam_10",
@@ -3683,8 +3684,7 @@
         "sha256": "4d789b4eff6cd068b3bfa59275f9fa1c49f9604b269f4ef3c337cefc2408493f",
         "size_bytes": 514453
       },
-      "status": "failed",
-      "description": "Colonoscopia demonstrativa 10"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -3715,8 +3715,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/adc09942-ecb5-479e-bb59-f02f336e4ac7_gradcam.jpg",
-          "sha256": "8cc36273aa5848eb00a709cbbb7f785852fe0af06a6ea57e92134ac50620f0ae",
-          "size_bytes": 20086
+          "sha256": "9fa55797eb7e4f118ec1958cedd29902a3819a6abcee0d6cd594feb2e7f435ad",
+          "size_bytes": 90296
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3726,6 +3726,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-04-04",
       "exam_key": "clinic_specialized_exam_11",
@@ -3744,8 +3745,7 @@
         "sha256": "4723d56f2e5b4ec84988fa4dfc6238227a68c06ed010989229504a2c7e17597d",
         "size_bytes": 192258
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 11"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3776,8 +3776,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/d324ff38-94db-45c2-98c7-d21c8640ff11_gradcam.jpg",
-          "sha256": "94eea49bbf1d36ccd8fc334fdd3c130f4a52a1625a380f5941fdcae223553e34",
-          "size_bytes": 18217
+          "sha256": "38e101f313ebc30bb163363b51fdb76dc656e3c072866dd63845322a1ae95713",
+          "size_bytes": 82107
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3787,6 +3787,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-04-09",
       "exam_key": "clinic_specialized_exam_12",
@@ -3805,8 +3806,7 @@
         "sha256": "507806c2a663096ed7a4003a2c52e67c78fad084e0a90c8bdaed29c29e20e56b",
         "size_bytes": 188714
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 12"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3837,8 +3837,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dcfe9caf-07e3-44cf-a743-0082d788f4ac_gradcam.jpg",
-          "sha256": "9c5a90d6ffa2671c75af05c2418a07f0290b5e9043246d2ced601daad9edac3c",
-          "size_bytes": 15262
+          "sha256": "af1628ef871541a79e7701c77ccb8b6b2c9bf9c8f42fc79ffd15e6274caf122f",
+          "size_bytes": 213714
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3848,6 +3848,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 13",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-04-14",
       "exam_key": "clinic_specialized_exam_13",
@@ -3866,8 +3867,7 @@
         "sha256": "c1bbfadd5ce5e061ea1b113a2e5fd25af30d7a6513cf07e8a7d9f4894425bf78",
         "size_bytes": 598907
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 13"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -3898,8 +3898,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/891fd052-5d07-4aaa-87f1-528685a1946d_gradcam.jpg",
-          "sha256": "de5e5a60b995a880fbbca63189a8c690e90d03ac8649fd99e41206cc38716a38",
-          "size_bytes": 16358
+          "sha256": "54d4e6cec1e2989fcc6d2cf1ae5d1279e89ddf836faf22f8c463d94e55d4d4a3",
+          "size_bytes": 240151
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3909,6 +3909,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-04-19",
       "exam_key": "clinic_specialized_exam_14",
@@ -3923,13 +3924,13 @@
         "sha256": "019c8edfa43f4b559d31044f9bd42f872aea724e0c90a84438e6ad070a77de56",
         "size_bytes": 618878
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 14"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-04-24",
       "exam_key": "clinic_specialized_exam_15",
@@ -3944,8 +3945,7 @@
         "sha256": "b401f738869371f9d204e01ec1c8b0611fe98dfcd32eae08a6d160c2987def3b",
         "size_bytes": 174579
       },
-      "status": "failed",
-      "description": "Endoscopia demonstrativa 15"
+      "status": "failed"
     },
     {
       "analysis": {
@@ -3976,8 +3976,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dd2357a6-25e2-4064-b308-b82ef7298be5_gradcam.jpg",
-          "sha256": "0ef3fc7e1deffa5b1d01ddca0af4ae73adb002ae6683e6faac164f75570b816b",
-          "size_bytes": 14536
+          "sha256": "3282d28b8b2d5d9e3da84ac55ce9d76d3c28bd4222aad06f08de285f97145237",
+          "size_bytes": 236392
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -3987,6 +3987,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-05-04",
       "exam_key": "clinic_specialized_exam_16",
@@ -4005,8 +4006,7 @@
         "sha256": "686ab8702955c7a2a7b2a49932be33fc6621cd7dec9109fda70398ce8fce723e",
         "size_bytes": 629498
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 16"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4037,8 +4037,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dd8be1a0-e023-4681-8ad6-dbe7f70395f4_gradcam.jpg",
-          "sha256": "a5735e3f0c6e4bb9e102071ebba2b02ec422f8f2e4ef148ada818c9d9f4594b0",
-          "size_bytes": 21978
+          "sha256": "2e37f36f334079513e88791642333a8c8d57250096e9adb7cd8ed2eb3098a400",
+          "size_bytes": 416825
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4048,6 +4048,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-05-09",
       "exam_key": "clinic_specialized_exam_17",
@@ -4066,8 +4067,7 @@
         "sha256": "c3ffb283899ec636b3c78110596c55e36f33d2a2b886e069356aa2fd57afd610",
         "size_bytes": 1043080
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 17"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4098,8 +4098,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/de2bfb04-2fd2-4034-b342-7a79be78c92a_gradcam.jpg",
-          "sha256": "e0632893b44f8f51d5917b5afd3aefb095d3780c9b56007f8315de96268364ab",
-          "size_bytes": 15055
+          "sha256": "fa278b0b2af3bc2662f6a8a4b8b3a55b4abe63c71e04d07843a2788b617341e4",
+          "size_bytes": 225147
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4109,6 +4109,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-05-14",
       "exam_key": "clinic_specialized_exam_18",
@@ -4127,8 +4128,7 @@
         "sha256": "ef4e65e18eeb7a2e147750e95a766ccc87579238c1073b7cd38933becba4f2ef",
         "size_bytes": 552107
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 18"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4159,8 +4159,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a4391f84-6aa1-4963-b0ad-b60b23f805e6_gradcam.jpg",
-          "sha256": "e5421f9d4a17c126e9c2efa41005ab9a23fb99215110b6a87686fb79dd90f659",
-          "size_bytes": 16781
+          "sha256": "8375bcc6b113d29a69edd8f03476c5147799321b4e9866c1bba68412a3622d71",
+          "size_bytes": 77217
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4170,6 +4170,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-05-19",
       "exam_key": "clinic_specialized_exam_19",
@@ -4184,13 +4185,13 @@
         "sha256": "0d0f4e227c1fd217beb0f9f70fcfadc4b314fdce5a8ed181e4c41b8e31ed9965",
         "size_bytes": 155871
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 19"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 20",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-05-24",
       "exam_key": "clinic_specialized_exam_20",
@@ -4205,8 +4206,7 @@
         "sha256": "1fbad4a55d84fbf805de8fc7c5c7a5892602f42a2abf3a5c0812087e43a39675",
         "size_bytes": 613469
       },
-      "status": "pending",
-      "description": "Colonoscopia demonstrativa 20"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -4237,8 +4237,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/df59d76a-9d60-4663-9adf-dedae66e1cf2_gradcam.jpg",
-          "sha256": "d246cafef4c787fde0a6033f81711c3b46354877f11a3ec24ccad38f92297f8f",
-          "size_bytes": 14342
+          "sha256": "ecbf4a37bf9e830454220f6de0675a52b1c448e51ef33be39adb088b51b8998b",
+          "size_bytes": 246050
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4248,6 +4248,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-06-04",
       "exam_key": "clinic_specialized_exam_21",
@@ -4266,8 +4267,7 @@
         "sha256": "3705adab21cd7d7923d4e58da91e831bd82a5487d69f51bc6cf5f04997fb8e20",
         "size_bytes": 614546
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 21"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4298,8 +4298,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e05779e5-50c8-4340-886c-72e46782ce79_gradcam.jpg",
-          "sha256": "880cd9d2ce4299d2df769905bea216b11ee428023b0971159fa6ec61dfb2348e",
-          "size_bytes": 18031
+          "sha256": "9c8b63c3bf0b67dedf3e51c05926f7293f81f5d13ce9164a14a7d76ebd2db469",
+          "size_bytes": 85460
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4309,6 +4309,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-06-09",
       "exam_key": "clinic_specialized_exam_22",
@@ -4327,8 +4328,7 @@
         "sha256": "f0a44fa69b726775d875955d99e0b7f3fbe7143d2e3b54268c2dd905b2ab679d",
         "size_bytes": 204822
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 22"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4359,8 +4359,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e062f910-d08b-4a98-8e96-a0ad1a744154_gradcam.jpg",
-          "sha256": "9680c5e5ad42f02ae0a13a9d31d2c8083373fc527359307d129f7596cb104be5",
-          "size_bytes": 14988
+          "sha256": "015893463f3ab5315f16fb7e2a85ef83288ba7a48a261958ecd0b4ee5f3b3772",
+          "size_bytes": 74206
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4370,6 +4370,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-06-14",
       "exam_key": "clinic_specialized_exam_23",
@@ -4388,8 +4389,7 @@
         "sha256": "5629b8bc4aeaac1e150c797ee45491de436cbd2b52f926f7b607420aa701eff2",
         "size_bytes": 156996
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 23"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4420,8 +4420,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a5302d7a-18f8-4c15-9daa-9b0777f855eb_gradcam.jpg",
-          "sha256": "aebda8d3b034e15276b56e92894be4acaa1ab4d00ed00c75bc4ee2400a100615",
-          "size_bytes": 12489
+          "sha256": "865c36363b8d9efbffa8d97794285d3444ec66daddaaa26dfb6cc61b8b5773b7",
+          "size_bytes": 59384
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4431,6 +4431,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-06-19",
       "exam_key": "clinic_specialized_exam_24",
@@ -4445,13 +4446,13 @@
         "sha256": "df265d4fcabfa78f813002d40882228a253cb9899fce9335ed21b8e8f2bdc0b8",
         "size_bytes": 125236
       },
-      "status": "awaiting_review",
-      "description": "Endoscopia demonstrativa 24"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-06-24",
       "exam_key": "clinic_specialized_exam_25",
@@ -4466,8 +4467,7 @@
         "sha256": "089eaf943ae848fcad629e6abb8c9a1538a2d56025675bcd2909e3dd842451c0",
         "size_bytes": 904291
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 25"
+      "status": "pending"
     },
     {
       "analysis": {
@@ -4498,8 +4498,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e11e8c02-40ee-479b-8a92-89a08eb96ca1_gradcam.jpg",
-          "sha256": "003a4fa9233894657249ae93fc96d0a3c215eb75d75ee5f40b1548289f4ac4c0",
-          "size_bytes": 12529
+          "sha256": "4996aa0ca0e6912bdc6b90e5a8858960f8127ed5154f4b4159eebfe257bbf2a5",
+          "size_bytes": 231608
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4509,6 +4509,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 26",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-07-04",
       "exam_key": "clinic_specialized_exam_26",
@@ -4527,8 +4528,7 @@
         "sha256": "4fae23b0694f300ce79201e04c9617231f682c46c8de1c2ae7342386144c94ba",
         "size_bytes": 449597
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 26"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4559,8 +4559,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e15c7bed-37ef-4720-a0c8-0f255cc8cf4b_gradcam.jpg",
-          "sha256": "5be2447a09216cfb5935aee17db381a2068fc3e55f70da1286f6586942f7772c",
-          "size_bytes": 12137
+          "sha256": "a67b4b095bfd342267e2a26ed123b9ebd689242198fbf34b35f2ff4bcea26b35",
+          "size_bytes": 216999
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4570,6 +4570,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 27",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-07-07",
       "exam_key": "clinic_specialized_exam_27",
@@ -4588,8 +4589,7 @@
         "sha256": "2fade61222724e5fbcce6ba42ba20ac173f4b32f1f84778ed3e15c78ac19d384",
         "size_bytes": 398839
       },
-      "status": "completed",
-      "description": "Colonoscopia demonstrativa 27"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4620,8 +4620,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e274b42b-5309-4234-bb68-8776817f4f1d_gradcam.jpg",
-          "sha256": "28398cb30cef1916b539bf51213ab0061a7445e7a965f7b56d6b4404f4d4bd00",
-          "size_bytes": 16103
+          "sha256": "e2378727c6b4a2db71004ed1b28e767628da1b427f83fe190a45bf679f808803",
+          "size_bytes": 75985
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4631,6 +4631,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 28",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-07-10",
       "exam_key": "clinic_specialized_exam_28",
@@ -4649,8 +4650,7 @@
         "sha256": "aa2d2afe798072c7782411b509b27c54cd6834bdeba31c1c6f19a0cc4143d688",
         "size_bytes": 189259
       },
-      "status": "completed",
-      "description": "Endoscopia demonstrativa 28"
+      "status": "completed"
     },
     {
       "analysis": {
@@ -4681,8 +4681,8 @@
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a673ca7c-b308-4a4d-8ef7-b13025b13371_gradcam.jpg",
-          "sha256": "8d7e808c351312bfb4493be5793bc026d098e9ff10a96fc54c793e4968210100",
-          "size_bytes": 18758
+          "sha256": "2b34b271ed372bf31670b8a88d525a37a1dade4d5346fa9ebf9222a52bb1ac35",
+          "size_bytes": 81635
         },
         "model_name": "ensemble_stacking",
         "model_version": "0.1.1",
@@ -4692,6 +4692,7 @@
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-07-13",
       "exam_key": "clinic_specialized_exam_29",
@@ -4706,13 +4707,13 @@
         "sha256": "b1e77cfe9a60bcfc58a15dc065939993653f498cd0a03bda00adb51e597a21aa",
         "size_bytes": 160391
       },
-      "status": "awaiting_review",
-      "description": "Colonoscopia demonstrativa 29"
+      "status": "awaiting_review"
     },
     {
       "analysis": null,
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_specialized",
       "exam_date": "2026-07-16",
       "exam_key": "clinic_specialized_exam_30",
@@ -4727,8 +4728,7 @@
         "sha256": "1fc5267c710d6082b65d5472b91d6e9faa33a237930a692134c81de88aff2ca3",
         "size_bytes": 183654
       },
-      "status": "pending",
-      "description": "Endoscopia demonstrativa 30"
+      "status": "pending"
     }
   ],
   "model": {
