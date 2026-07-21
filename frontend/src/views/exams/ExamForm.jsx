@@ -1092,147 +1092,122 @@ const ExamForm = ({ mode = 'create' }) => {
 
       <CCardBody>
         <CForm onSubmit={handleSubmit}>
-          <CRow className="g-3">
-            <CCol md={6}>
-              <div className="text-body-secondary small mb-1">Clínica</div>
+          <CRow className="g-3 align-items-start">
+            <CCol lg={8}>
+              <CRow className="g-3">
+                <CCol md={6}>
+                  <div className="text-body-secondary small mb-1">Clínica</div>
 
-              <div className="fw-semibold">{selectedClinicName}</div>
-            </CCol>
+                  <div className="fw-semibold">{selectedClinicName}</div>
+                </CCol>
 
-            <CCol md={6}>
-              <div className="text-body-secondary small mb-1">Médico responsável</div>
+                <CCol md={6}>
+                  <div className="text-body-secondary small mb-1">Médico responsável</div>
 
-              <div className="fw-semibold">{responsibleDoctorName}</div>
-            </CCol>
+                  <div className="fw-semibold">{responsibleDoctorName}</div>
+                </CCol>
 
-            <CCol md={8}>
-              <CFormLabel htmlFor="exam-patient-search">Paciente</CFormLabel>
+                <CCol md={9}>
+                  <CFormLabel htmlFor="exam-patient-search">Paciente</CFormLabel>
 
-              <CFormInput
-                id="exam-patient-search"
-                type="text"
-                list="exam-patient-options"
-                value={patientSearchValue}
-                placeholder="Digite ou selecione o paciente"
-                autoComplete="off"
-                aria-autocomplete="list"
-                onChange={handlePatientSearchChange}
-                required
-              />
+                  <CFormInput
+                    id="exam-patient-search"
+                    type="text"
+                    list="exam-patient-options"
+                    value={patientSearchValue}
+                    placeholder="Digite ou selecione o paciente"
+                    autoComplete="off"
+                    aria-autocomplete="list"
+                    onChange={handlePatientSearchChange}
+                    required
+                  />
 
-              <datalist id="exam-patient-options">
-                {availablePatients.map((patient) => (
-                  <option key={patient.id} value={buildPatientOptionLabel(patient)} />
-                ))}
-              </datalist>
-            </CCol>
+                  <datalist id="exam-patient-options">
+                    {availablePatients.map((patient) => (
+                      <option key={patient.id} value={buildPatientOptionLabel(patient)} />
+                    ))}
+                  </datalist>
+                </CCol>
 
-            <CCol md={2}>
-              <div className="text-body-secondary small mb-1">CPF</div>
+                <CCol md={3}>
+                  <div className="text-body-secondary small mb-1">CPF</div>
 
-              <div className="fw-semibold pt-2">{selectedPatientCpf}</div>
-            </CCol>
+                  <div className="fw-semibold pt-2">{selectedPatientCpf}</div>
+                </CCol>
 
-            <CCol md={2}>
-              <div className="text-body-secondary small mb-1">Idade</div>
+                <CCol md={6}>
+                  <CFormLabel>Tipo de exame</CFormLabel>
 
-              <div className="fw-semibold pt-2">
-                {selectedPatientAge === '-' ? '-' : `${selectedPatientAge} anos`}
-              </div>
-            </CCol>
-
-            <CCol md={6}>
-              <CFormLabel>Descrição</CFormLabel>
-
-              <CFormInput
-                value={form.description}
-                placeholder="Ex: Colonoscopia de rastreamento"
-                onChange={(event) => updateField('description', event.target.value)}
-                required
-              />
-            </CCol>
-
-            <CCol md={4}>
-              <CFormLabel>Tipo de exame</CFormLabel>
-
-              <CFormSelect
-                value={form.exam_type}
-                onChange={(event) => updateField('exam_type', event.target.value)}
-                required
-              >
-                <option value="">Selecione...</option>
-
-                {examTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CCol>
-
-            <CCol md={2}>
-              <CFormLabel>Data do exame</CFormLabel>
-
-              <CFormInput
-                type="date"
-                value={form.exam_date}
-                onChange={(event) => updateField('exam_date', event.target.value)}
-              />
-            </CCol>
-
-            <CCol md={6}>
-              <div className="mb-3">
-                <CFormLabel>Indicação clínica</CFormLabel>
-
-                <CFormTextarea
-                  rows={5}
-                  value={form.clinical_indication}
-                  placeholder="Motivo pelo qual o exame foi solicitado ou realizado."
-                  onChange={(event) => updateField('clinical_indication', event.target.value)}
-                />
-              </div>
-
-              <div>
-                <CFormLabel>Observações</CFormLabel>
-
-                <CFormTextarea
-                  rows={5}
-                  value={form.observations}
-                  placeholder="Informações adicionais relacionadas ao cadastro do exame."
-                  onChange={(event) => updateField('observations', event.target.value)}
-                />
-              </div>
-            </CCol>
-
-            <CCol md={6}>
-              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <CFormLabel>Imagem do exame</CFormLabel>
-
-                {isEditMode && canDownloadExamFile && originalImageUrl && (
-                  <CButton
-                    color="primary"
-                    className="clinicai-btn d-inline-flex align-items-center"
-                    size="sm"
-                    type="button"
-                    onClick={handleOriginalDownload}
-                    disabled={isOriginalDownloading}
-                    title="Baixar imagem do exame"
-                    aria-label="Baixar imagem do exame"
+                  <CFormSelect
+                    value={form.exam_type}
+                    onChange={(event) => updateField('exam_type', event.target.value)}
+                    required
                   >
-                    {isOriginalDownloading ? (
-                      <>
-                        <CSpinner size="sm" className="me-2" />
-                        Baixando...
-                      </>
-                    ) : (
-                      <>
-                        <CIcon icon={cilCloudDownload} className="me-2" />
-                        Baixar
-                      </>
-                    )}
-                  </CButton>
-                )}
-              </div>
+                    <option value="">Selecione...</option>
+
+                    {examTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+
+                <CCol md={3}>
+                  <CFormLabel>Data do exame</CFormLabel>
+
+                  <CFormInput
+                    type="date"
+                    value={form.exam_date}
+                    onChange={(event) => updateField('exam_date', event.target.value)}
+                  />
+                </CCol>
+
+                <CCol md={3}>
+                  <div className="text-body-secondary small mb-1">Idade</div>
+
+                  <div className="fw-semibold pt-2">
+                    {selectedPatientAge === '-' ? '-' : `${selectedPatientAge} anos`}
+                  </div>
+                </CCol>
+
+                <CCol md={12}>
+                  <CFormLabel>Descrição</CFormLabel>
+
+                  <CFormInput
+                    value={form.description}
+                    placeholder="Ex: Colonoscopia de rastreamento"
+                    onChange={(event) => updateField('description', event.target.value)}
+                    required
+                  />
+                </CCol>
+
+                <CCol md={12}>
+                  <CFormLabel>Indicação clínica</CFormLabel>
+
+                  <CFormTextarea
+                    rows={3}
+                    value={form.clinical_indication}
+                    placeholder="Motivo pelo qual o exame foi solicitado ou realizado."
+                    onChange={(event) => updateField('clinical_indication', event.target.value)}
+                  />
+                </CCol>
+
+                <CCol md={12}>
+                  <CFormLabel>Observações</CFormLabel>
+
+                  <CFormTextarea
+                    rows={3}
+                    value={form.observations}
+                    placeholder="Informações adicionais relacionadas ao cadastro do exame."
+                    onChange={(event) => updateField('observations', event.target.value)}
+                  />
+                </CCol>
+              </CRow>
+            </CCol>
+
+            <CCol lg={4}>
+              <CFormLabel>Imagem do exame</CFormLabel>
 
               <CFormInput
                 key={fileInputKey}
@@ -1288,6 +1263,30 @@ const ExamForm = ({ mode = 'create' }) => {
                   </div>
                 )}
               </div>
+
+              {isEditMode && canDownloadExamFile && originalImageUrl && (
+                <CButton
+                  color="primary"
+                  className="clinicai-btn d-flex align-items-center justify-content-center w-100 mt-3"
+                  type="button"
+                  onClick={handleOriginalDownload}
+                  disabled={isOriginalDownloading}
+                  title="Baixar imagem do exame"
+                  aria-label="Baixar imagem do exame"
+                >
+                  {isOriginalDownloading ? (
+                    <>
+                      <CSpinner size="sm" className="me-2" />
+                      Baixando...
+                    </>
+                  ) : (
+                    <>
+                      <CIcon icon={cilCloudDownload} className="me-2" />
+                      Baixar imagem
+                    </>
+                  )}
+                </CButton>
+              )}
             </CCol>
           </CRow>
 
@@ -1423,7 +1422,7 @@ const ExamForm = ({ mode = 'create' }) => {
           <div className="text-body-secondary">Registros de Saúde</div>
 
           <div className="d-flex flex-wrap align-items-center gap-2">
-            <h1 className="h3 mb-0">{isCreateMode ? title : form.description || title}</h1>
+            <h1 className="h3 mb-0 clinicai-page-title">{isCreateMode ? title : form.description || title}</h1>
 
             {!isCreateMode && form.status_name && (
               <CBadge color={statusColors[form.status_name] || 'secondary'}>
