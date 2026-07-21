@@ -8,6 +8,22 @@ import api from 'src/services/api'
 
 export const clinicService = {
   /**
+   * Busca a clínica vinculada ao usuário autenticado.
+   */
+  getMyClinic: async () => {
+    const response = await api.get('/clinics/me')
+    return response.data
+  },
+
+  /**
+   * Atualiza os dados cadastrais da própria clínica.
+   * O status só pode ser alterado pelo administrador nas rotas dedicadas.
+   */
+  updateMyClinic: async (payload) => {
+    const response = await api.patch('/clinics/me', payload)
+    return response.data
+  },
+  /**
    * Lista todas as clínicas cadastradas.
    */
   list: async ({ search = '', includeInactive = true } = {}) => {

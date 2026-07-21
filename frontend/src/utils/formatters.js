@@ -1,6 +1,6 @@
 /**
  * Funções utilitárias de formatação.
- * 
+ *
  * Usadas para:
  * - limpar máscaras antes de enviar dados ao backend;
  * - exibir CNPJ, telefone e CEP no padrão brasileiro;
@@ -12,7 +12,6 @@
  */
 export const onlyNumbers = (value = '') => {
   return String(value).replace(/\D/g, '')
-  
 }
 
 /**
@@ -26,6 +25,32 @@ export const formatCpfBR = (value = '') => {
     .replace(/^(\d{3})(\d)/, '$1.$2')
     .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1-$2')
+}
+
+/**
+ * Valida CNPJ pelos dígitos verificadores oficiais.
+ */
+export const isValidCnpj = (value = '') => {
+  const numbers = onlyNumbers(value)
+
+  if (numbers.length !== 14 || /^(\d)\1+$/.test(numbers)) {
+    return false
+  }
+
+  const calculateDigit = (length, weights) => {
+    const sum = numbers
+      .slice(0, length)
+      .split('')
+      .reduce((total, digit, index) => total + Number(digit) * weights[index], 0)
+
+    const remainder = sum % 11
+    return remainder < 2 ? 0 : 11 - remainder
+  }
+
+  const firstDigit = calculateDigit(12, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+  const secondDigit = calculateDigit(13, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+
+  return numbers.endsWith(`${firstDigit}${secondDigit}`)
 }
 
 /**
@@ -60,6 +85,20 @@ export const formatDateTimeBR = (value) => {
 }
 
 /**
+ * Formata uma data civil sem convertê-la em instante nem aplicar fuso.
+ * YYYY-MM-DD -> DD/MM/YYYY
+ */
+export const formatDateBR = (value) => {
+  if (!value) return '-'
+
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return '-'
+
+  const [, year, month, day] = match
+  return `${day}/${month}/${year}`
+}
+
+/**
  * Formata telefone fixo ou celular:
  * 88999998888 -> (88) 99999-8888
  * 8833334444  -> (88) 3333-4444
@@ -68,14 +107,10 @@ export const formatPhoneBR = (value = '') => {
   const numbers = onlyNumbers(value).slice(0, 11)
 
   if (numbers.length <= 10) {
-    return numbers
-      .replace(/^(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
+    return numbers.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
   }
 
-  return numbers
-    .replace(/^(\d{2})(\d)/, '($1) $2')
-    .replace(/(\d{5})(\d)/, '$1-$2')
+  return numbers.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
 }
 
 /**

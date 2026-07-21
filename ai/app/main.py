@@ -1,84 +1,95 @@
-"""
-API de Inteligência Artificial do ClinicAI.
+"""API multi-domínio de Inteligência Artificial do ClinicAI."""
 
-Este serviço recebe imagens de exames, resolve automaticamente qual
-modelo usar (conforme o tipo de exame informado) e retorna o resultado
-da análise. Ver `app/inference/domains/README.md` para como adicionar
-um domínio clínico novo (ex: tomografia de cabeça, mamografia).
-"""
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import JSONResponse
 
-from app.schemas import PredictionResponse
-from app.inference import domains  # noqa: F401  (registra os modelos disponíveis)
+from app.config import MAX_INFERENCE_IMAGE_BYTES
+from app.inference import domains  # noqa: F401
 from app.inference.predictor import predict_image
-from app.inference.registry import available_domains, available_models
+from app.inference.preprocess import InvalidImageError
+from app.inference.registry import (
+    ModelConfigurationError,
+    UnsupportedExamTypeError,
+    resolve_exam_domain,
+)
+from app.inference.runtime import (
+    initialize_runtime,
+    is_runtime_ready,
+    model_catalog,
+    runtime_snapshot,
+)
+from app.schemas import PredictionResponse
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    initialize_runtime(force=True)
+    yield
+
 
 app = FastAPI(
     title="ClinicAI AI Service",
-    description="Serviço de inferência de IA para análise de exames médicos.",
-    version="0.1.0",
+    description="Serviço de inferência multi-domínio para imagens médicas.",
+    version="0.2.0",
+    lifespan=lifespan,
 )
 
 
 @app.get("/")
 def root():
-    """
-    Rota inicial da API de IA.
-    """
     return {
         "message": "ClinicAI AI Service is running",
-        "version": "0.1.0",
+        "version": "0.2.0",
+        "ready": is_runtime_ready(),
     }
 
 
 @app.get("/health")
 def health_check():
-    """
-    Rota de verificação de saúde do serviço.
-    """
-    return {
-        "status": "ok",
-        "service": "clinicai-ai",
-    }
+    snapshot = runtime_snapshot()
+    return JSONResponse(
+        content=snapshot,
+        status_code=status.HTTP_200_OK if snapshot["ready"] else status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
 
 
 @app.get("/models")
 def list_models():
-    """
-    Lista os domínios clínicos e modelos preditivos registrados — útil
-    para conferir rapidamente quais modelos o serviço tem disponíveis e
-    de qual domínio, sem precisar consultar o código.
-    """
-    from app.config import ACTIVE_MODEL_BY_DOMAIN, EXAM_TYPE_TO_DOMAIN
-
-    return {
-        "domains": {
-            domain: {
-                "active_model": ACTIVE_MODEL_BY_DOMAIN.get(domain),
-                "available_models": available_models(domain),
-            }
-            for domain in available_domains()
-        },
-        "exam_type_to_domain": EXAM_TYPE_TO_DOMAIN,
-    }
+    return model_catalog()
 
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict_exam_image(
     file: UploadFile = File(...),
-    exam_type: str | None = Form(default=None),
+    exam_type: str = Form(...),
 ):
-    """
-    Recebe uma imagem de exame e retorna a predição do modelo
-    correspondente ao tipo de exame informado.
+    if not is_runtime_ready():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="O serviço de IA ainda não carregou todos os artefatos.",
+        )
 
-    `exam_type` é opcional — se omitido, usa `app.config.DEFAULT_DOMAIN`.
-    Isso mantém a rota funcionando mesmo para chamadas antigas/manuais
-    que não enviam o campo, mas o backend principal sempre deve enviá-lo.
-    """
-    image_bytes = await file.read()
+    try:
+        resolve_exam_domain(exam_type)
+    except UnsupportedExamTypeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    prediction = predict_image(image_bytes, exam_type=exam_type)
+    image_bytes = await file.read(MAX_INFERENCE_IMAGE_BYTES + 1)
+    if len(image_bytes) > MAX_INFERENCE_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="Imagem acima do limite permitido.")
+
+    try:
+        prediction = predict_image(image_bytes, exam_type=exam_type)
+    except InvalidImageError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except UnsupportedExamTypeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (FileNotFoundError, ModelConfigurationError, RuntimeError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="O modelo solicitado não está disponível para inferência.",
+        ) from exc
 
     return PredictionResponse(**prediction)

@@ -6,6 +6,7 @@ O router deve ficar mais limpo e apenas chamar essas funções.
 """
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.access_control import (
@@ -16,10 +17,12 @@ from app.common.access_control import (
 from app.common.constants import AuditAction, AuditEntity, RoleName, StatusName, StatusScope
 from app.common.services import (
     apply_update_data,
+    get_user_role_name,
     model_dump_update,
     serialize_for_json,
 )
 from app.modules.clinics.model import Clinic
+from app.modules.exams.model import Exam
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
@@ -152,6 +155,64 @@ def check_patient_duplicate(
         )
 
 
+def patient_has_exams(db: Session, patient_id: int) -> bool:
+    """Informa se o paciente já possui histórico de exames."""
+
+    return (
+        db.query(Exam.id)
+        .filter(Exam.patient_id == patient_id)
+        .first()
+        is not None
+    )
+
+
+def validate_patient_assignment_change(
+    db: Session,
+    *,
+    patient: Patient,
+    current_user: User,
+    new_clinic_id: int,
+    new_doctor_id: int,
+) -> bool:
+    """Valida troca de clínica ou médico responsável.
+
+    Política acadêmica adotada na CHK-08:
+    - médico não transfere nem reatribui pacientes;
+    - gestor pode reatribuir somente dentro da própria clínica;
+    - administrador pode transferir entre clínicas;
+    - qualquer mudança de vínculo é bloqueada quando já existe exame,
+      preservando RN05/RN06 e evitando divergência histórica.
+    """
+
+    assignment_changed = (
+        new_clinic_id != patient.clinic_id
+        or new_doctor_id != patient.doctor_id
+    )
+    if not assignment_changed:
+        return False
+
+    role_name = get_user_role_name(current_user)
+    if role_name == RoleName.DOCTOR.value:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Médicos não podem transferir o paciente nem alterar o "
+                "médico responsável."
+            ),
+        )
+
+    if patient_has_exams(db, patient.id):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Não é possível alterar a clínica ou o médico responsável "
+                "porque o paciente já possui exames vinculados."
+            ),
+        )
+
+    return True
+
+
 def build_patient_response(patient: Patient) -> dict:
     """
     Monta a resposta do paciente com dados relacionados.
@@ -213,11 +274,37 @@ def list_patients(
     db: Session,
     *,
     include_inactive: bool = False,
+    search: str | None = None,
+    clinic_id: int | None = None,
+    doctor_id: int | None = None,
     current_user: User,
 ) -> list[dict]:
+    """Lista pacientes sem permitir que filtros ampliem o escopo do usuário.
+
+    Escopo documentado:
+    - admin_master: todos os pacientes;
+    - clinic_manager: pacientes da própria clínica;
+    - doctor: somente pacientes sob sua responsabilidade.
     """
-    Lista pacientes conforme perfil do usuário.
-    """
+
+    role_name = get_user_role_name(current_user)
+
+    if clinic_id is not None and role_name != RoleName.ADMIN_MASTER.value:
+        validate_user_can_access_clinic(
+            current_user=current_user,
+            clinic_id=clinic_id,
+        )
+
+    if (
+        doctor_id is not None
+        and role_name == RoleName.DOCTOR.value
+        and doctor_id != current_user.id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Médicos só podem filtrar os próprios pacientes.",
+        )
+
     query = (
         db.query(Patient)
         .options(
@@ -228,20 +315,35 @@ def list_patients(
         .join(Status, Patient.status_id == Status.id)
     )
 
-    if not include_inactive:
-        query = query.filter(
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.PATIENT.value,
-        )
-
     query = filter_query_by_user_scope(
         query=query,
         model=Patient,
         current_user=current_user,
     )
 
-    patients = query.order_by(Patient.name.asc()).all()
+    if not include_inactive:
+        query = query.filter(
+            Status.name == StatusName.ACTIVE.value,
+            Status.applies_to == StatusScope.PATIENT.value,
+        )
 
+    if clinic_id is not None:
+        query = query.filter(Patient.clinic_id == clinic_id)
+
+    if doctor_id is not None:
+        query = query.filter(Patient.doctor_id == doctor_id)
+
+    if search:
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Patient.name.ilike(term),
+                Patient.cpf.ilike(term),
+                Patient.email.ilike(term),
+            )
+        )
+
+    patients = query.order_by(Patient.name.asc()).all()
     return [build_patient_response(patient) for patient in patients]
 
 
@@ -250,14 +352,12 @@ def create_patient(
     payload: PatientCreate,
     current_user: User,
 ) -> dict:
-    """
-    Cria um novo paciente.
-    """
+    """Cria paciente com clínica e médico validados no backend."""
+
     validate_user_can_access_clinic(
         current_user=current_user,
         clinic_id=payload.clinic_id,
     )
-
     validate_clinic_is_active(db=db, clinic_id=payload.clinic_id)
 
     active_status = get_status_by_name_and_applies_to(
@@ -273,8 +373,12 @@ def create_patient(
     )
 
     doctor_id = payload.doctor_id
-
-    if current_user.role and current_user.role.name == RoleName.DOCTOR.value:
+    if get_user_role_name(current_user) == RoleName.DOCTOR.value:
+        if payload.doctor_id != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="O médico só pode cadastrar pacientes sob sua responsabilidade.",
+            )
         doctor_id = current_user.id
 
     validate_doctor_can_be_assigned(
@@ -305,7 +409,6 @@ def create_patient(
     db.add(patient)
     db.flush()
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -330,10 +433,7 @@ def create_patient(
 
     db.commit()
     db.refresh(patient)
-
-    patient = get_patient_by_id(db=db, patient_id=patient.id)
-
-    return build_patient_response(patient)
+    return build_patient_response(get_patient_by_id(db=db, patient_id=patient.id))
 
 
 def get_patient(
@@ -360,48 +460,47 @@ def update_patient(
     payload: PatientUpdate,
     current_user: User,
 ) -> dict:
-    """
-    Atualiza parcialmente um paciente.
-    """
-    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    """Atualiza paciente e aplica a política de transferência da CHK-08."""
 
-    validate_user_can_access_patient(
-        patient=patient,
-        current_user=current_user,
-    )
+    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    validate_user_can_access_patient(patient=patient, current_user=current_user)
 
     update_data = model_dump_update(payload)
-    audit_new_data = serialize_for_json(update_data)
-
     if not update_data:
         return build_patient_response(patient)
+
+    required_fields = {
+        "clinic_id": "O paciente deve permanecer vinculado a uma clínica.",
+        "doctor_id": "O paciente deve permanecer vinculado a um médico.",
+        "name": "Nome do paciente é obrigatório.",
+        "cpf": "CPF do paciente é obrigatório.",
+    }
+    for field, detail in required_fields.items():
+        if field in update_data and update_data[field] is None:
+            raise HTTPException(status_code=400, detail=detail)
 
     new_clinic_id = update_data.get("clinic_id", patient.clinic_id)
     new_doctor_id = update_data.get("doctor_id", patient.doctor_id)
     new_cpf = update_data.get("cpf", patient.cpf)
 
-    if new_doctor_id is None:
-        raise HTTPException(
-            status_code=400,
-            detail="O paciente deve permanecer vinculado a um médico.",
-        )
+    assignment_changed = validate_patient_assignment_change(
+        db=db,
+        patient=patient,
+        current_user=current_user,
+        new_clinic_id=new_clinic_id,
+        new_doctor_id=new_doctor_id,
+    )
 
     validate_user_can_access_clinic(
         current_user=current_user,
         clinic_id=new_clinic_id,
     )
-
-    validate_clinic_is_active(
-        db=db,
-        clinic_id=new_clinic_id,
-    )
-
+    validate_clinic_is_active(db=db, clinic_id=new_clinic_id)
     validate_doctor_can_be_assigned(
         db=db,
         doctor_id=new_doctor_id,
         clinic_id=new_clinic_id,
     )
-
     check_patient_duplicate(
         db=db,
         clinic_id=new_clinic_id,
@@ -430,10 +529,12 @@ def update_patient(
         "city": patient.city,
         "state": patient.state,
     }
-    
-    apply_update_data(patient, update_data)
 
-    # Adiciona log
+    apply_update_data(patient, update_data)
+    audit_new_data = serialize_for_json(update_data)
+    if assignment_changed:
+        audit_new_data["assignment_changed"] = True
+
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -441,17 +542,18 @@ def update_patient(
         action=AuditAction.UPDATE,
         entity=AuditEntity.PATIENT,
         entity_id=patient.id,
-        description="Paciente atualizado.",
+        description=(
+            "Vínculo do paciente atualizado."
+            if assignment_changed
+            else "Paciente atualizado."
+        ),
         old_data=old_data,
         new_data=audit_new_data,
     )
-    
+
     db.commit()
     db.refresh(patient)
-
-    patient = get_patient_by_id(db=db, patient_id=patient.id)
-
-    return build_patient_response(patient)
+    return build_patient_response(get_patient_by_id(db=db, patient_id=patient.id))
 
 
 def activate_patient(
@@ -459,14 +561,19 @@ def activate_patient(
     patient_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Ativa um paciente.
-    """
-    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    """Ativa paciente somente com clínica e médico ainda válidos."""
 
-    validate_user_can_access_patient(
-        patient=patient,
-        current_user=current_user,
+    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    validate_user_can_access_patient(patient=patient, current_user=current_user)
+
+    if patient.status and patient.status.name == StatusName.ACTIVE.value:
+        return build_patient_response(patient)
+
+    validate_clinic_is_active(db=db, clinic_id=patient.clinic_id)
+    validate_doctor_can_be_assigned(
+        db=db,
+        doctor_id=patient.doctor_id,
+        clinic_id=patient.clinic_id,
     )
 
     active_status = get_status_by_name_and_applies_to(
@@ -479,7 +586,6 @@ def activate_patient(
         "status_id": patient.status_id,
         "status_name": patient.status.name if patient.status else None,
     }
-
     patient.status_id = active_status.id
 
     create_audit_log(
@@ -499,10 +605,7 @@ def activate_patient(
 
     db.commit()
     db.refresh(patient)
-
-    patient = get_patient_by_id(db=db, patient_id=patient.id)
-
-    return build_patient_response(patient)
+    return build_patient_response(get_patient_by_id(db=db, patient_id=patient.id))
 
 
 def inactivate_patient(
@@ -510,15 +613,13 @@ def inactivate_patient(
     patient_id: int,
     current_user: User,
 ) -> dict:
-    """
-    Inativa um paciente.
-    """
-    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    """Inativa paciente de forma lógica e idempotente."""
 
-    validate_user_can_access_patient(
-        patient=patient,
-        current_user=current_user,
-    )
+    patient = get_patient_by_id(db=db, patient_id=patient_id)
+    validate_user_can_access_patient(patient=patient, current_user=current_user)
+
+    if patient.status and patient.status.name == StatusName.INACTIVE.value:
+        return build_patient_response(patient)
 
     inactive_status = get_status_by_name_and_applies_to(
         db=db,
@@ -530,10 +631,8 @@ def inactivate_patient(
         "status_id": patient.status_id,
         "status_name": patient.status.name if patient.status else None,
     }
-
     patient.status_id = inactive_status.id
 
-    # Adiciona log
     create_audit_log(
         db=db,
         user_id=current_user.id,
@@ -551,7 +650,4 @@ def inactivate_patient(
 
     db.commit()
     db.refresh(patient)
-
-    patient = get_patient_by_id(db=db, patient_id=patient.id)
-
-    return build_patient_response(patient)
+    return build_patient_response(get_patient_by_id(db=db, patient_id=patient.id))

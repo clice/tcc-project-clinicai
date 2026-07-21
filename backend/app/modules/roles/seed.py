@@ -28,7 +28,7 @@ def get_or_create_role(
     )
 
     db.add(role)
-    db.commit()
+    db.flush()
     db.refresh(role)
 
     return role
@@ -40,7 +40,7 @@ def seed_roles(db: Session) -> dict[str, Role]:
             db,
             name=RoleName.ADMIN_MASTER,
             display_name="Administrador Master",
-            description="Administrador com acesso total ao sistema.",
+            description="Administrador da estrutura do sistema, sem acesso aos detalhes clínicos, às imagens, às análises de IA ou à revisão médica dos exames.",
         ),
         "doctor": get_or_create_role(
             db,
@@ -48,11 +48,10 @@ def seed_roles(db: Session) -> dict[str, Role]:
             display_name="Médico",
             description="Profissional médico vinculado a uma clínica.",
         ),
-        "clinic_staff": get_or_create_role(
+        "clinic_manager": get_or_create_role(
             db,
-            name=RoleName.CLINIC_STAFF,
-            display_name="Funcionário da clínica",
-            description="Funcionário da clínica com acesso operacional ao sistema.",
+            name=RoleName.CLINIC_MANAGER,
+            display_name="Gestor da Clínica",
+            description="Gestor responsável pela operação e pelos médicos da própria clínica.",
         ),
     }
-    

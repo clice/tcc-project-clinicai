@@ -2,7 +2,7 @@
  * Listagem de perfis.
  *
  * Exibe os perfis cadastrados no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * a edição dos dados e das permissões.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -41,7 +41,13 @@ const RolesList = () => {
   }, [])
 
   useEffect(() => {
-    void loadRoles()
+    const timeoutId = window.setTimeout(() => {
+      void loadRoles()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadRoles])
 
   const columns = useMemo(
@@ -54,12 +60,7 @@ const RolesList = () => {
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/roles/${row.original.id}`}
-            editTo={`/roles/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/roles/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],
@@ -71,26 +72,26 @@ const RolesList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Configurações</div>
-          <h1 className="h3 mb-0">Perfis</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Perfis</h1>
           <p className="text-body-secondary mb-0">
             Gerencie os perfis de acesso usados no sistema.
           </p>
         </div>
         {/* Botão "Cadastrar Perfil" removido: os 3 perfis oficiais
-            (admin_master, doctor, clinic_staff) são um enum fechado no
+            (admin_master, doctor, clinic_manager) são um enum fechado no
             backend e já vêm seedados — qualquer tentativa de criação
             resultaria em duplicidade ou em um nome fora do enum. Os
             perfis existentes continuam editáveis (nome de exibição,
             descrição e matriz de permissões). */}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <AppTable data={roles} columns={columns} emptyMessage="Nenhum perfil encontrado." />

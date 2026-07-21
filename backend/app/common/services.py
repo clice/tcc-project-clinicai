@@ -83,6 +83,13 @@ def is_admin_master(user: User) -> bool:
     return get_user_role_name(user) == RoleName.ADMIN_MASTER.value
 
 
+def is_clinic_manager(user: User) -> bool:
+    """
+    Verifica se o usuário autenticado é gestor de clínica.
+    """
+    return get_user_role_name(user) == RoleName.CLINIC_MANAGER.value
+
+
 def ensure_user_has_clinic(user: User) -> int:
     """
     Garante que o usuário está vinculado a uma clínica.

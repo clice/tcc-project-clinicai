@@ -5,6 +5,8 @@ Este arquivo lê as variáveis de ambiente do projeto e disponibiliza
 uma instância única de configuração para uso em todo o backend.
 """
 
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,14 +24,32 @@ class Settings(BaseSettings):
 
     # URL de conexão com o banco PostgreSQL
     database_url: str
+
+    # Dados iniciais. ``bootstrap`` cria os catálogos estruturais e um
+    # Administrador Master inicial. ``academic_demo`` acrescenta somente
+    # registros fictícios para a demonstração acadêmica.
+    seed_mode: Literal["bootstrap", "academic_demo"] = "bootstrap"
+    bootstrap_admin_name: str = "Administrador Master"
+    bootstrap_admin_email: str = "admin@clinicai.com"
+    bootstrap_admin_cpf: str = "39053344705"
+    bootstrap_admin_password: str = "clinicai123"
     
-    # Uploads
+    # Raiz única dos dados operacionais.
+    # Será montada como /app/data nos containers.
+    clinicai_data_dir: str = "/app/data"
+
+    # Caminho legado dos uploads, preservado durante a migração.
     upload_dir: str = "uploads"
+
     max_upload_size_mb: int = 10
+    max_image_width_px: int = 12000
+    max_image_height_px: int = 12000
+    max_image_pixels: int = 40_000_000
 
     # Serviço de IA (container separado, ver docker-compose.yml)
     ai_service_url: str = "http://ai:8001"
     ai_service_timeout_seconds: int = 120
+    ai_storage_dir: str = "/app/storage"
 
     # Configurações de autenticação JWT
     secret_key: str

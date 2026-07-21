@@ -5,7 +5,7 @@
 export const ROLES = {
   ADMIN_MASTER: 'admin_master',
   DOCTOR: 'doctor',
-  CLINIC_STAFF: 'clinic_staff',
+  CLINIC_MANAGER: 'clinic_manager',
 }
 
 /**
@@ -57,6 +57,7 @@ export const PERMISSIONS = {
 
   // EXAMS
   EXAMS_CREATE: 'exams:create',
+  EXAMS_LIST: 'exams:list',
   EXAMS_READ: 'exams:read',
   EXAMS_UPDATE: 'exams:update',
   EXAMS_CHANGE_STATUS: 'exams:change_status',
@@ -78,7 +79,7 @@ export const PERMISSIONS = {
  */
 export const isAdminMaster = (roleName) => roleName === ROLES.ADMIN_MASTER
 export const isDoctor = (roleName) => roleName === ROLES.DOCTOR
-export const isClinicStaff = (roleName) => roleName === ROLES.CLINIC_STAFF
+export const isClinicManager = (roleName) => roleName === ROLES.CLINIC_MANAGER
 
 /**
  * Normaliza a role do usuário.

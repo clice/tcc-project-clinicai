@@ -1,24 +1,8 @@
 /**
- * Componente de proteção de rota por perfil e/ou permissão.
+ * Protege páginas por perfil e permissão.
  *
- * Ele impede que usuários sem a role/permissão necessária acessem
- * páginas restritas, mesmo digitando a URL diretamente no navegador.
- *
- * Duas formas de proteção, escolha conforme o tipo de regra (achado
- * FE-02 de revisão):
- * - `requiredPermission`: para áreas operacionais (pacientes, exames,
- *   clínicas) onde o acesso real depende da matriz de permissões da
- *   role, não do nome da role em si — se um admin remover
- *   "patients:read" do Médico, a rota passa a bloquear sozinha, sem
- *   precisar editar routes.js.
- * - `allowedRoles`: para regras clínicas não-delegáveis (ex: revisão
- *   médica) e para a área de configuração estrutural do sistema (Perfis,
- *   Permissões, Vínculos, Status), que é exclusiva do Administrador
- *   Master por decisão arquitetural, não por permissão dinâmica (ver
- *   nota em `utils/permissions.js`).
- *
- * Se `requiredPermission` for informado, ele tem prioridade — é a
- * checagem mais fiel ao que o backend realmente vai aplicar.
+ * Quando uma rota declara as duas restrições, ambas precisam ser atendidas:
+ * a role define o perfil autorizado e a permissão confirma a capacidade.
  */
 
 import React from 'react'
@@ -29,21 +13,15 @@ import { getUserRole, hasPermission } from 'src/utils/permissions'
 
 const RoleRoute = ({ children, allowedRoles = [], requiredPermission = null }) => {
   const { user } = useAuth()
-
-  if (requiredPermission) {
-    if (!hasPermission(user, requiredPermission)) {
-      return <Navigate to="/dashboard" replace />
-    }
-    return children
-  }
-
-  if (!allowedRoles || allowedRoles.length === 0) {
-    return children
-  }
-
   const roleName = getUserRole(user)
 
-  if (!allowedRoles.includes(roleName)) {
+  const roleAllowed = !allowedRoles || allowedRoles.length === 0 || allowedRoles.includes(roleName)
+
+  if (!roleAllowed) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  if (requiredPermission && !hasPermission(user, requiredPermission)) {
     return <Navigate to="/dashboard" replace />
   }
 

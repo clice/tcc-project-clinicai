@@ -5,13 +5,13 @@
 import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
-  cilFile,
-  cilMedicalCross,
+  cilDescription,
   cilHospital,
+  cilMedicalCross,
   cilPeople,
   cilSettings,
   cilShieldAlt,
-  cilSpeedometer,
+  cilBarChart,
   cilUser,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
@@ -23,16 +23,94 @@ const _nav = [
     component: CNavItem,
     name: 'Dashboard',
     to: '/dashboard',
-    icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    icon: <CIcon icon={cilBarChart} customClassName="nav-icon" />,
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
   },
 
-  ////////// ADMIN
+  ////////// CARE
 
   {
     component: CNavTitle,
-    name: 'Administrativo',
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
+    name: 'Atendimento',
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
+  },
+  {
+    component: CNavItem,
+    name: 'Pacientes',
+    to: '/patients',
+    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
+    permission: PERMISSIONS.PATIENTS_READ,
+  },
+  {
+    component: CNavGroup,
+    name: 'Exames',
+    to: '/exams',
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
+    // O Gestor da Clínica pode acompanhar somente a listagem
+    // operacional e os status dos exames da própria clínica. A abertura
+    // dos detalhes e dos resultados continua protegida por exams:read.
+    roles: ['admin_master', 'doctor', 'clinic_manager'],
+    permission: PERMISSIONS.EXAMS_LIST,
+    lockedOpenRoles: ['doctor', 'clinic_manager'],
+    items: [
+      {
+        component: CNavItem,
+        name: 'Pendentes',
+        to: '/exams?status=pending',
+        badgeKey: 'pending',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+      {
+        component: CNavItem,
+        name: 'Revisão',
+        to: '/exams?status=awaiting_review',
+        badgeKey: 'awaiting_review',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+      {
+        component: CNavItem,
+        name: 'Concluídos',
+        to: '/exams?status=completed',
+        badgeKey: 'completed',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+      {
+        component: CNavItem,
+        name: 'Com Divergência',
+        to: '/exams?status=completed_with_divergence',
+        badgeKey: 'completed_with_divergence',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+      {
+        component: CNavItem,
+        name: 'Falha na IA',
+        to: '/exams?status=failed',
+        badgeKey: 'failed',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+      {
+        component: CNavItem,
+        name: 'Cancelados',
+        to: '/exams?status=canceled',
+        badgeKey: 'canceled',
+        roles: ['admin_master', 'doctor', 'clinic_manager'],
+        permission: PERMISSIONS.EXAMS_LIST,
+      },
+    ],
+  },
+
+  ////////// ADMINISTRATION
+
+  {
+    component: CNavTitle,
+    name: 'Administração',
+    roles: ['admin_master', 'clinic_manager'],
   },
   {
     component: CNavItem,
@@ -43,100 +121,18 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Pacientes',
-    to: '/patients',
-    icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
-    roles: ['admin_master', 'doctor', 'clinic_staff'],
-    permission: PERMISSIONS.PATIENTS_READ,
-  },
-  {
-    component: CNavGroup,
-    name: 'Exames',
-    to: '/exams',
-    icon: <CIcon icon={cilFile} customClassName="nav-icon" />,
-    // clinic_staff removido: o Funcionário da Clínica não tem exams:read
-    // (Art. 34 do CFM — sem acesso a resultados diagnósticos, nem à
-    // listagem de exames). Antes, o menu mostrava esse grupo mesmo assim,
-    // e o hook de contagem de badges tentava listar exames e recebia 403
-    // silenciosamente — a interface passava impressão de acesso quebrado
-    // em vez de simplesmente não oferecer algo que o perfil não usa.
-    roles: ['admin_master', 'doctor'],
-    permission: PERMISSIONS.EXAMS_READ,
-    items: [
-      {
-        component: CNavItem,
-        name: 'Processando',
-        to: '/exams?status=processing',
-        badgeKey: 'processing',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Revisão',
-        to: '/exams?status=awaiting_review',
-        badgeKey: 'awaiting_review',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Concluídos',
-        to: '/exams?status=completed',
-        badgeKey: 'completed',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Divergência',
-        to: '/exams?status=completed_with_divergence',
-        badgeKey: 'completed_with_divergence',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Falha na IA',
-        to: '/exams?status=failed',
-        badgeKey: 'failed',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Cancelados',
-        to: '/exams?status=canceled',
-        badgeKey: 'canceled',
-        roles: ['admin_master', 'doctor'],
-        permission: PERMISSIONS.EXAMS_READ,
-      },
-      {
-        component: CNavItem,
-        name: 'Pendentes',
-        to: '/exams?status=pending',
-        badgeKey: 'pending',
-        // Reservado — hoje nenhum exame chega a esse status (upload é
-        // obrigatório no cadastro). Visível só para o Administrador Master
-        // enquanto isso não se tornar um estado alcançável de verdade.
-        roles: ['admin_master'],
-      },
-    ],
-  },
-
-  ////////// SYSTEM
-
-  {
-    component: CNavTitle,
-    name: 'Sistema',
+    name: 'Usuários',
+    to: '/users',
+    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
     roles: ['admin_master'],
   },
   {
     component: CNavItem,
-    name: 'Usuários',
+    name: 'Médicos',
     to: '/users',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
-    roles: ['admin_master'],
+    icon: <CIcon icon={cilMedicalCross} customClassName="nav-icon" />,
+    roles: ['clinic_manager'],
+    permission: PERMISSIONS.USERS_READ,
   },
   {
     component: CNavItem,

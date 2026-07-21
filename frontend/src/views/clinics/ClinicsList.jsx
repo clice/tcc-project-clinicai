@@ -2,7 +2,7 @@
  * Listagem de clínicas.
  *
  * Exibe as clínicas cadastradas no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * edição e cadastro sem depender do banco.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -36,28 +36,48 @@ const ClinicsList = () => {
   const [activeTab, setActiveTab] = useState('active')
   const [isLoading, setIsLoading] = useState(true)
 
-  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
-    'clinics',
-    (permission) => hasPermission(user, permission),
+  const { canCreate, canEdit, canChangeStatus } = getActionAccess('clinics', (permission) =>
+    hasPermission(user, permission),
   )
 
   const loadClinics = useCallback(async () => {
     try {
-      setIsLoading(true)
       showError('')
 
       const data = await clinicService.list({ includeInactive: true })
       setClinics(Array.isArray(data) ? data : [])
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao carregar clínicas.'))
-    } finally {
-      setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
-    loadClinics()
-  }, [loadClinics])
+    let isCancelled = false
+
+    showError('')
+
+    clinicService
+      .list({ includeInactive: true })
+      .then((data) => {
+        if (!isCancelled) {
+          setClinics(Array.isArray(data) ? data : [])
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          showError(getErrorMessage(err, 'Erro ao carregar clínicas.'))
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [showError])
 
   /**
    * Separa clínicas por status para alimentar as abas.
@@ -76,23 +96,26 @@ const ClinicsList = () => {
     }
   }, [clinics])
 
-  const handleChangeStatus = async (clinic) => {
-    try {
-      showError('')
+  const handleChangeStatus = useCallback(
+    async (clinic) => {
+      try {
+        showError('')
 
-      if (clinic.status_name === 'active') {
-        await clinicService.inactivate(clinic.id)
-        showSuccess('Clínica inativada com sucesso.')
-      } else {
-        await clinicService.activate(clinic.id)
-        showSuccess('Clínica ativada com sucesso.')
+        if (clinic.status_name === 'active') {
+          await clinicService.inactivate(clinic.id)
+          showSuccess('Clínica inativada com sucesso.')
+        } else {
+          await clinicService.activate(clinic.id)
+          showSuccess('Clínica ativada com sucesso.')
+        }
+
+        await loadClinics()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao alterar status da clínica.'))
       }
-
-      await loadClinics()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao alterar status da clínica.')
-    }
-  }
+    },
+    [loadClinics, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
@@ -120,10 +143,8 @@ const ClinicsList = () => {
           return (
             <AppActionButtons
               itemLabel={clinic.name}
-              viewTo={`/clinics/${clinic.id}`}
               editTo={`/clinics/${clinic.id}/edit`}
               isInactive={isInactive}
-              canView={canView}
               canEdit={canEdit}
               canInactivate={canChangeStatus && !isInactive}
               canActivate={canChangeStatus && isInactive}
@@ -134,7 +155,7 @@ const ClinicsList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadClinics],
+    [canEdit, canChangeStatus, handleChangeStatus],
   )
 
   return (
@@ -142,7 +163,7 @@ const ClinicsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Administração</div>
-          <h1 className="h3 mb-0">Clínicas</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Clínicas</h1>
           <p className="text-body-secondary mb-0">
             Gerencie clínicas vinculadas aos usuários, pacientes e exames.
           </p>
@@ -150,14 +171,20 @@ const ClinicsList = () => {
 
         {canCreate && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/clinics/create">
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/clinics/create"
+            >
               Cadastrar Clínica
             </CButton>
           </div>
         )}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">

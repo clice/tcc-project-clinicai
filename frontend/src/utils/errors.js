@@ -57,8 +57,14 @@ const getFieldLabel = (loc) => {
 }
 
 const formatValidationError = (item) => {
+  const fieldName = Array.isArray(item?.loc) ? item.loc[item.loc.length - 1] : null
+
+  if (fieldName === 'cnpj') {
+    return 'Informe um CNPJ válido.'
+  }
+
   const field = getFieldLabel(item?.loc)
-  const message = item?.msg || 'Campo inválido.'
+  const message = String(item?.msg || 'Campo inválido.').replace(/^Value error,\s*/i, '')
 
   return field ? `${field}: ${message}` : message
 }

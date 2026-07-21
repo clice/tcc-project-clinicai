@@ -34,8 +34,14 @@ import {
 const AppActionButtons = ({
   itemLabel,
   editTo,
+  editColor = 'primary',
+  editIcon = cilPencil,
   uploadTo,
   viewTo,
+  viewTitle = 'Visualizar',
+  viewColor = 'secondary',
+  viewIcon = cilUser,
+  viewIconClassName,
   isInactive = false,
 
   onUpload,
@@ -49,6 +55,7 @@ const AppActionButtons = ({
   canEdit = false,
   canUpload = false,
   canDownload = false,
+  downloadTitle = 'Download',
   canCancel = false,
   canRestore = false,
   canInactivate = false,
@@ -131,19 +138,32 @@ const AppActionButtons = ({
       <CButtonGroup className="d-flex gap-2" size="sm" role="group">
         {showView && (
           <CButton
-            color="secondary"
+            color={viewColor}
             className="rounded-pill"
             as={Link}
             to={viewTo}
-            title="Visualizar"
+            title={viewTitle}
+            aria-label={viewTitle}
           >
-            <CIcon icon={cilUser} />
+            <CIcon icon={viewIcon} className={viewIconClassName} />
           </CButton>
         )}
 
         {showEdit && (
-          <CButton color="primary" className="rounded-pill" as={Link} to={editTo} title="Editar">
-            <CIcon icon={cilPencil} />
+          <CButton color={editColor} className="rounded-pill" as={Link} to={editTo} title="Editar">
+            <CIcon
+              icon={editIcon}
+              style={
+                editColor === 'info'
+                  ? {
+                      '--ci-primary-color': '#ffffff',
+                      '--ci-secondary-color': '#ffffff',
+                      color: '#ffffff',
+                      fill: '#ffffff',
+                    }
+                  : undefined
+              }
+            />
           </CButton>
         )}
 
@@ -161,10 +181,10 @@ const AppActionButtons = ({
 
         {showDownload && (
           <CButton
-            color="info"
-            className="rounded-pill text-white"
+            color="primary"
+            className="clinicai-btn rounded-pill"
             type="button"
-            title="Download"
+            title={downloadTitle}
             onClick={onDownload}
           >
             <CIcon icon={cilCloudDownload} />
@@ -186,7 +206,7 @@ const AppActionButtons = ({
         {showActivate && (
           <CButton
             color="success"
-            className="rounded-pill"
+            className="rounded-pill text-white"
             type="button"
             title="Ativar"
             onClick={() => setConfirmVisible(true)}
@@ -197,10 +217,11 @@ const AppActionButtons = ({
 
         {showCancel && (
           <CButton
-            color="danger"
-            className="rounded-pill text-white"
+            color="secondary"
+            className="rounded-pill"
             type="button"
             title="Cancelar exame"
+            aria-label="Cancelar exame"
             onClick={() => openExamConfirm('cancel')}
           >
             <CIcon icon={cilXCircle} />
@@ -209,13 +230,14 @@ const AppActionButtons = ({
 
         {showRestore && (
           <CButton
-            color="success"
+            color="info"
             className="rounded-pill"
             type="button"
             title="Retomar exame"
+            aria-label="Retomar exame"
             onClick={() => openExamConfirm('restore')}
           >
-            <CIcon icon={cilReload} />
+            <CIcon icon={cilReload} className="text-white" />
           </CButton>
         )}
       </CButtonGroup>
@@ -246,6 +268,7 @@ const AppActionButtons = ({
             <CButton
               color="secondary"
               variant="outline"
+              className="clinicai-modal-cancel-action"
               onClick={handleCloseModal}
               disabled={isSubmitting}
             >
@@ -298,14 +321,16 @@ const AppActionButtons = ({
             <CButton
               color="secondary"
               variant="outline"
+              className="clinicai-modal-cancel-action"
               onClick={handleCloseExamModal}
               disabled={isSubmitting}
             >
-              Fechar
+              Cancelar
             </CButton>
 
             <CButton
-              color={examActionType === 'cancel' ? 'danger' : 'success'}
+              color={examActionType === 'cancel' ? 'secondary' : 'info'}
+              className={examActionType === 'restore' ? 'text-white' : undefined}
               onClick={handleExamConfirm}
               disabled={isSubmitting}
             >

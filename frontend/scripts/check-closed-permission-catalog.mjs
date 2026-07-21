@@ -25,4 +25,18 @@ assert.doesNotMatch(service, /api\.post\(['"]\/permissions\//)
 assert.doesNotMatch(backendRouter, /@router\.post|create_permission/)
 assert.doesNotMatch(backendSchema, /class PermissionCreate/)
 
+assert.doesNotMatch(routes, /const ViewPermission/)
+assert.doesNotMatch(routes, /path:\s*['"]\/permissions\/:id['"]/)
+assert.doesNotMatch(list, /viewTo=\{`\/permissions\/\$\{row\.original\.id\}`\}/)
+assert.doesNotMatch(list, /canView=\{canManage\}/)
+assert.match(list, /editTo=\{`\/permissions\/\$\{row\.original\.id\}\/edit`\}/)
+assert.doesNotMatch(form, /\bisReadOnly\b|\bisEditMode\b|mode === ['"]view['"]/)
+assert.match(form, /Esta tela permite alterar os textos de apresentação da permissão\./)
+assert.match(form, /<CFormLabel>Módulo<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/)
+assert.match(form, /<CFormLabel>Ação<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/)
+assert.match(
+  form,
+  /<CFormLabel>Nome técnico<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/,
+)
+
 console.log('Catálogo fechado: nenhuma criação dinâmica exposta no frontend ou backend.')

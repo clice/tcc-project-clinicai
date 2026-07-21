@@ -30,8 +30,6 @@ import {
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
-import avatar8 from 'src/assets/images/avatars/8.jpg'
-
 import { useAuth } from 'src/hooks/useAuth'
 import { getStoredUser } from 'src/utils/token'
 
@@ -47,16 +45,18 @@ const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={avatar8} size="md" />
+        <CAvatar className="clinicai-user-avatar" color="primary" textColor="white" size="md">
+          <CIcon icon={cilUser} />
+        </CAvatar>
       </CDropdownToggle>
 
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
+        <CDropdownHeader className="clinicai-user-menu-header fw-semibold mb-2">
           Usuário
         </CDropdownHeader>
 
         <CDropdownItem as="div" className="d-flex flex-column align-items-start">
-          <strong>{user?.name || 'Usuário'}</strong>
+          <strong className="clinicai-page-title">{user?.name || 'Usuário'}</strong>
           <small className="text-body-secondary">{user?.email}</small>
           <small className="text-body-secondary">
             {user?.role_display_name || user?.role_name}
@@ -65,14 +65,24 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button" onClick={() => navigate('/profile')}>
+        <CDropdownItem
+          as="button"
+          type="button"
+          className="clinicai-user-menu-action"
+          onClick={() => navigate('/profile')}
+        >
           <CIcon icon={cilUser} className="me-2" />
           Perfil
         </CDropdownItem>
 
         <CDropdownDivider />
 
-        <CDropdownItem as="button" type="button" onClick={handleLogout}>
+        <CDropdownItem
+          as="button"
+          type="button"
+          className="clinicai-user-menu-action"
+          onClick={handleLogout}
+        >
           <CIcon icon={cilAccountLogout} className="me-2" />
           Sair
         </CDropdownItem>

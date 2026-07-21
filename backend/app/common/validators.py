@@ -166,6 +166,74 @@ def validate_birth_date(value):
     return value
 
 
+BRAZILIAN_UFS = frozenset(
+    {
+        "AC",
+        "AL",
+        "AP",
+        "AM",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MT",
+        "MS",
+        "MG",
+        "PA",
+        "PB",
+        "PR",
+        "PE",
+        "PI",
+        "RJ",
+        "RN",
+        "RS",
+        "RO",
+        "RR",
+        "SC",
+        "SP",
+        "SE",
+        "TO",
+    }
+)
+
+
+def normalize_crm_number(value: str | None) -> str | None:
+    """Normaliza o número do CRM sem realizar consulta ao CFM."""
+
+    if value is None:
+        return None
+
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    if not cleaned.isdigit():
+        raise ValueError("CRM deve conter somente números.")
+
+    if len(cleaned) > 10:
+        raise ValueError("CRM deve conter no máximo 10 números.")
+
+    return cleaned
+
+
+def normalize_crm_uf(value: str | None) -> str | None:
+    """Normaliza e valida a unidade federativa do CRM."""
+
+    if value is None:
+        return None
+
+    cleaned = value.strip().upper()
+    if not cleaned:
+        return None
+
+    if cleaned not in BRAZILIAN_UFS:
+        raise ValueError("UF do CRM inválida.")
+
+    return cleaned
+
+
 def is_valid_cpf(cpf: str | None) -> bool:
     """
     Valida CPF pelo algoritmo oficial dos dígitos verificadores.

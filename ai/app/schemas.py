@@ -1,57 +1,62 @@
-"""
-Schemas da API de Inteligência Artificial do ClinicAI.
-
-Este arquivo define os formatos de entrada e saída usados pelo serviço
-de inferência da IA.
-"""
+"""Schemas públicos do serviço de inferência do ClinicAI."""
 
 from pydantic import BaseModel, Field
 
 
 class PredictionResponse(BaseModel):
-    """
-    Resposta retornada pela IA após analisar uma imagem de exame.
-    """
+    exam_type: str = Field(
+        ...,
+        description="Tipo de exame enviado pelo backend.",
+    )
 
     exam_domain: str = Field(
         ...,
-        description="Domínio médico do modelo utilizado.",
+        description="Domínio clínico selecionado.",
+    )
+
+    prediction_class: int = Field(
+        ...,
+        ge=0,
+        description="Índice da classe prevista.",
     )
 
     label: str = Field(
         ...,
-        description="Classe prevista pela IA. Exemplo: normal ou abnormal.",
+        description="Rótulo da classe prevista.",
     )
 
     confidence: float = Field(
         ...,
         ge=0.0,
         le=1.0,
-        description="Confiança da predição, variando de 0 a 1.",
     )
 
-    model_name: str = Field(
-        ...,
-        description="Nome do modelo utilizado na inferência (ex: 'ensemble_stacking').",
-    )
+    model_name: str
+    model_version: str
 
-    model_version: str = Field(
-        ...,
-        description="Versão do modelo utilizado.",
-    )
+    gradcam_available: bool = False
+    gradcam_path: str | None = None
 
-    gradcam_available: bool = Field(
-        default=False,
-        description="Indica se o GradCAM foi gerado para a imagem.",
-    )
+    attribution_method: str | None = None
 
-    gradcam_path: str | None = Field(
-        default=None,
-        description="Caminho local do GradCAM gerado.",
-    )
+    attribution_target_layers: (
+        dict[str, str] | None
+    ) = None
 
-    device: str = Field(
-        ...,
-        description="Dispositivo usado durante a inferência (ex: 'cuda' ou 'cpu').",
-    )
-    
+    attribution_local_evidence: (
+        dict[str, float] | None
+    ) = None
+
+    attribution_branch_weights: (
+        dict[str, float] | None
+    ) = None
+
+    attribution_branch_cam_raw_maxima: (
+        dict[str, float] | None
+    ) = None
+
+    attribution_unavailable_reason: (
+        str | None
+    ) = None
+
+    device: str

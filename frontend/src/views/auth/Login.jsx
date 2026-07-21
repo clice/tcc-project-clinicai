@@ -8,7 +8,7 @@
  * - redirecionar para o dashboard.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   CAlert,
@@ -27,7 +27,9 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
 
+import { clinicaiSygnet } from 'src/assets/brand/clinicaiSygnet'
 import { useAuth } from 'src/hooks/useAuth'
+import { getErrorMessage } from 'src/utils/errors'
 
 const Login = () => {
   const { login } = useAuth()
@@ -40,6 +42,10 @@ const Login = () => {
 
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    document.title = 'ClinicAI | Login'
+  }, [])
 
   const updateField = (field, value) => {
     setForm((currentForm) => ({
@@ -57,12 +63,9 @@ const Login = () => {
       await login(form.email, form.password)
       navigate('/dashboard')
     } catch (error) {
-      const message =
-        error.response?.data?.detail ||
-        error.message ||
-        'Não foi possível realizar o login. Verifique suas credenciais.'
-
-    setError(message)
+      setError(
+        getErrorMessage(error, 'Não foi possível realizar o login. Verifique suas credenciais.'),
+      )
     } finally {
       setIsLoading(false)
     }
@@ -78,7 +81,9 @@ const Login = () => {
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
-                    <p className="text-body-secondary">Entre com sua conta para acessar o ClinicAI</p>
+                    <p className="text-body-secondary">
+                      Entre com sua conta para acessar o ClinicAI
+                    </p>
 
                     {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -113,14 +118,14 @@ const Login = () => {
                     </CInputGroup>
 
                     <CRow>
-                      <CCol xs={6}>
-                        <CButton color="primary" className="px-4" type="submit" disabled={isLoading}>
+                      <CCol xs={12}>
+                        <CButton
+                          color="primary"
+                          className="clinicai-btn px-4"
+                          type="submit"
+                          disabled={isLoading}
+                        >
                           {isLoading ? 'Entrando...' : 'Entrar'}
-                        </CButton>
-                      </CCol>
-                      <CCol xs={6} className="text-right">
-                        <CButton color="link" className="px-0">
-                          Esqueceu a senha?
                         </CButton>
                       </CCol>
                     </CRow>
@@ -128,15 +133,28 @@ const Login = () => {
                 </CCardBody>
               </CCard>
 
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
-                <CCardBody className="text-center">
-                  <div>
-                    <h2>ClinicAI</h2>
-                    <p>
-                      Sistema web para gestão clínica e apoio à análise de exames utilizando 
-                      inteligência artificial.
-                    </p>
+              <CCard
+                className="clinicai-login-brand-panel text-white py-5"
+                style={{ width: '44%' }}
+              >
+                <CCardBody className="clinicai-login-brand-content">
+                  <div className="clinicai-login-brand-lockup">
+                    <CIcon
+                      customClassName="clinicai-login-brand-icon"
+                      icon={clinicaiSygnet}
+                      height={64}
+                      aria-label="Logo do ClinicAI"
+                    />
+
+                    <h2 className="clinicai-login-brand-name">
+                      Clinic<span className="clinicai-brand-ai">AI</span>
+                    </h2>
                   </div>
+
+                  <p className="clinicai-login-description">
+                    Protótipo de Sistema Web para Gestão de Clínicas com Classificação Binária de
+                    Imagens de Exames Gastrointestinais por Inteligência Artificial
+                  </p>
                 </CCardBody>
               </CCard>
             </CCardGroup>

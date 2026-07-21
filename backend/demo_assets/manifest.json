@@ -1,0 +1,4744 @@
+{
+  "clinics": [
+    {
+      "doctor_key": "doctor_primary",
+      "key": "clinic_primary",
+      "name": "ClinicAI Endoscopia Especializada"
+    },
+    {
+      "doctor_key": "doctor_large",
+      "key": "clinic_large",
+      "name": "Hospital Regional Cariri"
+    },
+    {
+      "doctor_key": "doctor_specialized",
+      "key": "clinic_specialized",
+      "name": "Centro Endoscópico Cariri"
+    }
+  ],
+  "dataset": {
+    "ai_analyses": 72,
+    "clinics": 3,
+    "exams_per_clinic": 30,
+    "patients_per_clinic": 10,
+    "period_end": "2026-07-26",
+    "period_start": "2026-02-02",
+    "purpose": "academic_demonstration",
+    "real_source_prediction_divergences": 2,
+    "reviewed_exams": 50,
+    "source_abnormal": 45,
+    "source_images": 90,
+    "source_normal": 45
+  },
+  "description": "Ativos e plano reprodutível da massa acadêmica demonstrativa do ClinicAI.",
+  "exams": [
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4973384737968445,
+          "pvt_v2_b2": 0.15727227926254272,
+          "resnet50": 0.5183647274971008
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792797164553022,
+          "pvt_v2_b2": 0.34069932140191267,
+          "resnet50": 0.48002096214278517
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651721747546831,
+          "pvt_v2_b2": 1.238518007068764,
+          "resnet50": 1.7449832389979492
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/032e1815-45bd-4a82-bbb7-98aedc04c96e_gradcam.jpg",
+          "sha256": "ddb35a963f47560401a1eda1322e3a8e6b9577f1ab4c72e5256b5587e652b9d8",
+          "size_bytes": 80344
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 368
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 01",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-02-02",
+      "exam_key": "clinic_primary_exam_01",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "032e1815-45bd-4a82-bbb7-98aedc04c96e.jpg",
+        "path": "exams/normal/032e1815-45bd-4a82-bbb7-98aedc04c96e.jpg",
+        "sha256": "50c70ae525cdfe6facd279a11feb2f64972f8fac53d6db0fd99d0ed46d527772",
+        "size_bytes": 206136
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.48381274938583374,
+          "pvt_v2_b2": 0.14352481067180634,
+          "resnet50": 0.5722564458847046
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17914201562125667,
+          "pvt_v2_b2": 0.34074718830756373,
+          "resnet50": 0.48011079607117957
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6510794367225653,
+          "pvt_v2_b2": 1.2384224139641853,
+          "resnet50": 1.7449299405636174
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/03adaef7-3900-4624-9ffa-6df25d1ee70c_gradcam.jpg",
+          "sha256": "62c4a00c3be28202ec149e46b5e1744df29b06ff29638c0153d224921d0b1eb4",
+          "size_bytes": 80885
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 331
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 02",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-02-08",
+      "exam_key": "clinic_primary_exam_02",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_02",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "03adaef7-3900-4624-9ffa-6df25d1ee70c.jpg",
+        "path": "exams/normal/03adaef7-3900-4624-9ffa-6df25d1ee70c.jpg",
+        "sha256": "ec4dc2e0207db5b9a075eebb5788eb900feb847c8796abea2842ee9276cc857f",
+        "size_bytes": 199569
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5538804531097412,
+          "pvt_v2_b2": 0.09285102039575577,
+          "resnet50": 0.4762614965438843
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17964477795147338,
+          "pvt_v2_b2": 0.33936508779326896,
+          "resnet50": 0.4809901342552577
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279607068552,
+          "pvt_v2_b2": 1.2311725346247175,
+          "resnet50": 1.744969839329107
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9529,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/03b32e65-b829-4257-8eb1-b3f3c224f3ac_gradcam.jpg",
+          "sha256": "6146be09e46d335166632d2cd3fa83585838db546cab36bed2912ae52d178a15",
+          "size_bytes": 79208
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 344
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 03",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-02-15",
+      "exam_key": "clinic_primary_exam_03",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_03",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "03b32e65-b829-4257-8eb1-b3f3c224f3ac.jpg",
+        "path": "exams/normal/03b32e65-b829-4257-8eb1-b3f3c224f3ac.jpg",
+        "sha256": "a49e7d9e7c5745d6d5acddacbf01ceeac4597737ecd71c24704db4318e494897",
+        "size_bytes": 190383
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.27059298753738403,
+          "pvt_v2_b2": 0.14192599058151245,
+          "resnet50": 0.4865221381187439
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1789530697603396,
+          "pvt_v2_b2": 0.3409010692464656,
+          "resnet50": 0.4801458609931948
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6501175291265654,
+          "pvt_v2_b2": 1.2384574408917692,
+          "resnet50": 1.7443190060236875
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/02dcedf1-c0bd-4ef4-b072-ea8f11da6a1d_gradcam.jpg",
+          "sha256": "7769f2a16c421e7e7de6739a6e1ce59e36bb2c013275251d3cf5df595578697f",
+          "size_bytes": 85798
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 373
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 04",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-03-02",
+      "exam_key": "clinic_primary_exam_04",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "02dcedf1-c0bd-4ef4-b072-ea8f11da6a1d.jpg",
+        "path": "exams/normal/02dcedf1-c0bd-4ef4-b072-ea8f11da6a1d.jpg",
+        "sha256": "88c5109556691c50102afd534de40572e95d9c20251a7f9ec635fd242eac4914",
+        "size_bytes": 209512
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 05",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-02-21",
+      "exam_key": "clinic_primary_exam_05",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "728975b8-6f2f-4c05-9aea-365df3476982.jpg",
+        "path": "exams/abnormal/728975b8-6f2f-4c05-9aea-365df3476982.jpg",
+        "sha256": "8a4e1a874e85768edf9c53cfe107fcadcd6b4c7ec7e666f9033b7c88e37ce68f",
+        "size_bytes": 187733
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.422000527381897,
+          "pvt_v2_b2": 0.14466485381126404,
+          "resnet50": 0.45435553789138794
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17933162218208443,
+          "pvt_v2_b2": 0.34077636293402386,
+          "resnet50": 0.47989201488389177
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517267813363407,
+          "pvt_v2_b2": 1.2384490781274131,
+          "resnet50": 1.7440230252962894
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/03eb7061-0329-405a-a4b6-d629cf01baad_gradcam.jpg",
+          "sha256": "80b6ef696de39b953e7a6e4487d83cd446d31a2f38a0063a8313c7ed532fa089",
+          "size_bytes": 88478
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 389
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 06",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-06",
+      "exam_key": "clinic_primary_exam_06",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "03eb7061-0329-405a-a4b6-d629cf01baad.jpg",
+        "path": "exams/normal/03eb7061-0329-405a-a4b6-d629cf01baad.jpg",
+        "sha256": "2a26caaa3d54363be79f1c3553c6f59ced36b58fbaa29467520f142ac0e3ec84",
+        "size_bytes": 194567
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.6094093322753906,
+          "pvt_v2_b2": 0.17665450274944305,
+          "resnet50": 0.5434293746948242
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17929759271926235,
+          "pvt_v2_b2": 0.3407353627442252,
+          "resnet50": 0.47996704453651245
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517200078476614,
+          "pvt_v2_b2": 1.2385222239394034,
+          "resnet50": 1.7446086212754237
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/2bef68d0-afdf-4dd9-8724-513d2bf356ad_gradcam.jpg",
+          "sha256": "212d135d3f6b96c8e7721ad484caaa8ad805daf41e643a11c6e0ccfd913aedd6",
+          "size_bytes": 260821
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 921
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 07",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-11",
+      "exam_key": "clinic_primary_exam_07",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "2bef68d0-afdf-4dd9-8724-513d2bf356ad.jpg",
+        "path": "exams/normal/2bef68d0-afdf-4dd9-8724-513d2bf356ad.jpg",
+        "sha256": "956979bd4ac6f09221a4fde078ebda2e033b86ecdee01de6f20bb151a552c501",
+        "size_bytes": 522412
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.49650540947914124,
+          "pvt_v2_b2": 0.063339464366436,
+          "resnet50": 0.375296950340271
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 0.3410620122235171,
+          "resnet50": 0.6589379877764829
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 0.8918152190828648,
+          "resnet50": 1.7230031632657625
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.8618,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/2c3eb894-3a67-4cf4-bc75-9bd7442c9709_gradcam.jpg",
+          "sha256": "0c2d2b73c9a034d87ae1a95aa107723e5ea55533246b2cc0f5892be64534c936",
+          "size_bytes": 232001
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 714
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 08",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-16",
+      "exam_key": "clinic_primary_exam_08",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "2c3eb894-3a67-4cf4-bc75-9bd7442c9709.jpg",
+        "path": "exams/normal/2c3eb894-3a67-4cf4-bc75-9bd7442c9709.jpg",
+        "sha256": "927653c436c9ea121138510fe2097261876cfa2b73845edb3d142608ea9791b4",
+        "size_bytes": 426674
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.7180724143981934,
+          "pvt_v2_b2": 0.16124612092971802,
+          "resnet50": 0.4786260724067688
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17929745718821202,
+          "pvt_v2_b2": 0.34073012604023667,
+          "resnet50": 0.47997241677155134
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517280123087423,
+          "pvt_v2_b2": 1.2385193368626888,
+          "resnet50": 1.7446508949492916
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/02f88968-7b55-468b-ae66-a0458c7d874f_gradcam.jpg",
+          "sha256": "849d2b2e553009e85bfa986884902820a4f5c36d2051c8045854e0752850c4ca",
+          "size_bytes": 76912
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 411
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 09",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-21",
+      "exam_key": "clinic_primary_exam_09",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_09",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "02f88968-7b55-468b-ae66-a0458c7d874f.jpg",
+        "path": "exams/normal/02f88968-7b55-468b-ae66-a0458c7d874f.jpg",
+        "sha256": "028e31cb115d7bcbfbeb774c5ee381dd8df6e7462067bd2a546e9cddbe9d1a95",
+        "size_bytes": 174458
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 10",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-03-22",
+      "exam_key": "clinic_primary_exam_10",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "0233c35c-0bfd-4105-9756-7701de5f4901.jpg",
+        "path": "exams/normal/0233c35c-0bfd-4105-9756-7701de5f4901.jpg",
+        "sha256": "b0575e2e00d925a9bd9546a2346d1b425ce1474bdfc1c853fef73a146670fad3",
+        "size_bytes": 155980
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.7222491502761841,
+          "pvt_v2_b2": 0.18163271248340607,
+          "resnet50": 0.5302369594573975
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17926535099133223,
+          "pvt_v2_b2": 0.34073719944656466,
+          "resnet50": 0.479997449562103
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.65160405796577,
+          "pvt_v2_b2": 1.2385312645833537,
+          "resnet50": 1.744722469893299
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/2c923b19-3c0f-4cbf-b7ec-004a9319bca2_gradcam.jpg",
+          "sha256": "837a52200de5c111b1ead3ab40bfbeaa2cfc27f150657e9876e65db2d69ec394",
+          "size_bytes": 198370
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 430
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 11",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-04-06",
+      "exam_key": "clinic_primary_exam_11",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "2c923b19-3c0f-4cbf-b7ec-004a9319bca2.jpg",
+        "path": "exams/normal/2c923b19-3c0f-4cbf-b7ec-004a9319bca2.jpg",
+        "sha256": "deda27de7e217a1cbb1b4d28af5ce8f579c8ee170edb0e9de36430a2b281ceab",
+        "size_bytes": 536970
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.38961678743362427,
+          "pvt_v2_b2": 0.18351545929908752,
+          "resnet50": 0.5569546222686768
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17908731296837352,
+          "pvt_v2_b2": 0.34081544125822943,
+          "resnet50": 0.4800972457733971
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6508073357269356,
+          "pvt_v2_b2": 1.2385310026905068,
+          "resnet50": 1.7446842226439714
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3ad256a5-baae-4f9a-a808-44fc492a4839_gradcam.jpg",
+          "sha256": "8380ec4cf87b76955496a09b19e43f16bedf89808884529b5e3b5ad2d1af6650",
+          "size_bytes": 397432
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 895
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 12",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-04-12",
+      "exam_key": "clinic_primary_exam_12",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_02",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3ad256a5-baae-4f9a-a808-44fc492a4839.jpg",
+        "path": "exams/normal/3ad256a5-baae-4f9a-a808-44fc492a4839.jpg",
+        "sha256": "3facdedd6dbf606c11291031cece65bfb5f8c0c867ab341b9b67e78f7858ec6f",
+        "size_bytes": 993716
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5584349632263184,
+          "pvt_v2_b2": 0.1412477344274521,
+          "resnet50": 0.4154810309410095
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17899717769278686,
+          "pvt_v2_b2": 0.34117915489472656,
+          "resnet50": 0.47982366741248667
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6495270376972941,
+          "pvt_v2_b2": 1.2380367593458885,
+          "resnet50": 1.7411360856559652
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9529,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3b2a2f84-2974-433d-95ef-30de7fb2a228_gradcam.jpg",
+          "sha256": "4c0b8f7eed9264ddc2ab612a5df1907fc38c9355d37caf8ad863e1036b174410",
+          "size_bytes": 314326
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 676
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 13",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-04-18",
+      "exam_key": "clinic_primary_exam_13",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3b2a2f84-2974-433d-95ef-30de7fb2a228.jpg",
+        "path": "exams/normal/3b2a2f84-2974-433d-95ef-30de7fb2a228.jpg",
+        "sha256": "ce9d00816adcbe66767a528b504e2eecaefd2cefceec6d785950def1318e8344",
+        "size_bytes": 789859
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4531259834766388,
+          "pvt_v2_b2": 0.15162275731563568,
+          "resnet50": 0.5958888530731201
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 0.41519034304690655,
+          "resnet50": 0.5848096569530935
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 1.2384149801155104,
+          "resnet50": 1.744349433496102
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.8648,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/032a3076-c75c-4089-a57c-1b19e5f6589e_gradcam.jpg",
+          "sha256": "01391002b5f282a079af8963c685b4df864ed44ff0edf44037d40048121b739f",
+          "size_bytes": 85915
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 392
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 14",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-05-04",
+      "exam_key": "clinic_primary_exam_14",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "032a3076-c75c-4089-a57c-1b19e5f6589e.jpg",
+        "path": "exams/normal/032a3076-c75c-4089-a57c-1b19e5f6589e.jpg",
+        "sha256": "208fd69b4db49f51f6dce6b9747813dcf66066359467a14b14c081a0cdb75578",
+        "size_bytes": 206606
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 15",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-04-20",
+      "exam_key": "clinic_primary_exam_15",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "55ad4e6b-9af8-475b-8fad-5a6fc8ed7a6f.jpg",
+        "path": "exams/abnormal/55ad4e6b-9af8-475b-8fad-5a6fc8ed7a6f.jpg",
+        "sha256": "02b6da5e67069c9d29bc472728c52a979ca124834b0b696ef0d11413686b9fa0",
+        "size_bytes": 180691
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 2.797667980194092,
+          "pvt_v2_b2": 0.1732850968837738,
+          "resnet50": 0.984339714050293
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1793327175980966,
+          "pvt_v2_b2": 0.3408671741903647,
+          "resnet50": 0.4798001082115387
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6515628051575455,
+          "pvt_v2_b2": 1.2384598592842437,
+          "resnet50": 1.743239653133557
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/85b99115-d334-4a40-a60c-98017e6e4fc3_gradcam.jpg",
+          "sha256": "5e55654ea1851739f90d215619f08eacea4eed5c607b16c4f328dd1416ae62cf",
+          "size_bytes": 67816
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 548
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 16",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-09",
+      "exam_key": "clinic_primary_exam_16",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "85b99115-d334-4a40-a60c-98017e6e4fc3.jpg",
+        "path": "exams/abnormal/85b99115-d334-4a40-a60c-98017e6e4fc3.jpg",
+        "sha256": "91d9a7b832ebcc2be0fa1205b5ef2ac9002c4e8ca203faddbdb876e7f840a139",
+        "size_bytes": 172434
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 2.4539668560028076,
+          "pvt_v2_b2": 0.2191188931465149,
+          "resnet50": 1.0212604999542236
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17929180367144862,
+          "pvt_v2_b2": 0.3407233462777041,
+          "resnet50": 0.4799848500508473
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517270461466259,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.7447485167364896
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/85ca4da2-a727-49cf-b436-be431d57f294_gradcam.jpg",
+          "sha256": "2f895b7840a4ea0d737e945152463394a8bea1b643e481560dcf9018c0c86309",
+          "size_bytes": 267151
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 1553
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 17",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-13",
+      "exam_key": "clinic_primary_exam_17",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "85ca4da2-a727-49cf-b436-be431d57f294.jpg",
+        "path": "exams/abnormal/85ca4da2-a727-49cf-b436-be431d57f294.jpg",
+        "sha256": "02b8a4988f79035131b538277375e7fcd3c980527720ba67ba2bd35395a76334",
+        "size_bytes": 645429
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 7.188290119171143,
+          "pvt_v2_b2": 0.12890303134918213,
+          "resnet50": 0.7514084577560425
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1741599180344283,
+          "pvt_v2_b2": 0.34418940032646966,
+          "resnet50": 0.4816506816391021
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6261599139756006,
+          "pvt_v2_b2": 1.2374696068536952,
+          "resnet50": 1.7316863305012036
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9855,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/87d5f55a-465e-4c4b-beaf-e3aa08fa87ef_gradcam.jpg",
+          "sha256": "117561717b0c9a3aea37eb01fa0a8f87609c49f292c87b0acc9887065fe0b2c9",
+          "size_bytes": 379166
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 1322
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 18",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-17",
+      "exam_key": "clinic_primary_exam_18",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "87d5f55a-465e-4c4b-beaf-e3aa08fa87ef.jpg",
+        "path": "exams/abnormal/87d5f55a-465e-4c4b-beaf-e3aa08fa87ef.jpg",
+        "sha256": "66960cd066a284ec6dc854a21b99e57c8a3e2a435d4986da6ad37c8d6aced5f6",
+        "size_bytes": 930649
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.0261223316192627,
+          "pvt_v2_b2": 0.18694260716438293,
+          "resnet50": 0.7857698202133179
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927537690776546,
+          "pvt_v2_b2": 0.34071576795152425,
+          "resnet50": 0.4800088551407103
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651681673990702,
+          "pvt_v2_b2": 1.2385316145669703,
+          "resnet50": 1.744874168689636
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/76594c04-8899-4982-b973-5e484a98789c_gradcam.jpg",
+          "sha256": "bd80be898ab7c4f8abdfb95da143036f3fb1f61bd174797b7799b658b5cace9c",
+          "size_bytes": 83367
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 377
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 19",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-05-21",
+      "exam_key": "clinic_primary_exam_19",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_09",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "76594c04-8899-4982-b973-5e484a98789c.jpg",
+        "path": "exams/abnormal/76594c04-8899-4982-b973-5e484a98789c.jpg",
+        "sha256": "fd626323262e7fde11c583085e3dc3e7f282ed29728d7fc853a76fc721d80094",
+        "size_bytes": 197388
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 20",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-04-26",
+      "exam_key": "clinic_primary_exam_20",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "0163b3a2-9aa1-4b23-a9a8-aff07a738f16.jpg",
+        "path": "exams/normal/0163b3a2-9aa1-4b23-a9a8-aff07a738f16.jpg",
+        "sha256": "200825a0389d11d117d69ee7c606982cfabbc8d81b53bfc4de49313a587ec23f",
+        "size_bytes": 183210
+      },
+      "status": "pending"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.788297176361084,
+          "pvt_v2_b2": 0.135275200009346,
+          "resnet50": 1.0135009288787842
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17293527162122538,
+          "pvt_v2_b2": 0.3434070815846378,
+          "resnet50": 0.48365764679413675
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6229018202584407,
+          "pvt_v2_b2": 1.2369304087209436,
+          "resnet50": 1.7421040007954336
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9856,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/88bac517-668e-42ed-979b-785c52c599bb_gradcam.jpg",
+          "sha256": "5aff8ef96b2534bf42cefbc96d96ce1d8a02fb6b8c2422e4a5ce33918728d623",
+          "size_bytes": 227155
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 1095
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 21",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-06-05",
+      "exam_key": "clinic_primary_exam_21",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "88bac517-668e-42ed-979b-785c52c599bb.jpg",
+        "path": "exams/abnormal/88bac517-668e-42ed-979b-785c52c599bb.jpg",
+        "sha256": "3397c97102b63c7787b0afb9a49e67652ae9989821d07325663653733b983778",
+        "size_bytes": 442961
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 2.4334018230438232,
+          "pvt_v2_b2": 0.14416688680648804,
+          "resnet50": 1.2200558185577393
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1791619486908951,
+          "pvt_v2_b2": 0.34058221839639646,
+          "resnet50": 0.4802558329127084
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6510031893371357,
+          "pvt_v2_b2": 1.2375401809795044,
+          "resnet50": 1.7450584859586555
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8f0bc5ab-981c-41fb-8f8e-d4b5dd88a337_gradcam.jpg",
+          "sha256": "0b2d9f663e03871806026b4dcd422a4440d33b3cf9b906279992097d26f878bd",
+          "size_bytes": 237937
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 841
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 22",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-06-11",
+      "exam_key": "clinic_primary_exam_22",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_02",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "8f0bc5ab-981c-41fb-8f8e-d4b5dd88a337.jpg",
+        "path": "exams/abnormal/8f0bc5ab-981c-41fb-8f8e-d4b5dd88a337.jpg",
+        "sha256": "67e81e8656dac2c96be01e95b813de276e316514fb2176109f5f3d9f1062288a",
+        "size_bytes": 458195
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 2.4815566539764404,
+          "pvt_v2_b2": 0.16026422381401062,
+          "resnet50": 1.5644092559814453
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.16221118444069765,
+          "pvt_v2_b2": 0.34775227019863053,
+          "resnet50": 0.4900365453606718
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.5776622846602394,
+          "pvt_v2_b2": 1.2384064119337357,
+          "resnet50": 1.7451055014245678
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.985,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8f8b5d47-f221-4012-a2dc-e989c8b36ff0_gradcam.jpg",
+          "sha256": "df006f113074f1f4e57a1e4f517053db43b6ed7bb303dd00f9cf053195cc030b",
+          "size_bytes": 226597
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 1331
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 23",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-06-16",
+      "exam_key": "clinic_primary_exam_23",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "8f8b5d47-f221-4012-a2dc-e989c8b36ff0.jpg",
+        "path": "exams/abnormal/8f8b5d47-f221-4012-a2dc-e989c8b36ff0.jpg",
+        "sha256": "cc81b4392625e41109d4cb5d801c6c5bd41ee035b7134716ab54c77f3b20f359",
+        "size_bytes": 523652
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 5.43568754196167,
+          "pvt_v2_b2": 0.13930317759513855,
+          "resnet50": 1.0889753103256226
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17999605446947406,
+          "pvt_v2_b2": 0.33694753029967744,
+          "resnet50": 0.48305641523084847
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6502565687576358,
+          "pvt_v2_b2": 1.217261931378534,
+          "resnet50": 1.7450971801031674
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9857,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/820bb90d-3a37-4b1a-8498-56a385ccc69d_gradcam.jpg",
+          "sha256": "58657956d44230cffc0104e47627b511d66f7c748f974f0523ef4f522b93ff3e",
+          "size_bytes": 252393
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 931
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 24",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-07-02",
+      "exam_key": "clinic_primary_exam_24",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "820bb90d-3a37-4b1a-8498-56a385ccc69d.jpg",
+        "path": "exams/abnormal/820bb90d-3a37-4b1a-8498-56a385ccc69d.jpg",
+        "sha256": "e5171d1a7724b10a42ed6fc7fbc1af7f42ef68af61a0acebd55b2bdd7de2412c",
+        "size_bytes": 474198
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 25",
+      "doctor_key": "doctor_primary",
+      "exam_date": "2026-05-26",
+      "exam_key": "clinic_primary_exam_25",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "022ba669-9ab2-4703-8f9c-c7d07f31d89f.jpg",
+        "path": "exams/normal/022ba669-9ab2-4703-8f9c-c7d07f31d89f.jpg",
+        "sha256": "4516ec5a59a38f1128d5874f7613216a3ba2c9271898a0f4b289cd6ae2efba3f",
+        "size_bytes": 220776
+      },
+      "status": "pending"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.23096175491809845,
+          "pvt_v2_b2": 0.21298599243164062,
+          "resnet50": 0.6583303809165955
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17933186439097992,
+          "pvt_v2_b2": 0.3408007771011115,
+          "resnet50": 0.4798673585079085
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517233169283307,
+          "pvt_v2_b2": 1.238529547542365,
+          "resnet50": 1.743921793455357
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8fffbd0c-11a5-4a62-a4d4-053046f617ab_gradcam.jpg",
+          "sha256": "b79b4d7be1297b2a76598dc82b14e8cedbd03051a8d34a103abf7c8bd5b90269",
+          "size_bytes": 195382
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 2057
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 26",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-06",
+      "exam_key": "clinic_primary_exam_26",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "8fffbd0c-11a5-4a62-a4d4-053046f617ab.jpg",
+        "path": "exams/abnormal/8fffbd0c-11a5-4a62-a4d4-053046f617ab.jpg",
+        "sha256": "50af1c79191e7f954da2f81fcae60ce4efa01595aeb06d134d80540c712a5584",
+        "size_bytes": 502384
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4690566956996918,
+          "pvt_v2_b2": 0.18885764479637146,
+          "resnet50": 0.5876262187957764
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17931481260556256,
+          "pvt_v2_b2": 0.3407666658709149,
+          "resnet50": 0.4799185215235225
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279784511997,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7442860592996607
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/90d76564-923d-4f7a-8552-2205f9b95909_gradcam.jpg",
+          "sha256": "dbb78be8e7644e4107e8a5b26caaa438f215e295a439e801a3e87cc2ecb96ea9",
+          "size_bytes": 104151
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 633
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 27",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-11",
+      "exam_key": "clinic_primary_exam_27",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "90d76564-923d-4f7a-8552-2205f9b95909.jpg",
+        "path": "exams/abnormal/90d76564-923d-4f7a-8552-2205f9b95909.jpg",
+        "sha256": "4a0bc8175fa04ad75c5c5b85a470e03a1b6f31d497772e2b0702a7b9ab05b4d5",
+        "size_bytes": 235350
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.3931182622909546,
+          "pvt_v2_b2": 0.03314630687236786,
+          "resnet50": 0.47481420636177063
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.29505403098142735,
+          "pvt_v2_b2": 0.0,
+          "resnet50": 0.7049459690185726
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651397298410229,
+          "pvt_v2_b2": 0.0,
+          "resnet50": 1.5563247796224287
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.6119,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/55866948-68f1-430b-875b-953fc91c6dc6_gradcam.jpg",
+          "sha256": "9e9dce723f5ba3471573fc25007939fa6330932231e9cd285b49f1ed356408d8",
+          "size_bytes": 259103
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1470
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 28",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-15",
+      "exam_key": "clinic_primary_exam_28",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "55866948-68f1-430b-875b-953fc91c6dc6.jpg",
+        "path": "exams/abnormal/55866948-68f1-430b-875b-953fc91c6dc6.jpg",
+        "sha256": "f58c478b646aac20c6ad5675a9d7d47c6d97cdbb50aacb6dffcf56cd98dcfab1",
+        "size_bytes": 610510
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.1865849792957306,
+          "pvt_v2_b2": 0.1662140041589737,
+          "resnet50": 1.0630099773406982
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792740910639664,
+          "pvt_v2_b2": 0.34068879201869057,
+          "resnet50": 0.48003711691734297
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517256476897652,
+          "pvt_v2_b2": 1.238526004071613,
+          "resnet50": 1.745107165688848
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8513d335-0b58-43eb-8668-f6f836d1c8c1_gradcam.jpg",
+          "sha256": "b2bcf2354577f00c438fde5d4f3e4b8879ef5e40199c5eb688ba049f56ec8869",
+          "size_bytes": 87967
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 524
+      },
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Colonoscopia demonstrativa 29",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-07-20",
+      "exam_key": "clinic_primary_exam_29",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_primary_patient_09",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "8513d335-0b58-43eb-8668-f6f836d1c8c1.jpg",
+        "path": "exams/abnormal/8513d335-0b58-43eb-8668-f6f836d1c8c1.jpg",
+        "sha256": "d47cbda61bfcf0bdce02ab375703a56c9318ce9936520dd710b8ae85cdf74d48",
+        "size_bytes": 188283
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_primary",
+      "clinic_name": "ClinicAI Endoscopia Especializada",
+      "description": "Endoscopia demonstrativa 30",
+      "doctor_key": "doctor_primary_secondary",
+      "exam_date": "2026-06-26",
+      "exam_key": "clinic_primary_exam_30",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_primary_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "54e9cc5d-9cfe-4d70-aad1-685afa6ddaed.jpg",
+        "path": "exams/abnormal/54e9cc5d-9cfe-4d70-aad1-685afa6ddaed.jpg",
+        "sha256": "ba2a65fe062db58365f3f39c505d7efe4ed7c0d1c506559f9ac878966c4b8ad8",
+        "size_bytes": 207928
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5608570575714111,
+          "pvt_v2_b2": 0.15434984862804413,
+          "resnet50": 0.4405587613582611
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792810113580692,
+          "pvt_v2_b2": 0.340698394847512,
+          "resnet50": 0.4800205937944188
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281098020117,
+          "pvt_v2_b2": 1.2385177839223216,
+          "resnet50": 1.744986331178431
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3ed83478-0f49-400e-9e75-080aefd04205_gradcam.jpg",
+          "sha256": "472e4a9e0246beaaec7f18d97f84db374de45191e5a252c34d7cd7083b486ea0",
+          "size_bytes": 76556
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 380
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 01",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-02-04",
+      "exam_key": "clinic_large_exam_01",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3ed83478-0f49-400e-9e75-080aefd04205.jpg",
+        "path": "exams/normal/3ed83478-0f49-400e-9e75-080aefd04205.jpg",
+        "sha256": "07aee90530302a2ac62ae1931b68003e901e61edbfb04f3f3a487559369112a3",
+        "size_bytes": 157814
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5662494897842407,
+          "pvt_v2_b2": 0.15969158709049225,
+          "resnet50": 0.5848052501678467
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17852660357892083,
+          "pvt_v2_b2": 0.34103193837912604,
+          "resnet50": 0.48044145804195315
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6483463874578316,
+          "pvt_v2_b2": 1.238509111938065,
+          "resnet50": 1.7447958873466884
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.953,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3f14fa3b-7342-42ea-a1c8-5d09d437c404_gradcam.jpg",
+          "sha256": "386ee6a2a8932b86c224716d34e257b30504c7f686967ca32f006b36b24bbf32",
+          "size_bytes": 87439
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 366
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 02",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-02-10",
+      "exam_key": "clinic_large_exam_02",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_02",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3f14fa3b-7342-42ea-a1c8-5d09d437c404.jpg",
+        "path": "exams/normal/3f14fa3b-7342-42ea-a1c8-5d09d437c404.jpg",
+        "sha256": "9584dc458e73ac0f5d46f51f2ec153d9059de42e0bcf99f9df4914c071d6026d",
+        "size_bytes": 209838
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5201842188835144,
+          "pvt_v2_b2": 0.15077424049377441,
+          "resnet50": 0.6747635006904602
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17930573346096268,
+          "pvt_v2_b2": 0.3407398781733722,
+          "resnet50": 0.4799543883656651
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517153394062928,
+          "pvt_v2_b2": 1.2384735338168358,
+          "resnet50": 1.7444709161035754
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3f3eacce-e63b-45f4-a890-ade671eb1135_gradcam.jpg",
+          "sha256": "fb0644594f42e916a71e0abde99fe90a726d99e86f8612892e3e5ebc96fc97a7",
+          "size_bytes": 74810
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 411
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 03",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-02-17",
+      "exam_key": "clinic_large_exam_03",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3f3eacce-e63b-45f4-a890-ade671eb1135.jpg",
+        "path": "exams/normal/3f3eacce-e63b-45f4-a890-ade671eb1135.jpg",
+        "sha256": "03bbe1819967b3df0afd1b975f2bc84c40353e8983290a2c6954b2c76a0d5581",
+        "size_bytes": 163954
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.44954293966293335,
+          "pvt_v2_b2": 0.1775818169116974,
+          "resnet50": 0.4346980154514313
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17894128428391218,
+          "pvt_v2_b2": 0.34150619369635077,
+          "resnet50": 0.479552522019737
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6489596760404143,
+          "pvt_v2_b2": 1.238527764645668,
+          "resnet50": 1.739175230465649
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9528,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3c0cda87-4530-4d04-a58c-fb290ecb0139_gradcam.jpg",
+          "sha256": "033cf07f53f538448b94187e7cd35fb3a7b770c0c48626d3f33b4684aadc3a3d",
+          "size_bytes": 271422
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 596
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 04",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-03-03",
+      "exam_key": "clinic_large_exam_04",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3c0cda87-4530-4d04-a58c-fb290ecb0139.jpg",
+        "path": "exams/normal/3c0cda87-4530-4d04-a58c-fb290ecb0139.jpg",
+        "sha256": "2173c5b401958661f093e4e7c92444739a9e443fe8f25517609ec1d5c9a647a6",
+        "size_bytes": 674314
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 05",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-02-23",
+      "exam_key": "clinic_large_exam_05",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "942c3b8a-7b96-4722-8b49-cdb582d6fdf7.jpg",
+        "path": "exams/abnormal/942c3b8a-7b96-4722-8b49-cdb582d6fdf7.jpg",
+        "sha256": "5e3fcb5144dd68de472c69d436c17c4db64912acc01784390bc2116ddae71163",
+        "size_bytes": 522277
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5287511348724365,
+          "pvt_v2_b2": 0.14928829669952393,
+          "resnet50": 0.40863025188446045
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17928805933012096,
+          "pvt_v2_b2": 0.34070805604046167,
+          "resnet50": 0.48000388462941734
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517242972519272,
+          "pvt_v2_b2": 1.2384969708561924,
+          "resnet50": 1.744846787661925
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3f7c1c00-6f4d-42dc-a97a-e36e04037664_gradcam.jpg",
+          "sha256": "869d86f888e6ee8c3f8aac0a6cbe0c162e0570b97c51ef2da84ebf7967ee7291",
+          "size_bytes": 89161
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 403
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 06",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-03-08",
+      "exam_key": "clinic_large_exam_06",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3f7c1c00-6f4d-42dc-a97a-e36e04037664.jpg",
+        "path": "exams/normal/3f7c1c00-6f4d-42dc-a97a-e36e04037664.jpg",
+        "sha256": "e241cbb8f1e84e6a81d4dcd61d06aa9530226844ecddfb3300bbd09ce416e7b6",
+        "size_bytes": 178989
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5441307425498962,
+          "pvt_v2_b2": 0.14503343403339386,
+          "resnet50": 0.4984648525714874
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17921852388834744,
+          "pvt_v2_b2": 0.3408321935796754,
+          "resnet50": 0.47994928253197716
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6512279128267285,
+          "pvt_v2_b2": 1.2384849134642328,
+          "resnet50": 1.743995892526751
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/4c944674-3dfa-417d-915c-a69a1c30704d_gradcam.jpg",
+          "sha256": "2e4a4cbe156236510f22cf4c81249ad4212fed745ce5f1a762bfe481e02e6db1",
+          "size_bytes": 79695
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 409
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 07",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-03-13",
+      "exam_key": "clinic_large_exam_07",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "4c944674-3dfa-417d-915c-a69a1c30704d.jpg",
+        "path": "exams/normal/4c944674-3dfa-417d-915c-a69a1c30704d.jpg",
+        "sha256": "7cd40f9acfc4861af7eeae78ea2d5fb9fbacd8327b80942b954add5a3029eef8",
+        "size_bytes": 182714
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.9005635380744934,
+          "pvt_v2_b2": 0.1954931914806366,
+          "resnet50": 0.6380853056907654
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792808467265307,
+          "pvt_v2_b2": 0.34072677577731875,
+          "resnet50": 0.47999237749615065
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6516808168507187,
+          "pvt_v2_b2": 1.2385322114200814,
+          "resnet50": 1.7447587422762896
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/7a85bcd3-b3c8-42a3-a0f5-565609cbb44c_gradcam.jpg",
+          "sha256": "baaf9dc590fc56d81ef777f65b5bb7ff3fe7e8935cf4060c6795acb18a3e2875",
+          "size_bytes": 286254
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 487
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 08",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-03-18",
+      "exam_key": "clinic_large_exam_08",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "7a85bcd3-b3c8-42a3-a0f5-565609cbb44c.jpg",
+        "path": "exams/normal/7a85bcd3-b3c8-42a3-a0f5-565609cbb44c.jpg",
+        "sha256": "8d9d973a495e18e981ec6bda40c6bb14d641e5cd4dce683bd93d4bdab90dd68d",
+        "size_bytes": 734231
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5432099103927612,
+          "pvt_v2_b2": 0.18633565306663513,
+          "resnet50": 0.5004758238792419
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927845454560704,
+          "pvt_v2_b2": 0.34069788362803927,
+          "resnet50": 0.4800236618263537
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517263530195986,
+          "pvt_v2_b2": 1.2385302502812012,
+          "resnet50": 1.7450176669479127
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3c0f73a8-5755-4a9d-94b1-2f540b8109e3_gradcam.jpg",
+          "sha256": "61a1140285d67ca968dcdd5febaf5d1250ddc6e8f9b43efd63039cb03120bfda",
+          "size_bytes": 331651
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 954
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 09",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-04-02",
+      "exam_key": "clinic_large_exam_09",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_09",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3c0f73a8-5755-4a9d-94b1-2f540b8109e3.jpg",
+        "path": "exams/normal/3c0f73a8-5755-4a9d-94b1-2f540b8109e3.jpg",
+        "sha256": "6bfe690ec660677821ea6779cf5a01ef493dc084d2dd25165640939e526af8e2",
+        "size_bytes": 879332
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 10",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-03-24",
+      "exam_key": "clinic_large_exam_10",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3bf56e13-ef37-48fb-b6c1-a7220c9b3ae5.jpg",
+        "path": "exams/normal/3bf56e13-ef37-48fb-b6c1-a7220c9b3ae5.jpg",
+        "sha256": "5d01af4f815d4a51fe1353efefda2a80b4f66fa9f9d701431d2fd8691efd8485",
+        "size_bytes": 643429
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.548988938331604,
+          "pvt_v2_b2": 0.17777566611766815,
+          "resnet50": 0.6648088097572327
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17776837991700956,
+          "pvt_v2_b2": 0.34139178742837073,
+          "resnet50": 0.48083983265461977
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6449153570084427,
+          "pvt_v2_b2": 1.238515007966563,
+          "resnet50": 1.7444102966180113
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9529,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/7ac3a14e-fe8e-4bc3-b01e-a33cf9fc96c2_gradcam.jpg",
+          "sha256": "ac0f162523b7d41c9cb59edbf5c01bf747ac8477a71a0c2fcabd11d62df9af47",
+          "size_bytes": 246777
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 686
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 11",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-04-08",
+      "exam_key": "clinic_large_exam_11",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "7ac3a14e-fe8e-4bc3-b01e-a33cf9fc96c2.jpg",
+        "path": "exams/normal/7ac3a14e-fe8e-4bc3-b01e-a33cf9fc96c2.jpg",
+        "sha256": "8de0bf476e20bd69facee991bcf29cabd88fa8d67ee90ed349dd409a9515c05e",
+        "size_bytes": 478872
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4903739094734192,
+          "pvt_v2_b2": 0.19745078682899475,
+          "resnet50": 0.6073665618896484
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927077448011272,
+          "pvt_v2_b2": 0.3407038811625872,
+          "resnet50": 0.4800253443573001
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6516879929376017,
+          "pvt_v2_b2": 1.2385322099756346,
+          "resnet50": 1.7449958261774188
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/7c015078-9f75-48d3-87bb-79ea92630a74_gradcam.jpg",
+          "sha256": "b95d43c5f9b20da92565c4a0c539f3aa574ddc38a638044c133e9d9ed5334f0b",
+          "size_bytes": 66910
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 379
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 12",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-04-14",
+      "exam_key": "clinic_large_exam_12",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_02",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "7c015078-9f75-48d3-87bb-79ea92630a74.jpg",
+        "path": "exams/normal/7c015078-9f75-48d3-87bb-79ea92630a74.jpg",
+        "sha256": "a63038ec9338e2e2b6b6a0a1a04f5689bcbb08884be515fdc15db464bb5ea27e",
+        "size_bytes": 180035
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.8285753726959229,
+          "pvt_v2_b2": 0.17252251505851746,
+          "resnet50": 0.454069048166275
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17941100884989683,
+          "pvt_v2_b2": 0.34093987725097485,
+          "resnet50": 0.4796491138991283
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651728055782628,
+          "pvt_v2_b2": 1.2384974855442015,
+          "resnet50": 1.7423723686926862
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/7ca978f1-93fe-4ea6-8a94-106f48c8e01a_gradcam.jpg",
+          "sha256": "76b394d5597f23f0368c02416ceb8f25af7be12f7b21ed6ea377bbd1bf63920b",
+          "size_bytes": 326493
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 624
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 13",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-02",
+      "exam_key": "clinic_large_exam_13",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_03",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "7ca978f1-93fe-4ea6-8a94-106f48c8e01a.jpg",
+        "path": "exams/normal/7ca978f1-93fe-4ea6-8a94-106f48c8e01a.jpg",
+        "sha256": "23f6a28b91755d6532ee7d04d8de766366c9d3fa7b2c6c196c6bf0f72ef6159b",
+        "size_bytes": 838112
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.48124632239341736,
+          "pvt_v2_b2": 0.15340885519981384,
+          "resnet50": 0.37161311507225037
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17932655941808948,
+          "pvt_v2_b2": 0.3407562975830149,
+          "resnet50": 0.47991714299889565
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517234224493794,
+          "pvt_v2_b2": 1.2384047360448025,
+          "resnet50": 1.744154596744121
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/3e078f14-f99d-42d3-8ab4-426af1ac119f_gradcam.jpg",
+          "sha256": "7c9b4d463d1225a8137b41a59b681589f58c1d3e425b50d68e262006bd2d0193",
+          "size_bytes": 82423
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 369
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 14",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-06",
+      "exam_key": "clinic_large_exam_14",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3e078f14-f99d-42d3-8ab4-426af1ac119f.jpg",
+        "path": "exams/normal/3e078f14-f99d-42d3-8ab4-426af1ac119f.jpg",
+        "sha256": "e7dc62d8850979301e9f7b65e6ebeb34b1774133b1ee84683d720c17c40b17bc",
+        "size_bytes": 204234
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 15",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-04-22",
+      "exam_key": "clinic_large_exam_15",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "93a04913-7d41-4f37-a448-18ba9509da01.jpg",
+        "path": "exams/abnormal/93a04913-7d41-4f37-a448-18ba9509da01.jpg",
+        "sha256": "1eb81160ed645ae0eb83e329f2cfb07958a357f1bd4e441f8753183cf34960bd",
+        "size_bytes": 163829
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.776238203048706,
+          "pvt_v2_b2": 0.18143661320209503,
+          "resnet50": 1.1275420188903809
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927434654083524,
+          "pvt_v2_b2": 0.3406896836576706,
+          "resnet50": 0.48003596980149416
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517276676830084,
+          "pvt_v2_b2": 1.238531319277741,
+          "resnet50": 1.7451059174906378
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/94eced16-7a89-4b32-a92b-3670f59c0a62_gradcam.jpg",
+          "sha256": "e02a2c616d084df2abe40f1ae0e67faa24f6100f1c0405fa9d85ad5466f57efe",
+          "size_bytes": 77291
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 438
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 16",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-10",
+      "exam_key": "clinic_large_exam_16",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "94eced16-7a89-4b32-a92b-3670f59c0a62.jpg",
+        "path": "exams/abnormal/94eced16-7a89-4b32-a92b-3670f59c0a62.jpg",
+        "sha256": "aa0994324425fb763cba45bdce994e45fbfe80d25ed6d91b0918ad01e2d89554",
+        "size_bytes": 178433
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.7919012308120728,
+          "pvt_v2_b2": 0.18238580226898193,
+          "resnet50": 0.9942917227745056
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17920760107874756,
+          "pvt_v2_b2": 0.3408228309613024,
+          "resnet50": 0.47996956795995
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6512244562893121,
+          "pvt_v2_b2": 1.2385198029977973,
+          "resnet50": 1.7441666483375646
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/9625b393-0496-41bc-a829-8d7d7edd3d37_gradcam.jpg",
+          "sha256": "4555da59e9bdfc3ce529fb82f860bba90feb184284482994563f74a0a62ad1f7",
+          "size_bytes": 87547
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 523
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 17",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-14",
+      "exam_key": "clinic_large_exam_17",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9625b393-0496-41bc-a829-8d7d7edd3d37.jpg",
+        "path": "exams/abnormal/9625b393-0496-41bc-a829-8d7d7edd3d37.jpg",
+        "sha256": "2e8baede725e87199409eebed37dd58eb4e4766a36072234a2c35b6e6a5ac2a0",
+        "size_bytes": 192220
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.6623919010162354,
+          "pvt_v2_b2": 0.17228195071220398,
+          "resnet50": 0.9763124585151672
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17901946888467402,
+          "pvt_v2_b2": 0.3408034695447844,
+          "resnet50": 0.4801770615705416
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6505839630471273,
+          "pvt_v2_b2": 1.2385316145669703,
+          "resnet50": 1.7450364344569442
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/98631a86-77cc-4aaf-91e8-be0d3b9ae3d0_gradcam.jpg",
+          "sha256": "a99907830fe68ddd4ce665622b55690eda5abe3a8fb57c5aa186b8a5d52bf83b",
+          "size_bytes": 80901
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 352
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 18",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-18",
+      "exam_key": "clinic_large_exam_18",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "98631a86-77cc-4aaf-91e8-be0d3b9ae3d0.jpg",
+        "path": "exams/abnormal/98631a86-77cc-4aaf-91e8-be0d3b9ae3d0.jpg",
+        "sha256": "fee7ab61b8ed51fba01de09774056891c6a8a13c7e8e14dbae5ad7f319ab7129",
+        "size_bytes": 193016
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.33985546231269836,
+          "pvt_v2_b2": 0.1954154372215271,
+          "resnet50": 0.8900926113128662
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927711053895004,
+          "pvt_v2_b2": 0.34069485508112324,
+          "resnet50": 0.48002803437992675
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.745051412835465
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/94a5709e-0b95-45cf-9529-dab11496823a_gradcam.jpg",
+          "sha256": "b80b876e4c2c47e5ba1ca69ff76c072f9730d6ee1bebe24d8d7285200f06cdb0",
+          "size_bytes": 71285
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 349
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 19",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-06-02",
+      "exam_key": "clinic_large_exam_19",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_09",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "94a5709e-0b95-45cf-9529-dab11496823a.jpg",
+        "path": "exams/abnormal/94a5709e-0b95-45cf-9529-dab11496823a.jpg",
+        "sha256": "59afed551c37ea91dbecb3603ef4392bfbe30e82000f8747fa9c87388e7034e4",
+        "size_bytes": 147254
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 20",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-05-23",
+      "exam_key": "clinic_large_exam_20",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3b2df768-a38c-4c91-a7c3-f86bc327c70b.jpg",
+        "path": "exams/normal/3b2df768-a38c-4c91-a7c3-f86bc327c70b.jpg",
+        "sha256": "64cfbbe27a8dc674cd26d5f43f708bddfce67d8cbcff7346841b0a6e1301d933",
+        "size_bytes": 804958
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.3154718577861786,
+          "pvt_v2_b2": 0.1923903524875641,
+          "resnet50": 0.7535951137542725
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927473638104657,
+          "pvt_v2_b2": 0.3406904245029821,
+          "resnet50": 0.48003483911597133
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7450992604335176
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/995f90a6-1d87-4d29-b6d7-4f9e09558497_gradcam.jpg",
+          "sha256": "f0aa9532f541b0cfa18de2ee16ef3118c6e1e9b893b22020f0ad57c1d28dc480",
+          "size_bytes": 86836
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 349
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 21",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-06-07",
+      "exam_key": "clinic_large_exam_21",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "995f90a6-1d87-4d29-b6d7-4f9e09558497.jpg",
+        "path": "exams/abnormal/995f90a6-1d87-4d29-b6d7-4f9e09558497.jpg",
+        "sha256": "f58738d1da2cf9f8b2dc0da586c23aa35928f59a75f58737393076e4f004269e",
+        "size_bytes": 209679
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4281691312789917,
+          "pvt_v2_b2": 0.16187921166419983,
+          "resnet50": 0.6420954465866089
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792880807092945,
+          "pvt_v2_b2": 0.34071139723618005,
+          "resnet50": 0.4800005220545254
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279784511997,
+          "pvt_v2_b2": 1.238515964237816,
+          "resnet50": 1.7448442119325944
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/9a6f4254-3cf2-4922-87f8-0e70293780df_gradcam.jpg",
+          "sha256": "c53a3f5398e86d5462efcd6bb11f978b6a3f2178db8488c9101bcbf686534559",
+          "size_bytes": 79609
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 512
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 22",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-06-13",
+      "exam_key": "clinic_large_exam_22",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_02",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9a6f4254-3cf2-4922-87f8-0e70293780df.jpg",
+        "path": "exams/abnormal/9a6f4254-3cf2-4922-87f8-0e70293780df.jpg",
+        "sha256": "872dae085be12574c096e4facd7c846a8c8024342ad17ac7c30b5797de6287ea",
+        "size_bytes": 159679
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.3054841160774231,
+          "pvt_v2_b2": 0.11728060990571976,
+          "resnet50": 0.29842743277549744
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 0.437243944498827,
+          "resnet50": 0.562756055501173
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 1.2343486546173619,
+          "resnet50": 1.5886719272506928
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.8884,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8f7ec633-bde3-4923-8921-d06c4a356afd_gradcam.jpg",
+          "sha256": "c4d32a21aac2640447e6bd33d4a6d41953a021c0fbc20b1868a272e6e05f4e87",
+          "size_bytes": 276032
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1095
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 23",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-06-18",
+      "exam_key": "clinic_large_exam_23",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "8f7ec633-bde3-4923-8921-d06c4a356afd.jpg",
+        "path": "exams/abnormal/8f7ec633-bde3-4923-8921-d06c4a356afd.jpg",
+        "sha256": "1dcd7b25a28b38c2dd3cd9a66b9f780902c4a34ee76dd2891f16d3f4142ff95a",
+        "size_bytes": 658033
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5447523593902588,
+          "pvt_v2_b2": 0.21406830847263336,
+          "resnet50": 0.7852563261985779
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927239993806782,
+          "pvt_v2_b2": 0.34069077676209125,
+          "resnet50": 0.48003682329984093
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517191215577488,
+          "pvt_v2_b2": 1.2385325004346583,
+          "resnet50": 1.745105085358498
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/94a9e2e3-e972-43a4-9958-142cad87f38c_gradcam.jpg",
+          "sha256": "1b6d5ddfb47404523addddcc0cb1ff471a00413a3ea30be63bc55a29908fc256",
+          "size_bytes": 79432
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 399
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 24",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-03",
+      "exam_key": "clinic_large_exam_24",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "94a9e2e3-e972-43a4-9958-142cad87f38c.jpg",
+        "path": "exams/abnormal/94a9e2e3-e972-43a4-9958-142cad87f38c.jpg",
+        "sha256": "8ff2d90633ca128a20aa34ac2c60eec8a3c7060552786953663378808e07f71b",
+        "size_bytes": 168436
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 25",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-06-22",
+      "exam_key": "clinic_large_exam_25",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "3b57141b-acbf-4431-833a-8ee9a18c8cd8.jpg",
+        "path": "exams/normal/3b57141b-acbf-4431-833a-8ee9a18c8cd8.jpg",
+        "sha256": "46c2628b86310d8a17779dd587fc75d086a3dce2684a100d1e75655f040fbdcf",
+        "size_bytes": 679964
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 4.185798645019531,
+          "pvt_v2_b2": 0.14860886335372925,
+          "resnet50": 0.934921145439148
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17920041587001442,
+          "pvt_v2_b2": 0.3407151937733797,
+          "resnet50": 0.48008439035660583
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6513818603781849,
+          "pvt_v2_b2": 1.2384775766380034,
+          "resnet50": 1.7450755446675263
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/9abc35de-a9ad-4983-be5c-4f83c60f4710_gradcam.jpg",
+          "sha256": "17bdec6ef3429f93a20dfffc9d628103cf3df03052240fa60fce4306f897fdcb",
+          "size_bytes": 87370
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 346
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 26",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-08",
+      "exam_key": "clinic_large_exam_26",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9abc35de-a9ad-4983-be5c-4f83c60f4710.jpg",
+        "path": "exams/abnormal/9abc35de-a9ad-4983-be5c-4f83c60f4710.jpg",
+        "sha256": "0dfd42a2c3ab67f01ff6e646d53cb62ec009750c46bbd6cad3bb7cd2348567a2",
+        "size_bytes": 223913
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.0465868711471558,
+          "pvt_v2_b2": 0.19466868042945862,
+          "resnet50": 0.7189735174179077
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17928223766142312,
+          "pvt_v2_b2": 0.34070484225950654,
+          "resnet50": 0.48001292007907037
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279784511997,
+          "pvt_v2_b2": 1.2385325004346583,
+          "resnet50": 1.7449461481197497
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/9ae87823-cd0e-4309-aef4-71ff1a43902c_gradcam.jpg",
+          "sha256": "937738605a0831363494c342ec3c4773b3b6b10155e738d6a198ca1a0a6cb64c",
+          "size_bytes": 75887
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 391
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 27",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-12",
+      "exam_key": "clinic_large_exam_27",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_07",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9ae87823-cd0e-4309-aef4-71ff1a43902c.jpg",
+        "path": "exams/abnormal/9ae87823-cd0e-4309-aef4-71ff1a43902c.jpg",
+        "sha256": "7629eb176e7dabe042957faa2a5068de7125967c0bb760e9cc3b135f7cd9abea",
+        "size_bytes": 166945
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.49731793999671936,
+          "pvt_v2_b2": 0.1874145120382309,
+          "resnet50": 1.0221521854400635
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927464239726748,
+          "pvt_v2_b2": 0.340690083444084,
+          "resnet50": 0.48003527415864844
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2385316145669703,
+          "resnet50": 1.7451017568299376
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/9b69ae9c-9df1-4953-a750-3ff7927018b4_gradcam.jpg",
+          "sha256": "e2429516d2f99ba25514204d235bfc8a92f6701630097f444320f0cf82dbb557",
+          "size_bytes": 70558
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 360
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 28",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-17",
+      "exam_key": "clinic_large_exam_28",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9b69ae9c-9df1-4953-a750-3ff7927018b4.jpg",
+        "path": "exams/abnormal/9b69ae9c-9df1-4953-a750-3ff7927018b4.jpg",
+        "sha256": "7c74c2294b8fe415c3e481027b33a677b650ec874a329dd690726fd8ffdf48b4",
+        "size_bytes": 164052
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.9378862977027893,
+          "pvt_v2_b2": 0.19596773386001587,
+          "resnet50": 0.915401816368103
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927502958886846,
+          "pvt_v2_b2": 0.3406910629368534,
+          "resnet50": 0.48003390747427815
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2385325004346583,
+          "resnet50": 1.7450930194424672
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/94aaec39-2b33-4c51-b4f0-11c70f4cd7b5_gradcam.jpg",
+          "sha256": "3a21526d97b579ab7994657c18456472d50076d3b302a6cfc79fa6acff9216a1",
+          "size_bytes": 73338
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 450
+      },
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Colonoscopia demonstrativa 29",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-21",
+      "exam_key": "clinic_large_exam_29",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_large_patient_09",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "94aaec39-2b33-4c51-b4f0-11c70f4cd7b5.jpg",
+        "path": "exams/abnormal/94aaec39-2b33-4c51-b4f0-11c70f4cd7b5.jpg",
+        "sha256": "52a41cbc6af2b0b589221ee5186a0d13d557972074c204c18491b6bf5b046dc4",
+        "size_bytes": 161991
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_large",
+      "clinic_name": "Hospital Regional Cariri",
+      "description": "Endoscopia demonstrativa 30",
+      "doctor_key": "doctor_large",
+      "exam_date": "2026-07-24",
+      "exam_key": "clinic_large_exam_30",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_large_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "91c7512c-b400-4049-b35b-10ef5d16d193.jpg",
+        "path": "exams/abnormal/91c7512c-b400-4049-b35b-10ef5d16d193.jpg",
+        "sha256": "be0c3b7dd5eb400dc15589bb2512e855a9d5c7f78e16f315d7a4b355a0179d28",
+        "size_bytes": 149358
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.3161022961139679,
+          "pvt_v2_b2": 0.1475159078836441,
+          "resnet50": 0.48795342445373535
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.00292065428284849,
+          "pvt_v2_b2": 0.41390821257203986,
+          "resnet50": 0.5831711331451116
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.008738451923989267,
+          "pvt_v2_b2": 1.2383927251319697,
+          "resnet50": 1.744818940185143
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9145,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8990a6e0-41ee-4159-92cb-eb9748396aca_gradcam.jpg",
+          "sha256": "47eae80c06f82220e8fee92beeab8e797565b98bf610ab2ff1a896601eda5683",
+          "size_bytes": 240650
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 824
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 01",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-02-06",
+      "exam_key": "clinic_specialized_exam_01",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "8990a6e0-41ee-4159-92cb-eb9748396aca.jpg",
+        "path": "exams/normal/8990a6e0-41ee-4159-92cb-eb9748396aca.jpg",
+        "sha256": "0ea9665404db8a0ec469ce71dd3ae9f16200f6ab4a5e078dbeb2271dd1c54769",
+        "size_bytes": 457460
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.46815699338912964,
+          "pvt_v2_b2": 0.15460273623466492,
+          "resnet50": 0.49621662497520447
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17119267067388214,
+          "pvt_v2_b2": 0.3441556458361271,
+          "resnet50": 0.48465168348999077
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6160663719208851,
+          "pvt_v2_b2": 1.2385034900836966,
+          "resnet50": 1.744102730085979
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9515,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/a98d59d6-8d81-4a17-89da-0974dcf69314_gradcam.jpg",
+          "sha256": "2c1d1623d014676572c3ec48477956ae4a194ac4c5a47d1e4b98d31ff772f828",
+          "size_bytes": 72228
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 393
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 02",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-02-12",
+      "exam_key": "clinic_specialized_exam_02",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_02",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "a98d59d6-8d81-4a17-89da-0974dcf69314.jpg",
+        "path": "exams/normal/a98d59d6-8d81-4a17-89da-0974dcf69314.jpg",
+        "sha256": "d86ca2c74a69c69779c259d8a5e956d934c1412241d1c32c91d1f59e1029c52c",
+        "size_bytes": 141107
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.3660842478275299,
+          "pvt_v2_b2": 0.21387751400470734,
+          "resnet50": 0.971534788608551
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792747509429906,
+          "pvt_v2_b2": 0.3406903709492615,
+          "resnet50": 0.4800348781077479
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.7450992604335176
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/aa3978e4-6885-4919-88bc-bede64743e00_gradcam.jpg",
+          "sha256": "d5acd2e86ddabeca56825b6ba3d0ffc42f0c5fc7c64b0303f3274493b53b9e54",
+          "size_bytes": 70621
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 428
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 03",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-02-19",
+      "exam_key": "clinic_specialized_exam_03",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "aa3978e4-6885-4919-88bc-bede64743e00.jpg",
+        "path": "exams/abnormal/aa3978e4-6885-4919-88bc-bede64743e00.jpg",
+        "sha256": "c26f3ae1656c7195ed5cb4985ee2fca6722209c3afc75134d76370f9011b3d7a",
+        "size_bytes": 159636
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.6216429471969604,
+          "pvt_v2_b2": 0.18469911813735962,
+          "resnet50": 0.4226069152355194
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17928744844847117,
+          "pvt_v2_b2": 0.34072317260325946,
+          "resnet50": 0.47998937894826943
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517080185157819,
+          "pvt_v2_b2": 1.2385252040858885,
+          "resnet50": 1.74475642199182
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/8710bd86-02d1-40d9-b373-fa7e753578e9_gradcam.jpg",
+          "sha256": "ce4e8d309b374242397e67f66d7b4d64d3722aa5dcaf4d88c780d9f1d233f9bb",
+          "size_bytes": 237107
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1735
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 04",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-03-05",
+      "exam_key": "clinic_specialized_exam_04",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "8710bd86-02d1-40d9-b373-fa7e753578e9.jpg",
+        "path": "exams/normal/8710bd86-02d1-40d9-b373-fa7e753578e9.jpg",
+        "sha256": "2050c8f8a8660693b833e87bb70ff70615114dfc6e3eb156874157b2df04c187",
+        "size_bytes": 589289
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 05",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-02-26",
+      "exam_key": "clinic_specialized_exam_05",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9c7c79b8-1196-440a-baa1-158f451bd63f.jpg",
+        "path": "exams/abnormal/9c7c79b8-1196-440a-baa1-158f451bd63f.jpg",
+        "sha256": "f7931ce3f69235c24be16c88f7c1e54b088ae1cac4f34b36b5d9feda2660d6a4",
+        "size_bytes": 209692
+      },
+      "status": "pending"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.44515877962112427,
+          "pvt_v2_b2": 0.20600584149360657,
+          "resnet50": 0.7235910296440125
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927768240866238,
+          "pvt_v2_b2": 0.3406961855364895,
+          "resnet50": 0.4800261320548482
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2385327957238876,
+          "resnet50": 1.7450389308533645
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/aa73426e-5f8a-4a97-9dba-aa0c654b64f6_gradcam.jpg",
+          "sha256": "071fe237a2a31832232bcf08ac45db5daa5d2f9519f56d98d8d2cb9ccbf9eced",
+          "size_bytes": 94076
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 500
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 06",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-03-10",
+      "exam_key": "clinic_specialized_exam_06",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "aa73426e-5f8a-4a97-9dba-aa0c654b64f6.jpg",
+        "path": "exams/abnormal/aa73426e-5f8a-4a97-9dba-aa0c654b64f6.jpg",
+        "sha256": "6eb5373b5e8c7a8f32f6ef8aff7275c62b82efcf391e6956d1bd44ce006397c5",
+        "size_bytes": 196516
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4888157844543457,
+          "pvt_v2_b2": 0.2013825923204422,
+          "resnet50": 0.76310133934021
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17934114680779017,
+          "pvt_v2_b2": 0.3408166296612517,
+          "resnet50": 0.4798422235309582
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7437530786639635
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/ad337369-7968-4eef-a761-d06eab0d1ae2_gradcam.jpg",
+          "sha256": "eed790e060edb17719f36bc828666fdf4c28066715ae2035cd786ae63838a2a0",
+          "size_bytes": 75074
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 407
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 07",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-03-14",
+      "exam_key": "clinic_specialized_exam_07",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_07",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "ad337369-7968-4eef-a761-d06eab0d1ae2.jpg",
+        "path": "exams/abnormal/ad337369-7968-4eef-a761-d06eab0d1ae2.jpg",
+        "sha256": "8b085992fcb5b74939ffd8e200d8655cacb40fcc912059b59be146b3e7392bf7",
+        "size_bytes": 170653
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 3.3730993270874023,
+          "pvt_v2_b2": 0.2074187844991684,
+          "resnet50": 0.8146268129348755
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1791955792319945,
+          "pvt_v2_b2": 0.3407256590481587,
+          "resnet50": 0.4800787617198468
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651373003484734,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7450784571300164
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/ad879312-1a6e-4c89-b72c-25d0629fc0c4_gradcam.jpg",
+          "sha256": "3b80f876b63cbd4aa3915698d28bbaa50625df3c754fc5b47c9bce76aa9b2652",
+          "size_bytes": 349014
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 2291
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 08",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-03-19",
+      "exam_key": "clinic_specialized_exam_08",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "ad879312-1a6e-4c89-b72c-25d0629fc0c4.jpg",
+        "path": "exams/abnormal/ad879312-1a6e-4c89-b72c-25d0629fc0c4.jpg",
+        "sha256": "111ee7657456cefb33cabadbddcecc1781fa5ab42294f632cf8db89b0a94d3eb",
+        "size_bytes": 887327
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5047712326049805,
+          "pvt_v2_b2": 0.10920676589012146,
+          "resnet50": 0.5081169009208679
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17972533631743273,
+          "pvt_v2_b2": 0.3402410638058039,
+          "resnet50": 0.4800335998767634
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6516676255954985,
+          "pvt_v2_b2": 1.2336829671516285,
+          "resnet50": 1.7405579126876134
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9528,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/882f9f9d-f941-4e08-986d-d78d8a268697_gradcam.jpg",
+          "sha256": "ff914af9049ffadff093080fcc44efbc87ff58156f5ca6e1498c344162528cc4",
+          "size_bytes": 185368
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 2561
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 09",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-04-04",
+      "exam_key": "clinic_specialized_exam_09",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_09",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "882f9f9d-f941-4e08-986d-d78d8a268697.jpg",
+        "path": "exams/normal/882f9f9d-f941-4e08-986d-d78d8a268697.jpg",
+        "sha256": "b90747d0d1fe8e78a11ca00cd952c9f56cbfbb505f6ade3e29962a3158b3179a",
+        "size_bytes": 457695
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 10",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-03-26",
+      "exam_key": "clinic_specialized_exam_10",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "851d921c-2db7-48d8-92b4-8ba29ae8fc50.jpg",
+        "path": "exams/normal/851d921c-2db7-48d8-92b4-8ba29ae8fc50.jpg",
+        "sha256": "4d789b4eff6cd068b3bfa59275f9fa1c49f9604b269f4ef3c337cefc2408493f",
+        "size_bytes": 514453
+      },
+      "status": "pending"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.9601149559020996,
+          "pvt_v2_b2": 0.19443228840827942,
+          "resnet50": 0.910241425037384
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927595290528914,
+          "pvt_v2_b2": 0.3406928175908427,
+          "resnet50": 0.4800312295038681
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.651727823067104,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.7450734643371761
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/adc09942-ecb5-479e-bb59-f02f336e4ac7_gradcam.jpg",
+          "sha256": "9fa55797eb7e4f118ec1958cedd29902a3819a6abcee0d6cd594feb2e7f435ad",
+          "size_bytes": 90296
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 430
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 11",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-04-10",
+      "exam_key": "clinic_specialized_exam_11",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "adc09942-ecb5-479e-bb59-f02f336e4ac7.jpg",
+        "path": "exams/abnormal/adc09942-ecb5-479e-bb59-f02f336e4ac7.jpg",
+        "sha256": "4723d56f2e5b4ec84988fa4dfc6238227a68c06ed010989229504a2c7e17597d",
+        "size_bytes": 192258
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5389225482940674,
+          "pvt_v2_b2": 0.16733212769031525,
+          "resnet50": 0.7561688423156738
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792938731729768,
+          "pvt_v2_b2": 0.34071688096173103,
+          "resnet50": 0.47998924586529224
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279784511997,
+          "pvt_v2_b2": 1.2384958845702216,
+          "resnet50": 1.7447468524722094
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/d324ff38-94db-45c2-98c7-d21c8640ff11_gradcam.jpg",
+          "sha256": "38e101f313ebc30bb163363b51fdb76dc656e3c072866dd63845322a1ae95713",
+          "size_bytes": 82107
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 374
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 12",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-04-16",
+      "exam_key": "clinic_specialized_exam_12",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_02",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "d324ff38-94db-45c2-98c7-d21c8640ff11.jpg",
+        "path": "exams/abnormal/d324ff38-94db-45c2-98c7-d21c8640ff11.jpg",
+        "sha256": "507806c2a663096ed7a4003a2c52e67c78fad084e0a90c8bdaed29c29e20e56b",
+        "size_bytes": 188714
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.5557384490966797,
+          "pvt_v2_b2": 0.17865914106369019,
+          "resnet50": 0.6076502799987793
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17933636478928802,
+          "pvt_v2_b2": 0.3408074919678804,
+          "resnet50": 0.47985614324283166
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281296902913,
+          "pvt_v2_b2": 1.2385320154428199,
+          "resnet50": 1.7438501506568245
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9531,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/dcfe9caf-07e3-44cf-a743-0082d788f4ac_gradcam.jpg",
+          "sha256": "af1628ef871541a79e7701c77ccb8b6b2c9bf9c8f42fc79ffd15e6274caf122f",
+          "size_bytes": 213714
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 750
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 13",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-03",
+      "exam_key": "clinic_specialized_exam_13",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_03",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "dcfe9caf-07e3-44cf-a743-0082d788f4ac.jpg",
+        "path": "exams/normal/dcfe9caf-07e3-44cf-a743-0082d788f4ac.jpg",
+        "sha256": "c1bbfadd5ce5e061ea1b113a2e5fd25af30d7a6513cf07e8a7d9f4894425bf78",
+        "size_bytes": 598907
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.7863191366195679,
+          "pvt_v2_b2": 0.14425121247768402,
+          "resnet50": 0.5905805826187134
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792772099963403,
+          "pvt_v2_b2": 0.34068220862946413,
+          "resnet50": 0.48004058137419564
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517257280550852,
+          "pvt_v2_b2": 1.2384806772650265,
+          "resnet50": 1.74508961511879
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/891fd052-5d07-4aaa-87f1-528685a1946d_gradcam.jpg",
+          "sha256": "54d4e6cec1e2989fcc6d2cf1ae5d1279e89ddf836faf22f8c463d94e55d4d4a3",
+          "size_bytes": 240151
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1028
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 14",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-07",
+      "exam_key": "clinic_specialized_exam_14",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "891fd052-5d07-4aaa-87f1-528685a1946d.jpg",
+        "path": "exams/normal/891fd052-5d07-4aaa-87f1-528685a1946d.jpg",
+        "sha256": "019c8edfa43f4b559d31044f9bd42f872aea724e0c90a84438e6ad070a77de56",
+        "size_bytes": 618878
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 15",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-04-24",
+      "exam_key": "clinic_specialized_exam_15",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9bf37da2-4bd1-4a8a-aff9-66bdcc918ea9.jpg",
+        "path": "exams/abnormal/9bf37da2-4bd1-4a8a-aff9-66bdcc918ea9.jpg",
+        "sha256": "b401f738869371f9d204e01ec1c8b0611fe98dfcd32eae08a6d160c2987def3b",
+        "size_bytes": 174579
+      },
+      "status": "canceled"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.0464198589324951,
+          "pvt_v2_b2": 0.18578118085861206,
+          "resnet50": 0.46921002864837646
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1794631292910242,
+          "pvt_v2_b2": 0.34106011769970485,
+          "resnet50": 0.47947675300927095
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517058431289591,
+          "pvt_v2_b2": 1.2385322402503376,
+          "resnet50": 1.7411810593914072
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.953,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/dd2357a6-25e2-4064-b308-b82ef7298be5_gradcam.jpg",
+          "sha256": "3282d28b8b2d5d9e3da84ac55ce9d76d3c28bd4222aad06f08de285f97145237",
+          "size_bytes": 236392
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 716
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 16",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-11",
+      "exam_key": "clinic_specialized_exam_16",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "dd2357a6-25e2-4064-b308-b82ef7298be5.jpg",
+        "path": "exams/normal/dd2357a6-25e2-4064-b308-b82ef7298be5.jpg",
+        "sha256": "686ab8702955c7a2a7b2a49932be33fc6621cd7dec9109fda70398ce8fce723e",
+        "size_bytes": 629498
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 1.5552442073822021,
+          "pvt_v2_b2": 0.1853390634059906,
+          "resnet50": 0.5138317346572876
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17932413773839917,
+          "pvt_v2_b2": 0.3407841632292879,
+          "resnet50": 0.47989169903231294
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.65172813330492,
+          "pvt_v2_b2": 1.2385316854851067,
+          "resnet50": 1.7440982856145855
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/dd8be1a0-e023-4681-8ad6-dbe7f70395f4_gradcam.jpg",
+          "sha256": "2e37f36f334079513e88791642333a8c8d57250096e9adb7cd8ed2eb3098a400",
+          "size_bytes": 416825
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 598
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 17",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-16",
+      "exam_key": "clinic_specialized_exam_17",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_07",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "dd8be1a0-e023-4681-8ad6-dbe7f70395f4.jpg",
+        "path": "exams/normal/dd8be1a0-e023-4681-8ad6-dbe7f70395f4.jpg",
+        "sha256": "c3ffb283899ec636b3c78110596c55e36f33d2a2b886e069356aa2fd57afd610",
+        "size_bytes": 1043080
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.2867136299610138,
+          "pvt_v2_b2": 0.1857520341873169,
+          "resnet50": 0.4588809013366699
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17890721050414077,
+          "pvt_v2_b2": 0.34267093987215763,
+          "resnet50": 0.4784218496237016
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6466279033954115,
+          "pvt_v2_b2": 1.2385224205311725,
+          "resnet50": 1.7291696443591296
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9522,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/de2bfb04-2fd2-4034-b342-7a79be78c92a_gradcam.jpg",
+          "sha256": "fa278b0b2af3bc2662f6a8a4b8b3a55b4abe63c71e04d07843a2788b617341e4",
+          "size_bytes": 225147
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1075
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 18",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-20",
+      "exam_key": "clinic_specialized_exam_18",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "de2bfb04-2fd2-4034-b342-7a79be78c92a.jpg",
+        "path": "exams/normal/de2bfb04-2fd2-4034-b342-7a79be78c92a.jpg",
+        "sha256": "ef4e65e18eeb7a2e147750e95a766ccc87579238c1073b7cd38933becba4f2ef",
+        "size_bytes": 552107
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 2.201648235321045,
+          "pvt_v2_b2": 0.17759816348552704,
+          "resnet50": 0.8260164856910706
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17929536100802881,
+          "pvt_v2_b2": 0.3408009595635131,
+          "resnet50": 0.47990367942845813
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6515915512152369,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.744056182795974
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/a4391f84-6aa1-4963-b0ad-b60b23f805e6_gradcam.jpg",
+          "sha256": "8375bcc6b113d29a69edd8f03476c5147799321b4e9866c1bba68412a3622d71",
+          "size_bytes": 77217
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 519
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 19",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-06-03",
+      "exam_key": "clinic_specialized_exam_19",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_09",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "a4391f84-6aa1-4963-b0ad-b60b23f805e6.jpg",
+        "path": "exams/abnormal/a4391f84-6aa1-4963-b0ad-b60b23f805e6.jpg",
+        "sha256": "0d0f4e227c1fd217beb0f9f70fcfadc4b314fdce5a8ed181e4c41b8e31ed9965",
+        "size_bytes": 155871
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 20",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-05-24",
+      "exam_key": "clinic_specialized_exam_20",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "8276ff53-d9ba-4e70-8315-0290f7ff6a22.jpg",
+        "path": "exams/normal/8276ff53-d9ba-4e70-8315-0290f7ff6a22.jpg",
+        "sha256": "1fbad4a55d84fbf805de8fc7c5c7a5892602f42a2abf3a5c0812087e43a39675",
+        "size_bytes": 613469
+      },
+      "status": "pending"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5313552021980286,
+          "pvt_v2_b2": 0.15911515057086945,
+          "resnet50": 0.4919072389602661
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17930168527440854,
+          "pvt_v2_b2": 0.3407182138127742,
+          "resnet50": 0.4799801009128173
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517233272165759,
+          "pvt_v2_b2": 1.2384379299587283,
+          "resnet50": 1.744625143293601
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9532,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/df59d76a-9d60-4663-9adf-dedae66e1cf2_gradcam.jpg",
+          "sha256": "ecbf4a37bf9e830454220f6de0675a52b1c448e51ef33be39adb088b51b8998b",
+          "size_bytes": 246050
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 944
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 21",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-06-09",
+      "exam_key": "clinic_specialized_exam_21",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_01",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "df59d76a-9d60-4663-9adf-dedae66e1cf2.jpg",
+        "path": "exams/normal/df59d76a-9d60-4663-9adf-dedae66e1cf2.jpg",
+        "sha256": "3705adab21cd7d7923d4e58da91e831bd82a5487d69f51bc6cf5f04997fb8e20",
+        "size_bytes": 614546
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.6050039529800415,
+          "pvt_v2_b2": 0.1794428676366806,
+          "resnet50": 0.727959394454956
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927459275549523,
+          "pvt_v2_b2": 0.34069015155961574,
+          "resnet50": 0.4800352556848891
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7451021728960077
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/e05779e5-50c8-4340-886c-72e46782ce79_gradcam.jpg",
+          "sha256": "9c8b63c3bf0b67dedf3e51c05926f7293f81f5d13ce9164a14a7d76ebd2db469",
+          "size_bytes": 85460
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 461
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 22",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-06-14",
+      "exam_key": "clinic_specialized_exam_22",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_02",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "e05779e5-50c8-4340-886c-72e46782ce79.jpg",
+        "path": "exams/abnormal/e05779e5-50c8-4340-886c-72e46782ce79.jpg",
+        "sha256": "f0a44fa69b726775d875955d99e0b7f3fbe7143d2e3b54268c2dd905b2ab679d",
+        "size_bytes": 204822
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.47526097297668457,
+          "pvt_v2_b2": 0.2140103280544281,
+          "resnet50": 0.5612871050834656
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.1792756861682271,
+          "pvt_v2_b2": 0.3406923106885154,
+          "resnet50": 0.4800320031432575
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517279784511997,
+          "pvt_v2_b2": 1.238532205145429,
+          "resnet50": 1.7450792892621565
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/e062f910-d08b-4a98-8e96-a0ad1a744154_gradcam.jpg",
+          "sha256": "015893463f3ab5315f16fb7e2a85ef83288ba7a48a261958ecd0b4ee5f3b3772",
+          "size_bytes": 74206
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 547
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 23",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-06-20",
+      "exam_key": "clinic_specialized_exam_23",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_03",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "e062f910-d08b-4a98-8e96-a0ad1a744154.jpg",
+        "path": "exams/abnormal/e062f910-d08b-4a98-8e96-a0ad1a744154.jpg",
+        "sha256": "5629b8bc4aeaac1e150c797ee45491de436cbd2b52f926f7b607420aa701eff2",
+        "size_bytes": 156996
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4766787886619568,
+          "pvt_v2_b2": 0.16077116131782532,
+          "resnet50": 1.480385184288025
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.179285047157128,
+          "pvt_v2_b2": 0.3406858118850182,
+          "resnet50": 0.4800291409578539
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517281338352953,
+          "pvt_v2_b2": 1.2384442089550896,
+          "resnet50": 1.7449781852071413
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/a5302d7a-18f8-4c15-9daa-9b0777f855eb_gradcam.jpg",
+          "sha256": "865c36363b8d9efbffa8d97794285d3444ec66daddaaa26dfb6cc61b8b5773b7",
+          "size_bytes": 59384
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 402
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 24",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-05",
+      "exam_key": "clinic_specialized_exam_24",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_04",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "a5302d7a-18f8-4c15-9daa-9b0777f855eb.jpg",
+        "path": "exams/abnormal/a5302d7a-18f8-4c15-9daa-9b0777f855eb.jpg",
+        "sha256": "df265d4fcabfa78f813002d40882228a253cb9899fce9335ed21b8e8f2bdc0b8",
+        "size_bytes": 125236
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 25",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-06-24",
+      "exam_key": "clinic_specialized_exam_25",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_05",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "8516ff3f-b362-42ce-a1da-41052ab459c0.jpg",
+        "path": "exams/normal/8516ff3f-b362-42ce-a1da-41052ab459c0.jpg",
+        "sha256": "089eaf943ae848fcad629e6abb8c9a1538a2d56025675bcd2909e3dd842451c0",
+        "size_bytes": 904291
+      },
+      "status": "failed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.5236304998397827,
+          "pvt_v2_b2": 0.16859832406044006,
+          "resnet50": 0.6194813251495361
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17988185863761197,
+          "pvt_v2_b2": 0.3418546705519803,
+          "resnet50": 0.4782634708104077
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6516878824644793,
+          "pvt_v2_b2": 1.2384936871895877,
+          "resnet50": 1.7326845014452015
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9526,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/e11e8c02-40ee-479b-8a92-89a08eb96ca1_gradcam.jpg",
+          "sha256": "4996aa0ca0e6912bdc6b90e5a8858960f8127ed5154f4b4159eebfe257bbf2a5",
+          "size_bytes": 231608
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 645
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 26",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-09",
+      "exam_key": "clinic_specialized_exam_26",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_06",
+      "review": {
+        "agrees_with_ai": true,
+        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "reviewed_label": "normal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "e11e8c02-40ee-479b-8a92-89a08eb96ca1.jpg",
+        "path": "exams/normal/e11e8c02-40ee-479b-8a92-89a08eb96ca1.jpg",
+        "sha256": "4fae23b0694f300ce79201e04c9617231f682c46c8de1c2ae7342386144c94ba",
+        "size_bytes": 449597
+      },
+      "status": "completed"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.6994562149047852,
+          "pvt_v2_b2": 0.17947034537792206,
+          "resnet50": 0.28503087162971497
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.19375574923688396,
+          "pvt_v2_b2": 0.36820632734674147,
+          "resnet50": 0.4380379234163746
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517277837939345,
+          "pvt_v2_b2": 1.238519603396183,
+          "resnet50": 1.4734091048664784
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.9395,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/e15c7bed-37ef-4720-a0c8-0f255cc8cf4b_gradcam.jpg",
+          "sha256": "a67b4b095bfd342267e2a26ed123b9ebd689242198fbf34b35f2ff4bcea26b35",
+          "size_bytes": 216999
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1802
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 27",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-14",
+      "exam_key": "clinic_specialized_exam_27",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_07",
+      "review": {
+        "agrees_with_ai": false,
+        "review_notes": "Revisão clínica demonstrativa divergente do resultado apresentado pela IA.",
+        "reviewed_label": "abnormal"
+      },
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "normal",
+        "name": "e15c7bed-37ef-4720-a0c8-0f255cc8cf4b.jpg",
+        "path": "exams/normal/e15c7bed-37ef-4720-a0c8-0f255cc8cf4b.jpg",
+        "sha256": "2fade61222724e5fbcce6ba42ba20ac173f4b32f1f84778ed3e15c78ac19d384",
+        "size_bytes": 398839
+      },
+      "status": "completed_with_divergence"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.4535052180290222,
+          "pvt_v2_b2": 0.1820765882730484,
+          "resnet50": 0.9321568608283997
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17927102651298876,
+          "pvt_v2_b2": 0.3406918219747205,
+          "resnet50": 0.48003715151229065
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6517118185052542,
+          "pvt_v2_b2": 1.2385319098561998,
+          "resnet50": 1.7451000925656577
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/e274b42b-5309-4234-bb68-8776817f4f1d_gradcam.jpg",
+          "sha256": "e2378727c6b4a2db71004ed1b28e767628da1b427f83fe190a45bf679f808803",
+          "size_bytes": 75985
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 354
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 28",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-18",
+      "exam_key": "clinic_specialized_exam_28",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_08",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "e274b42b-5309-4234-bb68-8776817f4f1d.jpg",
+        "path": "exams/abnormal/e274b42b-5309-4234-bb68-8776817f4f1d.jpg",
+        "sha256": "aa2d2afe798072c7782411b509b27c54cd6834bdeba31c1c6f19a0cc4143d688",
+        "size_bytes": 189259
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": {
+        "attribution_branch_cam_raw_maxima": {
+          "efficientnet_b4": 0.998442530632019,
+          "pvt_v2_b2": 0.16543956100940704,
+          "resnet50": 1.0036582946777344
+        },
+        "attribution_branch_weights": {
+          "efficientnet_b4": 0.17922397048246935,
+          "pvt_v2_b2": 0.340702518006299,
+          "resnet50": 0.48007351151123157
+        },
+        "attribution_local_evidence": {
+          "efficientnet_b4": 0.6514937369270382,
+          "pvt_v2_b2": 1.2384814153979846,
+          "resnet50": 1.7451063335567079
+        },
+        "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
+        "attribution_target_layers": {
+          "efficientnet_b4": "blocks[-1]",
+          "pvt_v2_b2": "stages[-1]",
+          "resnet50": "layer4[-1]"
+        },
+        "attribution_unavailable_reason": null,
+        "confidence": 0.986,
+        "device": "cpu",
+        "gradcam_asset": {
+          "kind": "gradcam",
+          "path": "gradcam/a673ca7c-b308-4a4d-8ef7-b13025b13371_gradcam.jpg",
+          "sha256": "2b34b271ed372bf31670b8a88d525a37a1dade4d5346fa9ebf9222a52bb1ac35",
+          "size_bytes": 81635
+        },
+        "model_name": "ensemble_stacking",
+        "model_version": "0.1.1",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 474
+      },
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Colonoscopia demonstrativa 29",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-23",
+      "exam_key": "clinic_specialized_exam_29",
+      "exam_type": "colonoscopy",
+      "patient_key": "clinic_specialized_patient_09",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "a673ca7c-b308-4a4d-8ef7-b13025b13371.jpg",
+        "path": "exams/abnormal/a673ca7c-b308-4a4d-8ef7-b13025b13371.jpg",
+        "sha256": "b1e77cfe9a60bcfc58a15dc065939993653f498cd0a03bda00adb51e597a21aa",
+        "size_bytes": 160391
+      },
+      "status": "awaiting_review"
+    },
+    {
+      "analysis": null,
+      "clinic_key": "clinic_specialized",
+      "clinic_name": "Centro Endoscópico Cariri",
+      "description": "Endoscopia demonstrativa 30",
+      "doctor_key": "doctor_specialized",
+      "exam_date": "2026-07-26",
+      "exam_key": "clinic_specialized_exam_30",
+      "exam_type": "endoscopy",
+      "patient_key": "clinic_specialized_patient_10",
+      "review": null,
+      "source_asset": {
+        "kind": "exam_image",
+        "label": "abnormal",
+        "name": "9b917fd1-13d7-46a4-9558-4272af599b59.jpg",
+        "path": "exams/abnormal/9b917fd1-13d7-46a4-9558-4272af599b59.jpg",
+        "sha256": "1fc5267c710d6082b65d5472b91d6e9faa33a237930a692134c81de88aff2ca3",
+        "size_bytes": 183654
+      },
+      "status": "pending"
+    }
+  ],
+  "model": {
+    "name": "ensemble_stacking",
+    "operational_fold": 3,
+    "release": "models-v0.1.1",
+    "training_protocol": "viana_codigo_kfold3_roi_sh_da",
+    "version": "0.1.1"
+  },
+  "schema_version": 2,
+  "summary": {
+    "prediction_labels": {
+      "abnormal": 34,
+      "normal": 38
+    },
+    "source_labels": {
+      "abnormal": 45,
+      "normal": 45
+    },
+    "statuses": {
+      "awaiting_review": 18,
+      "canceled": 3,
+      "completed": 52,
+      "completed_with_divergence": 2,
+      "failed": 6,
+      "pending": 9
+    }
+  }
+}

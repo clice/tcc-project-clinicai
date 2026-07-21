@@ -5,6 +5,8 @@ Logs são apenas consultados pela API.
 A criação deve acontecer automaticamente pelos services do sistema.
 """
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,8 @@ def list_audit_logs_route(
     user_id: int | None = Query(default=None),
     entity: str | None = Query(default=None),
     action: str | None = Query(default=None),
+    date_from: date | None = Query(default=None),
+    date_to: date | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -42,6 +46,8 @@ def list_audit_logs_route(
         user_id=user_id,
         entity=entity,
         action=action,
+        date_from=date_from,
+        date_to=date_to,
         limit=limit,
         offset=offset,
     )

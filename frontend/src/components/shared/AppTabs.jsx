@@ -12,7 +12,7 @@ import { CBadge, CNav, CNavItem, CNavLink } from '@coreui/react'
 
 const AppTabs = ({ activeTab, counts = {}, onChange, tabs = [] }) => {
   return (
-    <CNav variant="tabs" role="tablist" className="mb-3">
+    <CNav variant="tabs" role="tablist" className="clinicai-tabs mb-3">
       {tabs.map((tab) => (
         <CNavItem key={tab.key}>
           <CNavLink
@@ -25,9 +25,11 @@ const AppTabs = ({ activeTab, counts = {}, onChange, tabs = [] }) => {
             {tab.label}
 
             <CBadge
-              color={activeTab === tab.key ? 'primary' : 'secondary'}
+              color="secondary"
               shape="rounded-pill"
-              className="ms-2"
+              className={`ms-2 ${
+                activeTab === tab.key ? 'clinicai-tab-badge-active' : 'clinicai-tab-badge-inactive'
+              }`}
             >
               {counts[tab.key] ?? 0}
             </CBadge>

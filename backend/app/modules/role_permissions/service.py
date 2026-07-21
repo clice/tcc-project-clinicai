@@ -8,7 +8,7 @@ entre perfis de acesso e permissões.
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 
-from app.common.constants import AuditAction, AuditEntity
+from app.common.constants import AuditAction, AuditEntity, RoleName
 from app.common.services import (
     apply_update_data,
     model_dump_update,
@@ -37,6 +37,24 @@ def validate_role_exists(db: Session, role_id: int) -> Role:
         )
 
     return role
+
+
+def ensure_role_permission_matrix_editable(role: Role) -> None:
+    """Impede alterações sem efeito na matriz fixa do Administrador Master.
+
+    O ``admin_master`` possui bypass autoritativo no backend e no frontend.
+    Permitir que seus vínculos fossem adicionados ou removidos pela API
+    criaria uma configuração visual divergente do acesso real.
+    """
+
+    if role.name == RoleName.ADMIN_MASTER.value:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "A matriz de permissões do Administrador Master é fixa e "
+                "não pode ser alterada."
+            ),
+        )
 
 
 def validate_permission_exists(db: Session, permission_id: int) -> Permission:
@@ -176,6 +194,7 @@ def create_role_permission(
     Cria um novo vínculo entre role e permission.
     """
     role = validate_role_exists(db=db, role_id=payload.role_id)
+    ensure_role_permission_matrix_editable(role)
     permission = validate_permission_exists(db=db, permission_id=payload.permission_id)
 
     check_role_permission_duplicate(
@@ -248,7 +267,11 @@ def update_role_permission(
         role_permission.permission_id,
     )
 
+    if role_permission.role is not None:
+        ensure_role_permission_matrix_editable(role_permission.role)
+
     role = validate_role_exists(db=db, role_id=new_role_id)
+    ensure_role_permission_matrix_editable(role)
     permission = validate_permission_exists(db=db, permission_id=new_permission_id)
 
     check_role_permission_duplicate(
@@ -297,6 +320,9 @@ def delete_role_permission(
         role_permission_id=role_permission_id,
     )
 
+    if role_permission.role is not None:
+        ensure_role_permission_matrix_editable(role_permission.role)
+
     old_data = {
         "id": role_permission.id,
         "role_id": role_permission.role_id,
@@ -342,6 +368,7 @@ def sync_role_permissions(
     de uma vez, com rollback integral em qualquer erro.
     """
     role = validate_role_exists(db=db, role_id=role_id)
+    ensure_role_permission_matrix_editable(role)
 
     ids_invalidos = [
         pid for pid in permission_ids

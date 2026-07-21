@@ -16,8 +16,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 - **Implementar Autenticação Segura:** JWT (_access_ + _refresh token_) para controle de acesso.
 - **Gerenciar Estrutura Administrativa:** usuários, clínicas, pacientes, perfis e permissões.
 - **Organizar Dados Clínicos:** exames endoscópicos, com fluxo de status e revisão médica.
-- **Aplicar Inteligência Artificial:** classificação de imagens endoscópicas (atualmente ResNet-50,
-  com _Ensemble Stacking_ em desenvolvimento), com explicabilidade via Grad-CAM.
+- **Aplicar Inteligência Artificial:** classificação binária de imagens endoscópicas por
+  _Ensemble Stacking_, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2, com explicabilidade
+  visual post-hoc por Grad-CAM.
 - **Aplicar Boas Práticas de Engenharia de Software:** separação de camadas, Docker, migrations
   e organização modular.
 
@@ -25,9 +26,9 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ## 📈 Status Atual do Projeto
 
-- **Status geral:** Em desenvolvimento — protótipo funcional
-- **Fase atual:** Correção de bugs e fechamento do fluxo de análise de exames (IA + revisão médica)
-- **Próxima etapa:** _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2) e telas de resultado de IA
+- **Status geral:** Protótipo acadêmico funcional em fase de finalização
+- **Fase atual:** Validação final do fluxo de exames, segurança, massa de demonstração e documentação
+- **Próxima etapa:** Testes de falha e reprocessamento, consolidação da demonstração e conclusão da monografia
 
 > Este README reflete o estado real do código. Módulos listados como "implementados" abaixo já
 > funcionam de ponta a ponta; "em desenvolvimento" indica que existe implementação parcial.
@@ -56,10 +57,10 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ### 🧠 Inteligência Artificial
 
-- PyTorch, torchvision (ResNet-50 em produção; EfficientNet-B4 e PVTv2-B2 em desenvolvimento)
-- OpenCV (pré-processamento: ROI, remoção de _Specular Highlights_)
-- Grad-CAM (explicabilidade)
-- Scikit-learn (métricas de avaliação; meta-classificador do _Ensemble Stacking_)
+- PyTorch e torchvision (ResNet-50, EfficientNet-B4 e PVTv2-B2 integrados ao serviço de inferência)
+- OpenCV (pré-processamento: ROI e remoção de _Specular Highlights_)
+- Grad-CAM (explicabilidade visual post-hoc)
+- Scikit-learn (meta-classificador de regressão logística do _Ensemble Stacking_)
 
 ### ⚙️ Infraestrutura
 
@@ -84,7 +85,6 @@ Frontend (React) → API REST (FastAPI) → PostgreSQL
     ├── frontend/       -> Interface web React
     ├── ai/             -> Serviço de inferência + scripts de treino do modelo
     ├── docs/           -> Documentação técnica
-    │   └── model-release-guide.md -> Publicação e atualização dos modelos
     ├── scripts/        -> Download e geração do manifesto dos modelos
     ├── docker-compose.yml
     ├── docker-compose.gpu.yml  -> override opcional para GPU NVIDIA
@@ -118,19 +118,12 @@ Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles nã
 no código, então o backend não sobe sem essas variáveis definidas.
 
 O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
-baixar os modelos. A tag padrão é `models-v0.1.0`.
-
-```dotenv
-MODEL_RELEASE_REPOSITORY=clice/tcc-project-clinicai
-MODEL_RELEASE_TAG=models-v0.1.0
-MODEL_RELEASE_MANIFEST=manifesto_modelos.json
-```
+baixar os modelos. A tag padrão é `models-v0.1.1`.
 
 ### 4. Baixar os modelos treinados
 
 Os pesos e o meta-classificador não são armazenados diretamente no Git. Antes de subir o
-sistema pela primeira vez, baixe os artefatos da
-[GitHub Release configurada em `.env`](https://github.com/clice/tcc-project-clinicai/releases/tag/models-v0.1.0):
+sistema pela primeira vez, baixe os artefatos da GitHub Release configurada em `.env`:
 
 ```bash
 docker compose --profile models run --rm model-downloader
@@ -148,18 +141,16 @@ O comando baixa e verifica os seguintes arquivos em
 O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
 válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
 
-Ao final, a saída deve informar que os quatro artefatos foram baixados e verificados. Para
-confirmar que a instalação pode ser repetida com segurança, execute o mesmo comando novamente:
+### 5. Validar dependências e configuração
+
+Antes do primeiro build ou após alterar arquivos de dependências:
 
 ```bash
-docker compose --profile models run --rm model-downloader
+python3 scripts/check_dependency_locks.py
+docker compose config --quiet
 ```
 
-Na segunda execução, o serviço deve informar que cada arquivo já existe e possui o SHA-256
-esperado. Se o download falhar, confira as três variáveis do `.env`, a conexão com a internet e
-se a Release configurada está publicada.
-
-### 5. Subir os containers
+### 6. Subir os containers
 
 ```bash
 docker compose up --build -d
@@ -171,40 +162,108 @@ Para usar GPU NVIDIA no serviço de IA (opcional):
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build -d
 ```
 
-### 6. Banco de dados: migrations e dados iniciais
+### 7. Banco de dados: migrations e dados iniciais
 
 **Isso acontece automaticamente.** O container do backend, ao subir, executa nesta ordem
 (veja `backend/entrypoint.sh`):
 
-1. Aguarda o PostgreSQL aceitar conexões;
-2. Aplica as migrations pendentes (`alembic upgrade head`);
-3. Roda os seeds do sistema (`python -m app.modules.seeds`): cria status, perfis, permissões
-   e usuários iniciais, caso ainda não existam.
+1. aguarda o PostgreSQL aceitar conexões;
+2. aplica as migrations pendentes (`alembic upgrade head`);
+3. executa os seeds no modo definido por `SEED_MODE`.
 
-Você não precisa rodar nenhum comando manual no primeiro `docker compose up`. Se precisar
-repetir esse processo manualmente (ex: depurar um problema), pode rodar:
+Os modos são separados:
+
+| `SEED_MODE` | Resultado |
+|---|---|
+| `bootstrap` | cria statuses, roles, permissions, a matriz inicial de role-permissions e um único Administrador Master |
+| `academic_demo` | executa o bootstrap e acrescenta somente clínicas, profissionais, pacientes, exames e análises fictícios |
+
+O padrão seguro do backend é `bootstrap`. O `backend/.env.example` usa
+`academic_demo` porque o Compose principal é destinado ao desenvolvimento acadêmico local.
+Nunca habilite esse modo em um banco com dados reais.
+
+No modo `bootstrap`, o primeiro acesso utiliza as variáveis
+`BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_CPF` e
+`BOOTSTRAP_ADMIN_PASSWORD`. Os valores do `.env.example` são destinados somente
+ao ambiente acadêmico e devem ser alterados em qualquer outro ambiente.
+
+Os seeds são idempotentes e não apagam registros existentes. Alterar
+`SEED_MODE` de `academic_demo` para `bootstrap` não remove dados de demonstração
+já persistidos; uma validação realmente limpa deve usar um banco novo.
+
+Comandos manuais equivalentes:
 
 ```bash
 docker compose exec backend alembic upgrade head
-docker compose exec backend python -m app.modules.seeds
+docker compose exec backend python -m app.modules.seeds --mode bootstrap
+docker compose exec backend python -m app.modules.seeds --mode academic_demo
 ```
 
-Os seeds são idempotentes, ou seja, rodar de novo não duplica dados.
+Os seeds não atualizam registros existentes e não reconciliam customizações administrativas.
+As fases de bootstrap e demonstração possuem transações separadas para impedir dados parciais.
+
+A integridade das migrations, dos seeds e dos contratos do banco é protegida pela suíte
+automatizada do backend. Para executá-la:
+
+```bash
+docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
+```
+
+Para validar todo o Bloco 1 em uma única execução — migration, backend,
+contratos do frontend, navegação e build — use o script correspondente ao
+seu sistema operacional a partir da raiz do projeto:
+
+```bash
+# Linux, macOS, Git Bash ou WSL
+./scripts/test-bloco-1.sh
+```
+
+```powershell
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File .\scripts\test-bloco-1.ps1
+```
+
+Os scripts iniciam apenas o banco de dados e criam contêineres temporários
+para os testes. Ao final, exibem claramente a primeira etapa que falhar ou a
+mensagem de sucesso do bloco completo.
 
 ---
 
-## 🔑 Credenciais de Acesso
+## 🔑 Credenciais iniciais e acadêmicas
 
-Os seeds criam os seguintes usuários de demonstração. **OBS:. troque essas senhas antes de qualquer
-uso fora do ambiente de desenvolvimento**:
+O Administrador Master é criado pelo modo `bootstrap` e também é reutilizado pelo
+`academic_demo`. No arquivo `backend/.env.example`, os valores acadêmicos locais são:
+
+| Perfil | E-mail padrão | Senha padrão |
+|---|---|---|
+| Administrador _Master_ | valor de `BOOTSTRAP_ADMIN_EMAIL` (`admin@clinicai.com`) | valor de `BOOTSTRAP_ADMIN_PASSWORD` (`clinicai123`) |
+
+O modo `academic_demo` acrescenta as contas fictícias abaixo:
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Administrador _Master_ | admin@clinicai.com | clinicai123 |
-| Médico | doctor@clinicai.com | clinicai123 |
-| Médico | doctor2@clinicai.com | clinicai123 |
-| Funcionário da Clínica | staff@clinicai.com | clinicai123 |
-| Funcionário da Clínica (inativo, para testar bloqueio) | inactive@clinicai.com | clinicai123 |
+| Médico — Clínica Primária | doctor@clinicai.com | clinicai123 |
+| Gestor — Clínica Primária | clinic_manager@clinicai.com | clinicai123 |
+| Médico — Hospital Regional Cariri | doctor.cariri@clinicai.com | clinicai123 |
+| Gestor — Hospital Regional Cariri | manager.cariri@clinicai.com | clinicai123 |
+| Médico — Centro Endoscópico Cariri | doctor.endoscopia@clinicai.com | clinicai123 |
+| Gestor — Centro Endoscópico Cariri | manager@clinicai.com | clinicai123 |
+
+Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
+ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
+um usuário que já exista.
+
+O `academic_demo` consolidado cria três clínicas, seis contas de acesso,
+30 pacientes fictícios e 90 exames, sendo 30 por clínica. A massa contempla
+`pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed`
+e `canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão
+`0.1.1`, todas com mapas Grad-CAM.
+
+As 90 imagens acadêmicas — 45 normais e 45 anormais segundo seus rótulos de
+origem — têm procedência, licença, hashes, vínculos e resultados registrados em
+`backend/demo_assets/manifest.json`. Esse conjunto serve exclusivamente à
+demonstração acadêmica e não representa uma avaliação formal ou validação
+clínica do modelo.
 
 ---
 
@@ -228,17 +287,17 @@ uso fora do ambiente de desenvolvimento**:
 - Perfis (Roles) e Permissões, com controle de acesso por escopo de clínica
 - Status (motor de fluxo de estados por entidade)
 - Logs de Auditoria
-- Exames (upload, download, cancelamento, restauração)
-- Módulo de IA: classificação de imagens endoscópicas com ResNet-50, pré-processamento
-  (ROI, remoção de _Specular Highlights_) e explicabilidade via Grad-CAM
+- Exames: upload, download, análise por IA, revisão médica, cancelamento e restauração
+- Integração automática entre backend e serviço de IA
+- Classificação binária pelo _Ensemble Stacking_ com ResNet-50, EfficientNet-B4 e PVTv2-B2
+- Revisão médica com confirmação ou divergência e histórico auditável
+- Disponibilização autenticada do mapa Grad-CAM
+- Massa `academic_demo` reproduzível com três clínicas, 30 pacientes, 90 exames e 72 análises com Grad-CAM
 
-### 🔄 Em desenvolvimento
+### 🔄 Em validação e finalização
 
-- Fluxo de revisão médica do resultado da IA (status intermediário + tela dedicada)
-- Integração automática entre backend e serviço de IA (hoje a criação da análise ainda depende
-  de um payload montado externamente)
-- _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2), conforme Viana (2026)
-- Tela de resultado de IA no frontend (predição, confiança, Grad-CAM)
+- Verificação manual do percurso completo do médico pela interface
+- Fechamento da documentação técnica e da monografia
 
 ### 🚧 Planejados
 
@@ -259,9 +318,13 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 
 ### Modelo
 
-- Em produção: ResNet-50 (_Transfer Learning_)
-- Em desenvolvimento: _Ensemble Stacking_ (EfficientNet-B4 + ResNet-50 + PVTv2-B2 com
-  meta-classificador de _Logistic Regression_), baseado em Viana (2026)
+- _Ensemble Stacking_ operacional, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2
+- Meta-classificador de regressão logística, baseado na reprodução operacional adaptada
+  do método de Viana
+- Artefatos operacionais distribuídos pela GitHub Release `models-v0.1.1`
+- Protocolo de treinamento dos artefatos: `viana_codigo_kfold3_roi_sh_da`
+- Fold operacional 3, selecionado como execução representativa por proximidade do
+  resultado à média agregada dos três folds, sem alegação de superioridade estatística
 
 ### Explicabilidade
 
@@ -277,9 +340,6 @@ O diferencial do ClinicAI é a integração com visão computacional para exames
 
 Esta seção é destinada à manutenção dos artefatos de IA. Quem deseja apenas executar o sistema
 deve seguir a seção **Como Executar o Projeto**.
-
-O procedimento completo, incluindo versionamento, testes, checklist, validação em clone limpo e
-recuperação de erros, está em [`docs/model-release-guide.md`](docs/model-release-guide.md).
 
 ### 1. Preparar os artefatos
 
@@ -301,8 +361,8 @@ Na raiz do projeto, execute:
 
 ```bash
 python scripts/generate_model_manifest.py \
-  --release-tag models-v0.1.0 \
-  --model-version 0.1.0
+  --release-tag models-v0.1.1 \
+  --model-version 0.1.1
 ```
 
 O comando gera `manifesto_modelos.json` com o tamanho e o hash SHA-256 de cada artefato. Os
@@ -312,8 +372,8 @@ modelos e o manifesto são ignorados pelo Git e devem ser anexados manualmente �
 
 No GitHub, abra **Releases** e selecione **Draft a new release**. Use:
 
-- tag: `models-v0.1.0`;
-- título: `Modelos ClinicAI v0.1.0`;
+- tag: `models-v0.1.1`;
+- título: `Modelos ClinicAI v0.1.1`;
 - opção **This is a pre-release**, enquanto o sistema estiver em desenvolvimento.
 
 Anexe exatamente os cinco arquivos:
@@ -328,20 +388,16 @@ manifesto_modelos.json
 
 Salve primeiro como rascunho, confira os nomes dos arquivos e somente depois publique.
 
-Depois da publicação, faça obrigatoriamente o teste em um clone novo descrito no
-[`guia de Releases`](docs/model-release-guide.md#8-validar-a-release-publicada). Esse teste confirma
-o download real, a validação do manifesto e a inicialização sem depender dos modelos presentes na
-máquina de desenvolvimento.
-
 ### 4. Versionar atualizações futuras
 
 A tag configurada em `.env` é fixa. Alterações posteriores no frontend, backend, README ou RBAC
-não modificam os artefatos da release `models-v0.1.0`.
+não modificam os artefatos da release `models-v0.1.1`.
 
 Se algum peso, meta-classificador, classe ou etapa de pré-processamento mudar, publique uma nova
-release, por exemplo `models-v0.1.1` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
+release, por exemplo `models-v0.1.2` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
 `.env.example`. Não substitua os arquivos de uma versão já publicada, pois as releases antigas
-devem continuar disponíveis para reprodutibilidade.
+devem continuar disponíveis para reprodutibilidade. A release `models-v0.1.0`
+permanece preservada como versão histórica anterior ao conjunto operacional do fold 3.
 
 O download atual usa assets públicos. Repositórios privados exigem um mecanismo de autenticação
 específico; tokens não devem ser armazenados no Compose, no README ou em arquivos versionados.
@@ -361,16 +417,19 @@ O projeto contribui com:
 
 ## Bootstrap e evolução da matriz RBAC
 
-O executor `python -m app.modules.seeds`, chamado pelo entrypoint do backend,
-faz apenas o bootstrap inicial. O campo `roles.permissions_initialized`
+No modo `bootstrap`, o executor `python -m app.modules.seeds`, chamado pelo
+entrypoint do backend, cria o bootstrap estrutural e garante um único
+Administrador Master inicial. O campo
+`roles.permissions_initialized`
 distingue uma role nunca inicializada de uma role configurada sem permissões.
 Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições
 administrativas permanecem como fonte da verdade.
 
-Mudanças oficiais de permissões em bancos existentes são implementadas por
-migrations de dados do Alembic. A migration `b7c1d4e2f901` introduz o marcador
-de bootstrap e revoga os privilégios legados `exams:read` e
-`ai_analysis:read` de `clinic_staff`.
+A baseline `0001clinicai` já contém o marcador de bootstrap e o catálogo
+estrutural atual. Na matriz padrão, `clinic_manager` possui acesso operacional
+à própria clínica, sem receber `exams:read` ou `ai_analysis:read`. Mudanças
+oficiais futuras em bancos existentes devem ser implementadas por novas
+migrations de dados do Alembic.
 
 Somente quando houver intenção de descartar customizações e restaurar toda a
 matriz padrão, execute manualmente:

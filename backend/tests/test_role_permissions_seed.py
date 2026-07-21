@@ -9,6 +9,7 @@ from app.core.database import Base
 from app.modules.permissions.model import Permission
 from app.modules.role_permissions.model import RolePermission
 from app.modules.role_permissions.seed import (
+    ADMIN_MASTER_RESTRICTED_PERMISSIONS,
     reconcile_role_permissions,
     seed_role_permissions,
 )
@@ -31,9 +32,13 @@ def make_session() -> Session:
 def add_catalog(db: Session) -> tuple[dict[str, Role], dict[str, Permission]]:
     roles = {
         name: Role(name=name, display_name=name)
-        for name in ("admin_master", "doctor", "clinic_staff")
+        for name in ("admin_master", "doctor", "clinic_manager")
     }
     permission_names = {
+        "users:create",
+        "users:read",
+        "users:update",
+        "users:change_status",
         "users:read_profile",
         "users:update_profile",
         "clinics:read_profile",
@@ -43,6 +48,7 @@ def add_catalog(db: Session) -> tuple[dict[str, Role], dict[str, Permission]]:
         "patients:update",
         "patients:change_status",
         "exams:create",
+        "exams:list",
         "exams:read",
         "exams:update",
         "exams:upload",
@@ -85,7 +91,7 @@ def test_restart_preserves_admin_customization() -> None:
     assert set(seed_role_permissions(db, roles, permissions)) == {
         "admin_master",
         "doctor",
-        "clinic_staff",
+        "clinic_manager",
     }
 
     doctor = roles["doctor"]
@@ -107,16 +113,16 @@ def test_restart_preserves_simultaneous_grant_and_revocation() -> None:
     db = make_session()
     roles, permissions = add_catalog(db)
     seed_role_permissions(db, roles, permissions)
-    clinic_staff = roles["clinic_staff"]
+    clinic_manager = roles["clinic_manager"]
     revoked = permissions["patients:update"]
     granted = permissions["exams:read"]
     db.query(RolePermission).filter_by(
-        role_id=clinic_staff.id,
+        role_id=clinic_manager.id,
         permission_id=revoked.id,
     ).delete()
     db.add(
         RolePermission(
-            role_id=clinic_staff.id,
+            role_id=clinic_manager.id,
             permission_id=granted.id,
         )
     )
@@ -124,7 +130,7 @@ def test_restart_preserves_simultaneous_grant_and_revocation() -> None:
 
     # Simula uma nova inicialização do backend.
     assert seed_role_permissions(db, roles, permissions) == []
-    persisted = permission_names_for(db, clinic_staff)
+    persisted = permission_names_for(db, clinic_manager)
 
     assert "patients:update" not in persisted
     assert "exams:read" in persisted
@@ -147,19 +153,19 @@ def test_bootstrap_fills_only_unconfigured_role() -> None:
 
     assert "doctor" not in bootstrapped
     assert permission_names_for(db, doctor) == {"users:read_profile"}
-    assert "clinic_staff" in bootstrapped
+    assert "clinic_manager" in bootstrapped
 
 
 def test_restart_preserves_intentionally_empty_role() -> None:
     db = make_session()
     roles, permissions = add_catalog(db)
     seed_role_permissions(db, roles, permissions)
-    clinic_staff = roles["clinic_staff"]
-    db.query(RolePermission).filter_by(role_id=clinic_staff.id).delete()
+    clinic_manager = roles["clinic_manager"]
+    db.query(RolePermission).filter_by(role_id=clinic_manager.id).delete()
     db.commit()
 
     assert seed_role_permissions(db, roles, permissions) == []
-    assert permission_names_for(db, clinic_staff) == set()
+    assert permission_names_for(db, clinic_manager) == set()
 
 
 def test_explicit_reconciliation_restores_default_matrix() -> None:
@@ -180,3 +186,20 @@ def test_explicit_reconciliation_restores_default_matrix() -> None:
     assert doctor_result.added == 1
     assert doctor_result.removed == 0
     assert "exams:download" in permission_names_for(db, doctor)
+
+def test_admin_master_keeps_exam_list_without_clinical_permissions() -> None:
+    db = make_session()
+    roles, permissions = add_catalog(db)
+
+    seed_role_permissions(db, roles, permissions)
+
+    admin_permissions = permission_names_for(db, roles["admin_master"])
+
+    assert "exams:list" in admin_permissions
+    assert ADMIN_MASTER_RESTRICTED_PERMISSIONS.isdisjoint(admin_permissions)
+
+    reconcile_role_permissions(db, roles, permissions)
+
+    reconciled_permissions = permission_names_for(db, roles["admin_master"])
+    assert "exams:list" in reconciled_permissions
+    assert ADMIN_MASTER_RESTRICTED_PERMISSIONS.isdisjoint(reconciled_permissions)

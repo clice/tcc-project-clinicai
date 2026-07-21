@@ -11,7 +11,7 @@ from app.modules.permissions.catalog import OFFICIAL_PERMISSION_NAMES
 from app.modules.permissions.model import Permission
 from app.modules.role_permissions.model import RolePermission
 from app.modules.role_permissions.seed import (
-    CLINIC_STAFF_PERMISSIONS,
+    CLINIC_MANAGER_PERMISSIONS,
     DOCTOR_PERMISSIONS,
 )
 from app.modules.roles.model import Role
@@ -28,7 +28,7 @@ PUBLIC_ROUTES = {
 ROLE_PERMISSIONS = {
     "admin_master": OFFICIAL_PERMISSION_NAMES,
     "doctor": set(DOCTOR_PERMISSIONS),
-    "clinic_staff": set(CLINIC_STAFF_PERMISSIONS),
+    "clinic_manager": set(CLINIC_MANAGER_PERMISSIONS),
 }
 
 

@@ -8,13 +8,7 @@
  */
 
 import React, { createContext, useCallback, useMemo, useState } from 'react'
-import {
-  CSpinner,
-  CToast,
-  CToastBody,
-  CToastClose,
-  CToaster,
-} from '@coreui/react'
+import { CSpinner, CToast, CToastBody, CToastClose, CToaster } from '@coreui/react'
 
 const FeedbackContext = createContext(null)
 
@@ -122,11 +116,7 @@ export const FeedbackProvider = ({ children }) => {
                 {toast.title && <strong className="d-block mb-1">{toast.title}</strong>}
                 {toast.message}
               </CToastBody>
-              <CToastClose
-                className="me-2 m-auto"
-                white
-                onClick={() => removeToast(toast.id)}
-              />
+              <CToastClose className="me-2 m-auto" white onClick={() => removeToast(toast.id)} />
             </div>
           </CToast>
         ))}

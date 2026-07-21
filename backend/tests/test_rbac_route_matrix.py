@@ -15,13 +15,6 @@ ADMIN_ONLY_ROUTES = (
     (clinics_router, "/clinics/{clinic_id}", "PATCH"),
     (clinics_router, "/clinics/{clinic_id}/inactivate", "PATCH"),
     (clinics_router, "/clinics/{clinic_id}/activate", "PATCH"),
-    (users_router, "/users/", "POST"),
-    (users_router, "/users/", "GET"),
-    (users_router, "/users/{user_id}", "GET"),
-    (users_router, "/users/{user_id}", "PATCH"),
-    (users_router, "/users/{user_id}/password", "PATCH"),
-    (users_router, "/users/{user_id}/inactivate", "PATCH"),
-    (users_router, "/users/{user_id}/activate", "PATCH"),
     (audit_logs_router, "/audit-logs/", "GET"),
 )
 
@@ -58,6 +51,14 @@ def test_self_service_and_support_routes_are_not_admin_only() -> None:
         (users_router, "/users/me", "PATCH"),
         (users_router, "/users/me/password", "PATCH"),
         (users_router, "/users/doctors", "GET"),
+        (users_router, "/users/doctor-management-options", "GET"),
+        (users_router, "/users/", "POST"),
+        (users_router, "/users/", "GET"),
+        (users_router, "/users/{user_id}", "GET"),
+        (users_router, "/users/{user_id}", "PATCH"),
+        (users_router, "/users/{user_id}/password", "PATCH"),
+        (users_router, "/users/{user_id}/inactivate", "PATCH"),
+        (users_router, "/users/{user_id}/activate", "PATCH"),
     )
 
     for router, path, method in delegated_routes:
@@ -65,3 +66,52 @@ def test_self_service_and_support_routes_are_not_admin_only() -> None:
         dependencies = {dependency.call for dependency in route.dependant.dependencies}
 
         assert require_admin not in dependencies, f"{method} {path} deve continuar delegável"
+
+
+def test_static_clinic_profile_routes_precede_dynamic_id_routes() -> None:
+    """Evita que /clinics/me seja capturada por /clinics/{clinic_id}."""
+
+    routes = [route for route in clinics_router.routes if isinstance(route, APIRoute)]
+
+    for method in ("GET", "PATCH"):
+        static_index = next(
+            index
+            for index, route in enumerate(routes)
+            if route.path == "/clinics/me" and method in route.methods
+        )
+        dynamic_index = next(
+            index
+            for index, route in enumerate(routes)
+            if route.path == "/clinics/{clinic_id}" and method in route.methods
+        )
+
+        assert static_index < dynamic_index
+
+
+def test_static_user_routes_precede_dynamic_id_route() -> None:
+    """Evita que opções estáticas sejam capturadas como user_id."""
+
+    routes = [
+        route
+        for route in users_router.routes
+        if isinstance(route, APIRoute)
+    ]
+    dynamic_index = next(
+        index
+        for index, route in enumerate(routes)
+        if route.path == "/users/{user_id}"
+        and "GET" in route.methods
+    )
+
+    for static_path in (
+        "/users/doctors",
+        "/users/doctor-management-options",
+        "/users/me",
+    ):
+        static_index = next(
+            index
+            for index, route in enumerate(routes)
+            if route.path == static_path
+            and "GET" in route.methods
+        )
+        assert static_index < dynamic_index

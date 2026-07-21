@@ -18,11 +18,10 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { patientService } from 'src/services/patientService'
 
-import { calculateAge } from 'src/utils/calculators'
 import { getErrorMessage } from 'src/utils/errors'
-import { formatCpfBR, formatPhoneBR, formatSex } from 'src/utils/formatters'
+import { formatCpfBR, formatPhoneBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
-import { hasPermission } from 'src/utils/permissions'
+import { getUserRole, hasPermission, ROLES } from 'src/utils/permissions'
 
 const patientTabs = [
   { key: 'active', label: 'Ativos' },
@@ -37,9 +36,12 @@ const PatientsList = () => {
   const [patients, setPatients] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess(
-    'patients',
-    (permission) => hasPermission(user, permission),
+  const roleName = getUserRole(user)
+  const showDoctorColumn = roleName !== ROLES.DOCTOR
+  const showClinicColumn = roleName === ROLES.ADMIN_MASTER
+
+  const { canCreate, canEdit, canChangeStatus } = getActionAccess('patients', (permission) =>
+    hasPermission(user, permission),
   )
 
   const loadPatients = useCallback(async () => {
@@ -54,18 +56,25 @@ const PatientsList = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
-    void loadPatients()
+    const timeoutId = window.setTimeout(() => {
+      void loadPatients()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadPatients])
 
   /**
    * Separa pacientes por status para alimentar as abas.
    */
-  const filteredPatients = useMemo(() => {
-    return patients.filter((patient) => patient.status_name === activeTab)
-  }, [patients, activeTab])
+  const filteredPatients = useMemo(
+    () => patients.filter((patient) => patient.status_name === activeTab),
+    [patients, activeTab],
+  )
 
   /**
    * Conta registros por aba.
@@ -81,41 +90,54 @@ const PatientsList = () => {
   /**
    * Mudança de status do paciente.
    */
-  const handleChangeStatus = async (patient) => {
-    try {
-      showError('')
+  const handleChangeStatus = useCallback(
+    async (patient) => {
+      try {
+        showError('')
 
-      if (patient.status_name === 'active') {
-        await patientService.inactivate(patient.id)
-        showSuccess('Paciente inativado com sucesso.')
-      } else {
-        await patientService.activate(patient.id)
-        showSuccess('Paciente ativado com sucesso.')
+        if (patient.status_name === 'active') {
+          await patientService.inactivate(patient.id)
+          showSuccess('Paciente inativado com sucesso.')
+        } else {
+          await patientService.activate(patient.id)
+          showSuccess('Paciente ativado com sucesso.')
+        }
+
+        await loadPatients()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao alterar status do paciente.'))
       }
-
-      await loadPatients()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao alterar status do paciente.')
-    }
-  }
+    },
+    [loadPatients, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Paciente' },
       { accessorKey: 'cpf', header: 'CPF', cell: ({ getValue }) => formatCpfBR(getValue()) || '-' },
       {
-        accessorKey: 'birth_date',
-        header: 'Idade',
-        cell: ({ getValue }) => calculateAge(getValue()),
-      },
-      { accessorKey: 'sex', header: 'Sexo', cell: ({ getValue }) => formatSex(getValue()) },
-      {
         accessorKey: 'phone',
         header: 'Telefone',
         cell: ({ getValue }) => formatPhoneBR(getValue()) || '-',
       },
-      { accessorKey: 'doctor_name', header: 'Médico', cell: ({ getValue }) => getValue() || '-' },
-      { accessorKey: 'clinic_name', header: 'Clínica', cell: ({ getValue }) => getValue() || '-' },
+      ...(showDoctorColumn
+        ? [
+            {
+              accessorKey: 'doctor_name',
+              header: 'Médico',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
+      ...(showClinicColumn
+        ? [
+            {
+              accessorKey: 'clinic_name',
+              header: 'Clínica',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
       {
         id: 'actions',
         header: 'Ações',
@@ -127,10 +149,8 @@ const PatientsList = () => {
           return (
             <AppActionButtons
               itemLabel={patient.name}
-              viewTo={`/patients/${patient.id}`}
               editTo={`/patients/${patient.id}/edit`}
               isInactive={isInactive}
-              canView={canView}
               canEdit={canEdit}
               canInactivate={canChangeStatus && !isInactive}
               canActivate={canChangeStatus && isInactive}
@@ -141,7 +161,7 @@ const PatientsList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadPatients],
+    [canEdit, canChangeStatus, handleChangeStatus, showClinicColumn, showDoctorColumn],
   )
 
   return (
@@ -149,22 +169,32 @@ const PatientsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">Pacientes</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Pacientes</h1>
           <p className="text-body-secondary mb-0">
-            Gerencie pacientes vinculados às clínicas e aos médicos responsáveis.
+            {roleName === ROLES.DOCTOR
+              ? 'Visualize somente os pacientes sob sua responsabilidade.'
+              : roleName === ROLES.CLINIC_MANAGER
+                ? 'Visualize os pacientes vinculados à sua clínica.'
+                : 'Gerencie pacientes de todas as clínicas conforme os filtros.'}
           </p>
         </div>
 
         {canCreate && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/patients/create">
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/patients/create"
+            >
               Cadastrar Paciente
             </CButton>
           </div>
         )}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">

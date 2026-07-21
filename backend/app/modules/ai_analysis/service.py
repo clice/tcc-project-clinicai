@@ -4,7 +4,10 @@ Service do módulo de análises de IA.
 Concentra as regras de negócio relacionadas aos resultados gerados por IA.
 """
 
+import json
+
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.access_control import (
@@ -17,29 +20,126 @@ from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.ai_analysis.schema import AIAnalysisCreate, AIAnalysisUpdate
 from app.modules.audit_logs.service import create_audit_log
 from app.modules.exams.model import Exam
+from app.modules.exams.state_machine import (
+    ExamTransitionAction,
+    get_transition_target,
+    transition_audit_payload,
+)
 from app.modules.statuses.service import get_status_by_name_and_applies_to
 from app.modules.users.model import User
 
 
-def build_ai_analysis_response(ai_analysis: AIAnalysis) -> dict:
-    """
-    Monta a resposta da análise de IA.
-    """
+def extract_attribution_metadata(
+    raw_response: str | None,
+) -> dict:
+    """Extrai metadados novos sem quebrar análises legadas."""
+
+    metadata = {
+        "attribution_method": None,
+        "attribution_target_layers": None,
+        "attribution_local_evidence": None,
+        "attribution_branch_weights": None,
+        "attribution_branch_cam_raw_maxima": None,
+        "attribution_unavailable_reason": None,
+    }
+
+    if not raw_response:
+        return metadata
+
+    try:
+        payload = json.loads(
+            raw_response
+        )
+    except (
+        json.JSONDecodeError,
+        TypeError,
+    ):
+        return metadata
+
+    if not isinstance(payload, dict):
+        return metadata
+
+    method = payload.get(
+        "attribution_method"
+    )
+
+    if isinstance(method, str) and method.strip():
+        metadata[
+            "attribution_method"
+        ] = method
+
+    mapping_fields = (
+        "attribution_target_layers",
+        "attribution_local_evidence",
+        "attribution_branch_weights",
+        "attribution_branch_cam_raw_maxima",
+    )
+
+    for field in mapping_fields:
+        value = payload.get(field)
+
+        if isinstance(value, dict):
+            metadata[field] = dict(value)
+
+    unavailable_reason = payload.get(
+        "attribution_unavailable_reason"
+    )
+
+    if (
+        isinstance(unavailable_reason, str)
+        and unavailable_reason.strip()
+    ):
+        metadata[
+            "attribution_unavailable_reason"
+        ] = unavailable_reason
+
+    return metadata
+
+
+def build_ai_analysis_response(
+    ai_analysis: AIAnalysis,
+) -> dict:
+    """Monta a resposta da análise de IA."""
+
+    attribution_metadata = (
+        extract_attribution_metadata(
+            ai_analysis.raw_response
+        )
+    )
+
     return {
         "id": ai_analysis.id,
         "exam_id": ai_analysis.exam_id,
         "status_id": ai_analysis.status_id,
-        "status_name": ai_analysis.status.name if ai_analysis.status else None,
-        "status_display_name": ai_analysis.status.display_name if ai_analysis.status else None,
-        "prediction_label": ai_analysis.prediction_label,
-        "prediction_class": ai_analysis.prediction_class,
+        "status_name": (
+            ai_analysis.status.name
+            if ai_analysis.status
+            else None
+        ),
+        "status_display_name": (
+            ai_analysis.status.display_name
+            if ai_analysis.status
+            else None
+        ),
+        "prediction_label": (
+            ai_analysis.prediction_label
+        ),
+        "prediction_class": (
+            ai_analysis.prediction_class
+        ),
         "confidence": ai_analysis.confidence,
         "model_name": ai_analysis.model_name,
-        "model_version": ai_analysis.model_version,
-        "gradcam_path": ai_analysis.gradcam_path,
-        "processing_time_ms": ai_analysis.processing_time_ms,
+        "model_version": (
+            ai_analysis.model_version
+        ),
+        "gradcam_available": bool(
+            ai_analysis.gradcam_path
+        ),
+        **attribution_metadata,
+        "processing_time_ms": (
+            ai_analysis.processing_time_ms
+        ),
         "ai_notes": ai_analysis.ai_notes,
-        "raw_response": ai_analysis.raw_response,
         "created_at": ai_analysis.created_at,
         "updated_at": ai_analysis.updated_at,
     }
@@ -64,46 +164,39 @@ def validate_exam_exists(
     db: Session,
     exam_id: int,
     current_user: User,
+    *,
+    for_update: bool = False,
 ) -> Exam:
-    """
-    Valida se o exame existe e se o usuário pode acessá-lo.
-    """
-    exam = (
+    """Valida existência/escopo e opcionalmente bloqueia a linha do exame."""
+
+    query = (
         db.query(Exam)
         .options(
             joinedload(Exam.clinic),
             joinedload(Exam.patient),
             joinedload(Exam.doctor),
             joinedload(Exam.status),
+            joinedload(Exam.ai_analysis),
         )
         .filter(Exam.id == exam_id)
-        .first()
     )
-
+    if for_update:
+        query = query.with_for_update(of=Exam)
+    exam = query.first()
     if not exam:
         raise HTTPException(status_code=404, detail="Exame não encontrado.")
-
-    validate_user_can_access_exam(
-        current_user=current_user,
-        exam=exam,
-    )
-
+    validate_user_can_access_exam(current_user=current_user, exam=exam)
     return exam
 
 
 def validate_exam_can_receive_ai_analysis(exam: Exam) -> None:
-    """
-    Valida se o exame está apto para receber resultado de IA.
-    """
-    if exam.status and exam.status.name == StatusName.CANCELED.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Não é possível criar análise de IA para exame cancelado.",
-        )
+    """Exige a transição processing -> awaiting_review e um arquivo."""
 
+    current_status = exam.status.name if exam.status else None
+    get_transition_target(current_status, ExamTransitionAction.ANALYSIS_SUCCEEDED)
     if not exam.file_path:
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="O exame precisa ter um arquivo enviado antes da análise de IA.",
         )
 
@@ -256,56 +349,51 @@ def create_ai_analysis(
     payload: AIAnalysisCreate,
     current_user: User,
 ) -> dict:
-    """
-    Cria uma análise de IA para um exame.
-    Cada exame pode ter apenas uma análise.
-    """
+    """Persiste uma única análise e conclui a transição atomicamente."""
+
     exam = validate_exam_exists(
         db=db,
         exam_id=payload.exam_id,
         current_user=current_user,
+        for_update=True,
     )
-
     validate_exam_can_receive_ai_analysis(exam)
-
-    existing_analysis = (
-        db.query(AIAnalysis)
-        .filter(AIAnalysis.exam_id == payload.exam_id)
-        .first()
-    )
-
-    if existing_analysis:
-        raise HTTPException(
-            status_code=400,
-            detail="Este exame já possui uma análise de IA.",
-        )
+    if exam.ai_analysis:
+        raise HTTPException(status_code=409, detail="Este exame já possui uma análise de IA.")
 
     completed_ai_status = get_status_by_name_and_applies_to(
         db=db,
         name=StatusName.COMPLETED.value,
         applies_to=StatusScope.AI_ANALYSIS.value,
     )
-
-    awaiting_review_exam_status = get_status_by_name_and_applies_to(
+    target_name = get_transition_target(
+        exam.status.name if exam.status else None,
+        ExamTransitionAction.ANALYSIS_SUCCEEDED,
+    )
+    target_status = get_status_by_name_and_applies_to(
         db=db,
-        name=StatusName.AWAITING_REVIEW.value,
+        name=target_name,
         applies_to=StatusScope.EXAM.value,
     )
-
-    ai_analysis = AIAnalysis(
-        **payload.model_dump(),
-        status_id=completed_ai_status.id,
-    )
-
+    ai_analysis = AIAnalysis(**payload.model_dump(), status_id=completed_ai_status.id)
     db.add(ai_analysis)
-    db.flush()
+    try:
+        db.flush()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Este exame já possui uma análise de IA.") from exc
 
-    old_exam_status = {
-        "status_id": exam.status_id,
-        "status_name": exam.status.name if exam.status else None,
-    }
-
-    exam.status_id = awaiting_review_exam_status.id
+    old_data, new_data = transition_audit_payload(
+        old_status_id=exam.status_id,
+        old_status_name=exam.status.name if exam.status else "",
+        new_status_id=target_status.id,
+        new_status_name=target_name,
+        action=ExamTransitionAction.ANALYSIS_SUCCEEDED,
+        ai_analysis_id=ai_analysis.id,
+    )
+    exam.status_id = target_status.id
+    exam.analysis_in_progress = False
+    exam.analysis_started_at = None
 
     create_audit_log(
         db=db,
@@ -314,34 +402,32 @@ def create_ai_analysis(
         action=AuditAction.RUN_AI_ANALYSIS,
         entity=AuditEntity.AI_ANALYSIS,
         entity_id=ai_analysis.id,
-        description="Análise de IA criada para exame. Exame movido para aguardando revisão médica.",
+        description="Análise de IA criada para exame.",
         new_data={
             "id": ai_analysis.id,
             "exam_id": ai_analysis.exam_id,
-            "status_id": ai_analysis.status_id,
             "prediction_label": ai_analysis.prediction_label,
             "prediction_class": ai_analysis.prediction_class,
             "confidence": ai_analysis.confidence,
             "model_name": ai_analysis.model_name,
             "model_version": ai_analysis.model_version,
-            "gradcam_path": ai_analysis.gradcam_path,
+            "gradcam_available": bool(ai_analysis.gradcam_path),
             "processing_time_ms": ai_analysis.processing_time_ms,
-            "old_exam_status": old_exam_status,
-            "new_exam_status": {
-                "status_id": awaiting_review_exam_status.id,
-                "status_name": StatusName.AWAITING_REVIEW.value,
-            },
         },
     )
-
-    db.commit()
-    db.refresh(ai_analysis)
-
-    ai_analysis = get_ai_analysis_model_by_id(
+    create_audit_log(
         db=db,
-        ai_analysis_id=ai_analysis.id,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.RUN_AI_ANALYSIS,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description="Análise de IA concluída. Exame movido para aguardando revisão médica.",
+        old_data=old_data,
+        new_data=new_data,
     )
-
+    db.commit()
+    ai_analysis = get_ai_analysis_model_by_id(db=db, ai_analysis_id=ai_analysis.id)
     return build_ai_analysis_response(ai_analysis)
 
 
@@ -420,6 +506,28 @@ def get_ai_metrics(db: Session) -> dict:
         name=StatusName.COMPLETED_WITH_DIVERGENCE.value,
         applies_to=StatusScope.EXAM.value,
     )
+
+    reviewed_confidence_mean, reviewed_analyses_count = (
+        db.query(
+            sa_func.avg(AIAnalysis.confidence),
+            sa_func.count(AIAnalysis.confidence),
+        )
+        .join(Exam, AIAnalysis.exam_id == Exam.id)
+        .filter(
+            Exam.status_id.in_(
+                [
+                    completed_status.id,
+                    completed_with_divergence_status.id,
+                ]
+            ),
+            AIAnalysis.confidence.is_not(None),
+        )
+        .one()
+    )
+    if reviewed_confidence_mean is not None:
+        reviewed_confidence_mean = float(reviewed_confidence_mean)
+    reviewed_analyses_count = int(reviewed_analyses_count)
+
     completed_count = (
         db.query(Exam).filter(Exam.status_id == completed_status.id).count()
     )
@@ -468,6 +576,8 @@ def get_ai_metrics(db: Session) -> dict:
         "total_analyses": total_analyses,
         "by_model": by_model,
         "confidence_mean": confidence_mean,
+        "reviewed_confidence_mean": reviewed_confidence_mean,
+        "reviewed_analyses_count": reviewed_analyses_count,
         "confidence_min": confidence_min,
         "confidence_max": confidence_max,
         "confidence_distribution": confidence_distribution,
@@ -511,13 +621,23 @@ def update_ai_analysis(
         "confidence": ai_analysis.confidence,
         "model_name": ai_analysis.model_name,
         "model_version": ai_analysis.model_version,
-        "gradcam_path": ai_analysis.gradcam_path,
+        "gradcam_available": bool(ai_analysis.gradcam_path),
         "processing_time_ms": ai_analysis.processing_time_ms,
         "ai_notes": ai_analysis.ai_notes,
-        "raw_response": ai_analysis.raw_response,
+        "raw_response_available": bool(ai_analysis.raw_response),
     }
 
     apply_update_data(ai_analysis, update_data)
+
+    audit_new_data = dict(update_data)
+    if "gradcam_path" in audit_new_data:
+        gradcam_value = audit_new_data.pop("gradcam_path")
+        audit_new_data["gradcam_updated"] = True
+        audit_new_data["gradcam_available"] = bool(gradcam_value)
+    if "raw_response" in audit_new_data:
+        raw_response_value = audit_new_data.pop("raw_response")
+        audit_new_data["raw_response_updated"] = True
+        audit_new_data["raw_response_available"] = bool(raw_response_value)
 
     create_audit_log(
         db=db,
@@ -528,7 +648,7 @@ def update_ai_analysis(
         entity_id=ai_analysis.id,
         description="Análise de IA atualizada.",
         old_data=old_data,
-        new_data=update_data,
+        new_data=audit_new_data,
     )
 
     db.commit()

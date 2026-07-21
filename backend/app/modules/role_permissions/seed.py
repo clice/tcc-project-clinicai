@@ -19,6 +19,22 @@ from app.modules.role_permissions.model import RolePermission
 from app.modules.roles.model import Role
 
 
+ADMIN_MASTER_RESTRICTED_PERMISSIONS = frozenset(
+    {
+        "exams:create",
+        "exams:read",
+        "exams:update",
+        "exams:upload",
+        "exams:download",
+        "exams:change_status",
+        "exams:review",
+        "ai_analysis:create",
+        "ai_analysis:read",
+        "ai_analysis:update",
+    }
+)
+
+
 DOCTOR_PERMISSIONS = [
     "users:read_profile",
     "users:update_profile",
@@ -29,6 +45,7 @@ DOCTOR_PERMISSIONS = [
     "patients:update",
     "patients:change_status",
     "exams:create",
+    "exams:list",
     "exams:read",
     "exams:update",
     "exams:upload",
@@ -40,7 +57,11 @@ DOCTOR_PERMISSIONS = [
     "ai_analysis:update",
 ]
 
-CLINIC_STAFF_PERMISSIONS = [
+CLINIC_MANAGER_PERMISSIONS = [
+    "users:create",
+    "users:read",
+    "users:update",
+    "users:change_status",
     "users:read_profile",
     "users:update_profile",
     "clinics:read_profile",
@@ -49,6 +70,7 @@ CLINIC_STAFF_PERMISSIONS = [
     "patients:read",
     "patients:update",
     "patients:change_status",
+    "exams:list",
 ]
 
 
@@ -67,9 +89,13 @@ def build_role_permission_map(
     """Monta a matriz padrão usada no primeiro bootstrap e no comando manual."""
 
     return {
-        "admin_master": list(permissions.keys()),
+        "admin_master": [
+            permission_name
+            for permission_name in permissions
+            if permission_name not in ADMIN_MASTER_RESTRICTED_PERMISSIONS
+        ],
         "doctor": DOCTOR_PERMISSIONS,
-        "clinic_staff": CLINIC_STAFF_PERMISSIONS,
+        "clinic_manager": CLINIC_MANAGER_PERMISSIONS,
     }
 
 
@@ -134,12 +160,10 @@ def seed_role_permissions(
         role = roles.get(role_name)
         if role is None:
             continue
-        if bootstrap_permissions_for_role(
-            db, role, permissions, permission_names
-        ):
+        if bootstrap_permissions_for_role(db, role, permissions, permission_names):
             bootstrapped_roles.append(role_name)
 
-    db.commit()
+    db.flush()
     return bootstrapped_roles
 
 
@@ -153,9 +177,7 @@ def reconcile_permissions_for_role(
 
     desired = _resolve_permissions(role, permissions, permission_names)
     current_links = (
-        db.query(RolePermission)
-        .filter(RolePermission.role_id == role.id)
-        .all()
+        db.query(RolePermission).filter(RolePermission.role_id == role.id).all()
     )
     current_ids = {link.permission_id for link in current_links}
     desired_ids = {permission.id for permission in desired.values()}
@@ -194,14 +216,14 @@ def reconcile_role_permissions(
 
     results: list[ReconciliationResult] = []
     try:
-        for role_name, permission_names in build_role_permission_map(permissions).items():
+        for role_name, permission_names in build_role_permission_map(
+            permissions
+        ).items():
             role = roles.get(role_name)
             if role is None:
                 continue
             results.append(
-                reconcile_permissions_for_role(
-                    db, role, permissions, permission_names
-                )
+                reconcile_permissions_for_role(db, role, permissions, permission_names)
             )
         db.commit()
     except Exception:

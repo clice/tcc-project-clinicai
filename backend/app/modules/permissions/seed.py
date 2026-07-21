@@ -22,7 +22,7 @@ def _bootstrap_empty_catalog(db: Session) -> dict[str, Permission]:
         for definition in OFFICIAL_PERMISSION_DEFINITIONS
     }
     db.add_all(permissions.values())
-    db.commit()
+    db.flush()
 
     for permission in permissions.values():
         db.refresh(permission)
@@ -52,7 +52,4 @@ def seed_permissions(db: Session) -> dict[str, Permission]:
             f"para as permissões ausentes: {missing_list}."
         )
 
-    return {
-        name: stored_by_name[name]
-        for name in OFFICIAL_PERMISSION_NAMES
-    }
+    return {name: stored_by_name[name] for name in OFFICIAL_PERMISSION_NAMES}

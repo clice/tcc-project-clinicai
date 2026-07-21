@@ -68,7 +68,7 @@ def test_doctor_with_review_permission_is_authorized() -> None:
     assert dependency(doctor) is doctor
 
 
-@pytest.mark.parametrize("role_name", ["clinic_staff", "admin_master"])
+@pytest.mark.parametrize("role_name", ["clinic_manager", "admin_master"])
 def test_non_doctor_is_forbidden_even_with_review_permission(role_name: str) -> None:
     """Conceder a permissão manualmente não transforma a role em médica."""
 
@@ -80,7 +80,7 @@ def test_non_doctor_is_forbidden_even_with_review_permission(role_name: str) -> 
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == (
-        "Apenas usuários com perfil médico podem revisar exames."
+        "Apenas usuários com perfil médico podem executar ações clínicas de exames."
     )
 
 

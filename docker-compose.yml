@@ -4,7 +4,7 @@ services:
     profiles: ["models"]
     environment:
       MODEL_RELEASE_REPOSITORY: ${MODEL_RELEASE_REPOSITORY:-clice/tcc-project-clinicai}
-      MODEL_RELEASE_TAG: ${MODEL_RELEASE_TAG:-models-v0.1.0}
+      MODEL_RELEASE_TAG: ${MODEL_RELEASE_TAG:-models-v0.1.1}
       MODEL_RELEASE_MANIFEST: ${MODEL_RELEASE_MANIFEST:-manifesto_modelos.json}
       MODEL_DESTINATION_DIR: /models/gastrointestinal
     volumes:
@@ -32,9 +32,15 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env
+    environment:
+      CLINICAI_DATA_DIR: /app/data
     volumes:
       - ./backend:/app
+      - ./data:/app/data
+
+      # Volumes legados preservados durante a migração.
       - uploads_data:/app/uploads
+      - ai_storage:/app/storage:ro
     ports:
       - "8000:8000"
     depends_on:
@@ -47,9 +53,16 @@ services:
       context: ./ai
     container_name: clinicai_ai
     restart: unless-stopped
+    environment:
+      CLINICAI_DATA_DIR: /app/data
     volumes:
       - ./ai:/app
       - ./ai/models:/app/models
+      - ./data:/app/data
+
+      # Volume legado preservado durante a migração.
+      - ai_storage:/app/storage
+
       - torch_cache:/root/.cache/torch
     ports:
       - "8001:8001"
@@ -78,4 +91,5 @@ volumes:
   postgres_data:
   uploads_data:
   ai_models:
+  ai_storage:
   torch_cache:

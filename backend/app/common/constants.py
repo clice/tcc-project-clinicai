@@ -17,6 +17,7 @@ class AuditAction(StrEnum):
     DELETE = "delete"
     LOGIN_SUCCESS = "login_success"
     LOGIN_FAILED = "login_failed"
+    REFRESH_TOKEN = "refresh_token"
     LOGOUT = "logout"
     CANCEL_EXAM = "cancel_exam"
     RESTORE_EXAM = "restore_exam"
@@ -43,6 +44,7 @@ class AuditEntity(StrEnum):
 class PermissionAction(StrEnum):
     CREATE = "create"
     READ = "read"
+    LIST = "list"
     UPDATE = "update"
     DELETE = "delete"
     CHANGE_STATUS = "change_status"
@@ -55,7 +57,7 @@ class PermissionAction(StrEnum):
 
 class RoleName(StrEnum):
     ADMIN_MASTER = "admin_master"
-    CLINIC_STAFF = "clinic_staff"
+    CLINIC_MANAGER = "clinic_manager"
     DOCTOR = "doctor"
 
 

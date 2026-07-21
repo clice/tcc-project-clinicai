@@ -107,7 +107,10 @@ class PatientCreate(PatientBase):
 class PatientUpdate(StrictRequestModel):
     """
     Schema usado para atualização parcial de paciente.
-    Todos os campos são opcionais porque o endpoint usa PATCH.
+
+    ``clinic_id`` e ``doctor_id`` permanecem disponíveis para a operação de
+    reatribuição administrativa, mas a autorização e a política de histórico
+    são validadas exclusivamente pelo service do backend.
     """
 
     clinic_id: int | None = None

@@ -3,12 +3,12 @@
  *
  * Diferente do UserForm (que é o cadastro administrado pelo admin_master),
  * esta página é acessada por qualquer usuário logado (admin_master, doctor,
- * clinic_staff) para:
+ * clinic_manager) para:
  * - visualizar e editar os próprios dados cadastrais (nome, e-mail, telefone, CPF);
  * - trocar a própria senha, exigindo a senha atual.
  *
- * Perfil de acesso, status e clínica NÃO são editáveis aqui — são
- * exclusivos do admin_master via /users/:id.
+ * Perfil de acesso e status não são editáveis nesta página. Gestores
+ * autorizados também podem atualizar os dados cadastrais da própria clínica.
  */
 
 import React, { useEffect, useState } from 'react'
@@ -29,9 +29,11 @@ import { useAuth } from 'src/hooks/useAuth'
 import { useFeedback } from 'src/hooks/useFeedback'
 
 import { userService } from 'src/services/userService'
+import ClinicProfileCard from './ClinicProfileCard'
 
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
+import { hasPermission, PERMISSIONS } from 'src/utils/permissions'
 
 const emptyProfile = {
   name: '',
@@ -57,14 +59,20 @@ const ProfilePage = () => {
   const [isSavingPassword, setIsSavingPassword] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    const timeoutId = window.setTimeout(() => {
+      if (!user) return
 
-    setForm({
-      name: user.name ?? '',
-      email: user.email ?? '',
-      cpf: formatCpfBR(user.cpf ?? ''),
-      phone: formatPhoneBR(user.phone ?? ''),
-    })
+      setForm({
+        name: user.name ?? '',
+        email: user.email ?? '',
+        cpf: formatCpfBR(user.cpf ?? ''),
+        phone: formatPhoneBR(user.phone ?? ''),
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [user])
 
   const updateField = (field, value) => {
@@ -151,10 +159,7 @@ const ProfilePage = () => {
       setIsSavingPassword(true)
       startLoading()
 
-      await userService.updateMyPassword(
-        passwordForm.password.trim(),
-        passwordForm.currentPassword,
-      )
+      await userService.updateMyPassword(passwordForm.password.trim(), passwordForm.currentPassword)
 
       setPasswordForm(emptyPasswordForm)
       showSuccess('Senha atualizada com sucesso.')
@@ -170,7 +175,7 @@ const ProfilePage = () => {
     <>
       <div className="mb-4">
         <div className="text-body-secondary">Minha Conta</div>
-        <h1 className="h3 mb-0">Meu Perfil</h1>
+        <h1 className="h3 mb-0 clinicai-page-title">Meu Perfil</h1>
         <p className="text-body-secondary mb-0">
           Visualize e atualize seus dados cadastrais e sua senha de acesso.
         </p>
@@ -178,7 +183,7 @@ const ProfilePage = () => {
 
       <CCard className="mb-4">
         <CCardHeader>
-          <strong>Dados cadastrais</strong>
+          <strong>Dados Cadastrais</strong>
         </CCardHeader>
 
         <CCardBody>
@@ -223,10 +228,7 @@ const ProfilePage = () => {
 
               <CCol md={4}>
                 <CFormLabel>Perfil de acesso</CFormLabel>
-                <CFormInput
-                  value={user?.role_display_name || user?.role_name || ''}
-                  disabled
-                />
+                <CFormInput value={user?.role_display_name || user?.role_name || ''} disabled />
               </CCol>
             </CRow>
 
@@ -237,15 +239,19 @@ const ProfilePage = () => {
         </CCardBody>
       </CCard>
 
-      <CCard>
+      {user?.clinic_id && hasPermission(user, PERMISSIONS.CLINICS_READ_PROFILE) && (
+        <ClinicProfileCard canUpdate={hasPermission(user, PERMISSIONS.CLINICS_UPDATE_PROFILE)} />
+      )}
+
+      <CCard className="mb-4">
         <CCardHeader>
-          <strong>Alterar senha</strong>
+          <strong>Alterar Senha</strong>
         </CCardHeader>
 
         <CCardBody>
           <CAlert color="info" className="mb-3">
-            Por segurança, ao trocar sua senha todas as suas sessões ativas em outros
-            dispositivos serão encerradas.
+            Por segurança, ao trocar sua senha todas as suas sessões ativas em outros dispositivos
+            serão encerradas.
           </CAlert>
 
           <CForm onSubmit={handlePasswordSubmit}>
@@ -278,9 +284,7 @@ const ProfilePage = () => {
                   type="password"
                   value={passwordForm.confirmPassword}
                   autoComplete="new-password"
-                  onChange={(event) =>
-                    updatePasswordField('confirmPassword', event.target.value)
-                  }
+                  onChange={(event) => updatePasswordField('confirmPassword', event.target.value)}
                   required
                 />
               </CCol>

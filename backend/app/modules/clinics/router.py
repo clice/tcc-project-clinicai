@@ -8,6 +8,7 @@ das clínicas do sistema.
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.common.services import ensure_user_has_clinic
 from app.core.database import get_db
 from app.core.deps import require_admin, require_permission
 from app.modules.clinics.schema import (
@@ -61,6 +62,41 @@ def list_clinics_route(
         current_user=current_user,
         search=search,
         include_inactive=include_inactive,
+    )
+
+
+# As rotas estáticas precisam ser registradas antes de /{clinic_id}.
+# Caso contrário, o Starlette considera "/clinics/me" compatível com a rota
+# dinâmica e o FastAPI tenta converter "me" para inteiro, devolvendo 422 antes
+# de alcançar o endpoint de autoatendimento.
+@router.get("/me", response_model=ClinicResponse)
+def get_my_clinic(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:read_profile")),
+):
+    """
+    Busca os dados da clínica vinculada ao usuário autenticado.
+    """
+    clinic_id = ensure_user_has_clinic(current_user)
+    clinic = get_clinic_by_id(db=db, clinic_id=clinic_id)
+    return build_clinic_response(clinic)
+
+
+@router.patch("/me", response_model=ClinicResponse)
+def update_my_clinic(
+    payload: ClinicUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_permission("clinics:update_profile")),
+):
+    """
+    Atualiza parcialmente os dados da clínica vinculada ao usuário.
+    """
+    clinic_id = ensure_user_has_clinic(current_user)
+    return update_clinic(
+        db=db,
+        clinic_id=clinic_id,
+        payload=payload,
+        current_user=current_user,
     )
 
 
@@ -150,33 +186,5 @@ def activate_clinic_route(
     return activate_clinic(
         db=db,
         clinic_id=clinic_id,
-        current_user=current_user,
-    )
-
-
-@router.get("/me")
-def get_my_clinic(
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:read_profile")),
-):
-    """
-    Busca dados de uma clínica para o perfil.
-    """
-    return get_clinic_by_id(db, current_user.clinic_id)
-
-
-@router.patch("/me")
-def update_my_clinic(
-    payload: ClinicUpdate,
-    db: Session = Depends(get_db),
-    current_user=Depends(require_permission("clinics:update_profile")),
-):
-    """
-    Atualiza parcialmente os dados do perfil da clínica.
-    """
-    return update_clinic(
-        db=db,
-        clinic_id=current_user.clinic_id,
-        payload=payload,
         current_user=current_user,
     )

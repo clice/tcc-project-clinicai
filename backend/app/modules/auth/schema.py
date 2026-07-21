@@ -7,7 +7,7 @@ e na rota /auth/me.
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.common.schemas import StrictRequestModel
 
@@ -40,7 +40,7 @@ class CurrentUserResponse(BaseModel):
     role_name: str
     role_display_name: str
 
-    permissions: list[str] = []
+    permissions: list[str] = Field(default_factory=list)
 
     status_id: int
     status_name: str

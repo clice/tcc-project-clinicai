@@ -1,0 +1,18 @@
+# Normaliza arquivos de texto e evita problemas de CRLF nos containers Linux.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Artefatos binários
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.pdf binary
+*.pt binary
+*.pth binary
+*.joblib binary
+*.zip binary

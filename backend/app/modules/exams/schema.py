@@ -3,6 +3,7 @@ Schemas do módulo de exames.
 """
 
 from datetime import date, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,17 +23,17 @@ class ExamBase(StrictRequestModel):
     exam_type: str = Field(..., min_length=2, max_length=80)
     exam_date: date | None = None
 
-    title: str = Field(..., min_length=3, max_length=180)
-    description: str | None = None
+    description: str = Field(..., min_length=3, max_length=180)
+    observations: str | None = None
     clinical_indication: str | None = None
 
-    @field_validator("exam_type", "title")
+    @field_validator("exam_type", "description")
     @classmethod
     def normalize_required_fields(cls, value: str) -> str:
         return normalize_required_text(value, "Campo obrigatório.")
 
     @field_validator(
-        "description",
+        "observations",
         "clinical_indication",
     )
     @classmethod
@@ -50,19 +51,19 @@ class ExamCreate(ExamBase):
 
 class ExamUpdate(StrictRequestModel):
     """
-    Schema usado para atualização parcial de exame.
+    Schema usado para atualização parcial de exame pendente.
     """
+
+    patient_id: int | None = Field(default=None, gt=0)
 
     exam_type: str | None = Field(default=None, min_length=2, max_length=80)
     exam_date: date | None = None
 
-    title: str | None = Field(default=None, min_length=3, max_length=180)
-    description: str | None = None
+    description: str | None = Field(default=None, min_length=3, max_length=180)
+    observations: str | None = None
     clinical_indication: str | None = None
-    findings: str | None = None
-    conclusion: str | None = None
 
-    @field_validator("exam_type", "title")
+    @field_validator("exam_type", "description")
     @classmethod
     def normalize_required_fields(cls, value: str | None) -> str | None:
         if value is None:
@@ -71,10 +72,8 @@ class ExamUpdate(StrictRequestModel):
         return normalize_required_text(value, "Campo obrigatório.")
 
     @field_validator(
-        "description",
+        "observations",
         "clinical_indication",
-        "findings",
-        "conclusion",
     )
     @classmethod
     def normalize_optional_fields(cls, value: str | None) -> str | None:
@@ -104,6 +103,28 @@ class ExamMedicalReview(StrictRequestModel):
         return normalize_required_text(value, "Campo obrigatório.")
     
 
+class ExamListItemResponse(BaseModel):
+    """Resumo operacional usado somente na listagem de exames."""
+
+    id: int
+    clinic_id: int
+    clinic_name: str | None = None
+    patient_id: int
+    patient_name: str | None = None
+    doctor_id: int | None = None
+    doctor_name: str | None = None
+    status_id: int
+    status_name: str | None = None
+    status_display_name: str | None = None
+    exam_type: str
+    exam_date: date | None = None
+    description: str
+    analysis_in_progress: bool = False
+    ai_analysis_status: str | None = None
+    file_available: bool = False
+    gradcam_available: bool = False
+
+
 class ExamResponse(BaseModel):
     """
     Schema usado nas respostas da API.
@@ -116,6 +137,8 @@ class ExamResponse(BaseModel):
 
     patient_id: int
     patient_name: str | None = None
+    patient_cpf: str | None = None
+    patient_birth_date: date | None = None
 
     doctor_id: int | None = None
     doctor_name: str | None = None
@@ -127,22 +150,25 @@ class ExamResponse(BaseModel):
     exam_type: str
     exam_date: date | None = None
 
-    title: str
-    description: str | None = None
+    description: str
+    observations: str | None = None
     clinical_indication: str | None = None
     findings: str | None = None
     conclusion: str | None = None
+
+    analysis_in_progress: bool = False
+    analysis_started_at: datetime | None = None
+    ai_analysis_status: str | None = None
 
     reviewed_by_id: int | None = None
     reviewed_by_name: str | None = None
     reviewed_at: datetime | None = None
 
-    file_path: str | None = None
     file_name: str | None = None
     file_mime_type: str | None = None
 
     # Preenchidos apenas se o exame tiver análise de IA concluída e o
-    # usuário tiver permissão de ver resultados diagnósticos (Funcionário
+    # usuário tiver permissão de ver resultados diagnósticos (Gestor
     # da Clínica nunca recebe esses dois campos preenchidos — ver
     # build_exam_response no service).
     ai_prediction_label: str | None = None
@@ -154,3 +180,25 @@ class ExamResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class ExamHistoryEntryResponse(BaseModel):
+    """Evento público do histórico de um exame (RF36)."""
+
+    id: int
+    user_id: int | None = None
+    user_name: str | None = None
+    action: str
+    description: str | None = None
+    old_data: Any | None = None
+    new_data: Any | None = None
+    created_at: datetime
+
+
+class ExamHistoryResponse(BaseModel):
+    """Lista paginada de eventos vinculados a um exame."""
+
+    items: list[ExamHistoryEntryResponse]
+    total: int
+    limit: int
+    offset: int

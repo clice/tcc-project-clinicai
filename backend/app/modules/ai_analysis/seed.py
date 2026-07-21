@@ -1,29 +1,44 @@
-"""
-Seed do módulo de análises de IA.
+"""Análises reais da massa acadêmica demonstrativa."""
 
-Cria análises iniciais para testes e desenvolvimento.
-"""
+import json
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import StatusName, StatusScope
+from app.common.constants import (
+    StatusName,
+    StatusScope,
+)
+from app.modules.academic_demo_assets import (
+    bundled_gradcam_path,
+    get_demo_exam_definitions,
+)
 from app.modules.ai_analysis.model import AIAnalysis
 from app.modules.exams.model import Exam
 from app.modules.statuses.model import Status
+
+
+ATTRIBUTION_FIELDS = (
+    "attribution_method",
+    "attribution_target_layers",
+    "attribution_local_evidence",
+    "attribution_branch_weights",
+    "attribution_branch_cam_raw_maxima",
+    "attribution_unavailable_reason",
+)
 
 
 def get_ai_analysis_status(
     db: Session,
     name: StatusName,
 ) -> Status | None:
-    """
-    Busca uma análise pelo status.
-    """
+    """Busca status de análise pelo nome oficial."""
+
     return (
         db.query(Status)
         .filter(
             Status.name == name.value,
-            Status.applies_to == StatusScope.AI_ANALYSIS.value,
+            Status.applies_to
+            == StatusScope.AI_ANALYSIS.value,
         )
         .first()
     )
@@ -32,46 +47,55 @@ def get_ai_analysis_status(
 def get_or_create_ai_analysis(
     db: Session,
     *,
-    exam_id: int,
+    exam: Exam,
     status_id: int,
-    prediction_label: str,
-    prediction_class: int | None,
-    confidence: float,
-    model_name: str,
-    model_version: str,
-    gradcam_path: str | None = None,
-    processing_time_ms: int | None = None,
-    ai_notes: str | None = None,
-    raw_response: str | None = None,
+    definition: dict,
 ) -> AIAnalysis:
-    """
-    Busca uma análise pelo exame ou cria uma nova.
-    """
-    ai_analysis = (
+    """Reconcilia a análise acadêmica vinculada ao exame."""
+
+    existing = (
         db.query(AIAnalysis)
-        .filter(AIAnalysis.exam_id == exam_id)
+        .filter(
+            AIAnalysis.exam_id == exam.id
+        )
         .first()
     )
 
-    if ai_analysis:
-        return ai_analysis
-
-    ai_analysis = AIAnalysis(
-        exam_id=exam_id,
-        status_id=status_id,
-        prediction_label=prediction_label,
-        prediction_class=prediction_class,
-        confidence=confidence,
-        model_name=model_name,
-        model_version=model_version,
-        gradcam_path=gradcam_path,
-        processing_time_ms=processing_time_ms,
-        ai_notes=ai_notes,
-        raw_response=raw_response,
+    analysis = definition["analysis"]
+    source = definition["source_asset"]
+    gradcam_path = bundled_gradcam_path(
+        analysis["gradcam_asset"]
     )
 
-    db.add(ai_analysis)
-    db.commit()
+    attribution_payload = {
+        field: analysis.get(field)
+        for field in ATTRIBUTION_FIELDS
+    }
+
+    ai_analysis = existing or AIAnalysis(exam_id=exam.id)
+    if existing is None:
+        db.add(ai_analysis)
+
+    ai_analysis.status_id = status_id
+    ai_analysis.prediction_label = str(analysis["prediction_label"])
+    ai_analysis.prediction_class = int(analysis["prediction_class"])
+    ai_analysis.confidence = float(analysis["confidence"])
+    ai_analysis.model_name = str(analysis["model_name"])
+    ai_analysis.model_version = str(analysis["model_version"])
+    ai_analysis.gradcam_path = str(gradcam_path)
+    ai_analysis.processing_time_ms = int(analysis["processing_time_ms"])
+    ai_analysis.ai_notes = (
+        "Predição real do Ensemble Stacking sobre ativo acadêmico de "
+        f"referência {source['label']}; sem finalidade clínica."
+    )
+    ai_analysis.raw_response = json.dumps(
+        attribution_payload,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    db.flush()
     db.refresh(ai_analysis)
 
     return ai_analysis
@@ -82,52 +106,55 @@ def seed_ai_analysis(
     exams: dict[str, Exam],
     statuses: dict[str, Status] | None = None,
 ) -> dict[str, AIAnalysis]:
-    """
-    Cria análises de IA iniciais do sistema.
-    """
-    completed_exam = exams.get("exam_colonoscopy_completed")
-    processing_exam = exams.get("exam_endoscopy_processing")
+    """Cria as 72 análises registradas no manifesto."""
 
-    completed_status = None
-    processing_status = None
+    completed_status = (
+        statuses.get(
+            "ai_analysis_completed"
+        )
+        if statuses
+        else None
+    )
 
-    if statuses:
-        completed_status = statuses.get("ai_analysis_completed")
-        processing_status = statuses.get("ai_analysis_processing")
+    completed_status = (
+        completed_status
+        or get_ai_analysis_status(
+            db,
+            StatusName.COMPLETED,
+        )
+    )
 
-    completed_status = completed_status or get_ai_analysis_status(db, StatusName.COMPLETED)
-    processing_status = processing_status or get_ai_analysis_status(db, StatusName.PROCESSING)
-
-    if not completed_exam or not processing_exam or not completed_status or not processing_status:
+    if completed_status is None:
         return {}
 
-    return {
-        "ai_analysis_colonoscopy_completed": get_or_create_ai_analysis(
-            db=db,
-            exam_id=completed_exam.id,
-            status_id=completed_status.id,
-            prediction_label="normal",
-            prediction_class=0,
-            confidence=0.94,
-            model_name="clinicai-endoscopy-cnn",
-            model_version="0.1.0",
-            gradcam_path="uploads/gradcam/colonoscopy_completed_gradcam.jpg",
-            processing_time_ms=1240,
-            ai_notes="Análise simulada para ambiente de desenvolvimento.",
-            raw_response='{"prediction_label": "normal", "confidence": 0.94}',
-        ),
-        "ai_analysis_endoscopy_processing": get_or_create_ai_analysis(
-            db=db,
-            exam_id=processing_exam.id,
-            status_id=processing_status.id,
-            prediction_label="suspected_gastritis",
-            prediction_class=1,
-            confidence=0.87,
-            model_name="clinicai-endoscopy-cnn",
-            model_version="0.1.0",
-            gradcam_path="uploads/gradcam/endoscopy_ai_processing_gradcam.jpg",
-            processing_time_ms=1580,
-            ai_notes="Resultado preliminar gerado por modelo simulado.",
-            raw_response='{"prediction_label": "suspected_gastritis", "status": "processing", "confidence": 0.87}',
-        ),
-    }
+    result: dict[str, AIAnalysis] = {}
+
+    for definition in get_demo_exam_definitions():
+        if definition.get("analysis") is None:
+            continue
+
+        exam_key = definition["exam_key"]
+        exam = exams.get(exam_key)
+
+        if exam is None:
+            raise RuntimeError(
+                "Exame acadêmico ausente para análise: "
+                f"{exam_key}."
+            )
+
+        result[exam_key] = (
+            get_or_create_ai_analysis(
+                db,
+                exam=exam,
+                status_id=completed_status.id,
+                definition=definition,
+            )
+        )
+
+    if len(result) != 72:
+        raise RuntimeError(
+            "O seed acadêmico deve produzir "
+            "72 análises."
+        )
+
+    return result

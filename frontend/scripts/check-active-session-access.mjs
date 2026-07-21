@@ -33,7 +33,7 @@ assert.equal(
   'Revogar uma permissão deve ser detectado.',
 )
 assert.equal(
-  hasAccessChanged(originalUser, { ...originalUser, role_id: 3, role_name: 'clinic_staff' }),
+  hasAccessChanged(originalUser, { ...originalUser, role_id: 3, role_name: 'clinic_manager' }),
   true,
   'Trocar a role deve ser detectado.',
 )

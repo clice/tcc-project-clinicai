@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.deps import require_admin, require_permission
+from app.core.deps import require_admin, require_doctor_permission
 from app.modules.ai_analysis.schema import (
     AIAnalysisCreate,
     AIAnalysisResponse,
@@ -49,7 +49,7 @@ def get_ai_metrics_route(
 def create_ai_analysis_route(
     payload: AIAnalysisCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:create")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:create")),
 ):
     """
     Cria uma análise de IA para um exame.
@@ -69,7 +69,7 @@ def list_ai_analysis_route(
     model_version: str | None = Query(default=None),
     prediction_label: str | None = Query(default=None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:read")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:read")),
 ):
     """
     Lista análises de IA.
@@ -89,7 +89,7 @@ def list_ai_analysis_route(
 def get_ai_analysis_by_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:read")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:read")),
 ):
     """
     Busca a análise de IA vinculada a um exame.
@@ -105,7 +105,7 @@ def get_ai_analysis_by_exam_route(
 def get_ai_analysis_route(
     ai_analysis_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:read")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:read")),
 ):
     """
     Busca uma análise de IA específica pelo ID.
@@ -122,7 +122,7 @@ def update_ai_analysis_route(
     ai_analysis_id: int,
     payload: AIAnalysisUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:update")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:update")),
 ):
     """
     Atualiza parcialmente uma análise de IA.

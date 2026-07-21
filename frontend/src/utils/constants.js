@@ -20,10 +20,10 @@ export const moduleLabels = {
 // STATUS
 
 export const statusColors = {
-  pending: 'secondary',
+  pending: 'info',
   processing: 'info',
   awaiting_review: 'warning',
-  completed: 'success',
+  completed: 'completed',
   completed_with_divergence: 'dark',
   canceled: 'secondary',
   failed: 'danger',
@@ -42,16 +42,32 @@ export const examStatusLabels = {
   canceled: 'Cancelados',
 }
 
+export const examStatusDisplayLabels = {
+  pending: 'Pendente',
+  processing: 'Processando',
+  awaiting_review: 'Aguardando revisão',
+  completed: 'Concluído',
+  completed_with_divergence: 'Com divergência',
+  failed: 'Falha na IA',
+  canceled: 'Cancelado',
+}
+
 // EXAMS
 
 export const examTypeLabels = {
   colonoscopy: 'Colonoscopia',
-  endoscopy: 'Endoscopia',
+  endoscopy: 'Endoscopia digestiva alta',
 }
 
 export const examTypeOptions = [
-  { value: 'endoscopy', label: 'Endoscopia' },
-  { value: 'colonoscopy', label: 'Colonoscopia' },
+  {
+    value: 'endoscopy',
+    label: 'Endoscopia digestiva alta',
+  },
+  {
+    value: 'colonoscopy',
+    label: 'Colonoscopia',
+  },
 ]
 
 // AI ANALYSIS
@@ -62,13 +78,18 @@ export const aiStatusLabels = {
   completed: 'Concluída',
   failed: 'Falhou',
   canceled: 'Cancelada',
-  not_processed: 'Não processado',
+  not_processed: 'Não processada',
+}
+
+export const predictionLabels = {
+  normal: 'Normal',
+  abnormal: 'Anormal',
 }
 
 export const aiStatusColors = {
   pending: 'secondary',
   processing: 'info',
-  completed: 'success',
+  completed: 'completed',
   failed: 'danger',
   canceled: 'secondary',
   not_processed: 'secondary',

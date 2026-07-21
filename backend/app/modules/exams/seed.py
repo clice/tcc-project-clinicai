@@ -1,36 +1,23 @@
-"""
-Seed do módulo de exames.
+"""Exames coerentes da massa acadêmica demonstrativa."""
 
-Cria exames iniciais para testes e desenvolvimento.
-"""
-
-from datetime import date
+from datetime import (
+    date,
+    datetime,
+    time,
+    timezone,
+)
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import StatusName, StatusScope
+from app.modules.academic_demo_assets import (
+    get_demo_exam_definitions,
+    install_exam_asset,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
 from app.modules.patients.model import Patient
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
-
-
-def get_exam_status(
-    db: Session,
-    name: StatusName,
-) -> Status | None:
-    """
-    Busca status de exame pelo nome oficial.
-    """
-    return (
-        db.query(Status)
-        .filter(
-            Status.name == name.value,
-            Status.applies_to == StatusScope.EXAM.value,
-        )
-        .first()
-    )
 
 
 def get_or_create_exam(
@@ -41,51 +28,57 @@ def get_or_create_exam(
     doctor_id: int,
     status_id: int,
     exam_type: str,
-    title: str,
-    exam_date: date | None = None,
-    description: str | None = None,
-    clinical_indication: str | None = None,
+    description: str,
+    asset_entry: dict,
+    exam_date: date,
+    observations: str,
+    clinical_indication: str,
     findings: str | None = None,
     conclusion: str | None = None,
-    file_path: str | None = None,
-    file_name: str | None = None,
-    file_mime_type: str | None = None,
+    reviewed_by_id: int | None = None,
+    reviewed_at: datetime | None = None,
 ) -> Exam:
-    """
-    Busca um exame pelo título, paciente e tipo ou cria um novo.
-    """
+    """Reconcilia um exame pela identidade paciente/tipo/descrição."""
+
     exam = (
         db.query(Exam)
         .filter(
             Exam.patient_id == patient_id,
             Exam.exam_type == exam_type,
-            Exam.title == title,
+            Exam.description == description,
         )
         .first()
     )
 
-    if exam:
-        return exam
+    if exam is None:
+        exam = Exam(
+            patient_id=patient_id,
+            exam_type=exam_type,
+            description=description,
+        )
+        db.add(exam)
 
-    exam = Exam(
-        clinic_id=clinic_id,
-        patient_id=patient_id,
-        doctor_id=doctor_id,
-        status_id=status_id,
-        exam_type=exam_type,
-        exam_date=exam_date,
-        title=title,
-        description=description,
-        clinical_indication=clinical_indication,
-        findings=findings,
-        conclusion=conclusion,
-        file_path=file_path,
-        file_name=file_name,
-        file_mime_type=file_mime_type,
+    exam.clinic_id = clinic_id
+    exam.doctor_id = doctor_id
+    exam.status_id = status_id
+    exam.exam_date = exam_date
+    exam.observations = observations
+    exam.clinical_indication = clinical_indication
+    exam.findings = findings
+    exam.conclusion = conclusion
+    exam.reviewed_by_id = reviewed_by_id
+    exam.reviewed_at = reviewed_at
+    exam.analysis_in_progress = False
+    exam.analysis_started_at = None
+    db.flush()
+
+    install_exam_asset(
+        exam,
+        asset_entry,
+        assign_fields=True,
     )
 
-    db.add(exam)
-    db.commit()
+    db.flush()
     db.refresh(exam)
 
     return exam
@@ -98,86 +91,94 @@ def seed_exams(
     users: dict[str, User],
     statuses: dict[str, Status],
 ) -> dict[str, Exam]:
-    """
-    Cria exames iniciais do sistema.
-    """
-    pending_status = statuses.get("exam_pending") or get_exam_status(db, StatusName.PENDING)
-    processing_status = statuses.get("exam_processing") or get_exam_status(db, StatusName.PROCESSING)
-    completed_status = statuses.get("exam_completed") or get_exam_status(db, StatusName.COMPLETED)
+    """Cria os 90 exames definidos no manifesto v2."""
 
-    primary_clinic = clinics.get("clinic_primary")
-    doctor_primary = users.get("doctor_primary")
-    doctor_secondary = users.get("doctor_secondary") or doctor_primary
+    result: dict[str, Exam] = {}
 
-    patient_example_1 = patients.get("patient_example_1")
-    patient_example_2 = patients.get("patient_example_2")
-    patient_elderly = patients.get("patient_elderly")
-
-    if not all(
-        [
-            primary_clinic,
-            doctor_primary,
-            doctor_secondary,
-            patient_example_1,
-            patient_example_2,
-            patient_elderly,
-            pending_status,
-            processing_status,
-            completed_status,
+    for definition in get_demo_exam_definitions():
+        clinic = clinics[
+            definition["clinic_key"]
         ]
-    ):
-        return {}
+        doctor = users[
+            definition["doctor_key"]
+        ]
+        patient = patients[
+            definition["patient_key"]
+        ]
+        status = statuses[
+            "exam_" + definition["status"]
+        ]
+        exam_date = date.fromisoformat(
+            definition["exam_date"]
+        )
+        review = definition.get("review")
 
-    return {
-        "exam_endoscopy_pending": get_or_create_exam(
+        reviewed_at = None
+        findings = None
+        conclusion = None
+
+        if review is not None:
+            reviewed_at = datetime.combine(
+                exam_date,
+                time(
+                    hour=14,
+                    minute=30,
+                    tzinfo=timezone.utc,
+                ),
+            )
+            findings = str(
+                review["review_notes"]
+            )
+            conclusion = (
+                "Revisão acadêmica concluída "
+                "com concordância."
+                if review["agrees_with_ai"]
+                else
+                "Revisão acadêmica concluída "
+                "com divergência."
+            )
+
+        source_label = definition[
+            "source_asset"
+        ]["label"]
+
+        result[
+            definition["exam_key"]
+        ] = get_or_create_exam(
             db=db,
-            clinic_id=primary_clinic.id,
-            patient_id=patient_example_1.id,
-            doctor_id=doctor_primary.id,
-            status_id=pending_status.id,
-            exam_type="endoscopy",
-            exam_date=date(2026, 5, 1),
-            title="Endoscopia digestiva alta",
-            description="Exame endoscópico inicial para avaliação clínica.",
-            clinical_indication="Dor epigástrica persistente e refluxo.",
-            findings=None,
-            conclusion=None,
-            file_path="uploads/exams/1/endoscopy_pending.jpg",
-            file_name="endoscopy_pending.jpg",
-            file_mime_type="image/jpeg",
-        ),
-        "exam_colonoscopy_completed": get_or_create_exam(
-            db=db,
-            clinic_id=primary_clinic.id,
-            patient_id=patient_example_2.id,
-            doctor_id=doctor_primary.id,
-            status_id=completed_status.id,
-            exam_type="colonoscopy",
-            exam_date=date(2026, 5, 2),
-            title="Colonoscopia completa",
-            description="Colonoscopia para rastreamento e investigação diagnóstica.",
-            clinical_indication="Rastreamento de lesões colorretais.",
-            findings="Mucosa sem alterações relevantes.",
-            conclusion="Exame sem achados significativos.",
-            file_path="uploads/exams/2/colonoscopy_completed.jpg",
-            file_name="colonoscopy_completed.jpg",
-            file_mime_type="image/jpeg",
-        ),
-        "exam_endoscopy_processing": get_or_create_exam(
-            db=db,
-            clinic_id=primary_clinic.id,
-            patient_id=patient_elderly.id,
-            doctor_id=doctor_secondary.id,
-            status_id=processing_status.id,
-            exam_type="endoscopy",
-            exam_date=date(2026, 5, 3),
-            title="Endoscopia com análise por IA",
-            description="Exame enviado para análise automatizada.",
-            clinical_indication="Investigação de gastrite e lesões gástricas.",
-            findings=None,
-            conclusion=None,
-            file_path="uploads/exams/3/endoscopy_ai_processing.jpg",
-            file_name="endoscopy_ai_processing.jpg",
-            file_mime_type="image/jpeg",
-        ),
-    }
+            clinic_id=clinic.id,
+            patient_id=patient.id,
+            doctor_id=doctor.id,
+            status_id=status.id,
+            exam_type=definition[
+                "exam_type"
+            ],
+            description=definition["description"],
+            asset_entry=definition[
+                "source_asset"
+            ],
+            exam_date=exam_date,
+            observations=(
+                "Exame fictício da massa acadêmica "
+                f"com imagem de referência {source_label}."
+            ),
+            clinical_indication=(
+                "Demonstração técnica do estado "
+                f"{definition['status']}."
+            ),
+            findings=findings,
+            conclusion=conclusion,
+            reviewed_by_id=(
+                doctor.id
+                if review is not None
+                else None
+            ),
+            reviewed_at=reviewed_at,
+        )
+
+    if len(result) != 90:
+        raise RuntimeError(
+            "O seed acadêmico deve produzir 90 exames."
+        )
+
+    return result

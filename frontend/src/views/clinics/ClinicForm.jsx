@@ -3,13 +3,13 @@
  *
  * Usado para:
  * - criar clínica;
- * - visualizar clínica;
  * - editar clínica.
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
+  CAlert,
   CButton,
   CButtonGroup,
   CCard,
@@ -19,7 +19,6 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormSelect,
   CFormTextarea,
   CRow,
 } from '@coreui/react'
@@ -28,13 +27,13 @@ import { useFeedback } from 'src/hooks/useFeedback'
 
 import { addressService } from 'src/services/addressService'
 import { clinicService } from 'src/services/clinicService'
-import { statusService } from 'src/services/statusService'
 
 import { getErrorMessage } from 'src/utils/errors'
 import {
   formatCnpjBR,
   formatPhoneBR,
   formatZipCodeBR,
+  isValidCnpj,
   onlyNumbers,
 } from 'src/utils/formatters'
 
@@ -51,7 +50,6 @@ const emptyClinic = {
   neighborhood: '',
   city: '',
   state: '',
-  status_id: '',
 }
 
 const ClinicForm = ({ mode = 'create' }) => {
@@ -60,36 +58,22 @@ const ClinicForm = ({ mode = 'create' }) => {
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyClinic)
-  const [statuses, setStatuses] = useState([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingAddress, setIsLoadingAddress] = useState(false)
 
-  const isReadOnly = mode === 'view'
   const isCreateMode = mode === 'create'
   const isEditMode = mode === 'edit'
 
-  const title = useMemo(() => {
-    if (isCreateMode) return 'Cadastrar Clínica'
-    if (isEditMode) return 'Editar Clínica'
-    return 'Detalhes da Clínica'
-  }, [isCreateMode, isEditMode])
+  const title = useMemo(
+    () => (isCreateMode ? 'Cadastrar Clínica' : 'Editar Clínica'),
+    [isCreateMode],
+  )
 
   useEffect(() => {
     const loadPageData = async () => {
       try {
         startLoading()
         showError('')
-
-        const statusData = await statusService.list()
-
-        /**
-         * O backend valida que a clínica use apenas status com applies_to = clinic.
-         */
-        setStatuses(
-          Array.isArray(statusData)
-            ? statusData.filter((status) => status.applies_to === 'clinic')
-            : [],
-        )
 
         if (!isCreateMode) {
           const clinicData = await clinicService.getById(id)
@@ -99,9 +83,7 @@ const ClinicForm = ({ mode = 'create' }) => {
             cnpj: clinicData.cnpj ? formatCnpjBR(clinicData.cnpj) : '',
             email: clinicData.email ?? '',
             phone: clinicData.phone ? formatPhoneBR(clinicData.phone) : '',
-            mobile_phone: clinicData.mobile_phone
-              ? formatPhoneBR(clinicData.mobile_phone)
-              : '',
+            mobile_phone: clinicData.mobile_phone ? formatPhoneBR(clinicData.mobile_phone) : '',
             zip_code: clinicData.zip_code ? formatZipCodeBR(clinicData.zip_code) : '',
             address: clinicData.address ?? '',
             number: clinicData.number ?? '',
@@ -109,7 +91,6 @@ const ClinicForm = ({ mode = 'create' }) => {
             neighborhood: clinicData.neighborhood ?? '',
             city: clinicData.city ?? '',
             state: clinicData.state ?? '',
-            status_id: clinicData.status_id ?? '',
           })
         }
       } catch (err) {
@@ -120,7 +101,7 @@ const ClinicForm = ({ mode = 'create' }) => {
     }
 
     loadPageData()
-  }, [id, isCreateMode])
+  }, [id, isCreateMode, showError, startLoading, stopLoading])
 
   /**
    * Atualiza um campo do formulário.
@@ -141,13 +122,8 @@ const ClinicForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (onlyNumbers(form.cnpj).length !== 14) {
+    if (!isValidCnpj(form.cnpj)) {
       showError('Informe um CNPJ válido.')
-      return false
-    }
-
-    if (!form.status_id) {
-      showError('Selecione o status da clínica.')
       return false
     }
 
@@ -224,32 +200,23 @@ const ClinicForm = ({ mode = 'create' }) => {
   /**
    * Monta o payload no formato esperado pela API.
    */
-  const buildPayload = () => {
-    const status = statuses.find((item) => String(item.id) === String(form.status_id))
-
-    return {
-      name: form.name.trim(),
-      cnpj: onlyNumbers(form.cnpj),
-      email: form.email.trim().toLowerCase() || null,
-      phone: onlyNumbers(form.phone) || null,
-      mobile_phone: onlyNumbers(form.mobile_phone) || null,
-      zip_code: onlyNumbers(form.zip_code) || null,
-      address: form.address.trim() || null,
-      number: form.number.trim() || null,
-      complement: form.complement.trim() || null,
-      neighborhood: form.neighborhood.trim() || null,
-      city: form.city.trim() || null,
-      state: form.state.trim().toUpperCase() || null,
-      status_id: Number(form.status_id),
-      status_name: status?.name ?? null,
-      status_display_name: status?.display_name ?? null,
-    }
-  }
+  const buildPayload = () => ({
+    name: form.name.trim(),
+    cnpj: onlyNumbers(form.cnpj),
+    email: form.email.trim().toLowerCase() || null,
+    phone: onlyNumbers(form.phone) || null,
+    mobile_phone: onlyNumbers(form.mobile_phone) || null,
+    zip_code: onlyNumbers(form.zip_code) || null,
+    address: form.address.trim() || null,
+    number: form.number.trim() || null,
+    complement: form.complement.trim() || null,
+    neighborhood: form.neighborhood.trim() || null,
+    city: form.city.trim() || null,
+    state: form.state.trim().toUpperCase() || null,
+  })
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-
-    if (isReadOnly) return
 
     showError('')
     showSuccess('')
@@ -261,7 +228,7 @@ const ClinicForm = ({ mode = 'create' }) => {
 
       if (isCreateMode) {
         const created = await clinicService.create(buildPayload())
-        navigate(`/clinics/${created.id}`)
+        navigate(`/clinics/${created.id}/edit`)
         return
       }
 
@@ -270,7 +237,7 @@ const ClinicForm = ({ mode = 'create' }) => {
         showSuccess('Clínica atualizada com sucesso.')
       }
     } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao salvar clínica.')
+      showError(getErrorMessage(err, 'Erro ao salvar clínica.'))
     } finally {
       setIsSaving(false)
     }
@@ -281,20 +248,34 @@ const ClinicForm = ({ mode = 'create' }) => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Administração</div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">{title}</h1>
           <p className="text-body-secondary mb-0">
             Cadastro usado para vincular usuários, pacientes e exames.
           </p>
         </div>
 
         <div className="d-flex justify-content-center mt-4">
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/clinics">
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            className="clinicai-soft-action"
+            as={Link}
+            to="/clinics"
+          >
             Voltar
           </CButton>
-        </div> 
+        </div>
       </div>
 
-      <CCard>
+      {isEditMode && (
+        <CAlert color="info">
+          Esta tela permite alterar os dados da clínica. Revise as informações antes de selecionar
+          “Salvar”.
+        </CAlert>
+      )}
+
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados da Clínica</strong>
         </CCardHeader>
@@ -306,40 +287,20 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Nome</CFormLabel>
                 <CFormInput
                   value={form.name}
-                  disabled={isReadOnly}
                   placeholder="Ex: Clínica Vida"
                   onChange={(event) => updateField('name', event.target.value)}
                   required
                 />
               </CCol>
 
-              <CCol md={2}>
+              <CCol md={4}>
                 <CFormLabel>CNPJ</CFormLabel>
                 <CFormInput
                   value={form.cnpj}
-                  disabled={isReadOnly}
                   placeholder="00.000.000/0000-00"
                   onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
                   required
                 />
-              </CCol>
-
-              <CCol md={2}>
-                <CFormLabel>Status</CFormLabel>
-                <CFormSelect
-                  value={form.status_id}
-                  disabled={isReadOnly}
-                  onChange={(event) => updateField('status_id', event.target.value)}
-                  required
-                >
-                  <option value="">Selecione...</option>
-
-                  {statuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.display_name}
-                    </option>
-                  ))}
-                </CFormSelect>
               </CCol>
 
               <CCol md={4}>
@@ -347,7 +308,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormInput
                   type="email"
                   value={form.email}
-                  disabled={isReadOnly}
                   placeholder="contato@clinica.com"
                   onChange={(event) => updateField('email', event.target.value)}
                 />
@@ -357,7 +317,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Telefone</CFormLabel>
                 <CFormInput
                   value={form.phone}
-                  disabled={isReadOnly}
                   placeholder="(00) 0000-0000"
                   onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                 />
@@ -367,7 +326,6 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormLabel>Celular</CFormLabel>
                 <CFormInput
                   value={form.mobile_phone}
-                  disabled={isReadOnly}
                   placeholder="(00) 00000-0000"
                   onChange={(event) =>
                     updateField('mobile_phone', formatPhoneBR(event.target.value))
@@ -375,14 +333,12 @@ const ClinicForm = ({ mode = 'create' }) => {
                 />
               </CCol>
 
-              <CCol md={3}>
+              <CCol md={2}>
                 <CFormLabel>CEP</CFormLabel>
                 <CFormInput
                   value={form.zip_code}
-                  disabled={isReadOnly || isLoadingAddress}
-                  onChange={(event) =>
-                    updateField('zip_code', formatZipCodeBR(event.target.value))
-                  }
+                  disabled={isLoadingAddress}
+                  onChange={(event) => updateField('zip_code', formatZipCodeBR(event.target.value))}
                   onBlur={handleZipCodeBlur}
                   placeholder="00000-000"
                 />
@@ -393,33 +349,32 @@ const ClinicForm = ({ mode = 'create' }) => {
                 <CFormInput value={form.address} disabled />
               </CCol>
 
-              <CCol md={1}>
+              <CCol md={2}>
                 <CFormLabel>Número</CFormLabel>
                 <CFormInput
                   value={form.number}
-                  disabled={isReadOnly}
                   onChange={(event) => updateField('number', event.target.value)}
                 />
               </CCol>
 
-              <CCol md={6}>
+              <CCol md={10}>
                 <CFormLabel>Complemento</CFormLabel>
                 <CFormInput value={form.complement} disabled />
               </CCol>
 
               <CCol md={2}>
+                <CFormLabel>UF</CFormLabel>
+                <CFormInput value={form.state} disabled />
+              </CCol>
+
+              <CCol md={6}>
                 <CFormLabel>Bairro</CFormLabel>
                 <CFormInput value={form.neighborhood} disabled />
               </CCol>
 
-              <CCol md={2}>
+              <CCol md={6}>
                 <CFormLabel>Cidade</CFormLabel>
                 <CFormInput value={form.city} disabled />
-              </CCol>
-
-              <CCol md={2}>
-                <CFormLabel>UF</CFormLabel>
-                <CFormInput value={form.state} disabled />
               </CCol>
 
               <CCol md={12}>
@@ -432,17 +387,15 @@ const ClinicForm = ({ mode = 'create' }) => {
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
 
-                <CButton color="secondary" variant="outline" as={Link} to="/clinics">
-                  Cancelar
-                </CButton>
-              </CButtonGroup>
-            )}
+              <CButton color="secondary" variant="outline" as={Link} to="/clinics">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

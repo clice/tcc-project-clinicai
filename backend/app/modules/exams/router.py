@@ -10,15 +10,27 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import require_doctor_permission, require_permission
 from app.modules.ai_analysis.schema import AIAnalysisResponse
-from app.modules.exams.schema import ExamCreate, ExamMedicalReview, ExamResponse, ExamUpdate
+from app.modules.exams.schema import (
+    ExamCreate,
+    ExamListItemResponse,
+    ExamHistoryResponse,
+    ExamMedicalReview,
+    ExamResponse,
+    ExamUpdate,
+)
 from app.modules.exams.service import (
     analyze_exam,
     cancel_exam,
     create_exam,
+    download_exam_ai_file,
     download_exam_file,
+    download_exam_images_package,
     get_exam_by_id,
+    get_exam_history,
     list_exam_form_options,
     list_exams,
+    preview_exam_ai_file,
+    preview_exam_file,
     replace_exam_file,
     restore_exam,
     review_exam,
@@ -33,7 +45,7 @@ router = APIRouter(prefix="/exams", tags=["Exams"])
 @router.get("/form-options")
 def get_exam_form_options_route(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
 ):
     """
     Retorna dados auxiliares para o formulário de exames.
@@ -49,12 +61,12 @@ def create_exam_route(
     doctor_id: int | None = Form(default=None),
     exam_type: str = Form(...),
     exam_date: date | None = Form(default=None),
-    title: str = Form(...),
-    description: str | None = Form(default=None),
+    description: str = Form(...),
+    observations: str | None = Form(default=None),
     clinical_indication: str | None = Form(default=None),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:create")),
+    current_user: User = Depends(require_doctor_permission("exams:create")),
 ):
     """
     Cria um novo exame.
@@ -65,8 +77,8 @@ def create_exam_route(
         doctor_id=doctor_id,
         exam_type=exam_type,
         exam_date=exam_date,
-        title=title,
         description=description,
+        observations=observations,
         clinical_indication=clinical_indication,
     )
 
@@ -78,7 +90,9 @@ def create_exam_route(
     )
 
 
-@router.get("/", response_model=list[ExamResponse])
+@router.get(
+    "/", response_model=list[ExamListItemResponse]
+)
 def list_exams_route(
     search: str | None = Query(default=None),
     clinic_id: int | None = Query(default=None),
@@ -90,7 +104,7 @@ def list_exams_route(
     ),
     include_inactive: bool = Query(default=True),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_permission("exams:list")),
 ):
     """
     Lista exames cadastrados.
@@ -112,7 +126,7 @@ def list_exams_route(
 def get_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:read")),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
 ):
     """
     Busca um exame específico pelo ID.
@@ -124,12 +138,29 @@ def get_exam_route(
     )
 
 
+@router.get("/{exam_id}/history", response_model=ExamHistoryResponse)
+def get_exam_history_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_doctor_permission("exams:read")),
+):
+    """Retorna os eventos do ciclo de vida do exame (RF36)."""
+
+    return get_exam_history(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.patch("/{exam_id}", response_model=ExamResponse)
 def update_exam_route(
     exam_id: int,
     payload: ExamUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:update")),
+    current_user: User = Depends(
+        require_doctor_permission("exams:update")
+    ),
 ):
     """
     Atualiza parcialmente um exame.
@@ -146,7 +177,7 @@ def update_exam_route(
 def cancel_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:change_status")),
+    current_user: User = Depends(require_doctor_permission("exams:change_status")),
 ):
     """
     Cancela logicamente um exame.
@@ -156,19 +187,19 @@ def cancel_exam_route(
         exam_id=exam_id,
         current_user=current_user,
     )
-    
-    
+
+
 @router.patch("/{exam_id}/restore", response_model=ExamResponse)
 def restore_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:change_status")),
+    current_user: User = Depends(require_doctor_permission("exams:change_status")),
 ):
     """
-    Retoma um exame cancelado.
+    Restaura um exame cancelado ou com falha para pending.
 
-    Se o exame possuir arquivo, retorna para processing.
-    Se não possuir arquivo, retorna para pending.
+    A operação exige que o arquivo físico continue disponível. Repetir a
+    requisição depois de atingir pending é idempotente.
     """
     return restore_exam(
         db=db,
@@ -181,15 +212,14 @@ def restore_exam_route(
 async def analyze_exam_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("ai_analysis:create")),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:create")),
 ):
     """
     Envia o exame para análise pelo serviço de IA (RF41-48).
 
-    O exame precisa estar em 'processing' e ter um arquivo enviado. Em
-    caso de sucesso, o exame passa para 'awaiting_review'; em caso de
-    falha na comunicação com o serviço de IA, o exame é marcado como
-    'failed' (RN12 permite reenvio posterior).
+    O exame precisa estar em 'pending' e ter um arquivo enviado. Um claim
+    atômico realiza pending -> processing e impede inferências concorrentes. Em sucesso, o exame passa
+    para 'awaiting_review'; em falha, passa para 'failed'.
     """
     return await analyze_exam(
         db=db,
@@ -221,11 +251,32 @@ def review_exam_route(
     )
 
 
+@router.get("/{exam_id}/preview")
+def preview_exam_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_doctor_permission("exams:download")
+    ),
+):
+    """
+    Retorna a imagem original para visualização autenticada.
+
+    Esta rota não registra download manual no histórico.
+    """
+
+    return preview_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.get("/{exam_id}/download")
 def download_exam_file_route(
     exam_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:download")),
+    current_user: User = Depends(require_doctor_permission("exams:download")),
 ):
     """
     Retorna informações do arquivo vinculado ao exame.
@@ -236,12 +287,67 @@ def download_exam_file_route(
         current_user=current_user,
     )
 
+
+@router.get("/{exam_id}/ai-file/preview")
+def preview_exam_ai_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_doctor_permission("ai_analysis:read")
+    ),
+):
+    """
+    Retorna o mapa Grad-CAM para visualização autenticada.
+
+    A abertura automática não é registrada como download manual.
+    """
+
+    return preview_exam_ai_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get("/{exam_id}/ai-file/download")
+def download_exam_ai_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_doctor_permission("ai_analysis:read")),
+):
+    """Retorna o mapa Grad-CAM sem expor o caminho físico armazenado."""
+
+    return download_exam_ai_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+@router.get("/{exam_id}/images/download")
+def download_exam_images_package_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_doctor_permission("exams:download")
+    ),
+):
+    """Baixa a imagem original e o Mapa Grad-CAM em um ZIP."""
+
+    return download_exam_images_package(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
 @router.post("/{exam_id}/replace-file", response_model=ExamResponse)
 def replace_exam_file_route(
     exam_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permission("exams:upload")),
+    current_user: User = Depends(
+        require_doctor_permission("exams:upload")
+    ),
 ):
     """
     Substitui arquivo do exame.
@@ -252,4 +358,3 @@ def replace_exam_file_route(
         file=file,
         current_user=current_user,
     )
-    

@@ -16,8 +16,7 @@ import { AppSidebarNav } from 'src/components/navigation/AppSidebarNav'
 import { useAuth } from 'src/hooks/useAuth'
 import { useExamStatusCounts } from 'src/hooks/useExamStatusCounts'
 
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
+import { clinicaiSygnet } from 'src/assets/brand/clinicaiSygnet'
 
 import { statusColors } from 'src/utils/constants'
 import { filterNavigationByAccess } from 'src/utils/navigationAccess.mjs'
@@ -52,8 +51,8 @@ const injectCountBadges = (items, counts) => {
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const { roleName, user } = useAuth()
-  const canReadExams = hasPermission(user, PERMISSIONS.EXAMS_READ)
-  const { counts: examCounts } = useExamStatusCounts({}, canReadExams)
+  const canListExams = hasPermission(user, PERMISSIONS.EXAMS_LIST)
+  const { counts: examCounts } = useExamStatusCounts({}, canListExams)
 
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -68,7 +67,7 @@ const AppSidebar = () => {
 
   return (
     <CSidebar
-      className="border-end"
+      className="app-sidebar border-end"
       colorScheme="dark"
       position="fixed"
       unfoldable={unfoldable}
@@ -77,10 +76,19 @@ const AppSidebar = () => {
         dispatch({ type: 'set', sidebarShow: visible })
       }}
     >
-      <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/dashboard">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+      <CSidebarHeader className="clinicai-sidebar-header">
+        <CSidebarBrand className="clinicai-sidebar-brand" to="/dashboard">
+          <span className="sidebar-brand-full clinicai-brand-full">
+            <CIcon customClassName="clinicai-brand-icon" icon={clinicaiSygnet} height={42} />
+            <span className="clinicai-brand-name">
+              Clinic<span className="clinicai-brand-ai">AI</span>
+            </span>
+          </span>
+          <CIcon
+            customClassName="sidebar-brand-narrow clinicai-brand-icon"
+            icon={clinicaiSygnet}
+            height={38}
+          />
         </CSidebarBrand>
 
         <CCloseButton
@@ -90,7 +98,7 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav items={filteredNavigation} />
+      <AppSidebarNav items={filteredNavigation} roleName={roleName} />
     </CSidebar>
   )
 }

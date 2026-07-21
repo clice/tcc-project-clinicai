@@ -1,7 +1,7 @@
 /**
  * Listagem de permissões.
  *
- * Exibe o catálogo oficial e permite visualizar ou editar seus textos.
+ * Exibe o catálogo oficial e permite editar seus textos de apresentação.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -41,7 +41,13 @@ const PermissionsList = () => {
   }, [])
 
   useEffect(() => {
-    void loadPermissions()
+    const timeoutId = window.setTimeout(() => {
+      void loadPermissions()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadPermissions])
 
   const columns = useMemo(
@@ -59,12 +65,7 @@ const PermissionsList = () => {
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/permissions/${row.original.id}`}
-            editTo={`/permissions/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/permissions/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],
@@ -76,14 +77,14 @@ const PermissionsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Configurações</div>
-          <h1 className="h3 mb-0">Permissões</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Permissões</h1>
           <p className="text-body-secondary mb-0">
             Consulte o catálogo técnico fechado usado no controle de acesso.
           </p>
         </div>
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 

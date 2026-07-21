@@ -1,8 +1,18 @@
-@use "@coreui/coreui/scss/coreui" as * with ( 
-  $enable-deprecation-messages: false,
+@use '@coreui/coreui/scss/coreui' as * with (
+  $enable-deprecation-messages: false
 );
-@use "@coreui/chartjs/scss/coreui-chartjs";
-@use "vendors/simplebar";
+@use '@coreui/chartjs/scss/coreui-chartjs';
+@use 'vendors/simplebar';
+
+:root {
+  --clinicai-sidebar-bg: #0b2f23;
+  --clinicai-brand: #198754;
+  --clinicai-brand-hover: #146c43;
+  --clinicai-brand-active: #0f5132;
+  --clinicai-brand-soft: #d1e7dd;
+  --clinicai-brand-accent: #5dd39e;
+  --clinicai-brand-contrast: #ffffff;
+}
 
 body {
   background-color: var(--cui-tertiary-bg);
@@ -12,7 +22,7 @@ body {
   width: 100%;
   padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
   will-change: auto;
-  @include transition(padding .15s);
+  @include transition(padding 0.15s);
 }
 
 .header > .container-fluid,
@@ -21,7 +31,267 @@ body {
 }
 
 .sidebar-brand-full {
-  margin-left: 3px;
+  margin-left: 0;
+}
+
+.app-sidebar {
+  --cui-sidebar-bg: #0b2f23;
+  --cui-sidebar-border-color: rgb(93 211 158 / 18%);
+  --cui-sidebar-color: #d8eee4;
+  --cui-sidebar-brand-bg: #0b2f23;
+  --cui-sidebar-brand-color: #f4fff9;
+  --cui-sidebar-nav-title-color: #93c9b0;
+  --cui-sidebar-nav-link-color: #d8eee4;
+  --cui-sidebar-nav-link-icon-color: #93c9b0;
+  --cui-sidebar-nav-link-hover-color: #ffffff;
+  --cui-sidebar-nav-link-hover-bg: rgb(93 211 158 / 12%);
+  --cui-sidebar-nav-link-hover-icon-color: #5dd39e;
+  --cui-sidebar-nav-link-active-color: #ffffff;
+  --cui-sidebar-nav-link-active-bg: rgb(25 135 84 / 36%);
+  --cui-sidebar-nav-link-active-icon-color: #5dd39e;
+  --cui-sidebar-nav-group-bg: rgb(0 0 0 / 10%);
+}
+
+.clinicai-sidebar-header {
+  position: relative;
+  display: flex;
+  min-height: 5rem;
+  border-bottom: 0 !important;
+  padding-inline: 1rem;
+}
+
+.clinicai-sidebar-header .clinicai-sidebar-brand {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.clinicai-sidebar-header .btn-close {
+  position: absolute;
+  right: 1rem;
+}
+
+.clinicai-sidebar-brand,
+.clinicai-sidebar-brand:hover,
+.clinicai-sidebar-brand:focus,
+.clinicai-sidebar-brand:visited {
+  color: #f4fff9;
+  text-decoration: none;
+}
+
+.clinicai-brand-full {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.clinicai-brand-icon {
+  flex: 0 0 auto;
+}
+
+.clinicai-brand-name {
+  color: #f4fff9;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.clinicai-brand-ai {
+  color: var(--clinicai-brand-accent);
+}
+
+// Controles institucionais usam a identidade verde.
+// As ações de negócio continuam usando o primary roxo do CoreUI.
+.clinicai-btn.btn-primary,
+.btn-primary[type='submit'] {
+  --cui-btn-color: var(--clinicai-brand-contrast);
+  --cui-btn-bg: var(--clinicai-brand);
+  --cui-btn-border-color: var(--clinicai-brand);
+  --cui-btn-hover-color: var(--clinicai-brand-contrast);
+  --cui-btn-hover-bg: var(--clinicai-brand-hover);
+  --cui-btn-hover-border-color: var(--clinicai-brand-hover);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+  --cui-btn-active-color: var(--clinicai-brand-contrast);
+  --cui-btn-active-bg: var(--clinicai-brand-active);
+  --cui-btn-active-border-color: var(--clinicai-brand-active);
+  --cui-btn-disabled-color: var(--clinicai-brand-contrast);
+  --cui-btn-disabled-bg: var(--clinicai-brand);
+  --cui-btn-disabled-border-color: var(--clinicai-brand);
+}
+
+.clinicai-login-brand-panel {
+  background: linear-gradient(145deg, var(--clinicai-brand-hover), var(--clinicai-sidebar-bg));
+}
+
+.clinicai-user-menu-header.dropdown-header {
+  color: var(--clinicai-brand-active);
+  background-color: var(--clinicai-brand-soft);
+}
+
+.clinicai-user-menu-action.dropdown-item {
+  color: var(--cui-body-color);
+  background-color: transparent;
+}
+
+.clinicai-user-menu-action.dropdown-item:hover,
+.clinicai-user-menu-action.dropdown-item:focus {
+  color: var(--clinicai-brand-active);
+  background-color: rgb(25 135 84 / 22%);
+}
+
+.clinicai-user-menu-action.dropdown-item:active,
+.clinicai-user-menu-action.dropdown-item.active {
+  color: var(--clinicai-brand-contrast);
+  background-color: var(--clinicai-brand);
+}
+
+.clinicai-login-brand-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  text-align: center;
+}
+
+.clinicai-login-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.clinicai-login-brand-icon {
+  flex: 0 0 auto;
+}
+
+.clinicai-login-brand-name {
+  margin: 0;
+  color: var(--clinicai-brand-contrast);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.clinicai-login-description {
+  max-width: 30rem;
+  margin: 0;
+  color: #f4fff9;
+  line-height: 1.6;
+}
+
+.clinicai-user-avatar.bg-primary {
+  background-color: var(--clinicai-brand) !important;
+  box-shadow: 0 0 0 3px rgb(25 135 84 / 16%);
+}
+
+// Badges de resultado positivo usam o verde institucional com contraste branco.
+.badge.bg-completed,
+.badge.clinicai-success-badge {
+  --cui-badge-color: #ffffff !important;
+  --cui-text-opacity: 1;
+
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+  background-color: var(--cui-completed) !important;
+}
+
+.clinicai-modal-cancel-action.btn {
+  --cui-btn-hover-color: var(--clinicai-brand-active);
+  --cui-btn-hover-bg: var(--clinicai-brand-soft);
+  --cui-btn-hover-border-color: rgb(25 135 84 / 32%);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+}
+
+// Ações secundárias de navegação seguem o verde suave das abas inativas.
+.clinicai-soft-action.btn {
+  --cui-btn-color: var(--clinicai-brand-active);
+  --cui-btn-bg: var(--clinicai-brand-soft);
+  --cui-btn-border-color: rgb(25 135 84 / 32%);
+  --cui-btn-hover-color: var(--clinicai-brand-active);
+  --cui-btn-hover-bg: rgb(25 135 84 / 22%);
+  --cui-btn-hover-border-color: var(--clinicai-brand);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+  --cui-btn-active-color: var(--clinicai-brand-contrast);
+  --cui-btn-active-bg: var(--clinicai-brand);
+  --cui-btn-active-border-color: var(--clinicai-brand);
+  --cui-btn-disabled-color: var(--clinicai-brand-active);
+  --cui-btn-disabled-bg: var(--clinicai-brand-soft);
+  --cui-btn-disabled-border-color: rgb(25 135 84 / 24%);
+}
+
+.clinicai-tabs {
+  gap: 0.3rem;
+  border-bottom-color: var(--clinicai-brand-soft);
+
+  .nav-link {
+    color: var(--clinicai-brand-active);
+    background-color: var(--clinicai-brand-soft);
+    border-color: transparent;
+    font-weight: 500;
+  }
+
+  .nav-link:hover {
+    color: var(--clinicai-brand-hover);
+    background-color: rgb(25 135 84 / 18%);
+    border-color: rgb(25 135 84 / 24%);
+  }
+
+  .nav-link.active {
+    color: var(--clinicai-brand-contrast);
+    background-color: var(--clinicai-brand);
+    border-color: var(--clinicai-brand);
+    font-weight: 600;
+  }
+}
+
+.clinicai-tab-badge-active.bg-secondary {
+  color: var(--clinicai-brand-contrast) !important;
+  background-color: rgb(255 255 255 / 22%) !important;
+}
+
+.clinicai-tab-badge-inactive.bg-secondary {
+  color: var(--clinicai-brand-active) !important;
+  background-color: rgb(255 255 255 / 48%) !important;
+}
+
+.breadcrumb-item {
+  a {
+    color: var(--clinicai-brand);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  a:hover,
+  a:focus {
+    color: var(--clinicai-brand-hover);
+    text-decoration: underline;
+  }
+}
+
+.clinicai-progress {
+  .progress-bar {
+    background-color: var(--clinicai-brand) !important;
+  }
+}
+
+// Verde-petróleo exclusivo para exames concluídos.
+// Evita confusão com o verde institucional e com ações de restauração.
+.bg-completed {
+  color: #0b2f23 !important;
+  background-color: #27c150 !important;
+}
+
+.text-completed {
+  color: #27c150 !important;
+}
+
+.border-completed {
+  border-color: #27c150 !important;
 }
 
 .sidebar-header {
@@ -64,4 +334,43 @@ body {
   .footer {
     --cui-footer-bg: var(--cui-body-bg);
   }
+}
+
+// ClinicAI: início da paleta semântica.
+:root {
+  --cui-completed: #27c150;
+  --cui-success: #27c150;
+  --cui-success-rgb: 39, 193, 80;
+}
+
+.btn-success {
+  --cui-btn-color: #0b2f23;
+  --cui-btn-bg: #27c150;
+  --cui-btn-border-color: #27c150;
+  --cui-btn-hover-color: #071f17;
+  --cui-btn-hover-bg: #23ae48;
+  --cui-btn-hover-border-color: #21a444;
+  --cui-btn-focus-shadow-rgb: 39, 193, 80;
+  --cui-btn-active-color: #071f17;
+  --cui-btn-active-bg: #1f9a40;
+  --cui-btn-active-border-color: #1d913c;
+  --cui-btn-disabled-color: #0b2f23;
+  --cui-btn-disabled-bg: #27c150;
+  --cui-btn-disabled-border-color: #27c150;
+}
+// ClinicAI: fim da paleta semântica.
+
+// Títulos principais das páginas usam o verde-escuro da barra lateral.
+.clinicai-page-title {
+  color: #0f5132 !important;
+  -webkit-text-fill-color: #0f5132 !important;
+}
+
+// Padronização visual dos modais.
+.modal-content {
+  border: 1px solid var(--clinicai-brand-accent);
+}
+
+.modal-title {
+  color: var(--clinicai-sidebar-bg);
 }

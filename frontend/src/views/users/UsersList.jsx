@@ -2,7 +2,7 @@
  * Listagem de usuários.
  *
  * Exibe os usuários cadastrados no sistema e permite acessar
- * visualização, edição e cadastro.
+ * edição e cadastro.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -21,7 +21,7 @@ import { userService } from 'src/services/userService'
 import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getErrorMessage } from 'src/utils/errors'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
-import { hasPermission } from 'src/utils/permissions'
+import { getUserRole, hasPermission, ROLES } from 'src/utils/permissions'
 
 const userTabs = [
   { key: 'active', label: 'Ativos' },
@@ -30,19 +30,20 @@ const userTabs = [
 
 const roleBadgeColors = {
   admin_master: 'danger',
-  doctor: 'primary',
-  clinic_staff: 'info',
+  doctor: 'success',
+  clinic_manager: 'info',
 }
 
 const UsersList = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useFeedback()
+  const isClinicManager = getUserRole(user) === ROLES.CLINIC_MANAGER
 
   const [activeTab, setActiveTab] = useState('active')
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const { canView, canCreate, canEdit, canChangeStatus } = getActionAccess('users', (permission) =>
+  const { canCreate, canEdit, canChangeStatus } = getActionAccess('users', (permission) =>
     hasPermission(user, permission),
   )
 
@@ -58,10 +59,16 @@ const UsersList = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
-    void loadUsers()
+    const timeoutId = window.setTimeout(() => {
+      void loadUsers()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
   }, [loadUsers])
 
   /**
@@ -85,51 +92,58 @@ const UsersList = () => {
   /**
    * Mudança de status do usuário.
    */
-  const handleChangeStatus = async (user) => {
-    try {
-      showError('')
+  const handleChangeStatus = useCallback(
+    async (user) => {
+      try {
+        showError('')
 
-      if (user.status_name === 'active') {
-        await userService.inactivate(user.id)
-        showSuccess('Usuário inativado com sucesso.')
-      } else {
-        await userService.activate(user.id)
-        showSuccess('Usuário ativado com sucesso.')
+        if (user.status_name === 'active') {
+          await userService.inactivate(user.id)
+          showSuccess(
+            isClinicManager ? 'Médico inativado com sucesso.' : 'Usuário inativado com sucesso.',
+          )
+        } else {
+          await userService.activate(user.id)
+          showSuccess(
+            isClinicManager ? 'Médico ativado com sucesso.' : 'Usuário ativado com sucesso.',
+          )
+        }
+
+        await loadUsers()
+      } catch (err) {
+        showError(getErrorMessage(err, 'Erro ao alterar status do usuário.'))
       }
-
-      await loadUsers()
-    } catch (err) {
-      showError(err.response?.data?.detail || 'Erro ao alterar status do usuário.')
-    }
-  }
+    },
+    [isClinicManager, loadUsers, showError, showSuccess],
+  )
 
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Nome' },
       { accessorKey: 'email', header: 'E-mail' },
-      {
-        accessorKey: 'cpf',
-        header: 'CPF',
-        cell: ({ getValue }) => {
-          const value = getValue()
-          return value ? formatCpfBR(value) : '-'
-        },
-      },
-      {
-        accessorKey: 'role_display_name',
-        header: 'Perfil',
-        cell: ({ getValue, row }) => {
-          const label = getValue() || row.original.role_name || '-'
-          const roleName = row.original.role_name
+      ...(!isClinicManager
+        ? [
+            {
+              accessorKey: 'role_display_name',
+              header: 'Perfil',
+              cell: ({ getValue, row }) => {
+                const label = getValue() || row.original.role_name || '-'
+                const roleName = row.original.role_name
 
-          return <CBadge color={roleBadgeColors[roleName] || 'secondary'}>{label}</CBadge>
-        },
-      },
-      {
-        accessorKey: 'clinic_name',
-        header: 'Clínica',
-        cell: ({ getValue }) => getValue() || '-',
-      },
+                return <CBadge color={roleBadgeColors[roleName] || 'secondary'}>{label}</CBadge>
+              },
+            },
+          ]
+        : []),
+      ...(!isClinicManager
+        ? [
+            {
+              accessorKey: 'clinic_name',
+              header: 'Clínica',
+              cell: ({ getValue }) => getValue() || '-',
+            },
+          ]
+        : []),
       {
         accessorKey: 'last_access_at',
         header: 'Último acesso',
@@ -146,12 +160,10 @@ const UsersList = () => {
           return (
             <AppActionButtons
               itemLabel={selectedUser.name}
-              viewTo={`/users/${selectedUser.id}`}
               editTo={`/users/${selectedUser.id}/edit`}
               isInactive={isInactive}
-              canView={canView}
               canEdit={canEdit}
-              canInactivate={canChangeStatus && !isInactive}
+              canInactivate={canChangeStatus && !isInactive && selectedUser.id !== user?.id}
               canActivate={canChangeStatus && isInactive}
               onInactivate={() => handleChangeStatus(selectedUser)}
               onActivate={() => handleChangeStatus(selectedUser)}
@@ -160,30 +172,42 @@ const UsersList = () => {
         },
       },
     ],
-    [canView, canEdit, canChangeStatus, loadUsers],
+    [canEdit, canChangeStatus, handleChangeStatus, isClinicManager, user?.id],
   )
 
   return (
     <>
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
-          <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">Usuários</h1>
+          <div className="text-body-secondary">
+            {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
+          </div>
+          <h1 className="h3 mb-0 clinicai-page-title">
+            {isClinicManager ? 'Médicos' : 'Usuários'}
+          </h1>
           <p className="text-body-secondary mb-0">
-            Gerencie usuários, perfis de acesso, status e vínculo com clínicas.
+            {isClinicManager
+              ? 'Gerencie os médicos vinculados à sua clínica.'
+              : 'Gerencie usuários, perfis de acesso, status e vínculo com clínicas.'}
           </p>
         </div>
 
         {canCreate && (
           <div className="d-flex justify-content-center mt-4">
-            <CButton color="primary" size="lg" as={Link} to="/users/create">
-              Cadastrar Usuário
+            <CButton
+              color="primary"
+              className="clinicai-btn"
+              size="lg"
+              as={Link}
+              to="/users/create"
+            >
+              {isClinicManager ? 'Cadastrar Médico' : 'Cadastrar Usuário'}
             </CButton>
           </div>
         )}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
@@ -200,7 +224,9 @@ const UsersList = () => {
               <AppTable
                 data={filteredUsers}
                 columns={columns}
-                emptyMessage="Nenhum usuário encontrado."
+                emptyMessage={
+                  isClinicManager ? 'Nenhum médico encontrado.' : 'Nenhum usuário encontrado.'
+                }
               />
             </>
           )}

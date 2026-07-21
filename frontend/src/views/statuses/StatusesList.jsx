@@ -1,12 +1,11 @@
 /**
- * Listagem de statuses.
+ * Listagem do catálogo oficial de status.
  *
- * Exibe os statuses cadastrados no sistema e permite acessar
- * visualização, edição e cadastro sem depender do banco.
+ * Permite editar os textos dos status previamente definidos pelo sistema.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { CAlert, CBadge, CCard, CCardBody, CSpinner } from '@coreui/react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { CAlert, CCard, CCardBody, CSpinner } from '@coreui/react'
 
 import AppTable from 'src/components/shared/AppTable'
 import AppActionButtons from 'src/components/shared/AppActionButtons'
@@ -25,41 +24,45 @@ const StatusesList = () => {
 
   const canManage = canManageStatuses(user)
 
-  const loadStatuses = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError('')
+  useEffect(() => {
+    let isCurrentRequest = true
 
-      const data = await statusService.list()
-      setStatuses(data)
-    } catch {
-      setError('Erro ao carregar os status.')
-    } finally {
-      setIsLoading(false)
+    statusService
+      .list()
+      .then((data) => {
+        if (!isCurrentRequest) return
+
+        setStatuses(data)
+        setError('')
+      })
+      .catch(() => {
+        if (!isCurrentRequest) return
+
+        setError('Erro ao carregar os status.')
+      })
+      .finally(() => {
+        if (isCurrentRequest) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isCurrentRequest = false
     }
   }, [])
-
-  useEffect(() => {
-    loadStatuses()
-  }, [loadStatuses])
 
   const columns = useMemo(
     () => [
       { accessorKey: 'name', header: 'Nome técnico' },
-      { accessorKey: 'display_name', header: 'Nome de exibição' },
       { accessorKey: 'applies_to', header: 'Aplicado em' },
+      { accessorKey: 'display_name', header: 'Nome de exibição' },
       { accessorKey: 'description', header: 'Descrição' },
       {
         id: 'actions',
         header: 'Ações',
         enableSorting: false,
         cell: ({ row }) => (
-          <AppActionButtons
-            viewTo={`/statuses/${row.original.id}`}
-            editTo={`/statuses/${row.original.id}/edit`}
-            canView={canManage}
-            canEdit={canManage}
-          />
+          <AppActionButtons editTo={`/statuses/${row.original.id}/edit`} canEdit={canManage} />
         ),
       },
     ],
@@ -71,7 +74,7 @@ const StatusesList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">Status</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Status</h1>
           <p className="text-body-secondary mb-0">
             Gerencie os estados usados por usuários, clínicas, pacientes e exames.
           </p>
@@ -83,13 +86,13 @@ const StatusesList = () => {
             continuam editáveis (nome de exibição e descrição). */}
       </div>
 
-      <CCard>
+      <CCard className="mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">
-              <CSpinner />              
+              <CSpinner />
             </div>
           ) : (
             <AppTable data={statuses} columns={columns} placeholder="Filtrar status" />

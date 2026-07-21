@@ -17,6 +17,8 @@ export const auditLogService = {
     userId = '',
     entity = '',
     action = '',
+    dateFrom = '',
+    dateTo = '',
     limit = 50,
     offset = 0,
   } = {}) => {
@@ -26,6 +28,8 @@ export const auditLogService = {
         user_id: userId || undefined,
         entity: entity || undefined,
         action: action || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
         limit,
         offset,
       },

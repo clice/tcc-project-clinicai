@@ -1,71 +1,125 @@
-"""
-Seed do módulo de pacientes.
-
-Este arquivo cadastra pacientes iniciais usados em desenvolvimento.
-"""
+"""Pacientes fictícios da massa acadêmica demonstrativa."""
 
 from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.common.constants import RoleName, StatusName, StatusScope
+from app.modules.academic_demo_assets import (
+    get_demo_exam_definitions,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.patients.model import Patient
-from app.modules.roles.model import Role
 from app.modules.statuses.model import Status
 from app.modules.users.model import User
 
 
-def get_active_patient_status(db: Session) -> Status | None:
-    """
-    Busca o status active para pacientes.
-    """
-    return (
-        db.query(Status)
-        .filter(
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.PATIENT.value,
+PATIENT_NAMES = {
+    "clinic_primary": (
+        "Maria Oliveira",
+        "João Santos",
+        "José Ferreira",
+        "Ana Clara Souza",
+        "Carlos Eduardo Lima",
+        "Francisca Alves",
+        "Paulo Henrique Melo",
+        "Luciana Ribeiro",
+        "Rafael Nogueira",
+        "Beatriz Martins",
+    ),
+    "clinic_large": (
+        "Antônio Rodrigues",
+        "Camila Fernandes",
+        "Eduardo Barbosa",
+        "Fernanda Araújo",
+        "Geraldo Monteiro",
+        "Isabela Correia",
+        "Leandro Cardoso",
+        "Márcia Teixeira",
+        "Ricardo Almeida",
+        "Sônia Carvalho",
+    ),
+    "clinic_specialized": (
+        "Adriana Moreira",
+        "Bruno Cavalcante",
+        "Cláudia Mendes",
+        "Daniel Pinheiro",
+        "Eliane Gonçalves",
+        "Fábio Freitas",
+        "Gabriela Rocha",
+        "Hugo Tavares",
+        "Irene Castro",
+        "Júlio Peixoto",
+    ),
+}
+
+DOCTOR_BY_CLINIC = {
+    "clinic_primary": "doctor_primary",
+    "clinic_large": "doctor_large",
+    "clinic_specialized": "doctor_specialized",
+}
+
+
+def _build_demo_cpf(base: int) -> str:
+    """Gera CPF fictício com dígitos verificadores válidos."""
+
+    digits = f"{base:09d}"
+
+    for initial_weight in (10, 11):
+        total = sum(
+            int(character)
+            * (initial_weight - index)
+            for index, character in enumerate(
+                digits
+            )
         )
-        .first()
-    )
-
-
-def get_first_active_clinic(db: Session) -> Clinic | None:
-    """
-    Busca uma clínica ativa para vincular pacientes de exemplo.
-    """
-    return (
-        db.query(Clinic)
-        .join(Status, Clinic.status_id == Status.id)
-        .filter(
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.CLINIC.value,
+        remainder = (total * 10) % 11
+        digits += str(
+            0
+            if remainder == 10
+            else remainder
         )
-        .order_by(Clinic.id.asc())
-        .first()
-    )
+
+    return digits
 
 
-def get_first_active_doctor_from_clinic(
-    db: Session,
-    clinic_id: int,
-) -> User | None:
-    """
-    Busca um médico ativo da clínica para vincular pacientes.
-    """
-    return (
-        db.query(User)
-        .join(Role, User.role_id == Role.id)
-        .join(Status, User.status_id == Status.id)
-        .filter(
-            User.clinic_id == clinic_id,
-            Role.name == RoleName.DOCTOR.value,
-            Status.name == StatusName.ACTIVE.value,
-            Status.applies_to == StatusScope.USER.value,
-        )
-        .order_by(User.id.asc())
-        .first()
-    )
+def get_demo_patient_definitions() -> dict[str, dict]:
+    """Retorna identidades e campos canônicos dos 30 pacientes demo."""
+
+    definitions: dict[str, dict] = {}
+    for clinic_index, (clinic_key, names) in enumerate(
+        PATIENT_NAMES.items(),
+        start=1,
+    ):
+        for patient_index, name in enumerate(names, start=1):
+            patient_key = f"{clinic_key}_patient_{patient_index:02d}"
+            definitions[patient_key] = {
+                "clinic_key": clinic_key,
+                "doctor_key": (
+                    "doctor_primary_secondary"
+                    if clinic_key == "clinic_primary" and patient_index >= 6
+                    else DOCTOR_BY_CLINIC[clinic_key]
+                ),
+                "status_key": (
+                    "patient_inactive"
+                    if patient_index in {9, 10}
+                    else "patient_active"
+                ),
+                "name": name,
+                "cpf": _build_demo_cpf(
+                    700_000_000 + clinic_index * 100 + patient_index
+                ),
+                "birth_date": date(
+                    1950 + ((clinic_index * 10 + patient_index) * 3) % 51,
+                    (patient_index + clinic_index) % 12 + 1,
+                    (patient_index * 2 + clinic_index) % 27 + 1,
+                ),
+                "sex": "female" if patient_index % 2 else "male",
+                "email": (
+                    f"paciente.{clinic_index}.{patient_index:02d}@example.com"
+                ),
+                "phone": f"8898{clinic_index:02d}{patient_index:05d}",
+            }
+    return definitions
 
 
 def get_or_create_patient(
@@ -80,17 +134,11 @@ def get_or_create_patient(
     sex: str | None = None,
     email: str | None = None,
     phone: str | None = None,
-    zip_code: str | None = None,
-    address: str | None = None,
-    number: str | None = None,
-    complement: str | None = None,
-    neighborhood: str | None = None,
     city: str | None = None,
     state: str | None = None,
 ) -> Patient:
-    """
-    Busca um paciente existente ou cria um novo.
-    """
+    """Reconcilia o paciente demo pela identidade clínica/CPF."""
+
     patient = (
         db.query(Patient)
         .filter(
@@ -100,162 +148,64 @@ def get_or_create_patient(
         .first()
     )
 
-    if patient:
-        return patient
+    if patient is None:
+        patient = Patient(clinic_id=clinic_id, cpf=cpf)
+        db.add(patient)
 
-    patient = Patient(
-        clinic_id=clinic_id,
-        doctor_id=doctor_id,
-        status_id=status_id,
-        name=name,
-        cpf=cpf,
-        birth_date=birth_date,
-        sex=sex,
-        email=email,
-        phone=phone,
-        zip_code=zip_code,
-        address=address,
-        number=number,
-        complement=complement,
-        neighborhood=neighborhood,
-        city=city,
-        state=state,
-    )
-
-    db.add(patient)
-    db.commit()
+    patient.doctor_id = doctor_id
+    patient.status_id = status_id
+    patient.name = name
+    patient.birth_date = birth_date
+    patient.sex = sex
+    patient.email = email
+    patient.phone = phone
+    patient.city = city
+    patient.state = state
+    db.flush()
     db.refresh(patient)
 
     return patient
 
 
-def seed_patients(db: Session) -> dict[str, Patient]:
-    """
-    Cria pacientes iniciais para desenvolvimento.
+def seed_patients(
+    db: Session,
+    *,
+    clinics: dict[str, Clinic],
+    users: dict[str, User],
+    statuses: dict[str, Status],
+) -> dict[str, Patient]:
+    """Cria dez pacientes por clínica, incluindo dois inativos em cada uma."""
 
-    Depende de clinics, roles, users e statuses já terem sido criados.
-    """
-    active_status = get_active_patient_status(db)
-    clinic = get_first_active_clinic(db)
-
-    if not active_status or not clinic:
-        return {}
-
-    doctor = get_first_active_doctor_from_clinic(db=db, clinic_id=clinic.id)
-
-    if not doctor:
-        return {}
-
-    return {
-        "patient_example_1": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Maria Oliveira",
-            cpf="52998224725",
-            birth_date=date(1988, 5, 14),
-            sex="female",
-            email="maria.oliveira@example.com",
-            phone="88999990000",
-            zip_code="63000000",
-            address="Rua Exemplo",
-            number="100",
-            neighborhood="Centro",
-            city="Barbalha",
-            state="CE",
-        ),
-        "patient_example_2": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="João Santos",
-            cpf="11144477735",
-            birth_date=date(1979, 9, 22),
-            sex="male",
-            email="joao.santos@example.com",
-            zip_code="63000000",
-            address="Avenida Teste",
-            number="200",
-            neighborhood="Centro",
-            city="Barbalha",
-            state="CE",
-        ),
-        "patient_elderly": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="José Ferreira",
-            cpf="39053344705",
-            birth_date=date(1945, 3, 10),
-            sex="male",
-            phone="88988887777",
-            city="Barbalha",
-            state="CE",
-        ),
-        "patient_young": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Ana Clara Souza",
-            cpf="22233344450",
-            birth_date=date(2005, 7, 2),
-            sex="female",
-            email="ana.clara@example.com",
-            city="Juazeiro do Norte",
-            state="CE",
-        ),
-        "patient_no_cpf": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Paciente Sem CPF",
-            cpf="00000000000",
-            birth_date=None,
-            sex=None,
-        ),
-        "patient_minimal": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Paciente Minimalista",
-            cpf="12312312387",
-        ),
-        "patient_complete": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Carlos Eduardo Lima",
-            cpf="98765432100",
-            birth_date=date(1990, 1, 1),
-            sex="male",
-            email="carlos.lima@example.com",
-            phone="88977776666",
-            zip_code="63000000",
-            address="Rua Completa",
-            number="321",
-            complement="Casa",
-            neighborhood="Centro",
-            city="Juazeiro do Norte",
-            state="CE",
-        ),
-        "patient_female_elderly": get_or_create_patient(
-            db,
-            clinic_id=clinic.id,
-            doctor_id=doctor.id,
-            status_id=active_status.id,
-            name="Dona Francisca Alves",
-            cpf="32165498700",
-            birth_date=date(1952, 11, 8),
-            sex="female",
-            phone="88966665555",
-            city="Crato",
-            state="CE",
-        ),
+    expected_patient_keys = {
+        definition["patient_key"]
+        for definition
+        in get_demo_exam_definitions()
     }
+
+    result: dict[str, Patient] = {}
+
+    for patient_key, definition in get_demo_patient_definitions().items():
+        clinic = clinics[definition["clinic_key"]]
+        doctor = users[definition["doctor_key"]]
+        result[patient_key] = get_or_create_patient(
+            db,
+            clinic_id=clinic.id,
+            doctor_id=doctor.id,
+            status_id=statuses[definition["status_key"]].id,
+            name=definition["name"],
+            cpf=definition["cpf"],
+            birth_date=definition["birth_date"],
+            sex=definition["sex"],
+            email=definition["email"],
+            phone=definition["phone"],
+            city=clinic.city,
+            state=clinic.state,
+        )
+
+    if set(result) != expected_patient_keys:
+        raise RuntimeError(
+            "As chaves dos pacientes não correspondem "
+            "ao manifesto acadêmico."
+        )
+
+    return result

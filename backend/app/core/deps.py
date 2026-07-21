@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.common.constants import RoleName
 from app.core.database import get_db
 from app.core.security import decode_access_token
+from app.modules.auth.policies import validate_active_session_context
+from app.modules.clinics.model import Clinic
 from app.modules.role_permissions.model import RolePermission
 from app.modules.roles.model import Role
 from app.modules.users.model import User
@@ -29,7 +31,7 @@ def get_current_user(
 ) -> User:
     """
     Retorna o usuário autenticado com base no token JWT enviado na requisição.
-    O token deve conter o campo 'sub', que neste projeto representa o e-mail
+    O token deve conter o campo 'sub', que neste projeto representa o ID
     do usuário autenticado.
     """
     payload = decode_access_token(token)
@@ -49,6 +51,14 @@ def get_current_user(
             detail="Token inválido.",
         )
 
+    try:
+        parsed_user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido.",
+        ) from None
+
     user = (
         db.query(User)
         .options(
@@ -56,9 +66,9 @@ def get_current_user(
             .joinedload(Role.role_permissions)
             .joinedload(RolePermission.permission),
             joinedload(User.status),
-            joinedload(User.clinic),
+            joinedload(User.clinic).joinedload(Clinic.status),
         )
-        .filter(User.id == int(user_id))
+        .filter(User.id == parsed_user_id)
         .first()
     )
 
@@ -74,11 +84,7 @@ def get_current_user(
             detail="Sessão expirada. Faça login novamente.",
         )
 
-    if not user.status or user.status.name != "active":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Usuário inativo ou bloqueado.",
-        )
+    validate_active_session_context(user)
 
     return user
 
@@ -163,7 +169,7 @@ def require_doctor_permission(permission_name: str):
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Apenas usuários com perfil médico podem revisar exames.",
+                detail="Apenas usuários com perfil médico podem executar ações clínicas de exames.",
             )
 
         if permission_name not in get_user_permission_names(current_user):

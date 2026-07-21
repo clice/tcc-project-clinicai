@@ -7,19 +7,16 @@
  */
 export const ACTION_PERMISSIONS = Object.freeze({
   patients: Object.freeze({
-    canView: 'patients:read',
     canCreate: 'patients:create',
     canEdit: 'patients:update',
     canChangeStatus: 'patients:change_status',
   }),
   clinics: Object.freeze({
-    canView: 'clinics:read',
     canCreate: 'clinics:create',
     canEdit: 'clinics:update',
     canChangeStatus: 'clinics:change_status',
   }),
   users: Object.freeze({
-    canView: 'users:read',
     canCreate: 'users:create',
     canEdit: 'users:update',
     canChangeStatus: 'users:change_status',

@@ -41,8 +41,8 @@ pvt_v2_b2 = TimmCNNPredictor(
     weights_path=PVT_V2_B2_WEIGHTS_PATH,
 )
 
-# ORDEM IMPORTA: precisa bater com `ordem_dos_modelos` do
-# manifesto_inferencia.json gerado pelo notebook de treino.
+# ORDEM IMPORTA: deve permanecer igual à ordem usada no treinamento
+# do meta-classificador: ResNet-50, EfficientNet-B4 e PVTv2-B2.
 ensemble_stacking = EnsembleStackingPredictor(
     name="ensemble_stacking",
     domain=DOMAIN,

@@ -100,11 +100,18 @@ class AIAnalysisResponse(BaseModel):
     model_name: str
     model_version: str
 
-    gradcam_path: str | None = None
+    gradcam_available: bool = False
+
+    attribution_method: str | None = None
+    attribution_target_layers: dict[str, str] | None = None
+    attribution_local_evidence: dict[str, float] | None = None
+    attribution_branch_weights: dict[str, float] | None = None
+    attribution_branch_cam_raw_maxima: dict[str, float] | None = None
+    attribution_unavailable_reason: str | None = None
+
     processing_time_ms: int | None = None
 
     ai_notes: str | None = None
-    raw_response: str | None = None
 
     created_at: datetime
     updated_at: datetime
@@ -156,6 +163,8 @@ class AIMetricsResponse(BaseModel):
     by_model: list[AIModelUsage]
 
     confidence_mean: float | None = None
+    reviewed_confidence_mean: float | None = None
+    reviewed_analyses_count: int = 0
     confidence_min: float | None = None
     confidence_max: float | None = None
     confidence_distribution: dict[str, int]

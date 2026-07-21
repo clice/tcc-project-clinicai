@@ -5,17 +5,13 @@
  */
 
 import api from 'src/services/api'
+import { setAuthTokens } from 'src/utils/token'
 
 export const userService = {
   /**
    * Lista usuários.
    */
-  list: async ({
-    search = '',
-    clinicId = '',
-    role = '',
-    status = '',
-  } = {}) => {
+  list: async ({ search = '', clinicId = '', role = '', status = '' } = {}) => {
     const response = await api.get('/users/', {
       params: {
         search: search || undefined,
@@ -45,7 +41,8 @@ export const userService = {
   },
 
   /**
-   * Atualiza parcialmente um usuário existente.
+   * Atualiza dados cadastrais, role e clínica de um usuário.
+   * Status é alterado exclusivamente por activate/inactivate.
    */
   update: async (id, payload) => {
     const response = await api.patch(`/users/${id}`, payload)
@@ -77,7 +74,7 @@ export const userService = {
   },
 
   /**
-   * Atualiza a senha do próprio usuário autenticado (doctor, clinic_staff
+   * Atualiza a senha do próprio usuário autenticado (doctor, clinic_manager
    * ou admin_master), sempre exigindo a senha atual.
    */
   updateMyPassword: async (password, currentPassword) => {
@@ -85,6 +82,12 @@ export const userService = {
       password,
       current_password: currentPassword,
     })
+
+    setAuthTokens({
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+    })
+
     return response.data
   },
 
@@ -105,6 +108,14 @@ export const userService = {
   },
 
   /**
+   * Retorna papel, status e clínica disponíveis ao gestor de médicos.
+   */
+  getDoctorManagementOptions: async () => {
+    const response = await api.get('/users/doctor-management-options')
+    return response.data
+  },
+
+  /**
    * Lista médicos ativos de uma clínica.
    */
   listDoctorsByClinic: async (clinicId) => {
@@ -115,5 +126,5 @@ export const userService = {
     })
 
     return Array.isArray(response.data) ? response.data : []
-  }
+  },
 }

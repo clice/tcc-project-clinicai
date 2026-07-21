@@ -1,16 +1,13 @@
 /**
- * Formulário do módulo de Status.
+ * Edição dos textos de apresentação de um status oficial.
  *
- * Usado para:
- * - visualizar status;
- * - editar status.
+ * Nome técnico e entidade de aplicação pertencem ao catálogo fechado.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   CButton,
-  CButtonGroup,
   CCard,
   CCardBody,
   CCardHeader,
@@ -34,20 +31,12 @@ const emptyStatus = {
   description: '',
 }
 
-const StatusForm = ({ mode = 'view' }) => {
+const StatusForm = () => {
   const { id } = useParams()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
   const [form, setForm] = useState(emptyStatus)
   const [isSaving, setIsSaving] = useState(false)
-
-  const isReadOnly = mode === 'view'
-  const isEditMode = mode === 'edit'
-
-  const title = useMemo(() => {
-    if (isEditMode) return 'Editar Status'
-    return 'Detalhes do Status'
-  }, [isEditMode])
 
   useEffect(() => {
     const loadStatus = async () => {
@@ -104,8 +93,6 @@ const StatusForm = ({ mode = 'view' }) => {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (isReadOnly) return
-
     showError('')
     showSuccess('')
 
@@ -119,10 +106,8 @@ const StatusForm = ({ mode = 'view' }) => {
     try {
       setIsSaving(true)
 
-      if (isEditMode) {
-        await statusService.update(id, buildPayload())
-        showSuccess('Status atualizado com sucesso.')
-      }
+      await statusService.update(id, buildPayload())
+      showSuccess('Status atualizado com sucesso.')
     } catch (err) {
       showError(getErrorMessage(err, 'Erro ao salvar status.'))
     } finally {
@@ -135,18 +120,30 @@ const StatusForm = ({ mode = 'view' }) => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Administração</div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Editar Status</h1>
           <p className="text-body-secondary mb-0">Status centralizados por entidade do sistema.</p>
         </div>
 
         <div className="d-flex justify-content-center mt-4">
-          <CButton color="secondary" size="lg" variant="outline" as={Link} to="/statuses">
+          <CButton
+            color="secondary"
+            size="lg"
+            variant="outline"
+            className="clinicai-soft-action"
+            as={Link}
+            to="/statuses"
+          >
             Voltar
           </CButton>
         </div>
       </div>
 
-      <CCard>
+      <div className="alert alert-info">
+        Esta tela permite alterar os textos de apresentação do status. Revise as informações antes
+        de selecionar “Salvar”.
+      </div>
+
+      <CCard className="mb-4">
         <CCardHeader>
           <strong>Dados do Status</strong>
         </CCardHeader>
@@ -155,15 +152,14 @@ const StatusForm = ({ mode = 'view' }) => {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
               <CCol md={4}>
-                <CFormLabel>Nome Técnico</CFormLabel>
-                <CFormInput value={form.name} disabled />
+                <CFormLabel>Nome técnico</CFormLabel>
+                <CFormInput value={form.name} disabled readOnly />
               </CCol>
 
               <CCol md={4}>
-                <CFormLabel>Nome de Exibição</CFormLabel>
+                <CFormLabel>Nome de exibição</CFormLabel>
                 <CFormInput
                   value={form.display_name}
-                  disabled={isReadOnly}
                   placeholder="Ex: Ativo, Inativo, Em processamento"
                   onChange={(e) => updateField('display_name', e.target.value)}
                   required
@@ -172,7 +168,7 @@ const StatusForm = ({ mode = 'view' }) => {
 
               <CCol md={4}>
                 <CFormLabel>Aplicado em</CFormLabel>
-                <CFormInput value={form.applies_to} disabled />
+                <CFormInput value={form.applies_to} disabled readOnly />
                 <div className="form-text">
                   Nome técnico e escopo definidos pelo catálogo oficial do sistema.
                 </div>
@@ -182,24 +178,21 @@ const StatusForm = ({ mode = 'view' }) => {
                 <CFormLabel>Descrição</CFormLabel>
                 <CFormInput
                   value={form.description}
-                  disabled={isReadOnly}
                   placeholder="Descreva quando esse status deve ser usado"
                   onChange={(e) => updateField('description', e.target.value)}
                 />
               </CCol>
             </CRow>
 
-            {!isReadOnly && (
-              <CButtonGroup className="mt-4">
-                <CButton color="primary" type="submit" disabled={isSaving}>
-                  {isSaving ? 'Salvando...' : 'Salvar'}
-                </CButton>
+            <div className="d-flex flex-wrap align-items-center mt-4 gap-2">
+              <CButton color="primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </CButton>
 
-                <CButton color="secondary" variant="outline" as={Link} to="/statuses">
-                  Cancelar
-                </CButton>
-              </CButtonGroup>
-            )}
+              <CButton color="secondary" variant="outline" as={Link} to="/statuses">
+                Cancelar
+              </CButton>
+            </div>
           </CForm>
         </CCardBody>
       </CCard>

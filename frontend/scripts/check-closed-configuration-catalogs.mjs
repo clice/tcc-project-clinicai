@@ -43,4 +43,27 @@ for (const catalog of [
   assert.doesNotMatch(backendSchema, new RegExp(`class ${catalog.createModel}`))
 }
 
-console.log('Catálogos fechados: perfis e status não expõem criação dinâmica.')
+const statusList = await readProjectFile('frontend/src/views/statuses/StatusesList.jsx')
+const statusForm = await readProjectFile('frontend/src/views/statuses/StatusForm.jsx')
+
+assert.doesNotMatch(routes, /ViewStatus|path: ['"]\/statuses\/:id['"]/)
+assert.match(routes, /path: ['"]\/statuses\/:id\/edit['"]/)
+assert.doesNotMatch(statusList, /viewTo=|canView=/)
+assert.match(statusList, /editTo=\{`\/statuses\/\$\{row\.original\.id\}\/edit`\}/)
+assert.doesNotMatch(statusForm, /\bisReadOnly\b|\bisEditMode\b|mode === ['"]view['"]/)
+assert.match(
+  statusForm,
+  /<h1[^>]*className=["'][^"']*\bclinicai-page-title\b[^"']*["'][^>]*>Editar Status<\/h1>/,
+)
+assert.match(
+  statusForm,
+  /<CFormLabel>Nome técnico<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/,
+)
+assert.match(
+  statusForm,
+  /<CFormLabel>Aplicado em<\/CFormLabel>[\s\S]*?<CFormInput[^>]*disabled readOnly \/>/,
+)
+
+console.log(
+  'Catálogos fechados: perfis e status não expõem criação dinâmica; Status usa edição unificada.',
+)
