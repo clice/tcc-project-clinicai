@@ -163,7 +163,7 @@ const ClinicsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Administração</div>
-          <h1 className="h3 mb-0">Clínicas</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Clínicas</h1>
           <p className="text-body-secondary mb-0">
             Gerencie clínicas vinculadas aos usuários, pacientes e exames.
           </p>

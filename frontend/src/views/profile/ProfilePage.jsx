@@ -175,7 +175,7 @@ const ProfilePage = () => {
     <>
       <div className="mb-4">
         <div className="text-body-secondary">Minha Conta</div>
-        <h1 className="h3 mb-0">Meu Perfil</h1>
+        <h1 className="h3 mb-0 clinicai-page-title">Meu Perfil</h1>
         <p className="text-body-secondary mb-0">
           Visualize e atualize seus dados cadastrais e sua senha de acesso.
         </p>

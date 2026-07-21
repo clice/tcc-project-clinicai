@@ -120,7 +120,7 @@ const StatusForm = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Administração</div>
-          <h1 className="h3 mb-0">Editar Status</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Editar Status</h1>
           <p className="text-body-secondary mb-0">Status centralizados por entidade do sistema.</p>
         </div>
 

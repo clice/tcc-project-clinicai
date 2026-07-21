@@ -30,7 +30,7 @@ const userTabs = [
 
 const roleBadgeColors = {
   admin_master: 'danger',
-  doctor: 'primary',
+  doctor: 'success',
   clinic_manager: 'info',
 }
 
@@ -182,7 +182,7 @@ const UsersList = () => {
           <div className="text-body-secondary">
             {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
           </div>
-          <h1 className="h3 mb-0">{isClinicManager ? 'Médicos' : 'Usuários'}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">{isClinicManager ? 'Médicos' : 'Usuários'}</h1>
           <p className="text-body-secondary mb-0">
             {isClinicManager
               ? 'Gerencie os médicos vinculados à sua clínica.'

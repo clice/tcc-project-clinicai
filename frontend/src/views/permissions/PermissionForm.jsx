@@ -100,7 +100,7 @@ const PermissionForm = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Configurações</div>
-          <h1 className="h3 mb-0">Editar Permissão</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Editar Permissão</h1>
           <p className="text-body-secondary mb-0">
             O catálogo técnico é versionado; apenas os textos de apresentação podem ser editados.
           </p>

@@ -178,7 +178,7 @@ const RoleForm = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Controle de Acesso</div>
-          <h1 className="h3 mb-0">Editar Perfil</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Editar Perfil</h1>
           <p className="text-body-secondary mb-0">
             Configure os perfis oficiais e suas permissões de acesso.
           </p>

@@ -489,7 +489,7 @@ const PatientForm = ({ mode = 'create' }) => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">{title}</h1>
           <p className="text-body-secondary mb-0">Cadastro clínico e administrativo do paciente.</p>
         </div>
 

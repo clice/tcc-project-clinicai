@@ -420,7 +420,7 @@ const UserForm = ({ mode = 'create' }) => {
           <div className="text-body-secondary">
             {isClinicManager ? 'Equipe Clínica' : 'Controle de Acesso'}
           </div>
-          <h1 className="h3 mb-0">{title}</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">{title}</h1>
           <p className="text-body-secondary mb-0">
             {isClinicManager
               ? 'Gerencie os dados cadastrais do médico da sua clínica.'

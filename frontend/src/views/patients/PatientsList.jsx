@@ -169,7 +169,7 @@ const PatientsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Registros de Saúde</div>
-          <h1 className="h3 mb-0">Pacientes</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Pacientes</h1>
           <p className="text-body-secondary mb-0">
             {roleName === ROLES.DOCTOR
               ? 'Visualize somente os pacientes sob sua responsabilidade.'

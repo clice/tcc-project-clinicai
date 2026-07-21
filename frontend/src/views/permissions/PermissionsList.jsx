@@ -77,7 +77,7 @@ const PermissionsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Configurações</div>
-          <h1 className="h3 mb-0">Permissões</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Permissões</h1>
           <p className="text-body-secondary mb-0">
             Consulte o catálogo técnico fechado usado no controle de acesso.
           </p>
