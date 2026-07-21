@@ -237,14 +237,14 @@ const AuditLogsList = () => {
       <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
         <div>
           <div className="text-body-secondary">Segurança e Auditoria</div>
-          <h1 className="h3 mb-0">Logs de Auditoria</h1>
+          <h1 className="h3 mb-0 clinicai-page-title">Logs de Auditoria</h1>
           <p className="text-body-secondary mb-0">
             Acompanhe e filtre ações relevantes realizadas no sistema ClinicAI.
           </p>
         </div>
       </div>
 
-      <CCard className="mb-4">
+      {/* <CCard className="mb-4">
         <CCardBody>
           <CForm onSubmit={handleApplyFilters}>
             <CRow className="g-3 align-items-end">
@@ -339,7 +339,7 @@ const AuditLogsList = () => {
             </CRow>
           </CForm>
         </CCardBody>
-      </CCard>
+      </CCard> */}
 
       <CCard className="mb-4">
         <CCardBody>
@@ -354,34 +354,6 @@ const AuditLogsList = () => {
                 columns={columns}
                 emptyMessage="Nenhum log de auditoria encontrado."
               />
-
-              <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-3">
-                <span className="text-body-secondary">
-                  Página {page + 1} de {totalPages} — {total} registro(s)
-                </span>
-
-                <div className="d-flex gap-2">
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    disabled={!canGoPrevious}
-                    onClick={() => {
-                      setIsLoading(true)
-                      setPage((current) => current - 1)
-                    }}
-                  >
-                    Anterior
-                  </CButton>
-                  <CButton
-                    color="secondary"
-                    variant="outline"
-                    disabled={!canGoNext}
-                    onClick={() => setPage((current) => current + 1)}
-                  >
-                    Próxima
-                  </CButton>
-                </div>
-              </div>
             </>
           )}
         </CCardBody>
