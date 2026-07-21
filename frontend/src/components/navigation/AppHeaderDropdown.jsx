@@ -61,7 +61,7 @@ const AppHeaderDropdown = () => {
         </CDropdownHeader>
 
         <CDropdownItem as="div" className="d-flex flex-column align-items-start">
-          <strong>{user?.name || 'Usuário'}</strong>
+          <strong className="clinicai-page-title">{user?.name || 'Usuário'}</strong>
           <small className="text-body-secondary">{user?.email}</small>
           <small className="text-body-secondary">
             {user?.role_display_name || user?.role_name}

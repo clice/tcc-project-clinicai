@@ -1,8 +1,8 @@
-@use "@coreui/coreui/scss/coreui" as * with ( 
-  $enable-deprecation-messages: false,
+@use '@coreui/coreui/scss/coreui' as * with (
+  $enable-deprecation-messages: false
 );
-@use "@coreui/chartjs/scss/coreui-chartjs";
-@use "vendors/simplebar";
+@use '@coreui/chartjs/scss/coreui-chartjs';
+@use 'vendors/simplebar';
 
 :root {
   --clinicai-sidebar-bg: #0b2f23;
@@ -22,7 +22,7 @@ body {
   width: 100%;
   padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
   will-change: auto;
-  @include transition(padding .15s);
+  @include transition(padding 0.15s);
 }
 
 .header > .container-fluid,
@@ -108,7 +108,7 @@ body {
 // Controles institucionais usam a identidade verde.
 // As ações de negócio continuam usando o primary roxo do CoreUI.
 .clinicai-btn.btn-primary,
-.btn-primary[type="submit"] {
+.btn-primary[type='submit'] {
   --cui-btn-color: var(--clinicai-brand-contrast);
   --cui-btn-bg: var(--clinicai-brand);
   --cui-btn-border-color: var(--clinicai-brand);
@@ -125,12 +125,7 @@ body {
 }
 
 .clinicai-login-brand-panel {
-  background:
-    linear-gradient(
-      145deg,
-      var(--clinicai-brand-hover),
-      var(--clinicai-sidebar-bg)
-    );
+  background: linear-gradient(145deg, var(--clinicai-brand-hover), var(--clinicai-sidebar-bg));
 }
 
 .clinicai-user-menu-header.dropdown-header {
@@ -207,6 +202,13 @@ body {
   background-color: var(--cui-completed) !important;
 }
 
+.clinicai-modal-cancel-action.btn {
+  --cui-btn-hover-color: var(--clinicai-brand-active);
+  --cui-btn-hover-bg: var(--clinicai-brand-soft);
+  --cui-btn-hover-border-color: rgb(25 135 84 / 32%);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+}
+
 // Ações secundárias de navegação seguem o verde suave das abas inativas.
 .clinicai-soft-action.btn {
   --cui-btn-color: var(--clinicai-brand-active);
@@ -279,7 +281,6 @@ body {
   }
 }
 
-
 // Verde-petróleo exclusivo para exames concluídos.
 // Evita confusão com o verde institucional e com ações de restauração.
 .bg-completed {
@@ -337,13 +338,8 @@ body {
   }
 }
 
-:root {
-
-}
-
 // ClinicAI: início da paleta semântica.
-:root,
-[data-coreui-theme] {
+:root {
   --cui-completed: #27c150;
   --cui-success: #27c150;
   --cui-success-rgb: 39, 193, 80;
@@ -365,3 +361,18 @@ body {
   --cui-btn-disabled-border-color: #27c150;
 }
 // ClinicAI: fim da paleta semântica.
+
+// Títulos principais das páginas usam o verde-escuro da barra lateral.
+.clinicai-page-title {
+  color: #0f5132 !important;
+  -webkit-text-fill-color: #0f5132 !important;
+}
+
+// Padronização visual dos modais.
+.modal-content {
+  border: 1px solid var(--clinicai-brand-accent);
+}
+
+.modal-title {
+  color: var(--clinicai-sidebar-bg);
+}
