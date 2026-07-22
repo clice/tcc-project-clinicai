@@ -1,12 +1,8 @@
-# 📌 ClinicAI: Sistema Web Inteligente para Clínicas com IA Aplicada a Exames Endoscópicos
-
-Projeto de Trabalho de Conclusão de Curso (TCC) voltado ao desenvolvimento de um sistema web para gestão clínica com módulo integrado de Inteligência Artificial para análise de exames gastrointestinais.
-
----
+# 📌 ClinicAI: Protótipo de Sistema Web Inteligente para Clínicas com IA Aplicada a Exames Endoscópicos
 
 ## 🧠 Objetivo Geral
 
-Desenvolver um sistema web para clínicas e profissionais da saúde, integrando gestão administrativa com um módulo de análise automatizada de exames endoscópicos utilizando técnicas de Inteligência Artificial.
+Desenvolver um protótipo de sistema web para clínicas e profissionais da saúde, integrando recursos de gestão administrativa a um módulo de análise automatizada de exames endoscópicos por meio de técnicas de Inteligência Artificial.
 
 ---
 
@@ -24,14 +20,14 @@ Desenvolver um sistema web para clínicas e profissionais da saúde, integrando 
 
 ---
 
-## 📈 Status Atual do Projeto
+## 📈 Status do Projeto
 
-- **Status geral:** Protótipo acadêmico funcional em fase de finalização
-- **Fase atual:** Validação final do fluxo de exames, segurança, massa de demonstração e documentação
-- **Próxima etapa:** Testes de falha e reprocessamento, consolidação da demonstração e conclusão da monografia
+O ClinicAI está concluído como protótipo acadêmico funcional dentro do escopo definido para o
+Trabalho de Conclusão de Curso. Os módulos descritos neste documento foram integrados e
+verificados tecnicamente em ambiente local de demonstração.
 
-> Este README reflete o estado real do código. Módulos listados como "implementados" abaixo já
-> funcionam de ponta a ponta; "em desenvolvimento" indica que existe implementação parcial.
+Essa conclusão não representa implantação em produção, validação clínica, certificação de
+segurança ou avaliação com profissionais e pacientes em cenário real.
 
 ---
 
@@ -178,8 +174,9 @@ Os modos são separados:
 | `bootstrap` | cria statuses, roles, permissions, a matriz inicial de role-permissions e um único Administrador Master |
 | `academic_demo` | executa o bootstrap e acrescenta somente clínicas, profissionais, pacientes, exames e análises fictícios |
 
-O padrão seguro do backend é `bootstrap`. O `backend/.env.example` usa
-`academic_demo` porque o Compose principal é destinado ao desenvolvimento acadêmico local.
+O padrão seguro do backend e do arquivo `backend/.env.example` é `bootstrap`.
+Para carregar a massa demonstrativa em um banco novo, defina explicitamente
+`SEED_MODE=academic_demo` no arquivo local `backend/.env` antes de subir os containers.
 Nunca habilite esse modo em um banco com dados reais.
 
 No modo `bootstrap`, o primeiro acesso utiliza as variáveis
@@ -209,23 +206,13 @@ automatizada do backend. Para executá-la:
 docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
 ```
 
-Para validar todo o Bloco 1 em uma única execução — migration, backend,
-contratos do frontend, navegação e build — use o script correspondente ao
-seu sistema operacional a partir da raiz do projeto:
+A qualidade estática e a geração do build do frontend podem ser verificadas,
+a partir da raiz do projeto, com:
 
 ```bash
-# Linux, macOS, Git Bash ou WSL
-./scripts/test-bloco-1.sh
+docker compose run --rm --no-deps frontend npm run lint
+docker compose run --rm --no-deps frontend npm run build
 ```
-
-```powershell
-# Windows PowerShell
-powershell -ExecutionPolicy Bypass -File .\scripts\test-bloco-1.ps1
-```
-
-Os scripts iniciam apenas o banco de dados e criam contêineres temporários
-para os testes. Ao final, exibem claramente a primeira etapa que falhar ou a
-mensagem de sucesso do bloco completo.
 
 ---
 
@@ -253,8 +240,9 @@ Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
 ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
 um usuário que já exista.
 
-O `academic_demo` consolidado cria três clínicas, seis contas de acesso,
-30 pacientes fictícios e 90 exames, sendo 30 por clínica. A massa contempla
+O `academic_demo` consolidado reúne três clínicas, um Administrador Master criado
+pelo bootstrap, seis contas demonstrativas, 30 pacientes fictícios e 90 exames,
+sendo 30 exames por clínica. A massa contempla
 `pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed`
 e `canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão
 `0.1.1`, todas com mapas Grad-CAM.
@@ -280,7 +268,7 @@ clínica do modelo.
 
 ## 🧩 Módulos do Sistema
 
-### ✔ Implementados
+### ✔ Escopo concluído
 
 - Autenticação (JWT com access + refresh token, invalidação de sessão)
 - Usuários, Clínicas, Pacientes
@@ -294,15 +282,10 @@ clínica do modelo.
 - Disponibilização autenticada do mapa Grad-CAM
 - Massa `academic_demo` reproduzível com três clínicas, 30 pacientes, 90 exames e 72 análises com Grad-CAM
 
-### 🔄 Em validação e finalização
+### Fora do escopo entregue
 
-- Verificação manual do percurso completo do médico pela interface
-- Fechamento da documentação técnica e da monografia
-
-### 🚧 Planejados
-
-- Dashboard clínico
-- Bloqueio automático de conta por tentativas de login inválidas
+Um prontuário eletrônico completo, agenda médica, faturamento, bloqueio automático por
+tentativas inválidas e implantação clínica não integram o escopo concluído deste protótipo.
 
 ---
 
@@ -374,7 +357,7 @@ No GitHub, abra **Releases** e selecione **Draft a new release**. Use:
 
 - tag: `models-v0.1.1`;
 - título: `Modelos ClinicAI v0.1.1`;
-- opção **This is a pre-release**, enquanto o sistema estiver em desenvolvimento.
+- use **Set as a pre-release** somente enquanto os artefatos ainda estiverem em validação;
 
 Anexe exatamente os cinco arquivos:
 
@@ -411,7 +394,7 @@ O projeto contribui com:
 - Aplicação de Engenharia de Software em sistemas reais
 - Integração entre sistemas web e Inteligência Artificial
 - Estruturação de dados clínicos com fluxo de revisão médica
-- Base para pesquisa em diagnóstico assistido por IA (CADx) em endoscopia gastrointestinal
+- Base para pesquisa em apoio computacional à detecção e triagem de achados em endoscopia gastrointestinal
 
 ---
 
@@ -446,9 +429,9 @@ não é executado automaticamente pelo entrypoint.
 
 ## 📄 Observações
 
-Este projeto está em desenvolvimento contínuo como parte do Trabalho de Conclusão de Curso e
-será evoluído progressivamente até sua versão final. Ainda não foi validado em ambiente clínico
-real. OBS:. é um protótipo funcional para fins acadêmicos.
+O ClinicAI é um protótipo funcional concluído para fins acadêmicos no escopo do Trabalho de
+Conclusão de Curso. Foi verificado tecnicamente em ambiente local com dados demonstrativos,
+mas não foi implantado nem validado em ambiente clínico real.
 
 ---
 

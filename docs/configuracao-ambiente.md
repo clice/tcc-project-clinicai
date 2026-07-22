@@ -89,10 +89,13 @@ O entrypoint aplica migrations e executa seeds conforme `SEED_MODE`. O modo `boo
 cria os catálogos estruturais e um único Administrador Master inicial; `academic_demo`
 executa esse bootstrap e acrescenta dados acadêmicos para a demonstração local.
 
-Em um banco novo, a massa final contém 8 clínicas, 5 usuários, 8 pacientes, 7 exames e
-4 análises. Os exames cobrem `processing`, `awaiting_review` com predição normal e abnormal,
-`completed`, `completed_with_divergence`, `failed` e `canceled`. Os ativos versionados ficam
-em `backend/demo_assets/`; origem, licença, hashes e predições estão em `manifest.json`.
+Em um banco novo, a massa consolidada contém três clínicas, um Administrador Master
+criado pelo bootstrap, seis contas demonstrativas, 30 pacientes fictícios e 90 exames,
+sendo 30 exames por clínica. Ela cobre os estados
+`pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed` e
+`canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão `0.1.1`,
+todas com mapas Grad-CAM. Os ativos versionados ficam em `backend/demo_assets/`;
+origem, licença, hashes, vínculos e resultados estão em `manifest.json`.
 
 As imagens de exame são copiadas para `uploads_data`. Os Grad-CAMs acadêmicos permanecem
 no diretório versionado do backend e continuam sujeitos à autenticação, ao escopo de clínica

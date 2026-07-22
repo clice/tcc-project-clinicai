@@ -86,10 +86,7 @@ docker compose run --rm --no-deps \
   -w /app \
   backend -m pytest -q
 
-docker compose run --rm --no-deps \
-  -v "$PWD:/workspace" \
-  -w /workspace/frontend \
-  frontend npm run check:rbac
+docker compose run --rm --no-deps frontend npm run lint
 
 docker compose run --rm --no-deps frontend npm run build
 
@@ -101,6 +98,8 @@ docker compose run --rm --no-deps \
 python3 tests/test_model_distribution.py
 ```
 
-Os testes automatizados constituem regressão permanente. A demonstração final
-ainda deve incluir a verificação manual da jornada do médico e do isolamento
-entre clínicas.
+Os testes automatizados constituem a regressão técnica permanente do projeto.
+A verificação manual breve do fluxo acadêmico de exames, da jornada do médico e
+do isolamento entre clínicas será registrada durante o fechamento técnico do
+protótipo. Essas verificações não equivalem a auditoria profissional de segurança,
+validação clínica ou certificação para uso real.

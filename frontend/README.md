@@ -1,251 +1,103 @@
 # ClinicAI Frontend
 
-Frontend oficial do projeto **ClinicAI**, desenvolvido para oferecer uma interface moderna, responsiva e profissional para clínicas, consultórios e profissionais da saúde.
+Interface web do ClinicAI, desenvolvida em React para operar os recursos administrativos e o fluxo acadêmico de exames integrado à API principal.
 
-Aplicação SPA construída com **React**, baseada em arquitetura escalável e preparada para integração completa com a API do sistema.
+## Escopo implementado
 
----
+- autenticação com tokens de acesso e atualização;
+- atualização da sessão e encerramento de acesso;
+- dashboard acadêmico;
+- gestão de usuários, clínicas, pacientes, perfis, permissões e status;
+- consulta de logs de auditoria;
+- cadastro, listagem, detalhamento e download de exames;
+- envio de exames para análise da IA;
+- acompanhamento dos estados de processamento;
+- visualização do resultado, da confiança e do mapa Grad-CAM;
+- revisão médica, confirmação ou registro de divergência;
+- cancelamento e restauração conforme as permissões do usuário;
+- controle de menus, rotas e ações conforme RBAC e escopo institucional;
+- edição do perfil e troca de senha.
 
-## Sobre o Projeto
+O frontend melhora a experiência de navegação, mas não é a fonte autoritativa de segurança. Todas as operações protegidas também são autorizadas pelo backend.
 
-O frontend do ClinicAI é responsável por fornecer a experiência visual e operacional do sistema, permitindo:
+## Tecnologias
 
-- Login seguro
-- Navegação protegida
-- Gestão administrativa
-- Cadastro de pacientes
-- Gestão de clínicas
-- Controle de usuários
-- Futuro módulo clínico
-- Integração futura com IA médica
+- React e JavaScript;
+- Vite;
+- React Router;
+- Axios;
+- Context API;
+- CoreUI React.
 
----
+## Organização
 
-## Stack Utilizada
-
-### Core
-
-- React
-- Vite
-- JavaScript
-- React Router DOM
-- Axios
-
-### UI / Layout
-
-- CoreUI React Free Admin Template
-- Componentização reutilizável
-- Layout responsivo
-- Sidebar administrativa
-- Header dinâmico
-
-### Estado / Auth
-
-- Context API
-- Persistência de sessão
-- JWT Token Integration
-
----
-
-## Estrutura Atual
-
-```txt
+```text
 frontend/
-├── public/
-│   ├── favicon.ico
-│   └── assets/
-│
+├── public/               # arquivos públicos
 ├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── layout/
-│   ├── routes/
-│   ├── services/
-│   ├── views/
-│   ├── context/
-│   ├── App.jsx
-│   └── main.jsx
-│
+│   ├── assets/           # identidade visual
+│   ├── components/       # componentes reutilizáveis
+│   ├── context/          # autenticação e estado compartilhado
+│   ├── layout/           # estrutura visual autenticada
+│   ├── routes/           # rotas e proteção de acesso
+│   ├── services/         # comunicação com a API
+│   └── views/            # telas dos módulos
 ├── package.json
 ├── vite.config.js
-└── .env
+└── README.md
 ```
 
----
+## Configuração local
 
-## Funcionalidades Atuais
+A execução integrada por Docker Compose é a forma recomendada. A partir da raiz do repositório:
 
-### Autenticação
+```bash
+cp frontend/.env.example frontend/.env
+docker compose up --build -d frontend
+```
 
-- Tela de login
-- Token JWT
-- Sessão autenticada
-- Logout
+O frontend fica disponível em <http://localhost:3000>.
 
-### Administrativo
-
-- Dashboard inicial
-- Usuários
-- Clínicas
-- Pacientes
-- Navegação lateral
-
-### Interface
-
-- Tema profissional
-- Responsivo
-- Layout administrativo moderno
-
----
-
-## Como Executar Localmente
-
-## 1. Entrar na pasta frontend
+Para executar diretamente com Node.js:
 
 ```bash
 cd frontend
-```
-
-## 2. Instalar dependências
-
-```bash
-npm install
-```
-
-## 3. Configurar .env
-
-```env
-VITE_API_URL=http://localhost:8000
-```
-
-## 4. Rodar aplicação
-
-```bash
-npm run dev
-```
-
-Se o projeto estiver usando script alternativo:
-
-```bash
+npm ci
+cp .env.example .env
 npm start
 ```
 
----
+O arquivo `.env` deve definir a URL da API conforme o exemplo versionado. Não grave credenciais ou segredos nesse arquivo; variáveis `VITE_*` são incorporadas ao código entregue ao navegador.
 
-## URLs Locais
+## Verificação
 
-| Serviço | URL |
-|--------|-----|
-| Frontend | http://localhost:3000 |
-| Vite Dev | http://localhost:5173 |
+```bash
+docker compose run --rm --no-deps frontend npm run lint
+docker compose run --rm --no-deps frontend npm run build
+```
 
----
+O primeiro comando executa a análise estática com ESLint. O segundo gera o pacote de produção com Vite.
 
-## Integração com Backend
+## Integração
 
-A aplicação consome a API FastAPI do projeto ClinicAI:
-
-```txt
+```text
 Frontend React
-     ↓
-Axios Requests
-     ↓
-FastAPI Backend
-     ↓
-PostgreSQL
+      ↓
+API FastAPI principal
+      ↓
+PostgreSQL e serviço de IA
 ```
 
----
+As requisições autenticadas são centralizadas nos serviços do frontend. Alterações de permissão são refletidas pela atualização de `/auth/me`; mesmo antes da atualização visual, o backend recusa ações fora do escopo.
 
-## Organização por Módulos
+## Identidade visual
 
-### Views
+A interface foi adaptada a partir do CoreUI com marca, logotipo, favicon, tema institucional e componentes próprios do ClinicAI.
 
-- Dashboard
-- Login
-- Patients
-- Clinics
-- Users
+## Limites do protótipo
 
-### Components
+O frontend demonstra o escopo definido para o TCC e não implementa um prontuário eletrônico completo, agenda médica, faturamento ou uso clínico em produção. Sua conclusão técnica não equivale a validação clínica, certificação de segurança ou avaliação formal de usabilidade.
 
-- Inputs reutilizáveis
-- Tabelas
-- Modais
-- Formulários
-- Alerts
+## Autoria
 
-### Services
-
-- authService
-- patientService
-- clinicService
-- userService
-
----
-
-## Identidade Visual
-
-Projeto customizado a partir do CoreUI com branding próprio:
-
-- Nome ClinicAI
-- Sidebar personalizada
-- Logo própria
-- Favicon próprio
-- Tema institucional
-
----
-
-## Roadmap Frontend
-
-### Em andamento
-
-- Refino UI/UX
-- Melhorias de responsividade
-- Padronização visual
-- Feedback visual de loading/errors
-
-### Próximos módulos
-
-- Prontuário eletrônico
-- Agenda médica
-- Upload de exames
-- Dashboard analítico
-- IA integrada na interface
-
----
-
-## IA no Frontend (Futuro)
-
-Telas previstas:
-
-```txt
-/ai/upload-exam
-/ai/results
-/ai/history
-```
-
-Funcionalidades:
-
-- Upload imagem/vídeo
-- Resultado IA em tempo real
-- Heatmaps / GradCAM
-- Histórico por paciente
-
----
-
-## Objetivo Acadêmico
-
-Construir uma interface moderna para demonstrar no TCC a integração entre:
-
-- Engenharia de Software
-- UX/UI
-- Sistemas Web
-- APIs modernas
-- Inteligência Artificial aplicada à saúde
-
----
-
-## Desenvolvido por
-
-**Clice Bezerra Brito Romão**
+Desenvolvido por **Clice Bezerra Brito Romão**.
