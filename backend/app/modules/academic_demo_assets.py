@@ -386,7 +386,7 @@ def gradcam_asset_target(
 
     return (
         storage_dir
-        / str(asset_entry["name"])
+        / Path(str(asset_entry["path"])).name
     )
 
 

@@ -196,7 +196,7 @@
       "clinic_name": "ClinicAI Endoscopia Especializada",
       "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_primary",
-      "exam_date": "2026-02-15",
+      "exam_date": "2026-04-15",
       "exam_key": "clinic_primary_exam_03",
       "exam_type": "endoscopy",
       "patient_key": "clinic_primary_patient_03",
