@@ -85,7 +85,7 @@ const RolesList = () => {
             descrição e matriz de permissões). */}
       </div>
 
-      <CCard className="mb-4">
+      <CCard className="clinicai-card mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 

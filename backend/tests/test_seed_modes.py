@@ -14,8 +14,10 @@ from app.modules.academic_demo_assets import (
     get_demo_manifest,
     verify_bundled_demo_assets,
 )
-from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
-from app.modules.ai_analysis.model import AIAnalysis
+from app.modules.ai_analyses import file_storage as attribution_file_storage
+from app.modules.ai_analyses.file_storage import resolve_safe_gradcam_path
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.service import get_ai_metrics
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.seed import ACADEMIC_DEMO_CLINICS
 from app.modules.exams import file_storage as exam_file_storage
@@ -67,9 +69,31 @@ def isolated_demo_uploads(
     tmp_path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    upload_root = tmp_path / "uploads" / "exams"
-    monkeypatch.setattr(exam_file_storage, "UPLOAD_DIR", upload_root)
-    return upload_root
+    data_root = tmp_path / "data"
+    exams_root = data_root / "exams"
+
+    monkeypatch.setattr(
+        exam_file_storage,
+        "DATA_DIR",
+        data_root,
+    )
+    monkeypatch.setattr(
+        exam_file_storage,
+        "UPLOAD_DIR",
+        exams_root,
+    )
+    monkeypatch.setattr(
+        attribution_file_storage,
+        "DATA_DIR",
+        data_root,
+    )
+    monkeypatch.setattr(
+        attribution_file_storage,
+        "EXAMS_DIR",
+        exams_root,
+    )
+
+    return exams_root
 
 
 def test_bootstrap_creates_only_initial_admin_and_no_demo_records(
@@ -238,9 +262,9 @@ def test_academic_demo_is_predictable_and_idempotent(
     )
     assert monthly_counts == Counter(
         {
-            "2026-02": 12,
+            "2026-02": 11,
             "2026-03": 16,
-            "2026-04": 13,
+            "2026-04": 14,
             "2026-05": 18,
             "2026-06": 14,
             "2026-07": 17,
@@ -277,6 +301,15 @@ def test_academic_demo_is_predictable_and_idempotent(
         analysis.prediction_label for analysis in demo.ai_analyses.values()
     )
     assert dict(sorted(label_counts.items())) == {"abnormal": 34, "normal": 38}
+
+    metrics = get_ai_metrics(db_session)
+
+    assert metrics["total_analyses"] == 72
+    assert metrics["reviewed_analyses_count"] == 50
+    assert metrics["false_positive_count"] == 2
+    assert metrics["false_negative_count"] == 4
+    assert metrics["confidence_mean"] is not None
+    assert metrics["processing_time_mean_ms"] is not None
 
     analysis_exam_status_counts = Counter(
         analysis.exam.status.name for analysis in demo.ai_analyses.values()

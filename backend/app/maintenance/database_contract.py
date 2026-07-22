@@ -30,7 +30,7 @@ from app.modules.role_permissions.seed import (
 )
 
 APP_TABLES = tuple(sorted(Base.metadata.tables))
-DEMO_TABLES = ("clinics", "patients", "exams", "ai_analysis")
+DEMO_TABLES = ("clinics", "patients", "exams", "ai_analyses")
 
 EXPECTED_UNIQUES: dict[str, set[tuple[str, ...]]] = {
     "statuses": {("name", "applies_to")},
@@ -40,7 +40,7 @@ EXPECTED_UNIQUES: dict[str, set[tuple[str, ...]]] = {
     "clinics": {("cnpj",), ("email",)},
     "users": {("email",), ("cpf",)},
     "patients": {("clinic_id", "cpf")},
-    "ai_analysis": {("exam_id",)},
+    "ai_analyses": {("exam_id",)},
 }
 
 EXPECTED_FOREIGN_KEYS: dict[
@@ -71,7 +71,7 @@ EXPECTED_FOREIGN_KEYS: dict[
         (("status_id",), "statuses", ("id",), None),
         (("reviewed_by_id",), "users", ("id",), None),
     },
-    "ai_analysis": {
+    "ai_analyses": {
         (("exam_id",), "exams", ("id",), None),
         (("status_id",), "statuses", ("id",), None),
     },
@@ -109,7 +109,7 @@ EXPECTED_INDEXES: dict[str, set[tuple[str, ...]]] = {
         ("status_id",),
         ("reviewed_by_id",),
     },
-    "ai_analysis": {("exam_id",), ("status_id",)},
+    "ai_analyses": {("exam_id",), ("status_id",)},
     "audit_logs": {
         ("action",),
         ("entity",),
@@ -137,7 +137,7 @@ EXPECTED_DEMO_COUNTS = {
     "users": 13,
     "patients": 30,
     "exams": 90,
-    "ai_analysis": 72,
+    "ai_analyses": 72,
     "audit_logs": 0,
 }
 
@@ -374,8 +374,8 @@ def assert_demo_data() -> None:
     from app.core.config import settings
     from app.core.security import verify_password
     from app.modules.academic_demo_assets import get_demo_exam_definitions
-    from app.modules.ai_analysis.file_storage import resolve_safe_gradcam_path
-    from app.modules.ai_analysis.model import AIAnalysis
+    from app.modules.ai_analyses.file_storage import resolve_safe_gradcam_path
+    from app.modules.ai_analyses.model import AIAnalysis
     from app.modules.clinics.model import Clinic
     from app.modules.clinics.seed import ACADEMIC_DEMO_CLINICS
     from app.modules.exams.file_storage import resolve_safe_exam_file_path
@@ -799,7 +799,7 @@ def semantic_snapshot() -> dict[str, Any]:
                 ORDER BY exams.description
                 """,
             ),
-            "ai_analysis": _rows(
+            "ai_analyses": _rows(
                 db,
                 """
                 SELECT exams.description AS exam_description,

@@ -195,7 +195,7 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
 
   if (isLoading) {
     return (
-      <CCard className="mb-4">
+      <CCard className="clinicai-card mb-4">
         <CCardBody className="d-flex justify-content-center py-4">
           <CSpinner />
         </CCardBody>
@@ -204,8 +204,8 @@ const ClinicProfileCard = ({ canUpdate = false }) => {
   }
 
   return (
-    <CCard className="mb-4">
-      <CCardHeader>
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header">
         <strong>Minha Clínica</strong>
       </CCardHeader>
       <CCardBody>

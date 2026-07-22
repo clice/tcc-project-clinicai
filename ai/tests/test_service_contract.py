@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
 import json
 import tempfile
 import unittest
@@ -183,7 +185,7 @@ class ServiceContractTests(unittest.TestCase):
         ), patch.object(
             predictor_module,
             "generate_gradcam_from_bytes",
-            return_value="/app/storage/gradcam/result.jpg",
+            return_value=b"gradcam-result",
         ) as gradcam, patch.object(
             predictor_module,
             "model_version_for_domain",
@@ -199,7 +201,35 @@ class ServiceContractTests(unittest.TestCase):
         self.assertEqual(result["model_version"], "models-v1.2.3")
         self.assertEqual(result["confidence"], 0.9)
         self.assertTrue(result["gradcam_available"])
-        gradcam.assert_called_once_with(b"image", domain="gastrointestinal")
+
+        self.assertEqual(
+            base64.b64decode(
+                result["gradcam_base64"]
+            ),
+            b"gradcam-result",
+        )
+
+        self.assertEqual(
+            result["gradcam_mime_type"],
+            "image/jpeg",
+        )
+
+        self.assertEqual(
+            result["gradcam_sha256"],
+            hashlib.sha256(
+                b"gradcam-result"
+            ).hexdigest(),
+        )
+
+        self.assertNotIn(
+            "gradcam_path",
+            result,
+        )
+
+        gradcam.assert_called_once_with(
+            b"image",
+            domain="gastrointestinal",
+        )
 
     def test_prediction_exposes_ensemble_attribution_metadata(
         self,
@@ -215,10 +245,7 @@ class ServiceContractTests(unittest.TestCase):
         )
 
         attribution = SimpleNamespace(
-            path=(
-                "/app/storage/gradcam/"
-                "composite-result.jpg"
-            ),
+            image_bytes=b"composite-result",
             final_probabilities=(
                 0.2,
                 0.8,
@@ -289,8 +316,27 @@ class ServiceContractTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            result["gradcam_path"],
-            attribution.path,
+            base64.b64decode(
+                result["gradcam_base64"]
+            ),
+            attribution.image_bytes,
+        )
+
+        self.assertEqual(
+            result["gradcam_mime_type"],
+            "image/jpeg",
+        )
+
+        self.assertEqual(
+            result["gradcam_sha256"],
+            hashlib.sha256(
+                attribution.image_bytes
+            ).hexdigest(),
+        )
+
+        self.assertNotIn(
+            "gradcam_path",
+            result,
         )
 
         self.assertEqual(

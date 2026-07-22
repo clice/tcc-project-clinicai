@@ -26,14 +26,17 @@ from app.common.services import (
     apply_update_data,
     model_dump_update,
 )
-from app.modules.ai_analysis.client import AIServiceError, request_prediction
-from app.modules.ai_analysis.file_storage import (
+from app.modules.ai_analyses.client import AIServiceError, request_prediction
+from app.modules.ai_analyses.file_storage import (
+    AttributionStorageError,
+    delete_attribution_file_safely,
     resolve_safe_gradcam_path,
     serialize_gradcam_path,
+    store_attribution_from_base64,
 )
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.schema import AIAnalysisCreate
-from app.modules.ai_analysis.service import build_ai_analysis_response, create_ai_analysis
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.schema import AIAnalysisCreate
+from app.modules.ai_analyses.service import build_ai_analysis_response, create_ai_analysis
 from app.modules.audit_logs.service import create_audit_log, list_entity_audit_logs
 from app.modules.clinics.model import Clinic
 from app.modules.exams.model import Exam
@@ -2062,39 +2065,124 @@ async def analyze_exam(
             raise HTTPException(status_code=409, detail="O estado do exame mudou durante a análise.") from conflict
         raise HTTPException(status_code=502, detail=f"Falha ao processar exame no serviço de IA: {exc}") from exc
 
-    processing_time_ms = int((datetime.now(timezone.utc) - started_at).total_seconds() * 1000)
-    payload = AIAnalysisCreate(
-        exam_id=exam_id,
-        prediction_label=prediction["label"],
-        prediction_class=prediction["prediction_class"],
-        confidence=prediction["confidence"],
-        model_name=prediction["model_name"],
-        model_version=prediction["model_version"],
-        gradcam_path=(
-            serialize_gradcam_path(
-                Path(
-                    prediction[
-                        "gradcam_path"
-                    ]
+    processing_time_ms = int(
+        (
+            datetime.now(timezone.utc)
+            - started_at
+        ).total_seconds()
+        * 1000
+    )
+
+    stored_attribution_path = None
+    serialized_attribution_path = None
+
+    try:
+        if prediction[
+            "gradcam_available"
+        ]:
+            stored_attribution_path = (
+                store_attribution_from_base64(
+                    encoded_data=prediction[
+                        "gradcam_base64"
+                    ],
+                    mime_type=prediction[
+                        "gradcam_mime_type"
+                    ],
+                    expected_sha256=prediction[
+                        "gradcam_sha256"
+                    ],
+                    clinic_id=exam.clinic_id,
+                    patient_id=exam.patient_id,
+                    exam_id=exam.id,
                 )
             )
-            if (
-                prediction[
-                    "gradcam_available"
-                ]
-                and prediction[
-                    "gradcam_path"
-                ]
+
+            serialized_attribution_path = (
+                serialize_gradcam_path(
+                    stored_attribution_path
+                )
             )
-            else None
+
+    except (
+        AttributionStorageError,
+        HTTPException,
+        OSError,
+    ) as exc:
+        try:
+            mark_exam_ai_failed(
+                db=db,
+                exam_id=exam_id,
+                error_message=str(exc),
+            )
+        except HTTPException as conflict:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "O estado do exame mudou "
+                    "durante a análise."
+                ),
+            ) from conflict
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "A IA concluiu a inferência, "
+                "mas o mapa de atribuição "
+                "retornado não pôde ser armazenado."
+            ),
+        ) from exc
+
+    raw_prediction = {
+        key: value
+        for key, value
+        in prediction.items()
+        if key != "gradcam_base64"
+    }
+
+    payload = AIAnalysisCreate(
+        exam_id=exam_id,
+        prediction_label=prediction[
+            "label"
+        ],
+        prediction_class=prediction[
+            "prediction_class"
+        ],
+        confidence=prediction[
+            "confidence"
+        ],
+        model_name=prediction[
+            "model_name"
+        ],
+        model_version=prediction[
+            "model_version"
+        ],
+        gradcam_path=(
+            serialized_attribution_path
         ),
-        processing_time_ms=processing_time_ms,
+        processing_time_ms=(
+            processing_time_ms
+        ),
         raw_response=json.dumps(
-            prediction,
+            raw_prediction,
             ensure_ascii=False,
             sort_keys=True,
             separators=(",", ":"),
             allow_nan=False,
         ),
     )
-    return create_ai_analysis(db=db, payload=payload, current_user=current_user)
+
+    try:
+        return create_ai_analysis(
+            db=db,
+            payload=payload,
+            current_user=current_user,
+        )
+    except Exception:
+        if (
+            stored_attribution_path
+            is not None
+        ):
+            delete_attribution_file_safely(
+                stored_attribution_path
+            )
+        raise

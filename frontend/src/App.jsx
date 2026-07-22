@@ -7,7 +7,6 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { CSpinner } from '@coreui/react'
 
 import 'src/scss/style.scss'
-import 'src/scss/examples.scss'
 
 // Provider
 import { AuthProvider } from 'src/contexts/AuthContext'
@@ -22,8 +21,6 @@ const DefaultLayout = React.lazy(() => import('src/layout/DefaultLayout'))
 
 // Pages
 const Login = React.lazy(() => import('src/views/auth/Login'))
-const Error404 = React.lazy(() => import('src/views/errors/Error404'))
-const Error500 = React.lazy(() => import('src/views/errors/Error500'))
 
 const App = () => {
   useEffect(() => {
@@ -56,10 +53,6 @@ const App = () => {
                   </PublicRoute>
                 }
               />
-
-              {/* Errors */}
-              <Route exact path="/404" name="Erro 404" element={<Error404 />} />
-              <Route exact path="/500" name="Erro 500" element={<Error500 />} />
 
               {/* Layout */}
               <Route

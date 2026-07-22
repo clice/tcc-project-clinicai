@@ -24,8 +24,8 @@ from app.core.database import SessionLocal
 
 # Registra todos os models antes de usar relacionamentos e metadata.
 from app.modules import models  # noqa: F401
-from app.modules.ai_analysis.model import AIAnalysis
-from app.modules.ai_analysis.seed import seed_ai_analysis
+from app.modules.ai_analyses.model import AIAnalysis
+from app.modules.ai_analyses.seed import seed_ai_analysis
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.seed import seed_clinics
 from app.modules.exams.model import Exam

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from io import BytesIO
-from pathlib import Path
-from uuid import uuid4
 
 import cv2
 import numpy as np
@@ -19,7 +17,6 @@ from pytorch_grad_cam.utils.image import (
 )
 
 from app.config import (
-    GRADCAM_DIR,
     NORMALIZE_MEAN,
     NORMALIZE_STD,
     TARGET_IMAGE_SIZE,
@@ -35,48 +32,83 @@ from training.preprocessing.pipeline import (
 )
 
 
-GRADCAM_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
-
 GRADCAM_SUPPORTED_DOMAINS = frozenset(
     {"gastrointestinal"}
 )
 
 
-def generate_gradcam_from_bytes(image_bytes: bytes, *, domain: str) -> str | None:
-    """Gera Grad-CAM da ResNet-50 para o domínio gastrointestinal."""
+def generate_gradcam_from_bytes(
+    image_bytes: bytes,
+    *,
+    domain: str,
+) -> bytes | None:
+    """Gera o Grad-CAM em memória para o domínio gastrointestinal."""
+
     if domain not in GRADCAM_SUPPORTED_DOMAINS:
         return None
 
-    image = Image.open(BytesIO(image_bytes)).convert("RGB")
-    image_array = preprocess_for_training(np.array(image))
-    resized = cv2.resize(image_array, TARGET_IMAGE_SIZE)
-    rgb_image = resized.astype(np.float32) / 255.0
-    input_tensor = gradcam_preprocess_image(
-        rgb_image,
-        mean=NORMALIZE_MEAN,
-        std=NORMALIZE_STD,
-    ).to(DEVICE)
+    image = Image.open(
+        BytesIO(image_bytes)
+    ).convert("RGB")
+
+    image_array = preprocess_for_training(
+        np.array(image)
+    )
+
+    resized = cv2.resize(
+        image_array,
+        TARGET_IMAGE_SIZE,
+    )
+
+    rgb_image = (
+        resized.astype(np.float32)
+        / 255.0
+    )
+
+    input_tensor = (
+        gradcam_preprocess_image(
+            rgb_image,
+            mean=NORMALIZE_MEAN,
+            std=NORMALIZE_STD,
+        )
+        .to(DEVICE)
+    )
 
     model = resnet50.torch_model
-    target_layers = [model.layer4[-1]]
-    cam = GradCAM(model=model, target_layers=target_layers)
-    grayscale_cam = cam(input_tensor=input_tensor)[0]
-    visualization = build_attribution_visualization(
-        image_array,
-        grayscale_cam,
+    target_layers = [
+        model.layer4[-1]
+    ]
+
+    cam = GradCAM(
+        model=model,
+        target_layers=target_layers,
     )
 
-    output_path = GRADCAM_DIR / f"{uuid4()}.jpg"
-    written = cv2.imwrite(
-        str(output_path),
-        cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR),
+    grayscale_cam = cam(
+        input_tensor=input_tensor
+    )[0]
+
+    visualization = (
+        build_attribution_visualization(
+            image_array,
+            grayscale_cam,
+        )
     )
-    if not written:
-        raise RuntimeError("Não foi possível persistir o Grad-CAM gerado.")
-    return str(output_path)
+
+    success, encoded = cv2.imencode(
+        ".jpg",
+        cv2.cvtColor(
+            visualization,
+            cv2.COLOR_RGB2BGR,
+        ),
+    )
+
+    if not success:
+        raise RuntimeError(
+            "Não foi possível codificar o Grad-CAM gerado."
+        )
+
+    return encoded.tobytes()
 
 
 ATTRIBUTION_METHOD = (
@@ -107,7 +139,7 @@ MINIMUM_CAM_VALUE = 1e-12
 class EnsembleAttributionResult:
     """Resultado serializável da explicabilidade do ensemble."""
 
-    path: str | None
+    image_bytes: bytes | None
     final_probabilities: tuple[float, float]
     predicted_class: int
     method: str
@@ -496,7 +528,6 @@ def generate_ensemble_attribution_from_bytes(
     image_bytes: bytes,
     *,
     domain: str,
-    output_dir: Path | None = None,
 ) -> EnsembleAttributionResult | None:
     """
     Gera um mapa composto orientado pela classe final do ensemble.
@@ -607,7 +638,7 @@ def generate_ensemble_attribution_from_bytes(
 
         if branch_weights is None:
             return EnsembleAttributionResult(
-                path=None,
+                image_bytes=None,
                 final_probabilities=(
                     final_probabilities[0],
                     final_probabilities[1],
@@ -716,7 +747,7 @@ def generate_ensemble_attribution_from_bytes(
 
         if combined_cam is None:
             return EnsembleAttributionResult(
-                path=None,
+                image_bytes=None,
                 final_probabilities=(
                     final_probabilities[0],
                     final_probabilities[1],
@@ -750,36 +781,22 @@ def generate_ensemble_attribution_from_bytes(
             )
         )
 
-        destination = Path(
-            output_dir or GRADCAM_DIR
-        )
-
-        destination.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        output_path = (
-            destination
-            / f"{uuid4()}.jpg"
-        )
-
-        written = cv2.imwrite(
-            str(output_path),
+        success, encoded = cv2.imencode(
+            ".jpg",
             cv2.cvtColor(
                 visualization,
                 cv2.COLOR_RGB2BGR,
             ),
         )
 
-        if not written:
+        if not success:
             raise RuntimeError(
-                "Não foi possível persistir o mapa "
+                "Não foi possível codificar o mapa "
                 "de atribuição composto."
             )
 
         return EnsembleAttributionResult(
-            path=str(output_path),
+            image_bytes=encoded.tobytes(),
             final_probabilities=(
                 final_probabilities[0],
                 final_probabilities[1],

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
 import math
+import re
 from typing import Any
 
 import httpx
@@ -69,7 +73,9 @@ _REQUIRED_FIELDS = {
     "model_name",
     "model_version",
     "gradcam_available",
-    "gradcam_path",
+    "gradcam_base64",
+    "gradcam_mime_type",
+    "gradcam_sha256",
     "device",
     *_ATTRIBUTION_FIELDS,
 }
@@ -438,24 +444,97 @@ def _validate_prediction_contract(
             "gradcam_available deve ser booleano."
         )
 
-    gradcam_path = payload["gradcam_path"]
+    gradcam_base64 = payload[
+        "gradcam_base64"
+    ]
+    gradcam_mime_type = payload[
+        "gradcam_mime_type"
+    ]
+    gradcam_sha256 = payload[
+        "gradcam_sha256"
+    ]
 
-    if gradcam_available and (
-        not isinstance(gradcam_path, str)
-        or not gradcam_path.strip()
-    ):
-        raise AIServiceResponseError(
-            "gradcam_path deve ser informado quando "
-            "gradcam_available for verdadeiro."
+    if gradcam_available:
+        if (
+            not isinstance(
+                gradcam_base64,
+                str,
+            )
+            or not gradcam_base64
+        ):
+            raise AIServiceResponseError(
+                "gradcam_base64 deve ser informado "
+                "quando o mapa estiver disponível."
+            )
+
+        if gradcam_mime_type not in {
+            "image/jpeg",
+            "image/png",
+        }:
+            raise AIServiceResponseError(
+                "gradcam_mime_type deve informar "
+                "image/jpeg ou image/png."
+            )
+
+        if (
+            not isinstance(
+                gradcam_sha256,
+                str,
+            )
+            or re.fullmatch(
+                r"[0-9a-f]{64}",
+                gradcam_sha256,
+            )
+            is None
+        ):
+            raise AIServiceResponseError(
+                "gradcam_sha256 deve ser um hash "
+                "SHA-256 hexadecimal válido."
+            )
+
+        try:
+            decoded_gradcam = (
+                base64.b64decode(
+                    gradcam_base64,
+                    validate=True,
+                )
+            )
+        except (
+            binascii.Error,
+            ValueError,
+        ) as exc:
+            raise AIServiceResponseError(
+                "gradcam_base64 não contém "
+                "Base64 válido."
+            ) from exc
+
+        if not decoded_gradcam:
+            raise AIServiceResponseError(
+                "O mapa de atribuição retornado "
+                "está vazio."
+            )
+
+        if (
+            hashlib.sha256(
+                decoded_gradcam
+            ).hexdigest()
+            != gradcam_sha256
+        ):
+            raise AIServiceResponseError(
+                "O hash do mapa de atribuição "
+                "não corresponde ao conteúdo."
+            )
+    elif any(
+        value not in (None, "")
+        for value in (
+            gradcam_base64,
+            gradcam_mime_type,
+            gradcam_sha256,
         )
-
-    if (
-        not gradcam_available
-        and gradcam_path not in (None, "")
     ):
         raise AIServiceResponseError(
-            "gradcam_path deve ser nulo quando "
-            "gradcam_available for falso."
+            "Os campos do mapa devem ser nulos "
+            "quando ele não estiver disponível."
         )
 
     _validate_attribution_contract(

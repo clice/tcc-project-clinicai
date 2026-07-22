@@ -1,114 +1,91 @@
 # ClinicAI — Módulo de Inteligência Artificial
 
-Este diretório contém a estrutura inicial da parte de Inteligência Artificial do projeto **ClinicAI**.
+Este diretório contém o serviço de Inteligência Artificial integrado ao ClinicAI, além dos componentes de inferência, treinamento e verificação dos modelos usados no protótipo acadêmico.
 
-O objetivo deste módulo é organizar os códigos, modelos, experimentos e futuras APIs responsáveis pela análise automatizada de imagens de exames endoscópicos e colonoscópicos.
+## Finalidade
 
----
+O módulo realiza a classificação binária de imagens endoscópicas gastrointestinais nas classes `normal` e `abnormal`. O resultado inclui a classe predita, a confiança associada, metadados do modelo e, quando disponível, um mapa de atribuição Grad-CAM.
 
-## Objetivo da IA
+A saída é apresentada como apoio computacional à revisão médica. Ela não constitui diagnóstico definitivo, validação clínica nem recomendação terapêutica.
 
-A proposta inicial da IA no ClinicAI é realizar uma classificação binária de imagens médicas, indicando se uma imagem de exame apresenta características:
+## Modelo operacional
 
-- normais;
-- suspeitas ou anormais.
+O serviço utiliza um *Ensemble Stacking* composto por:
 
-O resultado da IA será utilizado como ferramenta de apoio à decisão médica, não substituindo a avaliação de um profissional de saúde.
+- ResNet-50;
+- EfficientNet-B4;
+- PVTv2-B2;
+- meta-classificador de regressão logística.
 
----
+Os artefatos operacionais pertencem à versão `0.1.1`, distribuída pela GitHub Release `models-v0.1.1`. Eles correspondem ao fold 3 do protocolo `viana_codigo_kfold3_roi_sh_da`, selecionado como execução representativa pela proximidade de seu resultado à média agregada dos três folds, sem alegação de superioridade estatística.
 
-## Estrutura do diretório
+Os pesos não são versionados no repositório. A instalação, o manifesto de integridade e o processo de atualização estão descritos em [`../docs/model-release-guide.md`](../docs/model-release-guide.md).
 
-```txt
+## Fluxo de inferência
+
+```text
+Imagem e tipo de exame
+        ↓
+Validação e resolução do domínio
+        ↓
+Pré-processamento gastrointestinal
+        ↓
+Modelos base e Ensemble Stacking
+        ↓
+Classe, confiança e metadados
+        ↓
+Grad-CAM
+        ↓
+Backend, banco de dados e frontend
+```
+
+O pipeline gastrointestinal aplica extração da região de interesse (ROI) e remoção de reflexos especulares de forma compatível com o protocolo de treinamento. A explicabilidade utiliza a ResNet-50 como explicador parcial do ensemble e não representa uma justificativa causal da decisão.
+
+## Organização
+
+```text
 ai/
-├── app/
-│   ├── main.py
-│   ├── schemas.py
-│   ├── inference/
-│   │   ├── predictor.py
-│   │   ├── preprocess.py
-│   │   └── gradcam.py
-│   └── models/
-├── notebooks/
-├── training/
-├── datasets/
-├── requirements.txt
+├── app/                  # API, configuração e inferência
+│   ├── inference/        # preditores, registro de domínios e Grad-CAM
+│   └── main.py           # aplicação FastAPI
+├── models/exported/      # artefatos instalados localmente e ignorados pelo Git
+├── training/             # treinamento e avaliação experimental
+├── tests/                # testes automatizados do módulo
 ├── Dockerfile
+├── requirements.txt
 └── README.md
 ```
 
-### Descrição das pastas
+Datasets e artefatos pesados permanecem fora do Git por tamanho, licença e privacidade. Não devem ser utilizados dados clínicos reais neste protótipo.
 
-#### `app/`
+## Execução
 
-Contém a futura API de inferência da IA.
+A partir da raiz do projeto, instale os modelos e suba o serviço:
 
-Essa API será responsável por receber imagens de exames, executar o modelo treinado e retornar o resultado da análise.
+```bash
+docker compose --profile models run --rm model-downloader
+docker compose up --build -d ai
+```
 
-#### `app/inference/`
+A documentação interativa fica disponível em <http://localhost:8001/docs>. Para verificar o módulo:
 
-Contém os arquivos relacionados ao fluxo de inferência.
+```bash
+docker compose run --rm --no-deps \
+  --entrypoint python \
+  -w /app \
+  ai -m unittest discover -s tests -p 'test_*.py' -v
+```
 
-- `preprocess.py`: preparação da imagem antes da predição.
-- `predictor.py`: carregamento do modelo e execução da classificação.
-- `gradcam.py`: geração futura do mapa de explicabilidade GradCAM.
+## Tecnologias
 
-#### `app/models/`
+- Python e FastAPI;
+- PyTorch, torchvision e timm;
+- OpenCV, Pillow e NumPy;
+- scikit-learn e joblib;
+- Grad-CAM.
 
-Diretório reservado para armazenar os modelos treinados exportados, como arquivos `.pt`, `.pth` ou formatos equivalentes.
+## Limitações
 
-Por segurança e organização, os modelos pesados não devem ser versionados diretamente no GitHub sem necessidade.
+O domínio implementado é o gastrointestinal. A estrutura admite o registro explícito de novos domínios, mas cada modalidade exige artefatos, classes, pré-processamento e explicabilidade próprios. As orientações técnicas estão em [`app/inference/domains/README.md`](app/inference/domains/README.md).
 
-#### `notebooks/`
-
-Contém notebooks utilizados para exploração, testes, treinamento inicial e análise dos datasets.
-
-#### `training/`
-
-Contém scripts de treinamento, avaliação e comparação entre modelos.
-
-#### `datasets/`
-
-Diretório reservado para organização local dos datasets usados nos experimentos.
-
-Os datasets não devem ser enviados ao GitHub, principalmente por tamanho, licença e privacidade.
-
----
-
-## Fluxo futuro da IA
-
-O fluxo planejado para integração da IA ao ClinicAI será:
-
-Imagem do exame
-→ Pré-processamento
-→ Modelo de classificação
-→ Resultado da predição
-→ Confiança da predição
-→ GradCAM
-→ API de IA
-→ Backend principal
-→ Banco de dados
-→ Frontend
-
----
-
-## Tecnologias previstas
-
-- Python
-- FastAPI
-- PyTorch
-- OpenCV
-- Pillow
-- NumPy
-- scikit-learn
-- Matplotlib
-- GradCAM
-
----
-
-## Aviso importante
-
-Este módulo tem finalidade acadêmica e experimental dentro do contexto do Trabalho de Conclusão de Curso.
-
-Os resultados gerados pela IA devem ser interpretados como apoio à decisão médica e não como diagnóstico definitivo.
-
+Este módulo foi desenvolvido exclusivamente para fins acadêmicos e demonstrativos no Trabalho de Conclusão de Curso.

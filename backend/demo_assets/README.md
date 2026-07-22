@@ -11,9 +11,9 @@ demonstração acadêmica reproduzível do ClinicAI.
 - `manifest.json` no esquema 2, com os hashes SHA-256, tamanhos, vínculos e
   resultados necessários à reconstrução determinística da massa.
 
-A massa cria três clínicas, dez pacientes e trinta exames por clínica. Cada
-clínica recebe 15 imagens normais e 15 anormais, totalizando 90 exames entre
-fevereiro e julho de 2026.
+A massa cria três clínicas, com dez pacientes e trinta exames em cada clínica.
+Cada clínica recebe 15 imagens normais e 15 anormais, totalizando 30 pacientes
+e 90 exames entre fevereiro e julho de 2026.
 
 ## Modelo e explicabilidade
 

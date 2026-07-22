@@ -14,8 +14,8 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
     <>
       <CRow className="mb-4">
         <CCol lg={8}>
-          <CCard className="h-100">
-            <CCardHeader>
+          <CCard className="clinicai-card h-100">
+            <CCardHeader className="clinicai-card-header">
               <strong>Evolução dos Exames (Últimos 6 meses)</strong>
             </CCardHeader>
             <CCardBody>
@@ -57,8 +57,8 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
         </CCol>
 
         <CCol lg={4}>
-          <CCard className="h-100">
-            <CCardHeader>
+          <CCard className="clinicai-card h-100">
+            <CCardHeader className="clinicai-card-header">
               <strong>Distribuição dos Exames</strong>
             </CCardHeader>
             <CCardBody>
@@ -83,7 +83,7 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
         </CCol>
       </CRow>
 
-      <CCard className="mb-4">
+      <CCard className="clinicai-card mb-4">
         <CCardBody>
           <div className="d-flex justify-content-between mb-2">
             <div>

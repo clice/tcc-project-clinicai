@@ -201,10 +201,35 @@ body {
 }
 
 .clinicai-modal-cancel-action.btn {
+  --cui-btn-color: var(--clinicai-brand-active);
+  --cui-btn-bg: var(--clinicai-brand-soft);
+  --cui-btn-border-color: rgb(25 135 84 / 32%);
   --cui-btn-hover-color: var(--clinicai-brand-active);
-  --cui-btn-hover-bg: var(--clinicai-brand-soft);
-  --cui-btn-hover-border-color: rgb(25 135 84 / 32%);
+  --cui-btn-hover-bg: rgb(25 135 84 / 22%);
+  --cui-btn-hover-border-color: var(--clinicai-brand);
   --cui-btn-focus-shadow-rgb: 25, 135, 84;
+  --cui-btn-active-color: var(--clinicai-brand-active);
+  --cui-btn-active-bg: rgb(25 135 84 / 28%);
+  --cui-btn-active-border-color: var(--clinicai-brand);
+  --cui-btn-disabled-color: var(--clinicai-brand-active);
+  --cui-btn-disabled-bg: var(--clinicai-brand-soft);
+  --cui-btn-disabled-border-color: rgb(25 135 84 / 24%);
+}
+
+.clinicai-modal-primary-action.btn {
+  --cui-btn-color: var(--clinicai-brand-contrast);
+  --cui-btn-bg: var(--clinicai-brand);
+  --cui-btn-border-color: var(--clinicai-brand);
+  --cui-btn-hover-color: var(--clinicai-brand-contrast);
+  --cui-btn-hover-bg: var(--clinicai-brand-hover);
+  --cui-btn-hover-border-color: var(--clinicai-brand-hover);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+  --cui-btn-active-color: var(--clinicai-brand-contrast);
+  --cui-btn-active-bg: var(--clinicai-brand-active);
+  --cui-btn-active-border-color: var(--clinicai-brand-active);
+  --cui-btn-disabled-color: var(--clinicai-brand-contrast);
+  --cui-btn-disabled-bg: var(--clinicai-brand);
+  --cui-btn-disabled-border-color: var(--clinicai-brand);
 }
 
 // Ações secundárias de navegação seguem o verde suave das abas inativas.
@@ -222,6 +247,43 @@ body {
   --cui-btn-disabled-color: var(--clinicai-brand-active);
   --cui-btn-disabled-bg: var(--clinicai-brand-soft);
   --cui-btn-disabled-border-color: rgb(25 135 84 / 24%);
+}
+
+
+// Botões compactos das ações exibidas nas tabelas.
+.clinicai-action-button.btn {
+  --cui-btn-color: var(--clinicai-brand-contrast);
+  --cui-btn-bg: var(--clinicai-brand-active);
+  --cui-btn-border-color: var(--clinicai-brand-active);
+  --cui-btn-hover-color: var(--clinicai-brand-contrast);
+  --cui-btn-hover-bg: var(--clinicai-sidebar-bg);
+  --cui-btn-hover-border-color: var(--clinicai-sidebar-bg);
+  --cui-btn-focus-shadow-rgb: 15, 81, 50;
+  --cui-btn-active-color: var(--clinicai-brand-contrast);
+  --cui-btn-active-bg: var(--clinicai-sidebar-bg);
+  --cui-btn-active-border-color: var(--clinicai-sidebar-bg);
+  --cui-btn-disabled-color: var(--clinicai-brand-contrast);
+  --cui-btn-disabled-bg: var(--clinicai-brand-active);
+  --cui-btn-disabled-border-color: var(--clinicai-brand-active);
+
+  font-weight: 700;
+}
+
+.clinicai-action-button .icon {
+  --ci-primary-color: var(--clinicai-brand-contrast);
+  --ci-secondary-color: var(--clinicai-brand-contrast);
+
+  width: 1rem;
+  height: 1rem;
+  color: var(--clinicai-brand-contrast);
+  fill: var(--clinicai-brand-contrast);
+}
+
+.clinicai-action-button .icon path {
+  stroke: currentColor;
+  stroke-width: 0.25;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
 }
 
 .clinicai-tabs {
@@ -366,6 +428,51 @@ body {
   -webkit-text-fill-color: #0f5132 !important;
 }
 
+// Cards institucionais do ClinicAI.
+.clinicai-card {
+  border-color: rgb(25 135 84 / 28%);
+}
+
+.clinicai-card-header {
+  color: var(--clinicai-brand-active);
+  background-color: var(--clinicai-brand-soft);
+  border-bottom-color: rgb(25 135 84 / 28%);
+}
+
+.clinicai-summary-card {
+  color: var(--clinicai-brand-active);
+  background-color: var(--clinicai-brand-soft);
+  border-color: rgb(25 135 84 / 28%);
+}
+
+.clinicai-summary-card-label {
+  color: rgb(15 81 50 / 72%);
+}
+
+.clinicai-summary-card-icon {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--clinicai-brand);
+  background-color: rgb(25 135 84 / 12%);
+  border-radius: 50%;
+}
+
+
+// Paginação das tabelas.
+.clinicai-table-pagination .btn-outline-secondary {
+  --cui-btn-hover-color: var(--clinicai-brand-active);
+  --cui-btn-hover-bg: var(--clinicai-brand-soft);
+  --cui-btn-hover-border-color: rgb(25 135 84 / 45%);
+  --cui-btn-focus-shadow-rgb: 25, 135, 84;
+  --cui-btn-active-color: var(--clinicai-brand-active);
+  --cui-btn-active-bg: rgb(25 135 84 / 22%);
+  --cui-btn-active-border-color: var(--clinicai-brand);
+}
+
 // Padronização visual dos modais.
 .modal-content {
   border: 1px solid var(--clinicai-brand-accent);
@@ -373,4 +480,11 @@ body {
 
 .modal-title {
   color: var(--clinicai-sidebar-bg);
+}
+
+
+// Hover das linhas usa o verde suave das abas não selecionadas.
+.clinicai-table {
+  --cui-table-hover-color: var(--clinicai-brand-active);
+  --cui-table-hover-bg: #effaf5;
 }

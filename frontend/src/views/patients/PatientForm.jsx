@@ -528,8 +528,8 @@ const PatientForm = ({ mode = 'create' }) => {
 
       <CRow className="mb-4 g-4">
         <CCol xs={12}>
-          <CCard>
-            <CCardHeader>
+          <CCard className="clinicai-card">
+            <CCardHeader className="clinicai-card-header">
               <strong>Dados do Paciente</strong>
             </CCardHeader>
 
@@ -714,7 +714,7 @@ const PatientForm = ({ mode = 'create' }) => {
                       {isSaving ? 'Salvando...' : 'Salvar'}
                     </CButton>
 
-                    <CButton color="secondary" variant="outline" as={Link} to="/patients">
+                    <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/patients">
                       Cancelar
                     </CButton>
                   </div>
@@ -726,8 +726,8 @@ const PatientForm = ({ mode = 'create' }) => {
 
         {!isCreateMode && hasPatientExams && (
           <CCol xs={12}>
-            <CCard>
-              <CCardHeader>
+            <CCard className="clinicai-card">
+              <CCardHeader className="clinicai-card-header">
                 <strong>Histórico de Exames ({patientExams.length})</strong>
               </CCardHeader>
 

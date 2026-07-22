@@ -275,8 +275,8 @@ const ClinicForm = ({ mode = 'create' }) => {
         </CAlert>
       )}
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Dados da Clínica</strong>
         </CCardHeader>
 
@@ -392,7 +392,7 @@ const ClinicForm = ({ mode = 'create' }) => {
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/clinics">
+              <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/clinics">
                 Cancelar
               </CButton>
             </div>

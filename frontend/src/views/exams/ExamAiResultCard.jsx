@@ -90,8 +90,8 @@ const ExamAiResultCard = ({
   const statusLabel = aiStatusLabels[aiStatus] || aiStatus || '-'
 
   return (
-    <CCard>
-      <CCardHeader>
+    <CCard className="clinicai-card">
+      <CCardHeader className="clinicai-card-header">
         <strong>Análise Automatizada e Revisão Médica</strong>
       </CCardHeader>
 

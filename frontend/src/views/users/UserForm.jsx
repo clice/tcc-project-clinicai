@@ -463,8 +463,8 @@ const UserForm = ({ mode = 'create' }) => {
         </CAlert>
       )}
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>{isDoctorRole ? 'Dados do Médico' : 'Dados do Usuário'}</strong>
         </CCardHeader>
 
@@ -628,7 +628,7 @@ const UserForm = ({ mode = 'create' }) => {
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/users">
+              <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/users">
                 Cancelar
               </CButton>
             </div>
@@ -637,8 +637,8 @@ const UserForm = ({ mode = 'create' }) => {
       </CCard>
 
       {!isCreateMode && isDoctorRole && (
-        <CCard className="mb-4">
-          <CCardHeader>
+        <CCard className="clinicai-card mb-4">
+          <CCardHeader className="clinicai-card-header">
             <strong>Pacientes ({doctorPatients.length})</strong>
           </CCardHeader>
 

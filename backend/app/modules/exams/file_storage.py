@@ -19,25 +19,10 @@ from fastapi import HTTPException, UploadFile
 from app.core.config import settings
 
 
-CONFIGURED_DATA_DIR = os.getenv("CLINICAI_DATA_DIR")
 DATA_DIR = Path(
-    CONFIGURED_DATA_DIR
-    or settings.clinicai_data_dir
+    settings.clinicai_data_dir
 )
-NEW_UPLOAD_DIR = DATA_DIR / "exams"
-LEGACY_UPLOAD_DIR = Path(settings.upload_dir) / "exams"
-
-# A raiz nova só se torna ativa quando a variável existe no processo.
-# Assim, containers antigos continuam gravando no volume legado até a
-# recriação controlada prevista para a etapa de migração.
-NEW_STORAGE_ENABLED = bool(
-    CONFIGURED_DATA_DIR
-)
-UPLOAD_DIR = (
-    NEW_UPLOAD_DIR
-    if NEW_STORAGE_ENABLED
-    else LEGACY_UPLOAD_DIR
-)
+UPLOAD_DIR = DATA_DIR / "exams"
 
 MAX_FILE_SIZE = settings.max_upload_size_mb * 1024 * 1024
 MAX_IMAGE_WIDTH = settings.max_image_width_px
@@ -331,7 +316,7 @@ def _parse_jpeg(data: bytes) -> tuple[int, int]:
     return width, height
 
 
-def _detect_and_parse(data: bytes) -> tuple[str, str, int, int]:
+def detect_and_parse_image(data: bytes) -> tuple[str, str, int, int]:
     if data.startswith(PNG_SIGNATURE):
         width, height = _parse_png(data)
         return "image/png", ".png", width, height
@@ -367,7 +352,7 @@ def validate_exam_file(file: UploadFile) -> ValidatedExamImage:
             f"Arquivo muito grande. Tamanho máximo permitido: {settings.max_upload_size_mb} MB.",
         )
 
-    real_mime, canonical_extension, width, height = _detect_and_parse(data)
+    real_mime, canonical_extension, width, height = detect_and_parse_image(data)
 
     if declared_mime != real_mime:
         raise _http_error(415, "O tipo MIME declarado não corresponde ao conteúdo real do arquivo.")
@@ -385,32 +370,33 @@ def validate_exam_file(file: UploadFile) -> ValidatedExamImage:
     )
 
 
-def _allowed_exam_roots() -> tuple[Path, ...]:
-    roots = (
-        UPLOAD_DIR,
-        NEW_UPLOAD_DIR,
-        LEGACY_UPLOAD_DIR,
-    )
+def _validate_relative_exam_path(
+    relative_path: Path,
+) -> None:
+    """Valida a hierarquia canônica de uma imagem original."""
 
-    unique_roots: list[Path] = []
+    parts = relative_path.parts
 
-    for root in roots:
-        resolved_root = root.resolve(
-            strict=False
+    if (
+        len(parts) != 6
+        or parts[0] != "exams"
+        or parts[4] != "original"
+        or not all(
+            part.isdigit() and int(part) > 0
+            for part in parts[1:4]
         )
-
-        if resolved_root not in unique_roots:
-            unique_roots.append(
-                resolved_root
-            )
-
-    return tuple(unique_roots)
+        or not parts[5]
+    ):
+        raise _http_error(
+            403,
+            "Caminho de arquivo inválido.",
+        )
 
 
 def serialize_exam_file_path(
     file_path: Path,
 ) -> str:
-    """Serializa arquivos novos como caminhos relativos à raiz data."""
+    """Serializa a imagem relativamente à raiz de dados."""
 
     resolved_path = file_path.resolve(
         strict=False
@@ -425,9 +411,15 @@ def serialize_exam_file_path(
                 data_root
             )
         )
-    except ValueError:
-        # Caminhos legados permanecem absolutos até a migração.
-        return str(resolved_path)
+    except ValueError as exc:
+        raise _http_error(
+            500,
+            "A imagem está fora da raiz de dados.",
+        ) from exc
+
+    _validate_relative_exam_path(
+        relative_path
+    )
 
     return relative_path.as_posix()
 
@@ -435,20 +427,24 @@ def serialize_exam_file_path(
 def _resolve_exam_path_and_root(
     file_path: str,
 ) -> tuple[Path, Path]:
-    """Resolve caminho relativo novo ou absoluto legado com sua raiz."""
+    """Resolve exclusivamente a hierarquia canônica do exame."""
 
     raw_path = Path(file_path)
 
-    if raw_path.is_absolute():
-        candidate = raw_path
-    else:
-        if ".." in raw_path.parts:
-            raise _http_error(
-                403,
-                "Caminho de arquivo inválido.",
-            )
+    if (
+        raw_path.is_absolute()
+        or ".." in raw_path.parts
+    ):
+        raise _http_error(
+            403,
+            "Caminho de arquivo inválido.",
+        )
 
-        candidate = DATA_DIR / raw_path
+    _validate_relative_exam_path(
+        raw_path
+    )
+
+    candidate = DATA_DIR / raw_path
 
     if candidate.is_symlink():
         raise _http_error(
@@ -459,20 +455,21 @@ def _resolve_exam_path_and_root(
     resolved_path = candidate.resolve(
         strict=False
     )
-
-    for root in _allowed_exam_roots():
-        try:
-            resolved_path.relative_to(
-                root
-            )
-            return resolved_path, root
-        except ValueError:
-            continue
-
-    raise _http_error(
-        403,
-        "Caminho de arquivo inválido.",
+    storage_root = UPLOAD_DIR.resolve(
+        strict=False
     )
+
+    try:
+        resolved_path.relative_to(
+            storage_root
+        )
+    except ValueError as exc:
+        raise _http_error(
+            403,
+            "Caminho de arquivo inválido.",
+        ) from exc
+
+    return resolved_path, storage_root
 
 
 def _ensure_secure_directory(path: Path) -> Path:
@@ -498,37 +495,38 @@ def _ensure_secure_directory(path: Path) -> Path:
     return candidate
 
 
-def _uses_new_upload_root() -> bool:
-    return (
-        UPLOAD_DIR.resolve(
-            strict=False
-        )
-        == NEW_UPLOAD_DIR.resolve(
-            strict=False
-        )
-    )
-
-
 def build_exam_storage_dir(
     *,
     clinic_id: int,
     patient_id: int,
     exam_id: int,
 ) -> Path:
-    """Cria a hierarquia interna sem usar o nome original do arquivo."""
+    """Cria a pasta da imagem original dentro do exame."""
+
+    identifiers = (
+        clinic_id,
+        patient_id,
+        exam_id,
+    )
+
+    if any(
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value <= 0
+        for value in identifiers
+    ):
+        raise _http_error(
+            500,
+            "Identificadores inválidos para o armazenamento do exame.",
+        )
 
     storage_dir = (
         UPLOAD_DIR
         / str(clinic_id)
         / str(patient_id)
         / str(exam_id)
+        / "original"
     )
-
-    if _uses_new_upload_root():
-        storage_dir = (
-            storage_dir
-            / "original"
-        )
 
     return _ensure_secure_directory(
         storage_dir

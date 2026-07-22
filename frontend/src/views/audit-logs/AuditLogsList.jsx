@@ -244,7 +244,7 @@ const AuditLogsList = () => {
         </div>
       </div>
 
-      {/* <CCard className="mb-4">
+      {/* <CCard className="clinicai-card mb-4">
         <CCardBody>
           <CForm onSubmit={handleApplyFilters}>
             <CRow className="g-3 align-items-end">
@@ -341,7 +341,7 @@ const AuditLogsList = () => {
         </CCardBody>
       </CCard> */}
 
-      <CCard className="mb-4">
+      <CCard className="clinicai-card mb-4">
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
 

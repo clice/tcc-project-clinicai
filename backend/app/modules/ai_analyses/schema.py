@@ -165,6 +165,8 @@ class AIMetricsResponse(BaseModel):
     confidence_mean: float | None = None
     reviewed_confidence_mean: float | None = None
     reviewed_analyses_count: int = 0
+    false_positive_count: int = 0
+    false_negative_count: int = 0
     confidence_min: float | None = None
     confidence_max: float | None = None
     confidence_distribution: dict[str, int]

@@ -1,5 +1,8 @@
 """Orquestra a inferência conforme o domínio explicitamente selecionado."""
 
+import base64
+import hashlib
+
 import numpy as np
 
 from app.config import CLASS_LABELS_BY_DOMAIN
@@ -71,7 +74,7 @@ def predict_image(
             dtype=float,
         )
 
-        gradcam_path = attribution.path
+        gradcam_bytes = attribution.image_bytes
 
     else:
         image_tensor = preprocess_image(
@@ -85,7 +88,7 @@ def predict_image(
             dtype=float,
         )
 
-        gradcam_path = generate_gradcam_from_bytes(
+        gradcam_bytes = generate_gradcam_from_bytes(
             image_bytes,
             domain=predictor.domain,
         )
@@ -150,9 +153,27 @@ def predict_image(
         ),
         "device": str(DEVICE),
         "gradcam_available": (
-            gradcam_path is not None
+            gradcam_bytes is not None
         ),
-        "gradcam_path": gradcam_path,
+        "gradcam_base64": (
+            base64.b64encode(
+                gradcam_bytes
+            ).decode("ascii")
+            if gradcam_bytes is not None
+            else None
+        ),
+        "gradcam_mime_type": (
+            "image/jpeg"
+            if gradcam_bytes is not None
+            else None
+        ),
+        "gradcam_sha256": (
+            hashlib.sha256(
+                gradcam_bytes
+            ).hexdigest()
+            if gradcam_bytes is not None
+            else None
+        ),
         "attribution_method": (
             attribution.method
             if attribution is not None

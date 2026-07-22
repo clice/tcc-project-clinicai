@@ -143,8 +143,8 @@ const StatusForm = () => {
         de selecionar “Salvar”.
       </div>
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Dados do Status</strong>
         </CCardHeader>
 
@@ -189,7 +189,7 @@ const StatusForm = () => {
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/statuses">
+              <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/statuses">
                 Cancelar
               </CButton>
             </div>

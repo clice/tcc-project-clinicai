@@ -16,7 +16,7 @@ from app.modules.clinics.router import router as clinics_router
 from app.modules.users.router import router as users_router
 from app.modules.patients.router import router as patients_router
 from app.modules.exams.router import router as exams_router
-from app.modules.ai_analysis.router import router as ai_analysis_router
+from app.modules.ai_analyses.router import router as ai_analyses_router
 from app.modules.audit_logs.router import router as audit_logs_router
 
 
@@ -42,4 +42,4 @@ def register_routes(app: FastAPI) -> None:
     
     # Módulo AI
     app.include_router(exams_router)
-    app.include_router(ai_analysis_router)
+    app.include_router(ai_analyses_router)

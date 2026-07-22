@@ -203,8 +203,8 @@ const RoleForm = () => {
         selecionar “Salvar”.
       </div>
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Dados do Perfil</strong>
         </CCardHeader>
 
@@ -256,8 +256,8 @@ const RoleForm = () => {
                 <CRow className="g-3">
                   {Object.entries(groupedPermissions).map(([moduleName, modulePermissions]) => (
                     <CCol md={6} key={moduleName}>
-                      <CCard className="h-100 border">
-                        <CCardHeader className="fw-semibold">
+                      <CCard className="clinicai-card h-100 border">
+                        <CCardHeader className="clinicai-card-header fw-semibold">
                           {moduleLabels[moduleName] || moduleName}
                         </CCardHeader>
 
@@ -292,7 +292,7 @@ const RoleForm = () => {
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/roles">
+              <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/roles">
                 Cancelar
               </CButton>
             </div>

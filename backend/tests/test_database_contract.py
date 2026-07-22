@@ -50,7 +50,7 @@ def test_fk_cascade_policy_is_explicit() -> None:
         "users",
         "patients",
         "exams",
-        "ai_analysis",
+        "ai_analyses",
         "audit_logs",
     }
     for table_name in clinical_tables:

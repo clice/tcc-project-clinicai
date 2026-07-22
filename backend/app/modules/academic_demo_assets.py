@@ -8,6 +8,9 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from app.modules.ai_analyses.file_storage import (
+    build_attribution_storage_dir,
+)
 from app.modules.exams.file_storage import (
     build_exam_storage_dir,
     serialize_exam_file_path,
@@ -362,12 +365,49 @@ def install_exam_asset(
     return target
 
 
-def bundled_gradcam_path(
+def gradcam_asset_target(
+    exam: "Exam",
     asset_entry: dict[str, Any],
 ) -> Path:
-    """Retorna um mapa versionado e validado."""
+    """Calcula o destino operacional do mapa demonstrativo."""
 
-    return _bundled_asset_path(
+    _bundled_asset_path(
         asset_entry,
         expected_kind="gradcam",
     )
+
+    storage_dir = (
+        build_attribution_storage_dir(
+            clinic_id=exam.clinic_id,
+            patient_id=exam.patient_id,
+            exam_id=exam.id,
+        )
+    )
+
+    return (
+        storage_dir
+        / Path(str(asset_entry["path"])).name
+    )
+
+
+def install_gradcam_asset(
+    exam: "Exam",
+    asset_entry: dict[str, Any],
+) -> Path:
+    """Copia o mapa demonstrativo para a pasta do exame."""
+
+    source = _bundled_asset_path(
+        asset_entry,
+        expected_kind="gradcam",
+    )
+
+    target = _copy_if_missing(
+        source,
+        gradcam_asset_target(
+            exam,
+            asset_entry,
+        ),
+        asset_entry,
+    )
+
+    return target

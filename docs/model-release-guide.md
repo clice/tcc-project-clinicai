@@ -193,7 +193,8 @@ documentação.
 3. Informe uma tag ainda não publicada, por exemplo `models-v0.1.2`.
 4. Selecione `main` como target.
 5. Use o título correspondente, por exemplo `Modelos ClinicAI v0.1.2`.
-6. Marque **Set as a pre-release** enquanto o sistema estiver em desenvolvimento.
+6. Marque **Set as a pre-release** somente durante a validação dos novos artefatos; a versão
+   adotada como padrão deve ser publicada após a conferência.
 7. Descreva as mudanças dos modelos e eventuais requisitos de compatibilidade.
 8. Anexe os quatro artefatos e `manifesto_modelos.json`.
 9. Aguarde o término de todos os uploads.
