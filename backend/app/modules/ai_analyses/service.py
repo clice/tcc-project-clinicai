@@ -510,7 +510,7 @@ def get_ai_metrics(db: Session) -> dict:
     reviewed_confidence_mean, reviewed_analyses_count = (
         db.query(
             sa_func.avg(AIAnalysis.confidence),
-            sa_func.count(AIAnalysis.confidence),
+            sa_func.count(AIAnalysis.id),
         )
         .join(Exam, AIAnalysis.exam_id == Exam.id)
         .filter(
@@ -520,7 +520,6 @@ def get_ai_metrics(db: Session) -> dict:
                     completed_with_divergence_status.id,
                 ]
             ),
-            AIAnalysis.confidence.is_not(None),
         )
         .one()
     )
@@ -536,6 +535,32 @@ def get_ai_metrics(db: Session) -> dict:
     )
     total_concluded = completed_count + divergence_count
     divergence_rate = (divergence_count / total_concluded) if total_concluded > 0 else 0.0
+
+    # A revisão médica confirma ou discorda da classificação binária
+    # normal/anormal. Entre os exames com divergência:
+    # - classe 1 (anormal) representa falso positivo;
+    # - classe 0 (normal) representa falso negativo.
+    false_positive_count = int(
+        db.query(sa_func.count(AIAnalysis.id))
+        .join(Exam, AIAnalysis.exam_id == Exam.id)
+        .filter(
+            Exam.status_id == completed_with_divergence_status.id,
+            AIAnalysis.prediction_class == 1,
+        )
+        .scalar()
+        or 0
+    )
+
+    false_negative_count = int(
+        db.query(sa_func.count(AIAnalysis.id))
+        .join(Exam, AIAnalysis.exam_id == Exam.id)
+        .filter(
+            Exam.status_id == completed_with_divergence_status.id,
+            AIAnalysis.prediction_class == 0,
+        )
+        .scalar()
+        or 0
+    )
 
     # --- Falhas: contagem + últimas ocorrências (via log de auditoria) ---
     failed_status = get_status_by_name_and_applies_to(
@@ -578,6 +603,8 @@ def get_ai_metrics(db: Session) -> dict:
         "confidence_mean": confidence_mean,
         "reviewed_confidence_mean": reviewed_confidence_mean,
         "reviewed_analyses_count": reviewed_analyses_count,
+        "false_positive_count": false_positive_count,
+        "false_negative_count": false_negative_count,
         "confidence_min": confidence_min,
         "confidence_max": confidence_max,
         "confidence_distribution": confidence_distribution,
