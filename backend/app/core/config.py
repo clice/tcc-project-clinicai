@@ -34,12 +34,8 @@ class Settings(BaseSettings):
     bootstrap_admin_cpf: str = "39053344705"
     bootstrap_admin_password: str = "clinicai123"
     
-    # Raiz única dos dados operacionais.
-    # Será montada como /app/data nos containers.
-    clinicai_data_dir: str = "/app/data"
-
-    # Caminho legado dos uploads, preservado durante a migração.
-    upload_dir: str = "uploads"
+    # Raiz única dos dados operacionais do ClinicAI.
+    clinicai_data_dir: str = "/clinicai-data"
 
     max_upload_size_mb: int = 10
     max_image_width_px: int = 12000
@@ -49,7 +45,6 @@ class Settings(BaseSettings):
     # Serviço de IA (container separado, ver docker-compose.yml)
     ai_service_url: str = "http://ai:8001"
     ai_service_timeout_seconds: int = 120
-    ai_storage_dir: str = "/app/storage"
 
     # Configurações de autenticação JWT
     secret_key: str

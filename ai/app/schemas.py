@@ -6,23 +6,31 @@ from pydantic import BaseModel, Field
 class PredictionResponse(BaseModel):
     exam_type: str = Field(
         ...,
-        description="Tipo de exame enviado pelo backend.",
+        description=(
+            "Tipo de exame enviado pelo backend."
+        ),
     )
 
     exam_domain: str = Field(
         ...,
-        description="Domínio clínico selecionado.",
+        description=(
+            "Domínio clínico selecionado."
+        ),
     )
 
     prediction_class: int = Field(
         ...,
         ge=0,
-        description="Índice da classe prevista.",
+        description=(
+            "Índice da classe prevista."
+        ),
     )
 
     label: str = Field(
         ...,
-        description="Rótulo da classe prevista.",
+        description=(
+            "Rótulo da classe prevista."
+        ),
     )
 
     confidence: float = Field(
@@ -35,7 +43,9 @@ class PredictionResponse(BaseModel):
     model_version: str
 
     gradcam_available: bool = False
-    gradcam_path: str | None = None
+    gradcam_base64: str | None = None
+    gradcam_mime_type: str | None = None
+    gradcam_sha256: str | None = None
 
     attribution_method: str | None = None
 

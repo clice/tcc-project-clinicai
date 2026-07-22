@@ -1,143 +1,356 @@
-"""Resolução segura dos mapas de atribuição produzidos ou versionados."""
+"""Armazenamento canônico dos mapas de atribuição."""
 
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
+import os
+import re
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import HTTPException
 
 from app.core.config import settings
-from app.modules.academic_demo_assets import (
-    BUNDLED_DEMO_ASSETS_DIR,
+from app.modules.exams.file_storage import (
+    detect_and_parse_image,
 )
 
 
 DATA_DIR = Path(
     settings.clinicai_data_dir
 )
-NEW_ATTRIBUTION_DIR = (
-    DATA_DIR
-    / "attribution"
+EXAMS_DIR = DATA_DIR / "exams"
+
+DIRECTORY_MODE = 0o750
+FILE_MODE = 0o640
+MAX_NAME_ATTEMPTS = 10
+
+MAX_ATTRIBUTION_SIZE = (
+    settings.max_upload_size_mb
+    * 1024
+    * 1024
 )
 
-# Caminhos legados preservados durante a migração.
-AI_STORAGE_DIR = Path(
-    settings.ai_storage_dir
-)
-GRADCAM_DIR = (
-    AI_STORAGE_DIR
-    / "gradcam"
-)
-
-DEMO_GRADCAM_DIR = (
-    BUNDLED_DEMO_ASSETS_DIR
-    / "gradcam"
-)
-
-ALLOWED_GRADCAM_SUFFIXES = frozenset(
-    {
-        ".jpg",
-        ".jpeg",
-        ".png",
-    }
-)
+ALLOWED_ATTRIBUTION_MIME_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+}
 
 
-def _allowed_attribution_roots() -> tuple[Path, ...]:
-    roots = (
-        NEW_ATTRIBUTION_DIR,
-        GRADCAM_DIR,
-        DEMO_GRADCAM_DIR,
+class AttributionStorageError(RuntimeError):
+    """Falha na validação ou persistência do mapa."""
+
+
+def _validate_identifiers(
+    *,
+    clinic_id: int,
+    patient_id: int,
+    exam_id: int,
+) -> None:
+    values = (
+        clinic_id,
+        patient_id,
+        exam_id,
     )
 
-    unique_roots: list[Path] = []
-
-    for root in roots:
-        resolved_root = root.resolve(
-            strict=False
+    if any(
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value <= 0
+        for value in values
+    ):
+        raise AttributionStorageError(
+            "Identificadores inválidos para "
+            "armazenar o mapa de atribuição."
         )
 
-        if resolved_root not in unique_roots:
-            unique_roots.append(
-                resolved_root
+
+def _ensure_directory(
+    path: Path,
+) -> Path:
+    root = EXAMS_DIR.resolve(
+        strict=False
+    )
+
+    root.mkdir(
+        parents=True,
+        exist_ok=True,
+        mode=DIRECTORY_MODE,
+    )
+    os.chmod(
+        root,
+        DIRECTORY_MODE,
+    )
+
+    candidate = path.resolve(
+        strict=False
+    )
+
+    try:
+        relative_parts = (
+            candidate.relative_to(
+                root
+            ).parts
+        )
+    except ValueError as exc:
+        raise AttributionStorageError(
+            "Diretório de atribuição "
+            "fora da raiz de exames."
+        ) from exc
+
+    current = root
+
+    for part in relative_parts:
+        current = current / part
+
+        if (
+            current.exists()
+            and current.is_symlink()
+        ):
+            raise AttributionStorageError(
+                "A hierarquia de atribuição "
+                "contém link simbólico."
             )
 
-    return tuple(
-        unique_roots
+        current.mkdir(
+            exist_ok=True,
+            mode=DIRECTORY_MODE,
+        )
+        os.chmod(
+            current,
+            DIRECTORY_MODE,
+        )
+
+    return candidate
+
+
+def build_attribution_storage_dir(
+    *,
+    clinic_id: int,
+    patient_id: int,
+    exam_id: int,
+) -> Path:
+    """Retorna a pasta attribution do exame."""
+
+    _validate_identifiers(
+        clinic_id=clinic_id,
+        patient_id=patient_id,
+        exam_id=exam_id,
     )
+
+    return _ensure_directory(
+        EXAMS_DIR
+        / str(clinic_id)
+        / str(patient_id)
+        / str(exam_id)
+        / "attribution"
+    )
+
+
+def _validate_relative_attribution_path(
+    relative_path: Path,
+) -> None:
+    parts = relative_path.parts
+
+    if (
+        len(parts) != 6
+        or parts[0] != "exams"
+        or parts[4] != "attribution"
+        or not all(
+            part.isdigit()
+            and int(part) > 0
+            for part in parts[1:4]
+        )
+        or not parts[5]
+        or Path(parts[5]).suffix.lower()
+        not in {".jpg", ".jpeg", ".png"}
+    ):
+        raise AttributionStorageError(
+            "Caminho do mapa de atribuição inválido."
+        )
 
 
 def serialize_gradcam_path(
     file_path: Path,
 ) -> str:
-    """Serializa mapas novos relativamente à raiz data."""
+    """Serializa o mapa relativamente à raiz de dados."""
 
     resolved_path = file_path.resolve(
-        strict=False
-    )
-    data_root = DATA_DIR.resolve(
         strict=False
     )
 
     try:
         relative_path = (
             resolved_path.relative_to(
-                data_root
+                DATA_DIR.resolve(
+                    strict=False
+                )
             )
         )
-    except ValueError:
-        # Caminhos legados e ativos versionados permanecem absolutos.
-        return str(
-            resolved_path
-        )
+    except ValueError as exc:
+        raise AttributionStorageError(
+            "O mapa está fora da raiz de dados."
+        ) from exc
+
+    _validate_relative_attribution_path(
+        relative_path
+    )
 
     return relative_path.as_posix()
 
 
-def _resolve_candidate(
-    stored_path: str,
+def store_attribution_from_base64(
+    *,
+    encoded_data: str,
+    mime_type: str,
+    expected_sha256: str,
+    clinic_id: int,
+    patient_id: int,
+    exam_id: int,
 ) -> Path:
-    raw_path = Path(
-        stored_path
-    )
+    """Valida e grava o mapa retornado pela IA."""
 
-    if raw_path.is_absolute():
-        return raw_path
-
-    if ".." in raw_path.parts:
-        raise HTTPException(
-            status_code=403,
-            detail=(
-                "O caminho do mapa de "
-                "atribuição não é permitido."
-            ),
+    if mime_type not in (
+        ALLOWED_ATTRIBUTION_MIME_TYPES
+    ):
+        raise AttributionStorageError(
+            "Tipo de mapa de atribuição não permitido."
         )
 
-    return (
-        DATA_DIR
-        / raw_path
+    if re.fullmatch(
+        r"[0-9a-f]{64}",
+        expected_sha256,
+    ) is None:
+        raise AttributionStorageError(
+            "Hash inválido para o mapa de atribuição."
+        )
+
+    try:
+        data = base64.b64decode(
+            encoded_data,
+            validate=True,
+        )
+    except (
+        binascii.Error,
+        ValueError,
+    ) as exc:
+        raise AttributionStorageError(
+            "Conteúdo Base64 inválido para o mapa."
+        ) from exc
+
+    if not data:
+        raise AttributionStorageError(
+            "O mapa de atribuição está vazio."
+        )
+
+    if len(data) > MAX_ATTRIBUTION_SIZE:
+        raise AttributionStorageError(
+            "O mapa de atribuição excede "
+            "o limite permitido."
+        )
+
+    actual_sha256 = hashlib.sha256(
+        data
+    ).hexdigest()
+
+    if actual_sha256 != expected_sha256:
+        raise AttributionStorageError(
+            "O hash do mapa não corresponde "
+            "ao conteúdo recebido."
+        )
+
+    (
+        real_mime,
+        canonical_extension,
+        _width,
+        _height,
+    ) = detect_and_parse_image(
+        data
     )
 
+    if real_mime != mime_type:
+        raise AttributionStorageError(
+            "O tipo declarado do mapa não "
+            "corresponde ao conteúdo."
+        )
 
-def _is_inside_allowed_root(
-    resolved: Path,
-) -> bool:
-    for root in _allowed_attribution_roots():
-        try:
-            resolved.relative_to(
-                root
+    expected_extension = (
+        ALLOWED_ATTRIBUTION_MIME_TYPES[
+            mime_type
+        ]
+    )
+
+    if (
+        canonical_extension
+        != expected_extension
+    ):
+        raise AttributionStorageError(
+            "A extensão canônica do mapa "
+            "não corresponde ao tipo declarado."
+        )
+
+    storage_dir = (
+        build_attribution_storage_dir(
+            clinic_id=clinic_id,
+            patient_id=patient_id,
+            exam_id=exam_id,
+        )
+    )
+
+    last_error: OSError | None = None
+
+    for _ in range(
+        MAX_NAME_ATTEMPTS
+    ):
+        file_path = (
+            storage_dir
+            / (
+                f"{uuid4().hex}"
+                f"{canonical_extension}"
             )
-            return True
-        except ValueError:
+        )
+
+        try:
+            with file_path.open(
+                "xb"
+            ) as output:
+                output.write(
+                    data
+                )
+                output.flush()
+                os.fsync(
+                    output.fileno()
+                )
+
+            os.chmod(
+                file_path,
+                FILE_MODE,
+            )
+
+            return file_path
+
+        except FileExistsError as exc:
+            last_error = exc
             continue
 
-    return False
+        except OSError:
+            file_path.unlink(
+                missing_ok=True
+            )
+            raise
+
+    raise AttributionStorageError(
+        "Não foi possível gerar um nome "
+        "físico exclusivo para o mapa."
+    ) from last_error
 
 
 def resolve_safe_gradcam_path(
     stored_path: str | None,
 ) -> Path:
-    """Resolve mapa relativo novo ou caminho absoluto legado autorizado."""
+    """Resolve exclusivamente um mapa da pasta do exame."""
 
     if not stored_path:
         raise HTTPException(
@@ -148,9 +361,33 @@ def resolve_safe_gradcam_path(
             ),
         )
 
-    candidate = _resolve_candidate(
+    raw_path = Path(
         stored_path
     )
+
+    if (
+        raw_path.is_absolute()
+        or ".." in raw_path.parts
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "O caminho do mapa de "
+                "atribuição não é permitido."
+            ),
+        )
+
+    try:
+        _validate_relative_attribution_path(
+            raw_path
+        )
+    except AttributionStorageError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail=str(exc),
+        ) from exc
+
+    candidate = DATA_DIR / raw_path
 
     if candidate.is_symlink():
         raise HTTPException(
@@ -173,40 +410,53 @@ def resolve_safe_gradcam_path(
             status_code=404,
             detail=(
                 "O mapa de atribuição não foi "
-                "encontrado no armazenamento autorizado."
+                "encontrado."
             ),
         ) from exc
 
-    if not _is_inside_allowed_root(
-        resolved
-    ):
+    try:
+        resolved.relative_to(
+            EXAMS_DIR.resolve(
+                strict=False
+            )
+        )
+    except ValueError as exc:
         raise HTTPException(
             status_code=403,
             detail=(
-                "O caminho do mapa de atribuição "
-                "está fora do armazenamento autorizado."
+                "O mapa está fora da "
+                "raiz de exames."
             ),
-        )
-
-    if (
-        resolved.suffix.lower()
-        not in ALLOWED_GRADCAM_SUFFIXES
-    ):
-        raise HTTPException(
-            status_code=415,
-            detail=(
-                "O mapa de atribuição possui "
-                "formato não permitido."
-            ),
-        )
+        ) from exc
 
     if not resolved.is_file():
         raise HTTPException(
             status_code=404,
             detail=(
-                "O mapa de atribuição não é "
-                "um arquivo válido."
+                "O mapa de atribuição não "
+                "é um arquivo válido."
             ),
         )
 
     return resolved
+
+
+def delete_attribution_file_safely(
+    file_path: Path,
+) -> None:
+    """Remove somente um mapa pertencente à raiz canônica."""
+
+    serialized = serialize_gradcam_path(
+        file_path
+    )
+
+    resolved = (
+        DATA_DIR
+        / serialized
+    ).resolve(
+        strict=False
+    )
+
+    resolved.unlink(
+        missing_ok=True
+    )

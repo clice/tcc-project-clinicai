@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,6 +24,17 @@ from app.modules.ai_analyses.client import (
 from app.modules.exams import service as exam_service
 
 
+GRADCAM_BYTES = b"clinicai-gradcam-contract"
+
+GRADCAM_BASE64 = base64.b64encode(
+    GRADCAM_BYTES
+).decode("ascii")
+
+GRADCAM_SHA256 = hashlib.sha256(
+    GRADCAM_BYTES
+).hexdigest()
+
+
 VALID_RESPONSE = {
     "exam_type": "colonoscopy",
     "exam_domain": "gastrointestinal",
@@ -31,9 +44,9 @@ VALID_RESPONSE = {
     "model_name": "ensemble_stacking",
     "model_version": "models-v0.1.0",
     "gradcam_available": True,
-    "gradcam_path": (
-        "/app/storage/gradcam/example.jpg"
-    ),
+    "gradcam_base64": GRADCAM_BASE64,
+    "gradcam_mime_type": "image/jpeg",
+    "gradcam_sha256": GRADCAM_SHA256,
     "attribution_method": (
         "weighted_base_gradcam_oriented_by_"
         "ensemble_stacking_v1"
@@ -191,7 +204,10 @@ def test_client_rejects_wrong_domain(monkeypatch):
 
 
 def test_client_rejects_inconsistent_gradcam(monkeypatch):
-    invalid = dict(VALID_RESPONSE, gradcam_path=None)
+    invalid = dict(
+        VALID_RESPONSE,
+        gradcam_base64=None,
+    )
     monkeypatch.setattr(
         ai_client.httpx,
         "AsyncClient",
@@ -201,7 +217,10 @@ def test_client_rejects_inconsistent_gradcam(monkeypatch):
         ),
     )
 
-    with pytest.raises(AIServiceResponseError, match="gradcam_path"):
+    with pytest.raises(
+        AIServiceResponseError,
+        match="gradcam_base64",
+    ):
         asyncio.run(
             request_prediction(
                 image_bytes=b"image",
@@ -235,7 +254,13 @@ def test_client_rejects_class_label_mismatch(monkeypatch):
 
 
 def test_client_requires_gradcam_for_gastrointestinal(monkeypatch):
-    invalid = dict(VALID_RESPONSE, gradcam_available=False, gradcam_path=None)
+    invalid = dict(
+        VALID_RESPONSE,
+        gradcam_available=False,
+        gradcam_base64=None,
+        gradcam_mime_type=None,
+        gradcam_sha256=None,
+    )
     monkeypatch.setattr(
         ai_client.httpx,
         "AsyncClient",
@@ -333,7 +358,9 @@ def test_client_accepts_documented_unavailable_map(
     unavailable = dict(
         VALID_RESPONSE,
         gradcam_available=False,
-        gradcam_path=None,
+        gradcam_base64=None,
+        gradcam_mime_type=None,
+        gradcam_sha256=None,
         attribution_branch_weights=None,
         attribution_branch_cam_raw_maxima=None,
         attribution_unavailable_reason=(
@@ -374,6 +401,8 @@ def test_analyze_exam_sends_type_and_persists_model_contract(tmp_path, monkeypat
     image_path.write_bytes(b"validated-image")
     exam = SimpleNamespace(
         id=17,
+        clinic_id=3,
+        patient_id=4,
         ai_analysis=None,
         status=SimpleNamespace(name="processing"),
         file_path=str(image_path),
@@ -389,6 +418,32 @@ def test_analyze_exam_sends_type_and_persists_model_contract(tmp_path, monkeypat
     monkeypatch.setattr(exam_service, "get_transition_target", lambda *_args, **_kwargs: "awaiting_review")
     monkeypatch.setattr(exam_service, "resolve_safe_exam_file_path", lambda _path: Path(image_path))
     monkeypatch.setattr(exam_service, "claim_exam_for_analysis", lambda **_kwargs: None)
+
+    stored_map = (
+        tmp_path
+        / "data"
+        / "exams"
+        / "3"
+        / "4"
+        / "17"
+        / "attribution"
+        / "mapa.jpg"
+    )
+
+    monkeypatch.setattr(
+        exam_service,
+        "store_attribution_from_base64",
+        lambda **_kwargs: stored_map,
+    )
+
+    monkeypatch.setattr(
+        exam_service,
+        "serialize_gradcam_path",
+        lambda _path: (
+            "exams/3/4/17/"
+            "attribution/mapa.jpg"
+        ),
+    )
 
     async def fake_request_prediction(**kwargs):
         captured["request"] = kwargs
@@ -416,12 +471,26 @@ def test_analyze_exam_sends_type_and_persists_model_contract(tmp_path, monkeypat
     assert payload.confidence == pytest.approx(0.9342)
     assert payload.model_name == "ensemble_stacking"
     assert payload.model_version == "models-v0.1.0"
-    assert payload.gradcam_path == "/app/storage/gradcam/example.jpg"
+    assert payload.gradcam_path == (
+        "exams/3/4/17/attribution/mapa.jpg"
+    )
     assert result["model_name"] == "ensemble_stacking"
 
     persisted_response = json.loads(
         payload.raw_response
     )
+
+    assert "gradcam_base64" not in (
+        persisted_response
+    )
+
+    assert persisted_response[
+        "gradcam_mime_type"
+    ] == "image/jpeg"
+
+    assert persisted_response[
+        "gradcam_sha256"
+    ] == GRADCAM_SHA256
 
     assert persisted_response[
         "attribution_method"
@@ -454,7 +523,8 @@ def _build_analysis_with_raw_response(
         model_name="ensemble_stacking",
         model_version="models-v0.1.0",
         gradcam_path=(
-            "/app/storage/gradcam/example.jpg"
+            "exams/3/4/17/"
+            "attribution/mapa.jpg"
         ),
         processing_time_ms=1234,
         ai_notes=None,
@@ -498,9 +568,9 @@ def test_analysis_response_exposes_attribution_metadata():
     ]
 
 
-def test_legacy_analysis_without_json_remains_compatible():
+def test_invalid_raw_response_omits_optional_metadata():
     analysis = _build_analysis_with_raw_response(
-        str(VALID_RESPONSE)
+        "conteudo-nao-json"
     )
 
     result = (

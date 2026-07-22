@@ -30,17 +30,50 @@ def assert_http_error(expected_status: int, call) -> HTTPException:
 
 
 @pytest.fixture
-def isolated_ai_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    root = tmp_path / "storage"
-    monkeypatch.setattr(ai_file_storage, "AI_STORAGE_DIR", root)
-    monkeypatch.setattr(ai_file_storage, "GRADCAM_DIR", root / "gradcam")
-    return root
+def isolated_attribution_storage(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Path:
+    data_root = tmp_path / "data"
+
+    monkeypatch.setattr(
+        ai_file_storage,
+        "DATA_DIR",
+        data_root,
+    )
+
+    monkeypatch.setattr(
+        ai_file_storage,
+        "EXAMS_DIR",
+        data_root / "exams",
+    )
+
+    return data_root
 
 
-def seed_context(db_session, gradcam_path: Path):
-    active_user = Status(name="active", display_name="Ativo", applies_to="user")
-    active_clinic = Status(name="active", display_name="Ativa", applies_to="clinic")
-    active_patient = Status(name="active", display_name="Ativo", applies_to="patient")
+def seed_context(
+    db_session,
+    data_root: Path,
+    *,
+    map_name: str = "mapa.jpg",
+    create_map: bool = True,
+    stored_path_override: str | None = None,
+):
+    active_user = Status(
+        name="active",
+        display_name="Ativo",
+        applies_to="user",
+    )
+    active_clinic = Status(
+        name="active",
+        display_name="Ativa",
+        applies_to="clinic",
+    )
+    active_patient = Status(
+        name="active",
+        display_name="Ativo",
+        applies_to="patient",
+    )
     awaiting_review = Status(
         name="awaiting_review",
         display_name="Aguardando revisão",
@@ -63,8 +96,16 @@ def seed_context(db_session, gradcam_path: Path):
         permissions_initialized=True,
     )
 
-    clinic_a = Clinic(name="Clínica Grad-CAM A", cnpj="11222333000181", status=active_clinic)
-    clinic_b = Clinic(name="Clínica Grad-CAM B", cnpj="11444777000161", status=active_clinic)
+    clinic_a = Clinic(
+        name="Clínica Grad-CAM A",
+        cnpj="11222333000181",
+        status=active_clinic,
+    )
+    clinic_b = Clinic(
+        name="Clínica Grad-CAM B",
+        cnpj="11444777000161",
+        status=active_clinic,
+    )
 
     doctor_a = User(
         name="Médico Grad-CAM A",
@@ -111,17 +152,6 @@ def seed_context(db_session, gradcam_path: Path):
         file_name="exame.png",
         file_mime_type="image/png",
     )
-    analysis = AIAnalysis(
-        exam=exam,
-        status=completed_ai,
-        prediction_label="abnormal",
-        prediction_class=1,
-        confidence=0.91,
-        model_name="ensemble_stacking",
-        model_version="0.1.0",
-        gradcam_path=str(gradcam_path),
-        processing_time_ms=250,
-    )
 
     db_session.add_all(
         [
@@ -139,34 +169,77 @@ def seed_context(db_session, gradcam_path: Path):
             manager_a,
             patient,
             exam,
-            analysis,
         ]
     )
-    db_session.commit()
-    return exam, analysis, doctor_a, doctor_b, manager_a
+    db_session.flush()
 
+    relative_map = (
+        Path("exams")
+        / str(exam.clinic_id)
+        / str(exam.patient_id)
+        / str(exam.id)
+        / "attribution"
+        / map_name
+    )
+
+    physical_map = (
+        data_root
+        / relative_map
+    )
+
+    if create_map:
+        physical_map.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        physical_map.write_bytes(
+            b"gradcam-academico"
+        )
+
+    analysis = AIAnalysis(
+        exam=exam,
+        status=completed_ai,
+        prediction_label="abnormal",
+        prediction_class=1,
+        confidence=0.91,
+        model_name="ensemble_stacking",
+        model_version="0.1.0",
+        gradcam_path=(
+            stored_path_override
+            if stored_path_override is not None
+            else relative_map.as_posix()
+        ),
+        processing_time_ms=250,
+    )
+
+    db_session.add(
+        analysis
+    )
+    db_session.commit()
+
+    return (
+        exam,
+        analysis,
+        doctor_a,
+        doctor_b,
+        manager_a,
+        physical_map,
+    )
 
 def test_gradcam_preview_and_download_are_scoped_private_and_audited(
     db_session,
-    isolated_ai_storage: Path,
+    isolated_attribution_storage: Path,
 ) -> None:
-    gradcam = (
-        isolated_ai_storage
-        / "gradcam"
-        / "mapa.jpg"
-    )
-    gradcam.parent.mkdir(parents=True)
-    gradcam.write_bytes(b"gradcam-academico")
-
     (
         exam,
         analysis,
         doctor_a,
         doctor_b,
         manager_a,
+        gradcam,
     ) = seed_context(
         db_session,
-        gradcam,
+        isolated_attribution_storage,
     )
 
     assert_http_error(
@@ -200,16 +273,28 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
         doctor_a,
     )
 
-    assert Path(preview_response.path) == gradcam
-    assert preview_response.media_type == "image/jpeg"
-
-    preview_disposition = preview_response.headers[
-        "content-disposition"
-    ]
-
-    assert preview_disposition.startswith("inline;")
     assert (
-        preview_response.headers["cache-control"]
+        Path(preview_response.path)
+        == gradcam
+    )
+    assert (
+        preview_response.media_type
+        == "image/jpeg"
+    )
+
+    preview_disposition = (
+        preview_response.headers[
+            "content-disposition"
+        ]
+    )
+
+    assert preview_disposition.startswith(
+        "inline;"
+    )
+    assert (
+        preview_response.headers[
+            "cache-control"
+        ]
         == "private, no-store"
     )
 
@@ -238,8 +323,13 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
         "paciente-grad-cam-sem-data.jpg"
     )
 
-    assert disposition.startswith("attachment;")
-    assert response.headers["cache-control"] == "no-store"
+    assert disposition.startswith(
+        "attachment;"
+    )
+    assert (
+        response.headers["cache-control"]
+        == "no-store"
+    )
     assert expected_name in disposition
 
     logs = (
@@ -255,44 +345,97 @@ def test_gradcam_preview_and_download_are_scoped_private_and_audited(
     assert len(logs) == 1
     assert (
         logs[0].description
-        == "Download do Mapa Grad-CAM autorizado."
+        == (
+            "Download do Mapa "
+            "Grad-CAM autorizado."
+        )
     )
     assert (
-        logs[0].new_data["artifact_type"]
+        logs[0].new_data[
+            "artifact_type"
+        ]
         == "ai_attribution_map"
     )
-    assert "gradcam_path" not in str(logs[0].new_data)
     assert (
-        logs[0].new_data["download_name"]
+        "gradcam_path"
+        not in str(
+            logs[0].new_data
+        )
+    )
+    assert (
+        logs[0].new_data[
+            "download_name"
+        ]
         == expected_name
     )
     assert (
-        logs[0].new_data["delivery_mode"]
+        logs[0].new_data[
+            "delivery_mode"
+        ]
         == "attachment"
     )
 
-
-def test_gradcam_path_outside_shared_storage_is_rejected(
+def test_gradcam_path_outside_canonical_storage_is_rejected(
     db_session,
-    isolated_ai_storage: Path,
+    isolated_attribution_storage: Path,
     tmp_path: Path,
 ) -> None:
     outside = tmp_path / "outside.jpg"
-    outside.write_bytes(b"fora")
-    exam, _, doctor_a, _, _ = seed_context(db_session, outside)
+    outside.write_bytes(
+        b"fora"
+    )
 
-    assert_http_error(403, lambda: download_exam_ai_file(db_session, exam.id, doctor_a))
+    (
+        exam,
+        _,
+        doctor_a,
+        _,
+        _,
+        _,
+    ) = seed_context(
+        db_session,
+        isolated_attribution_storage,
+        create_map=False,
+        stored_path_override=str(
+            outside
+        ),
+    )
 
+    assert_http_error(
+        403,
+        lambda: download_exam_ai_file(
+            db_session,
+            exam.id,
+            doctor_a,
+        ),
+    )
 
 def test_missing_gradcam_returns_404(
     db_session,
-    isolated_ai_storage: Path,
+    isolated_attribution_storage: Path,
 ) -> None:
-    missing = isolated_ai_storage / "gradcam" / "ausente.jpg"
-    exam, _, doctor_a, _, _ = seed_context(db_session, missing)
+    (
+        exam,
+        _,
+        doctor_a,
+        _,
+        _,
+        _,
+    ) = seed_context(
+        db_session,
+        isolated_attribution_storage,
+        map_name="ausente.jpg",
+        create_map=False,
+    )
 
-    assert_http_error(404, lambda: download_exam_ai_file(db_session, exam.id, doctor_a))
-
+    assert_http_error(
+        404,
+        lambda: download_exam_ai_file(
+            db_session,
+            exam.id,
+            doctor_a,
+        ),
+    )
 
 def test_public_schemas_do_not_expose_physical_paths() -> None:
     assert "file_path" not in ExamResponse.model_fields

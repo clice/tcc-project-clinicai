@@ -33,14 +33,10 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      CLINICAI_DATA_DIR: /app/data
+      CLINICAI_DATA_DIR: /clinicai-data
     volumes:
       - ./backend:/app
-      - ./data:/app/data
-
-      # Volumes legados preservados durante a migração.
-      - uploads_data:/app/uploads
-      - ai_storage:/app/storage:ro
+      - ./data:/clinicai-data
     ports:
       - "8000:8000"
     depends_on:
@@ -53,16 +49,9 @@ services:
       context: ./ai
     container_name: clinicai_ai
     restart: unless-stopped
-    environment:
-      CLINICAI_DATA_DIR: /app/data
     volumes:
       - ./ai:/app
       - ./ai/models:/app/models
-      - ./data:/app/data
-
-      # Volume legado preservado durante a migração.
-      - ai_storage:/app/storage
-
       - torch_cache:/root/.cache/torch
     ports:
       - "8001:8001"
@@ -89,7 +78,4 @@ services:
 
 volumes:
   postgres_data:
-  uploads_data:
-  ai_models:
-  ai_storage:
   torch_cache:

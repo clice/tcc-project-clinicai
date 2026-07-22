@@ -1,6 +1,5 @@
 """Configurações centrais do serviço de IA do ClinicAI."""
 
-import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -50,8 +49,7 @@ ACTIVE_MODEL_BY_DOMAIN = {
     "gastrointestinal": "ensemble_stacking",
 }
 
-# Mantida apenas como informação de configuração e compatibilidade interna.
-# O contrato HTTP de inferência exige exam_type explícito e não usa fallback.
+# Domínio padrão usado pelos metadados do modelo ativo.
 DEFAULT_DOMAIN = "gastrointestinal"
 
 CLASS_LABELS_BY_DOMAIN: dict[str, dict[int, str]] = {
@@ -61,54 +59,14 @@ CLASS_LABELS_BY_DOMAIN: dict[str, dict[int, str]] = {
     },
 }
 
-# Alias legado para módulos antigos. Novas inferências devem consultar o mapa
-# do domínio resolvido em CLASS_LABELS_BY_DOMAIN.
+# Atalho para as classes do domínio atualmente ativo.
 CLASS_LABELS = CLASS_LABELS_BY_DOMAIN[DEFAULT_DOMAIN]
 MODEL_VERSION_FALLBACK = "0.1.0"
 MODEL_VERSION = MODEL_VERSION_FALLBACK
 
 # =========================================================
-# ARMAZENAMENTO E LIMITES DE ENTRADA
+# LIMITES DE ENTRADA
 # =========================================================
-
-LEGACY_STORAGE_DIR = AI_ROOT_DIR / "storage"
-CONFIGURED_DATA_DIR = os.getenv(
-    "CLINICAI_DATA_DIR"
-)
-
-if CONFIGURED_DATA_DIR:
-    DATA_DIR = Path(
-        CONFIGURED_DATA_DIR
-    )
-    STORAGE_DIR = DATA_DIR
-    GRADCAM_DIR = (
-        DATA_DIR
-        / "attribution"
-    )
-    PREDICTIONS_DIR = (
-        DATA_DIR
-        / "predictions"
-    )
-    TEMP_DIR = (
-        DATA_DIR
-        / "temporary"
-    )
-else:
-    # Compatibilidade com containers criados antes da migração.
-    DATA_DIR = LEGACY_STORAGE_DIR
-    STORAGE_DIR = LEGACY_STORAGE_DIR
-    GRADCAM_DIR = (
-        LEGACY_STORAGE_DIR
-        / "gradcam"
-    )
-    PREDICTIONS_DIR = (
-        LEGACY_STORAGE_DIR
-        / "predictions"
-    )
-    TEMP_DIR = (
-        LEGACY_STORAGE_DIR
-        / "temp"
-    )
 
 MAX_INFERENCE_IMAGE_BYTES = 10 * 1024 * 1024
 MAX_INFERENCE_IMAGE_WIDTH = 12_000

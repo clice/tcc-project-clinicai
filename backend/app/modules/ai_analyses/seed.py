@@ -9,8 +9,11 @@ from app.common.constants import (
     StatusScope,
 )
 from app.modules.academic_demo_assets import (
-    bundled_gradcam_path,
+    install_gradcam_asset,
     get_demo_exam_definitions,
+)
+from app.modules.ai_analyses.file_storage import (
+    serialize_gradcam_path,
 )
 from app.modules.ai_analyses.model import AIAnalysis
 from app.modules.exams.model import Exam
@@ -63,8 +66,9 @@ def get_or_create_ai_analysis(
 
     analysis = definition["analysis"]
     source = definition["source_asset"]
-    gradcam_path = bundled_gradcam_path(
-        analysis["gradcam_asset"]
+    gradcam_path = install_gradcam_asset(
+        exam,
+        analysis["gradcam_asset"],
     )
 
     attribution_payload = {
@@ -82,7 +86,11 @@ def get_or_create_ai_analysis(
     ai_analysis.confidence = float(analysis["confidence"])
     ai_analysis.model_name = str(analysis["model_name"])
     ai_analysis.model_version = str(analysis["model_version"])
-    ai_analysis.gradcam_path = str(gradcam_path)
+    ai_analysis.gradcam_path = (
+        serialize_gradcam_path(
+            gradcam_path
+        )
+    )
     ai_analysis.processing_time_ms = int(analysis["processing_time_ms"])
     ai_analysis.ai_notes = (
         "Predição real do Ensemble Stacking sobre ativo acadêmico de "

@@ -153,7 +153,7 @@ A descrição completa está em [`../docs/access-control-and-security.md`](../do
 
 ## Armazenamento de arquivos
 
-As imagens enviadas são persistidas em `data/exams/`, por meio do diretório operacional montado como `/app/data` no container. O volume `uploads_data`, montado como `/app/uploads`, permanece somente para compatibilidade com o armazenamento legado. Os ativos demonstrativos versionados permanecem em `demo_assets/`. O acesso a imagens de exame e mapas de atribuição ocorre por meio da API, sujeito às regras de autenticação e escopo.
+As imagens originais e os mapas de atribuição são persistidos exclusivamente em `data/exams/{clinic_id}/{patient_id}/{exam_id}/`, nas subpastas `original/` e `attribution/`. No container do backend, a raiz operacional é montada em `/clinicai-data`. O serviço de IA não possui acesso a essa raiz: ele retorna o mapa codificado em Base64, acompanhado do tipo MIME e do hash SHA-256, e o backend realiza sua validação e persistência. Os ativos demonstrativos versionados permanecem em `demo_assets/` como fontes acadêmicas, enquanto suas cópias operacionais são instaladas na hierarquia canônica durante o seed. O acesso aos arquivos ocorre somente por rotas autenticadas da API, sujeito às regras de escopo.
 
 O backend valida o vínculo do arquivo com o exame, a existência do arquivo e a resolução segura de seu caminho antes de disponibilizá-lo.
 

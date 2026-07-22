@@ -71,11 +71,11 @@ docker compose ps
 
 ## Portas e volumes
 
-| Recurso | Porta local padrão | Volume persistente |
+| Recurso | Porta local padrão | Armazenamento ou montagem |
 |---|---:|---|
 | PostgreSQL | 5432 | `postgres_data` |
-| Backend | 8000 | `uploads_data` |
-| Serviço de IA | 8001 | `torch_cache`, `ai_storage` |
+| Backend | 8000 | `./data:/clinicai-data` |
+| Serviço de IA | 8001 | `torch_cache` |
 | Frontend | 3000 | — |
 
 O código-fonte é montado nos containers para recarga automática em desenvolvimento. A
@@ -97,9 +97,12 @@ sendo 30 exames por clínica. Ela cobre os estados
 todas com mapas Grad-CAM. Os ativos versionados ficam em `backend/demo_assets/`;
 origem, licença, hashes, vínculos e resultados estão em `manifest.json`.
 
-As imagens de exame são copiadas para `uploads_data`. Os Grad-CAMs acadêmicos permanecem
-no diretório versionado do backend e continuam sujeitos à autenticação, ao escopo de clínica
-e à resolução segura de caminhos.
+As imagens originais e os mapas de atribuição são copiados para
+`data/exams/{clinic_id}/{patient_id}/{exam_id}/`, respectivamente nas subpastas
+`original/` e `attribution/`. O diretório `backend/demo_assets/` permanece
+versionado como fonte da massa acadêmica, mas não é utilizado diretamente para
+servir os arquivos. O serviço de IA transfere o mapa em memória, enquanto o
+backend valida o conteúdo, o tipo MIME e o SHA-256 antes da persistência.
 
 Os seeds são idempotentes e não devem sobrescrever usuários, registros existentes ou
 customizações administrativas. Alterar o modo não remove dados já persistidos; a validação
