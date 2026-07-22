@@ -7,6 +7,7 @@
  */
 
 import React, { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 
 import { CCloseButton, CSidebar, CSidebarBrand, CSidebarHeader } from '@coreui/react'
@@ -77,7 +78,13 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="clinicai-sidebar-header">
-        <CSidebarBrand className="clinicai-sidebar-brand" to="/dashboard">
+        <CSidebarBrand
+          as={Link}
+          className="clinicai-sidebar-brand"
+          to="/dashboard"
+          aria-label="Ir para o Dashboard"
+          title="Dashboard"
+        >
           <span className="sidebar-brand-full clinicai-brand-full">
             <CIcon customClassName="clinicai-brand-icon" icon={clinicaiSygnet} height={42} />
             <span className="clinicai-brand-name">

@@ -38,7 +38,12 @@ import ExamAiResultCard from 'src/views/exams/ExamAiResultCard'
 import ExamHistoryCard from 'src/views/exams/ExamHistoryCard'
 import ExamSummaryHeader from 'src/views/exams/ExamSummaryHeader'
 
-import { examStatusDisplayLabels, examTypeOptions, statusColors } from 'src/utils/constants'
+import {
+  examStatusDisplayLabels,
+  examTypeOptions,
+  predictionLabels,
+  statusColors,
+} from 'src/utils/constants'
 import {
   buildExamImagesPackageDownloadName,
   buildOriginalDownloadName,
@@ -210,6 +215,13 @@ const ExamForm = ({ mode = 'create' }) => {
     form.status_name === 'awaiting_review'
 
   const aiStatus = resolveAiStatus(form, aiAnalysis)
+
+  const predictionBadgeColor = aiAnalysis?.prediction_class === 1 ? 'danger' : 'success'
+  const predictionBadgeClass =
+    aiAnalysis?.prediction_class === 1 ? undefined : 'clinicai-success-badge'
+  const predictionLabel =
+    predictionLabels[aiAnalysis?.prediction_label] || aiAnalysis?.prediction_label || '-'
+
   const examListPath =
     !isCreateMode && examListFilterStatuses.has(form.status_name)
       ? `/exams?status=${form.status_name}`
@@ -991,13 +1003,20 @@ const ExamForm = ({ mode = 'create' }) => {
         </div>
 
         <div className="mb-3">
-          <CFormLabel>Em relação à classificação automatizada</CFormLabel>
+          <CFormLabel>Em relação à classificação automatizada sugerida</CFormLabel>
 
           <CFormCheck
             type="radio"
             name="has_discrepancy"
             id="discrepancy-false"
-            label="Confirmo o resultado sugerido pela IA"
+            label={
+              <>
+                <strong>CONCORDO</strong> com a classificação{' '}
+                <CBadge color={predictionBadgeColor} className={predictionBadgeClass}>
+                  {predictionLabel}
+                </CBadge>
+              </>
+            }
             checked={!review.has_discrepancy}
             onChange={() =>
               setReview((current) => ({
@@ -1011,7 +1030,14 @@ const ExamForm = ({ mode = 'create' }) => {
             type="radio"
             name="has_discrepancy"
             id="discrepancy-true"
-            label="Identifiquei divergência em relação ao resultado da IA"
+            label={
+              <>
+                <strong>DISCORDO</strong> da classificação{' '}
+                <CBadge color={predictionBadgeColor} className={predictionBadgeClass}>
+                  {predictionLabel}
+                </CBadge>
+              </>
+            }
             checked={review.has_discrepancy}
             onChange={() =>
               setReview((current) => ({
