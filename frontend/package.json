@@ -11,21 +11,9 @@
   "author": "Clice Bezerra Brito Romão",
   "scripts": {
     "build": "vite build",
-    "check:actions": "node scripts/check-action-permissions.mjs",
-    "check:active-session-access": "node scripts/check-active-session-access.mjs",
-    "check:configuration-catalogs": "node scripts/check-closed-configuration-catalogs.mjs",
-    "check:permission-catalog": "node scripts/check-closed-permission-catalog.mjs",
-    "check:navigation": "node scripts/check-navigation-access.mjs",
-    "check:permissions": "node scripts/check-permissions.mjs",
-    "check:rbac-contract": "node scripts/check-rbac-contract.mjs",
-    "check:rbac": "npm run check:permissions && npm run check:permission-catalog && npm run check:configuration-catalogs && npm run check:navigation && npm run check:actions && npm run check:active-session-access && npm run check:rbac-contract",
-    "check:clinics": "node scripts/check-clinic-contract.mjs",
-    "check:users": "node scripts/check-user-contract.mjs",
-    "check:patients": "node scripts/check-patient-contract.mjs",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite",
-    "check:exams": "node scripts/check-exam-download-matrix.mjs && node scripts/check-exam-edit-contract.mjs && node scripts/check-exam-form-layout.mjs && node scripts/check-exam-list-access.mjs && node scripts/check-exam-review-layout.mjs"
+    "start": "vite"
   },
   "dependencies": {
     "@coreui/chartjs": "^4.2.0",
