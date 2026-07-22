@@ -184,7 +184,7 @@ const ClinicsList = () => {
         )}
       </div>
 
-      <CCard className="mb-4">
+      <CCard className="clinicai-card mb-4">
         <CCardBody>
           {isLoading ? (
             <div className="d-flex justify-content-center py-5">

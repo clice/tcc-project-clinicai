@@ -181,8 +181,8 @@ const ProfilePage = () => {
         </p>
       </div>
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Dados Cadastrais</strong>
         </CCardHeader>
 
@@ -243,8 +243,8 @@ const ProfilePage = () => {
         <ClinicProfileCard canUpdate={hasPermission(user, PERMISSIONS.CLINICS_UPDATE_PROFILE)} />
       )}
 
-      <CCard className="mb-4">
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Alterar Senha</strong>
         </CCardHeader>
 

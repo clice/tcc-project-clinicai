@@ -125,8 +125,8 @@ const PermissionForm = () => {
         antes de selecionar “Salvar”.
       </div>
 
-      <CCard>
-        <CCardHeader>
+      <CCard className="clinicai-card mb-4">
+        <CCardHeader className="clinicai-card-header">
           <strong>Dados da Permissão</strong>
         </CCardHeader>
 
@@ -174,7 +174,7 @@ const PermissionForm = () => {
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </CButton>
 
-              <CButton color="secondary" variant="outline" as={Link} to="/permissions">
+              <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/permissions">
                 Cancelar
               </CButton>
             </div>

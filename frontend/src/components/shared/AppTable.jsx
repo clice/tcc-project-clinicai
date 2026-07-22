@@ -88,7 +88,7 @@ export default function AppTable({
         <CCol md={6}>
           {searchable && (
             <CInputGroup>
-              <CInputGroupText>
+              <CInputGroupText className="clinicai-card-header">
                 <CIcon icon={cilSearch} />
               </CInputGroupText>
               <CFormInput
@@ -116,7 +116,7 @@ export default function AppTable({
       </CRow>
 
       <div className="table-responsive">
-        <CTable hover bordered align="middle">
+        <CTable className="clinicai-table clinicai-card" hover bordered align="middle">
           <CTableHead color="light">
             {table.getHeaderGroups().map((headerGroup) => (
               <React.Fragment key={headerGroup.id}>
@@ -127,7 +127,12 @@ export default function AppTable({
                     return (
                       <CTableHeaderCell
                         key={header.id}
-                        style={{ width: header.column.columnDef.meta?.width }}
+                        style={{
+                          width: header.column.columnDef.meta?.width,
+                          backgroundColor: 'var(--clinicai-brand-soft)',
+                          borderColor: 'rgb(25 135 84 / 28%)',
+                          color: 'var(--clinicai-brand-active)',
+                        }}
                       >
                         {header.isPlaceholder ? null : (
                           <div
@@ -160,7 +165,15 @@ export default function AppTable({
                 {columnFiltersEnabled && (
                   <CTableRow>
                     {headerGroup.headers.map((header) => (
-                      <CTableHeaderCell key={`${header.id}-filter`}>
+                      <CTableHeaderCell
+                        key={`${header.id}-filter`}
+                        style={{
+                          width: header.column.columnDef.meta?.width,
+                          backgroundColor: 'var(--clinicai-brand-soft)',
+                          borderColor: 'rgb(25 135 84 / 28%)',
+                          color: 'var(--clinicai-brand-active)',
+                        }}
+                      >
                         {header.column.getCanFilter() ? (
                           <DefaultColumnFilter column={header.column} />
                         ) : null}
@@ -197,7 +210,7 @@ export default function AppTable({
         </CTable>
       </div>
 
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 clinicai-page-title mt-3">
         <div>
           Página{' '}
           <strong>
@@ -205,7 +218,7 @@ export default function AppTable({
           </strong>
         </div>
 
-        <CButtonGroup>
+        <CButtonGroup className="clinicai-table-pagination">
           <CButton
             color="secondary"
             variant="outline"

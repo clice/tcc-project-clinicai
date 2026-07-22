@@ -88,7 +88,7 @@ const Login = () => {
                     {error && <CAlert color="danger">{error}</CAlert>}
 
                     <CInputGroup className="mb-3">
-                      <CInputGroupText>
+                      <CInputGroupText className="clinicai-card-header">
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
 
@@ -103,7 +103,7 @@ const Login = () => {
                     </CInputGroup>
 
                     <CInputGroup className="mb-4">
-                      <CInputGroupText>
+                      <CInputGroupText className="clinicai-card-header">
                         <CIcon icon={cilLockLocked} />
                       </CInputGroupText>
 

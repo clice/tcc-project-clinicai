@@ -28,8 +28,8 @@ const AdminAiMetrics = ({ metrics }) => {
   ]
 
   return (
-    <CCard className="mb-4">
-      <CCardHeader>
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header">
         <strong>Indicadores Técnicos da IA</strong>
       </CCardHeader>
 

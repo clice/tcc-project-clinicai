@@ -1118,8 +1118,8 @@ const ExamForm = ({ mode = 'create' }) => {
   ) : null
 
   const examDataCard = (
-    <CCard className="mb-4">
-      <CCardHeader>
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header">
         <strong>{isCreateMode ? 'Dados Cadastrais do Exame' : 'Editar Dados do Exame'}</strong>
       </CCardHeader>
 
@@ -1328,7 +1328,7 @@ const ExamForm = ({ mode = 'create' }) => {
               {isSaving ? 'Salvando...' : 'Salvar'}
             </CButton>
 
-            <CButton color="secondary" variant="outline" as={Link} to="/exams">
+            <CButton className="clinicai-modal-cancel-action" variant="outline" as={Link} to="/exams">
               Cancelar
             </CButton>
           </div>
@@ -1370,16 +1370,16 @@ const ExamForm = ({ mode = 'create' }) => {
   )
 
   const examDataViewCard = (
-    <CCard>
-      <CCardHeader>{examSummaryHeader}</CCardHeader>
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header">{examSummaryHeader}</CCardHeader>
 
       <CCardBody>{examDataViewContent}</CCardBody>
     </CCard>
   )
 
   const pendingExamCard = (
-    <CCard className="mb-4">
-      <CCardHeader>{examSummaryHeader}</CCardHeader>
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header">{examSummaryHeader}</CCardHeader>
 
       <CCardBody>
         <CRow className="g-4 align-items-start">

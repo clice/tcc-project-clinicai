@@ -87,8 +87,8 @@ const ExamHistoryCard = ({ examId, refreshKey = 0, collapsible = false, defaultO
   }, [examId, isContentOpen, refreshKey])
 
   return (
-    <CCard className="mb-4">
-      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
+    <CCard className="clinicai-card mb-4">
+      <CCardHeader className="clinicai-card-header d-flex justify-content-between align-items-center gap-2">
         <strong>Histórico do Exame</strong>
 
         {collapsible && (

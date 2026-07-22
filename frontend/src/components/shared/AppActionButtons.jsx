@@ -139,7 +139,7 @@ const AppActionButtons = ({
         {showView && (
           <CButton
             color={viewColor}
-            className="rounded-pill"
+            className="clinicai-action-button rounded-pill"
             as={Link}
             to={viewTo}
             title={viewTitle}
@@ -150,7 +150,7 @@ const AppActionButtons = ({
         )}
 
         {showEdit && (
-          <CButton color={editColor} className="rounded-pill" as={Link} to={editTo} title="Editar">
+          <CButton color={editColor} className="clinicai-action-button rounded-pill" as={Link} to={editTo} title="Editar">
             <CIcon
               icon={editIcon}
               style={
@@ -170,7 +170,7 @@ const AppActionButtons = ({
         {showUpload && !uploadTo && (
           <CButton
             color="info"
-            className="rounded-pill text-white"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title="Upload"
             onClick={onUpload}
@@ -182,7 +182,7 @@ const AppActionButtons = ({
         {showDownload && (
           <CButton
             color="primary"
-            className="clinicai-btn rounded-pill"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title={downloadTitle}
             onClick={onDownload}
@@ -194,7 +194,7 @@ const AppActionButtons = ({
         {showInactivate && (
           <CButton
             color="warning"
-            className="rounded-pill"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title="Inativar"
             onClick={() => setConfirmVisible(true)}
@@ -206,7 +206,7 @@ const AppActionButtons = ({
         {showActivate && (
           <CButton
             color="success"
-            className="rounded-pill text-white"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title="Ativar"
             onClick={() => setConfirmVisible(true)}
@@ -218,7 +218,7 @@ const AppActionButtons = ({
         {showCancel && (
           <CButton
             color="secondary"
-            className="rounded-pill"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title="Cancelar exame"
             aria-label="Cancelar exame"
@@ -231,7 +231,7 @@ const AppActionButtons = ({
         {showRestore && (
           <CButton
             color="info"
-            className="rounded-pill"
+            className="clinicai-action-button rounded-pill"
             type="button"
             title="Retomar exame"
             aria-label="Retomar exame"
@@ -243,8 +243,8 @@ const AppActionButtons = ({
       </CButtonGroup>
 
       {(showInactivate || showActivate) && (
-        <CModal visible={confirmVisible} onClose={handleCloseModal}>
-          <CModalHeader>
+        <CModal className="clinicai-card" visible={confirmVisible} onClose={handleCloseModal}>
+          <CModalHeader className="clinicai-card-header">
             <CModalTitle>
               {actionType === 'inactivate' ? 'Inativar Registro' : 'Ativar Registro'}
             </CModalTitle>
@@ -276,7 +276,8 @@ const AppActionButtons = ({
             </CButton>
 
             <CButton
-              color={actionType === 'inactivate' ? 'warning' : 'success'}
+              color="primary"
+              className="clinicai-modal-primary-action"
               onClick={handleConfirm}
               disabled={isSubmitting}
             >
@@ -329,8 +330,8 @@ const AppActionButtons = ({
             </CButton>
 
             <CButton
-              color={examActionType === 'cancel' ? 'secondary' : 'info'}
-              className={examActionType === 'restore' ? 'text-white' : undefined}
+              color="primary"
+              className="clinicai-modal-primary-action"
               onClick={handleExamConfirm}
               disabled={isSubmitting}
             >
