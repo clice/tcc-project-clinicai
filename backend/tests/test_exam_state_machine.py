@@ -1,6 +1,7 @@
 """CHK-09 — tabela de transições, repetição, concorrência e revisão única."""
 
 from __future__ import annotations
+from datetime import date
 
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +16,7 @@ from app.modules.ai_analyses.schema import AIAnalysisCreate
 from app.modules.ai_analyses.service import create_ai_analysis
 from app.modules.audit_logs.model import AuditLog
 from app.modules.clinics.model import Clinic
+from app.modules.exams import file_storage
 from app.modules.exams.model import Exam
 from app.modules.exams.schema import ExamMedicalReview, ExamUpdate
 from app.modules.exams.service import (
@@ -108,6 +110,9 @@ def _seed_exam_context(db_session, *, status_name: str = "pending"):
         clinic=clinic,
         doctor=doctor,
         status=active_patient,
+        birth_date=date(1992, 9, 9),
+        sex="not_informed",
+        phone="88999991004",
     )
     db_session.add_all(
         [
@@ -196,13 +201,24 @@ def test_analysis_claim_rejects_duplicate_request(db_session) -> None:
 
 def test_cancel_and_restore_are_idempotent(db_session, tmp_path, monkeypatch) -> None:
     context = _seed_exam_context(db_session)
-    upload_root = tmp_path / "exams"
-    upload_root.mkdir()
-    image = upload_root / "exam.jpg"
+    data_root = tmp_path / "data"
+    upload_root = data_root / "exams"
+    monkeypatch.setattr(file_storage, "DATA_DIR", data_root)
+    monkeypatch.setattr(file_storage, "UPLOAD_DIR", upload_root)
+
+    image = (
+        upload_root
+        / str(context.exam.clinic_id)
+        / str(context.exam.patient_id)
+        / str(context.exam.id)
+        / "original"
+        / "exam.jpg"
+    )
+    image.parent.mkdir(parents=True)
     image.write_bytes(b"fake-image")
-    context.exam.file_path = str(image)
+
+    context.exam.file_path = file_storage.serialize_exam_file_path(image)
     db_session.commit()
-    monkeypatch.setattr("app.modules.exams.file_storage.UPLOAD_DIR", upload_root)
 
     first_cancel = cancel_exam(db_session, context.exam.id, context.doctor)
     second_cancel = cancel_exam(db_session, context.exam.id, context.doctor)
@@ -302,13 +318,24 @@ def test_final_exam_metadata_cannot_be_edited(db_session) -> None:
 
 def test_status_changes_are_audited_once(db_session, tmp_path, monkeypatch) -> None:
     context = _seed_exam_context(db_session)
-    upload_root = tmp_path / "exams"
-    upload_root.mkdir()
-    image = upload_root / "exam.jpg"
+    data_root = tmp_path / "data"
+    upload_root = data_root / "exams"
+    monkeypatch.setattr(file_storage, "DATA_DIR", data_root)
+    monkeypatch.setattr(file_storage, "UPLOAD_DIR", upload_root)
+
+    image = (
+        upload_root
+        / str(context.exam.clinic_id)
+        / str(context.exam.patient_id)
+        / str(context.exam.id)
+        / "original"
+        / "exam.jpg"
+    )
+    image.parent.mkdir(parents=True)
     image.write_bytes(b"fake-image")
-    context.exam.file_path = str(image)
+
+    context.exam.file_path = file_storage.serialize_exam_file_path(image)
     db_session.commit()
-    monkeypatch.setattr("app.modules.exams.file_storage.UPLOAD_DIR", upload_root)
 
     cancel_exam(db_session, context.exam.id, context.doctor)
     restore_exam(db_session, context.exam.id, context.doctor)

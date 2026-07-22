@@ -30,9 +30,9 @@ class Patient(Base):
     # Campos da tabela
     name = Column(String(150), nullable=False, index=True)
     cpf = Column(String(11), nullable=False, index=True)
-    birth_date = Column(Date, nullable=True)
-    sex = Column(String(20), nullable=True)
-    phone = Column(String(20), nullable=True)
+    birth_date = Column(Date, nullable=False)
+    sex = Column(String(20), nullable=False)
+    phone = Column(String(20), nullable=False)
     email = Column(String(150), nullable=True)
 
     zip_code = Column(String(8), nullable=True)

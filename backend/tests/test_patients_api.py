@@ -208,6 +208,8 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         name="Paciente A1",
         cpf="52998224725",
         birth_date=date(1990, 1, 10),
+        sex="female",
+        phone="88999990001",
     )
     patient_a2 = Patient(
         clinic=clinic_a,
@@ -216,6 +218,8 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         name="Paciente A2",
         cpf="16899535009",
         birth_date=date(1985, 5, 20),
+        sex="male",
+        phone="88999990002",
     )
     patient_b = Patient(
         clinic=clinic_b,
@@ -224,6 +228,8 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         name="Paciente B",
         cpf="52998224725",
         birth_date=date(1975, 8, 5),
+        sex="not_informed",
+        phone="88999990003",
     )
     patient_with_exam = Patient(
         clinic=clinic_a,
@@ -232,6 +238,8 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         name="Paciente com Exame",
         cpf="12345678909",
         birth_date=date(2000, 2, 2),
+        sex="female",
+        phone="88999990004",
     )
     inactive_valid = Patient(
         clinic=clinic_a,
@@ -239,6 +247,9 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         status=inactive_patient,
         name="Paciente Inativo Válido",
         cpf="98765432100",
+        birth_date=date(1965, 3, 15),
+        sex="male",
+        phone="88999990005",
     )
     inactive_bad_doctor = Patient(
         clinic=clinic_a,
@@ -246,6 +257,9 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         status=inactive_patient,
         name="Paciente Médico Inativo",
         cpf="39053344705",
+        birth_date=date(1970, 7, 21),
+        sex="not_informed",
+        phone="88999990006",
     )
     inactive_bad_clinic = Patient(
         clinic=clinic_inactive,
@@ -253,6 +267,9 @@ def _seed_patients(db: Session) -> tuple[PatientData, dict[str, dict[str, str]]]
         status=inactive_patient,
         name="Paciente Clínica Inativa",
         cpf="93541134780",
+        birth_date=date(1980, 11, 30),
+        sex="female",
+        phone="88999990007",
     )
     db.add_all([
         patient_a1,
@@ -693,6 +710,27 @@ def test_status_is_dedicated_idempotent_and_revalidates_links(patient_api_contex
     ).status_code == 200
 
 
+def test_required_demographics_are_required_on_create(
+    patient_api_context: PatientApiContext,
+) -> None:
+    ctx = patient_api_context
+
+    for field in ("birth_date", "sex", "phone"):
+        payload = _patient_payload(
+            clinic_id=ctx.data.clinic_a_id,
+            doctor_id=ctx.data.doctor_a_id,
+            cpf="86288366757",
+        )
+        payload.pop(field)
+
+        response = ctx.client.post(
+            "/patients/",
+            json=payload,
+            headers=ctx.admin_headers,
+        )
+        assert response.status_code == 422, (field, response.text)
+
+
 def test_required_fields_cannot_be_cleared(patient_api_context: PatientApiContext) -> None:
     ctx = patient_api_context
 
@@ -703,6 +741,14 @@ def test_required_fields_cannot_be_cleared(patient_api_context: PatientApiContex
             headers=ctx.manager_a_headers,
         )
         assert response.status_code == 400, (field, response.text)
+
+    for field in ("birth_date", "sex", "phone"):
+        response = ctx.client.patch(
+            f"/patients/{ctx.data.patient_a1_id}",
+            json={field: None},
+            headers=ctx.manager_a_headers,
+        )
+        assert response.status_code == 422, (field, response.text)
 
 
 def test_doctor_context_cannot_change_while_active_patients_exist(

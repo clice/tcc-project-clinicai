@@ -1,6 +1,7 @@
 """CHK-09 — testes de concorrência real usando PostgreSQL."""
 
 from __future__ import annotations
+from datetime import date
 
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -199,6 +200,9 @@ def _seed_exam(
             clinic=clinic,
             doctor=doctor,
             status=active_patient,
+            birth_date=date(1988, 8, 8),
+            sex="female",
+            phone="88999991005",
         )
 
         exam = Exam(

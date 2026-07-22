@@ -1,6 +1,7 @@
 """CHK-06 — testes de API e regras de negócio do módulo de clínicas."""
 
 from __future__ import annotations
+from datetime import date
 
 from dataclasses import dataclass
 from typing import Iterator
@@ -188,6 +189,9 @@ def _seed_clinic_data(db: Session) -> tuple[ClinicData, dict[str, str], dict[str
         clinic=clinic_a,
         doctor=doctor_a,
         status=active_patient,
+        birth_date=date(1985, 5, 20),
+        sex="female",
+        phone="88999991002",
     )
     db.add(patient)
     db.flush()

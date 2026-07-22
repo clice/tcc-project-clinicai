@@ -1,6 +1,7 @@
 """CHK-11 — cobertura, privacidade e atomicidade dos logs de auditoria."""
 
 from __future__ import annotations
+from datetime import date
 
 import json
 import struct
@@ -185,6 +186,9 @@ def _seed_context(
         clinic=clinic,
         doctor=doctor,
         status=statuses[("active", "patient")],
+        birth_date=date(1990, 1, 15),
+        sex="not_informed",
+        phone="88999991001",
     )
     exam = Exam(
         clinic=clinic,
@@ -304,7 +308,9 @@ def test_exam_creation_upload_and_download_have_distinct_safe_logs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     context = _seed_context(db_session)
-    upload_root = tmp_path / "uploads" / "exams"
+    data_root = tmp_path / "uploads"
+    upload_root = data_root / "exams"
+    monkeypatch.setattr(file_storage, "DATA_DIR", data_root)
     monkeypatch.setattr(file_storage, "UPLOAD_DIR", upload_root)
 
     created = create_exam(

@@ -1,6 +1,7 @@
 """CHK-10 — upload, armazenamento seguro, retenção e download por escopo."""
 
 from __future__ import annotations
+from datetime import date
 
 import base64
 import os
@@ -103,9 +104,11 @@ def assert_http_error(expected_status: int, call) -> HTTPException:
 
 @pytest.fixture
 def isolated_upload_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    root = tmp_path / "uploads" / "exams"
-    monkeypatch.setattr(file_storage, "UPLOAD_DIR", root)
-    return root
+    data_root = tmp_path / "uploads"
+    upload_root = data_root / "exams"
+    monkeypatch.setattr(file_storage, "DATA_DIR", data_root)
+    monkeypatch.setattr(file_storage, "UPLOAD_DIR", upload_root)
+    return upload_root
 
 
 def test_valid_png_and_jpeg_are_identified_from_real_bytes() -> None:
@@ -197,9 +200,9 @@ def test_original_name_never_controls_physical_path_and_modes_are_restricted(
     assert stored.name != Path(original_name).name
     assert stored.name.endswith(".png")
     assert len(stored.stem) == 32
-    assert stored.parent == isolated_upload_root / "7" / "11" / "13"
+    assert stored.parent == isolated_upload_root / "7" / "11" / "13" / "original"
     assert stat.S_IMODE(stored.stat().st_mode) == file_storage.FILE_MODE
-    for directory in (isolated_upload_root, *stored.parents[:3]):
+    for directory in (isolated_upload_root, *stored.parents[:4]):
         assert stat.S_IMODE(directory.stat().st_mode) == file_storage.DIRECTORY_MODE
 
 
@@ -251,7 +254,12 @@ def test_safe_deletion_never_removes_external_file_and_cleans_empty_folders(
 
     assert delete_exam_file_safely(str(external)) is False
     assert external.exists()
-    assert delete_exam_file_safely(str(stored)) is True
+    assert (
+        delete_exam_file_safely(
+            file_storage.serialize_exam_file_path(stored)
+        )
+        is True
+    )
     assert not stored.exists()
     assert not exam_dir.exists()
 
@@ -281,6 +289,9 @@ def _seed_download_context(db_session, physical_file: Path):
         clinic=clinic_a,
         doctor=doctor_a,
         status=active_patient,
+        birth_date=date(1978, 3, 12),
+        sex="male",
+        phone="88999991003",
     )
     manager_a = User(
         name="Gestor A",
@@ -307,7 +318,7 @@ def _seed_download_context(db_session, physical_file: Path):
         status=pending,
         exam_type="colonoscopy",
         description="Exame protegido",
-        file_path=str(physical_file),
+        file_path=file_storage.serialize_exam_file_path(physical_file),
         file_name=physical_file.name,
         file_mime_type="image/png",
     )
@@ -337,7 +348,14 @@ def test_download_is_scoped_to_clinic_and_audited(
     db_session,
     isolated_upload_root: Path,
 ) -> None:
-    physical_file = isolated_upload_root / "1" / "1" / "1" / "arquivo.png"
+    physical_file = (
+        isolated_upload_root
+        / "1"
+        / "1"
+        / "1"
+        / "original"
+        / "arquivo.png"
+    )
     physical_file.parent.mkdir(parents=True)
     physical_file.write_bytes(make_png())
     exam, doctor, manager_a, manager_b = _seed_download_context(
@@ -416,7 +434,14 @@ def test_cancel_retains_file_and_replace_deletes_only_old_file(
     db_session,
     isolated_upload_root: Path,
 ) -> None:
-    old_file = isolated_upload_root / "1" / "1" / "1" / "antigo.png"
+    old_file = (
+        isolated_upload_root
+        / "1"
+        / "1"
+        / "1"
+        / "original"
+        / "antigo.png"
+    )
     old_file.parent.mkdir(parents=True)
     old_file.write_bytes(make_png())
     exam, doctor, manager, _ = _seed_download_context(

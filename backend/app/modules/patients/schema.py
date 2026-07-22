@@ -31,11 +31,11 @@ class PatientBase(StrictRequestModel):
     clinic_id: int
     doctor_id: int
 
-    name: str = Field(..., min_length=3, max_length=180)
+    name: str = Field(..., min_length=3, max_length=150)
     cpf: str = Field(..., min_length=11, max_length=14)
-    birth_date: date | None = None
-    sex: PatientSex | None = None
-    phone: str | None = Field(default=None, max_length=20)
+    birth_date: date
+    sex: PatientSex
+    phone: str = Field(..., min_length=10, max_length=20)
     email: EmailStr | None = None
 
     zip_code: str | None = Field(default=None, max_length=10)
@@ -81,8 +81,13 @@ class PatientBase(StrictRequestModel):
 
     @field_validator("phone")
     @classmethod
-    def normalize_phone_field(cls, value: str | None) -> str | None:
-        return normalize_phone(value)
+    def normalize_phone_field(cls, value: str) -> str:
+        normalized = normalize_phone(value)
+
+        if normalized is None:
+            raise ValueError("Telefone ou celular do paciente é obrigatório.")
+
+        return normalized
 
     @field_validator("email")
     @classmethod
@@ -91,8 +96,13 @@ class PatientBase(StrictRequestModel):
 
     @field_validator("birth_date")
     @classmethod
-    def validate_birth_date_field(cls, value: date | None) -> date | None:
-        return validate_birth_date(value)
+    def validate_birth_date_field(cls, value: date) -> date:
+        validated = validate_birth_date(value)
+
+        if validated is None:
+            raise ValueError("Data de nascimento do paciente é obrigatória.")
+
+        return validated
 
 
 class PatientCreate(PatientBase):
@@ -116,11 +126,11 @@ class PatientUpdate(StrictRequestModel):
     clinic_id: int | None = None
     doctor_id: int | None = None
 
-    name: str | None = Field(default=None, min_length=3, max_length=180)
+    name: str | None = Field(default=None, min_length=3, max_length=150)
     cpf: str | None = Field(default=None, min_length=11, max_length=14)
     birth_date: date | None = None
     sex: PatientSex | None = None
-    phone: str | None = Field(default=None, max_length=20)
+    phone: str | None = Field(default=None, min_length=10, max_length=20)
     email: EmailStr | None = None
 
     zip_code: str | None = Field(default=None, max_length=10)
@@ -166,7 +176,18 @@ class PatientUpdate(StrictRequestModel):
     @field_validator("birth_date")
     @classmethod
     def validate_birth_date_field(cls, value: date | None) -> date | None:
+        if value is None:
+            raise ValueError("Data de nascimento do paciente não pode ser removida.")
+
         return validate_birth_date(value)
+
+    @field_validator("sex")
+    @classmethod
+    def validate_sex_field(cls, value: PatientSex | None) -> PatientSex | None:
+        if value is None:
+            raise ValueError("Sexo do paciente não pode ser removido.")
+
+        return value
 
     @field_validator("zip_code")
     @classmethod
@@ -176,7 +197,15 @@ class PatientUpdate(StrictRequestModel):
     @field_validator("phone")
     @classmethod
     def normalize_phone_field(cls, value: str | None) -> str | None:
-        return normalize_phone(value)
+        if value is None:
+            raise ValueError("Telefone ou celular do paciente não pode ser removido.")
+
+        normalized = normalize_phone(value)
+
+        if normalized is None:
+            raise ValueError("Telefone ou celular do paciente não pode ser removido.")
+
+        return normalized
 
     @field_validator("email")
     @classmethod
@@ -203,9 +232,9 @@ class PatientResponse(BaseModel):
 
     name: str
     cpf: str
-    birth_date: date | None = None
-    sex: str | None = None
-    phone: str | None = None
+    birth_date: date
+    sex: str
+    phone: str
     email: EmailStr | None = None
 
     zip_code: str | None = None

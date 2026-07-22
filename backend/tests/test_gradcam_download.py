@@ -1,4 +1,5 @@
 """Download autenticado do Grad-CAM e ausência de caminhos físicos nas APIs."""
+from datetime import date
 
 from pathlib import Path
 
@@ -141,6 +142,9 @@ def seed_context(
         clinic=clinic_a,
         doctor=doctor_a,
         status=active_patient,
+        birth_date=date(1995, 4, 14),
+        sex="male",
+        phone="88999991006",
     )
     exam = Exam(
         clinic=clinic_a,
