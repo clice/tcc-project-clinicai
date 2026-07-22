@@ -35,7 +35,7 @@ import { examService } from 'src/services/examService'
 import { statusColors } from 'src/utils/constants'
 import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatPhoneBR, onlyNumbers } from 'src/utils/formatters'
-import { getUserRole, ROLES } from 'src/utils/permissions'
+import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
 const emptyUser = {
   name: '',
@@ -86,6 +86,7 @@ const UserForm = ({ mode = 'create' }) => {
   const { user: currentUser } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
   const isClinicManager = getUserRole(currentUser) === ROLES.CLINIC_MANAGER
+  const canCreatePatient = hasPermission(currentUser, PERMISSIONS.PATIENTS_CREATE)
 
   const [form, setForm] = useState(emptyUser)
   const [roles, setRoles] = useState([])
@@ -280,9 +281,15 @@ const UserForm = ({ mode = 'create' }) => {
    */
   const validateForm = () => {
     const cpfNumbers = onlyNumbers(form.cpf)
+    const userName = form.name.trim()
 
-    if (!form.name.trim()) {
+    if (!userName) {
       showError('Informe o nome do usuário.')
+      return false
+    }
+
+    if (userName.length < 2 || userName.length > 150) {
+      showError('O nome do usuário deve conter entre 2 e 150 caracteres.')
       return false
     }
 
@@ -428,7 +435,19 @@ const UserForm = ({ mode = 'create' }) => {
           </p>
         </div>
 
-        <div className="d-flex justify-content-center mt-4">
+        <div className="d-flex flex-wrap justify-content-center mt-4 gap-2">
+          {isEditMode && isDoctorRole && canCreatePatient && form.clinic_id && (
+            <CButton
+              color="primary"
+              size="lg"
+              className="clinicai-btn text-white"
+              as={Link}
+              to={`/patients/create?doctor=${id}&clinic=${form.clinic_id}`}
+            >
+              Cadastrar Paciente
+            </CButton>
+          )}
+
           <CButton
             color="secondary"
             size="lg"
@@ -472,9 +491,11 @@ const UserForm = ({ mode = 'create' }) => {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
               <CCol md={isClinicManager ? 12 : 8}>
-                <CFormLabel>Nome</CFormLabel>
+                <CFormLabel>Nome *</CFormLabel>
                 <CFormInput
                   value={form.name}
+                  minLength={2}
+                  maxLength={150}
                   onChange={(event) => updateField('name', event.target.value)}
                   required
                 />
@@ -482,7 +503,7 @@ const UserForm = ({ mode = 'create' }) => {
 
               {!isClinicManager && (
                 <CCol md={4}>
-                  <CFormLabel>Perfil de acesso</CFormLabel>
+                  <CFormLabel>Perfil de acesso *</CFormLabel>
                   <CFormSelect
                     value={form.role_id}
                     disabled={isSelfRecord}
@@ -501,7 +522,7 @@ const UserForm = ({ mode = 'create' }) => {
 
               {!isClinicManager && requiresClinic && (
                 <CCol md={isDoctorRole ? 6 : 12}>
-                  <CFormLabel>Clínica</CFormLabel>
+                  <CFormLabel>Clínica *</CFormLabel>
                   <CFormSelect
                     value={form.clinic_id}
                     disabled={isSelfRecord}
@@ -521,7 +542,7 @@ const UserForm = ({ mode = 'create' }) => {
               {isDoctorRole && (
                 <>
                   <CCol md={isClinicManager ? 8 : 4}>
-                    <CFormLabel>CRM</CFormLabel>
+                    <CFormLabel>CRM *</CFormLabel>
                     <CFormInput
                       value={form.crm_number}
                       inputMode="numeric"
@@ -535,7 +556,7 @@ const UserForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={isClinicManager ? 4 : 2}>
-                    <CFormLabel>UF do CRM</CFormLabel>
+                    <CFormLabel>UF do CRM *</CFormLabel>
                     <CFormSelect
                       value={form.crm_uf}
                       onChange={(event) => updateField('crm_uf', event.target.value)}
@@ -553,9 +574,11 @@ const UserForm = ({ mode = 'create' }) => {
               )}
 
               <CCol md={6}>
-                <CFormLabel>CPF</CFormLabel>
+                <CFormLabel>CPF *</CFormLabel>
                 <CFormInput
                   value={form.cpf}
+                  minLength={14}
+                  maxLength={14}
                   onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
                   placeholder="000.000.000-00"
                   required
@@ -566,13 +589,14 @@ const UserForm = ({ mode = 'create' }) => {
                 <CFormLabel>Telefone</CFormLabel>
                 <CFormInput
                   value={form.phone}
+                  maxLength={20}
                   onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                   placeholder="(88) 99999-9999"
                 />
               </CCol>
 
               <CCol md={!isEditMode || !isSelfRecord ? 4 : 12}>
-                <CFormLabel>E-mail</CFormLabel>
+                <CFormLabel>E-mail *</CFormLabel>
                 <CFormInput
                   type="email"
                   value={form.email}
@@ -584,10 +608,12 @@ const UserForm = ({ mode = 'create' }) => {
               {(!isEditMode || !isSelfRecord) && (
                 <>
                   <CCol md={4}>
-                    <CFormLabel>{isCreateMode ? 'Senha' : 'Nova senha'}</CFormLabel>
+                    <CFormLabel>{isCreateMode ? 'Senha *' : 'Nova senha'}</CFormLabel>
                     <CFormInput
                       type="password"
                       value={form.password}
+                      minLength={8}
+                      maxLength={128}
                       autoComplete="new-password"
                       onChange={(event) => updateField('password', event.target.value)}
                       required={isCreateMode}
@@ -597,11 +623,13 @@ const UserForm = ({ mode = 'create' }) => {
 
                   <CCol md={4}>
                     <CFormLabel>
-                      {isCreateMode ? 'Confirmar senha' : 'Confirmar nova senha'}
+                      {isCreateMode ? 'Confirmar senha *' : 'Confirmar nova senha'}
                     </CFormLabel>
                     <CFormInput
                       type="password"
                       value={form.confirmPassword}
+                      minLength={8}
+                      maxLength={128}
                       autoComplete="new-password"
                       onChange={(event) => updateField('confirmPassword', event.target.value)}
                       required={isCreateMode}

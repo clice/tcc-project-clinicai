@@ -117,8 +117,15 @@ const ClinicForm = ({ mode = 'create' }) => {
    * Valida campos obrigatórios antes de enviar ao backend.
    */
   const validateForm = () => {
-    if (!form.name.trim()) {
+    const clinicName = form.name.trim()
+
+    if (!clinicName) {
       showError('Informe o nome da clínica.')
+      return false
+    }
+
+    if (clinicName.length < 3 || clinicName.length > 180) {
+      showError('O nome da clínica deve conter entre 3 e 180 caracteres.')
       return false
     }
 
@@ -227,8 +234,9 @@ const ClinicForm = ({ mode = 'create' }) => {
       setIsSaving(true)
 
       if (isCreateMode) {
-        const created = await clinicService.create(buildPayload())
-        navigate(`/clinics/${created.id}/edit`)
+        await clinicService.create(buildPayload())
+        showSuccess('Clínica cadastrada com sucesso.')
+        navigate('/clinics')
         return
       }
 
@@ -284,9 +292,11 @@ const ClinicForm = ({ mode = 'create' }) => {
           <CForm onSubmit={handleSubmit}>
             <CRow className="g-3">
               <CCol md={8}>
-                <CFormLabel>Nome</CFormLabel>
+                <CFormLabel>Nome *</CFormLabel>
                 <CFormInput
                   value={form.name}
+                  minLength={3}
+                  maxLength={180}
                   placeholder="Ex: Clínica Vida"
                   onChange={(event) => updateField('name', event.target.value)}
                   required
@@ -294,9 +304,11 @@ const ClinicForm = ({ mode = 'create' }) => {
               </CCol>
 
               <CCol md={4}>
-                <CFormLabel>CNPJ</CFormLabel>
+                <CFormLabel>CNPJ *</CFormLabel>
                 <CFormInput
                   value={form.cnpj}
+                  minLength={18}
+                  maxLength={18}
                   placeholder="00.000.000/0000-00"
                   onChange={(event) => updateField('cnpj', formatCnpjBR(event.target.value))}
                   required

@@ -17,6 +17,7 @@ import {
   CCol,
   CForm,
   CFormCheck,
+  CFormFeedback,
   CFormInput,
   CFormLabel,
   CFormSelect,
@@ -53,7 +54,29 @@ import { getErrorMessage } from 'src/utils/errors'
 import { formatCpfBR, formatDateTimeBR } from 'src/utils/formatters'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
 
-const allowedImageTypes = ['image/jpeg', 'image/png']
+const allowedImageTypes = new Set(['image/jpeg', 'image/png'])
+const allowedImageExtensions = new Set(['.jpg', '.jpeg', '.png'])
+
+const getFileExtension = (fileName = '') => {
+  const lastDotIndex = fileName.lastIndexOf('.')
+
+  return lastDotIndex >= 0 ? fileName.slice(lastDotIndex).toLowerCase() : ''
+}
+
+const getImageFileValidationError = (file) => {
+  if (!file) return ''
+
+  const extension = getFileExtension(file.name)
+  const hasAllowedExtension = allowedImageExtensions.has(extension)
+  const hasAllowedMimeType = allowedImageTypes.has(file.type)
+
+  if (!hasAllowedExtension || !hasAllowedMimeType) {
+    return 'Formato inválido. Selecione somente uma imagem JPG, JPEG ou PNG.'
+  }
+
+  return ''
+}
+
 const analysisPollingIntervalMs = 2000
 const maxConsecutivePollingErrors = 5
 
@@ -153,6 +176,7 @@ const ExamForm = ({ mode = 'create' }) => {
   const [isOriginalImageLoading, setIsOriginalImageLoading] = useState(false)
   const [isOriginalDownloading, setIsOriginalDownloading] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [fileError, setFileError] = useState('')
   const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -635,7 +659,25 @@ const ExamForm = ({ mode = 'create' }) => {
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0] || null
+    const validationError = getImageFileValidationError(file)
 
+    setFileError(validationError)
+
+    if (validationError) {
+      event.target.value = ''
+      setSelectedFile(null)
+
+      setForm((current) => ({
+        ...current,
+        file_name: isCreateMode ? '' : current.file_name,
+        file_mime_type: isCreateMode ? '' : current.file_mime_type,
+      }))
+
+      showError(validationError)
+      return
+    }
+
+    showError('')
     setSelectedFile(file)
 
     if (isEditMode && file) {
@@ -751,11 +793,15 @@ const ExamForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (selectedFile && !allowedImageTypes.includes(selectedFile.type)) {
-      showError('Formato inválido. Envie uma imagem JPG, JPEG ou PNG.')
+    const selectedFileError = getImageFileValidationError(selectedFile)
+
+    if (selectedFileError) {
+      setFileError(selectedFileError)
+      showError(selectedFileError)
       return false
     }
 
+    setFileError('')
     return true
   }
 
@@ -833,6 +879,7 @@ const ExamForm = ({ mode = 'create' }) => {
 
         setForm((current) => mergeExamSnapshot(current, updatedExam))
         setSelectedFile(null)
+        setFileError('')
         setFileInputKey((current) => current + 1)
         setIsDirty(false)
         setHistoryRefreshKey((current) => current + 1)
@@ -1141,7 +1188,7 @@ const ExamForm = ({ mode = 'create' }) => {
                 </CCol>
 
                 <CCol md={9}>
-                  <CFormLabel htmlFor="exam-patient-search">Paciente</CFormLabel>
+                  <CFormLabel htmlFor="exam-patient-search">Paciente *</CFormLabel>
 
                   <CFormInput
                     id="exam-patient-search"
@@ -1169,7 +1216,7 @@ const ExamForm = ({ mode = 'create' }) => {
                 </CCol>
 
                 <CCol md={6}>
-                  <CFormLabel>Tipo de exame</CFormLabel>
+                  <CFormLabel>Tipo de exame *</CFormLabel>
 
                   <CFormSelect
                     value={form.exam_type}
@@ -1205,10 +1252,12 @@ const ExamForm = ({ mode = 'create' }) => {
                 </CCol>
 
                 <CCol md={12}>
-                  <CFormLabel>Descrição</CFormLabel>
+                  <CFormLabel>Descrição *</CFormLabel>
 
                   <CFormInput
                     value={form.description}
+                    minLength={3}
+                    maxLength={180}
                     placeholder="Ex: Colonoscopia de rastreamento"
                     onChange={(event) => updateField('description', event.target.value)}
                     required
@@ -1240,15 +1289,20 @@ const ExamForm = ({ mode = 'create' }) => {
             </CCol>
 
             <CCol lg={4}>
-              <CFormLabel>Imagem do exame</CFormLabel>
+              <CFormLabel>
+                {isCreateMode ? 'Imagem do exame *' : 'Nova imagem do exame'}
+              </CFormLabel>
 
               <CFormInput
                 key={fileInputKey}
                 type="file"
-                accept="image/jpeg,image/png"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                 onChange={handleFileChange}
                 required={isCreateMode}
+                invalid={Boolean(fileError)}
               />
+
+              {fileError && <CFormFeedback invalid>{fileError}</CFormFeedback>}
 
               <div className="text-body-secondary small mt-2">
                 {isEditMode

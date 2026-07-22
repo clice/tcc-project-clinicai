@@ -7,7 +7,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   CAlert,
   CBadge,
@@ -69,6 +69,9 @@ const emptyPatient = {
 const PatientForm = ({ mode = 'create' }) => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const requestedDoctorId = searchParams.get('doctor')
+  const requestedClinicId = searchParams.get('clinic')
   const { user } = useAuth()
   const { showSuccess, showError, startLoading, stopLoading } = useFeedback()
 
@@ -122,17 +125,21 @@ const PatientForm = ({ mode = 'create' }) => {
     async (clinicId) => {
       if (!clinicId) {
         setDoctors([])
-        return
+        return []
       }
 
       try {
         setIsLoadingDoctors(true)
 
         const data = await userService.listDoctorsByClinic(clinicId)
-        setDoctors(Array.isArray(data) ? data : [])
+        const loadedDoctors = Array.isArray(data) ? data : []
+
+        setDoctors(loadedDoctors)
+        return loadedDoctors
       } catch (err) {
         setDoctors([])
         showError(getErrorMessage(err, 'Erro ao carregar dados do paciente.'))
+        return []
       } finally {
         setIsLoadingDoctors(false)
       }
@@ -184,19 +191,71 @@ const PatientForm = ({ mode = 'create' }) => {
           return
         }
 
-        const clinicId = isAdminMaster ? '' : user?.clinic_id ? String(user.clinic_id) : ''
+        const defaultClinicId = isAdminMaster
+          ? ''
+          : user?.clinic_id
+            ? String(user.clinic_id)
+            : ''
+
+        const requestedClinicIsAllowed = Boolean(
+          requestedClinicId &&
+            (isAdminMaster
+              ? loadedClinics.some(
+                  (clinic) =>
+                    String(clinic.id) === requestedClinicId &&
+                    clinic.status_name === 'active',
+                )
+              : String(user?.clinic_id) === requestedClinicId),
+        )
+
+        const clinicId = requestedClinicIsAllowed ? requestedClinicId : defaultClinicId
+        const loadedDoctors = clinicId ? await loadDoctorsByClinic(clinicId) : []
+
+        const requestedDoctor = requestedDoctorId
+          ? loadedDoctors.find(
+              (doctor) =>
+                String(doctor.id) === requestedDoctorId &&
+                String(doctor.clinic_id) === clinicId &&
+                doctor.status_name === 'active',
+            )
+          : null
+
+        const requestedDoctorMatchesAuthenticatedUser =
+          !isDoctor || String(requestedDoctor?.id) === String(user?.id)
+
+        const canPreselectRequestedDoctor = Boolean(
+          requestedClinicIsAllowed &&
+            requestedDoctor &&
+            requestedDoctorMatchesAuthenticatedUser,
+        )
+
+        if (
+          (requestedClinicId || requestedDoctorId) &&
+          !canPreselectRequestedDoctor
+        ) {
+          showError(
+            'Não foi possível pré-selecionar o médico. Verifique se o médico e a clínica estão ativos.',
+          )
+        }
 
         setForm({
           ...emptyPatient,
           clinic_id: clinicId,
-          clinic_name: user?.clinic_name ?? '',
-          doctor_id: isDoctor && user?.id ? String(user.id) : '',
-          doctor_name: isDoctor ? (user?.name ?? '') : '',
+          clinic_name:
+            loadedClinics.find((clinic) => String(clinic.id) === clinicId)?.name ??
+            user?.clinic_name ??
+            '',
+          doctor_id: canPreselectRequestedDoctor
+            ? String(requestedDoctor.id)
+            : isDoctor && user?.id
+              ? String(user.id)
+              : '',
+          doctor_name: canPreselectRequestedDoctor
+            ? requestedDoctor.name ?? ''
+            : isDoctor
+              ? user?.name ?? ''
+              : '',
         })
-
-        if (clinicId) {
-          await loadDoctorsByClinic(clinicId)
-        }
       } catch (err) {
         showError(getErrorMessage(err, 'Erro ao carregar os dados do paciente.'))
       } finally {
@@ -210,6 +269,8 @@ const PatientForm = ({ mode = 'create' }) => {
     isCreateMode,
     isAdminMaster,
     isDoctor,
+    requestedClinicId,
+    requestedDoctorId,
     user?.clinic_id,
     user?.clinic_name,
     user?.id,
@@ -273,6 +334,7 @@ const PatientForm = ({ mode = 'create' }) => {
     const cpf = onlyNumbers(form.cpf)
     const phone = onlyNumbers(form.phone)
     const zipCode = onlyNumbers(form.zip_code)
+    const patientName = form.name.trim()
 
     if (!form.clinic_id && !user?.clinic_id) {
       showError('Selecione a clínica do paciente.')
@@ -284,8 +346,13 @@ const PatientForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (!form.name.trim()) {
+    if (!patientName) {
       showError('Informe o nome do paciente.')
+      return false
+    }
+
+    if (patientName.length < 3 || patientName.length > 150) {
+      showError('O nome do paciente deve conter entre 3 e 150 caracteres.')
       return false
     }
 
@@ -294,8 +361,23 @@ const PatientForm = ({ mode = 'create' }) => {
       return false
     }
 
-    if (phone && phone.length < 10) {
-      showError('Telefone deve conter pelo menos 10 dígitos.')
+    if (!form.birth_date) {
+      showError('Informe a data de nascimento do paciente.')
+      return false
+    }
+
+    if (!form.sex) {
+      showError('Selecione o sexo do paciente.')
+      return false
+    }
+
+    if (!phone) {
+      showError('Informe o telefone ou celular do paciente.')
+      return false
+    }
+
+    if (phone.length < 10) {
+      showError('Telefone ou celular deve conter pelo menos 10 dígitos.')
       return false
     }
 
@@ -316,9 +398,9 @@ const PatientForm = ({ mode = 'create' }) => {
     const payload = {
       name: form.name.trim(),
       cpf: onlyNumbers(form.cpf),
-      birth_date: form.birth_date || null,
-      sex: form.sex || null,
-      phone: onlyNumbers(form.phone) || null,
+      birth_date: form.birth_date,
+      sex: form.sex,
+      phone: onlyNumbers(form.phone),
       email: form.email.trim() || null,
       zip_code: onlyNumbers(form.zip_code) || null,
       address: form.address.trim() || null,
@@ -537,9 +619,11 @@ const PatientForm = ({ mode = 'create' }) => {
               <CForm onSubmit={handleSubmit}>
                 <CRow className="g-3">
                   <CCol md={9}>
-                    <CFormLabel>Nome</CFormLabel>
+                    <CFormLabel>Nome *</CFormLabel>
                     <CFormInput
                       value={form.name}
+                      minLength={3}
+                      maxLength={150}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('name', event.target.value)}
                       required
@@ -547,9 +631,11 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>CPF</CFormLabel>
+                    <CFormLabel>CPF *</CFormLabel>
                     <CFormInput
                       value={form.cpf}
+                      minLength={14}
+                      maxLength={14}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('cpf', formatCpfBR(event.target.value))}
                       placeholder="000.000.000-00"
@@ -558,21 +644,23 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>Data de Nascimento</CFormLabel>
+                    <CFormLabel>Data de Nascimento *</CFormLabel>
                     <CFormInput
                       type="date"
                       value={form.birth_date}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('birth_date', event.target.value)}
+                      required
                     />
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>Sexo</CFormLabel>
+                    <CFormLabel>Sexo *</CFormLabel>
                     <CFormSelect
                       value={form.sex}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('sex', event.target.value)}
+                      required
                     >
                       <option value="">Selecione</option>
                       <option value="female">Feminino</option>
@@ -583,12 +671,14 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={3}>
-                    <CFormLabel>Telefone</CFormLabel>
+                    <CFormLabel>Telefone/Celular *</CFormLabel>
                     <CFormInput
                       value={form.phone}
+                      maxLength={20}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('phone', formatPhoneBR(event.target.value))}
                       placeholder="(88) 99999-9999"
+                      required
                     />
                   </CCol>
 
@@ -603,7 +693,7 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={6}>
-                    <CFormLabel>Clínica</CFormLabel>
+                    <CFormLabel>Clínica *</CFormLabel>
 
                     {isAdminMaster ? (
                       <CFormSelect
@@ -629,7 +719,7 @@ const PatientForm = ({ mode = 'create' }) => {
                   </CCol>
 
                   <CCol md={6}>
-                    <CFormLabel>Médico Responsável</CFormLabel>
+                    <CFormLabel>Médico Responsável *</CFormLabel>
 
                     {isDoctor ? (
                       <CFormInput
@@ -664,6 +754,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CFormLabel>CEP</CFormLabel>
                     <CFormInput
                       value={form.zip_code}
+                      maxLength={9}
                       disabled={isReadOnly || isLoadingAddress}
                       onChange={(event) =>
                         updateField('zip_code', formatZipCodeBR(event.target.value))
@@ -682,6 +773,7 @@ const PatientForm = ({ mode = 'create' }) => {
                     <CFormLabel>Número</CFormLabel>
                     <CFormInput
                       value={form.number}
+                      maxLength={20}
                       disabled={isReadOnly}
                       onChange={(event) => updateField('number', event.target.value)}
                     />
