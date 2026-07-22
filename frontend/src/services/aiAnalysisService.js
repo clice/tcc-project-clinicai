@@ -16,7 +16,7 @@ export const aiAnalysisService = {
    */
   getByExamId: async (examId) => {
     try {
-      const response = await api.get(`/ai-analyses/exam/${examId}`)
+      const response = await api.get(`/ai-analysis/exam/${examId}`)
       return response.data
     } catch (err) {
       if (err?.response?.status === 404) {
@@ -33,7 +33,7 @@ export const aiAnalysisService = {
    * por `require_admin`; qualquer outro perfil recebe 403.
    */
   getMetrics: async () => {
-    const response = await api.get('/ai-analyses/metrics')
+    const response = await api.get('/ai-analysis/metrics')
     return response.data
   },
 }
