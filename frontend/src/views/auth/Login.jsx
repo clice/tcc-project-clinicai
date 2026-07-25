@@ -153,7 +153,7 @@ const Login = () => {
 
                   <p className="clinicai-login-description">
                     Protótipo de Sistema Web para Gestão de Clínicas com Classificação Binária de
-                    Imagens de Exames Gastrointestinais por Inteligência Artificial
+                    Anomalidades em Exames Gastrointestinais por Inteligência Artificial
                   </p>
                 </CCardBody>
               </CCard>

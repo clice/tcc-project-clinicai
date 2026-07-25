@@ -1,6 +1,6 @@
 import React from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow } from '@coreui/react'
-import { CChartLine, CChartPie } from '@coreui/react-chartjs'
+import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 
 import { examStatusLabels } from 'src/utils/constants'
 import { CHART_COLORS, DASHBOARD_STATUSES } from './dashboardData'
@@ -13,7 +13,7 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
   return (
     <>
       <CRow className="mb-4">
-        <CCol lg={8}>
+        <CCol lg={6}>
           <CCard className="clinicai-card h-100">
             <CCardHeader className="clinicai-card-header">
               <strong>Evolução dos Exames (Últimos 6 meses)</strong>
@@ -56,7 +56,7 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
           </CCard>
         </CCol>
 
-        <CCol lg={4}>
+        <CCol lg={6}>
           <CCard className="clinicai-card h-100">
             <CCardHeader className="clinicai-card-header">
               <strong>Distribuição dos Exames</strong>
@@ -65,17 +65,44 @@ const DashboardCharts = ({ counts, monthlyData, concordance }) => {
               {distribution.length === 0 ? (
                 <p className="text-body-secondary mb-0">Nenhum exame disponível.</p>
               ) : (
-                <CChartPie
+                <CChartBar
                   data={{
                     labels: distribution.map((status) => examStatusLabels[status]),
                     datasets: [
                       {
+                        label: 'Exames',
                         backgroundColor: distribution.map((status) => CHART_COLORS[status]),
+                        borderRadius: 6,
+                        borderSkipped: false,
                         data: distribution.map((status) => counts[status]),
                       },
                     ],
                   }}
-                  options={{ plugins: { legend: { position: 'bottom' } } }}
+                  options={{
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                    },
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                        ticks: {
+                          precision: 0,
+                        },
+                      },
+                      y: {
+                        grid: {
+                          display: false,
+                        },
+                      },
+                    },
+                  }}
+                  style={{
+                    height: `${Math.max(240, distribution.length * 44)}px`,
+                  }}
                 />
               )}
             </CCardBody>

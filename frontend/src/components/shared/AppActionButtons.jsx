@@ -17,6 +17,7 @@ import {
   cilFolderOpen,
   cilUser,
   cilPencil,
+  cilPrint,
   cilReload,
   cilXCircle,
 } from '@coreui/icons'
@@ -46,6 +47,7 @@ const AppActionButtons = ({
 
   onUpload,
   onDownload,
+  onPrint,
   onCancel,
   onRestore,
   onInactivate,
@@ -56,6 +58,8 @@ const AppActionButtons = ({
   canUpload = false,
   canDownload = false,
   downloadTitle = 'Download',
+  canPrint = false,
+  printTitle = 'Imprimir',
   canCancel = false,
   canRestore = false,
   canInactivate = false,
@@ -70,6 +74,7 @@ const AppActionButtons = ({
   const showEdit = Boolean(editTo && !isInactive && canEdit)
   const showUpload = Boolean((uploadTo || onUpload) && !isInactive && canUpload)
   const showDownload = Boolean(onDownload && canDownload)
+  const showPrint = Boolean(onPrint && canPrint)
   const showCancel = Boolean(onCancel && canCancel)
   const showRestore = Boolean(onRestore && canRestore)
 
@@ -188,6 +193,19 @@ const AppActionButtons = ({
             onClick={onDownload}
           >
             <CIcon icon={cilCloudDownload} />
+          </CButton>
+        )}
+
+        {showPrint && (
+          <CButton
+            color="secondary"
+            className="clinicai-action-button rounded-pill"
+            type="button"
+            onClick={onPrint}
+            title={printTitle}
+            aria-label={printTitle}
+          >
+            <CIcon icon={cilPrint} />
           </CButton>
         )}
 

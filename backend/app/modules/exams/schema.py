@@ -182,6 +182,46 @@ class ExamResponse(BaseModel):
     }
 
 
+class ExamPrintReportResponse(BaseModel):
+    """Dados clínicos autorizados para impressão de exame finalizado."""
+
+    id: int
+
+    clinic_name: str | None = None
+
+    patient_name: str | None = None
+    patient_cpf: str | None = None
+    patient_birth_date: date | None = None
+    patient_sex: str | None = None
+    patient_phone: str | None = None
+
+    doctor_name: str | None = None
+
+    status_name: str | None = None
+    status_display_name: str | None = None
+
+    exam_type: str
+    exam_date: date | None = None
+    description: str
+
+    observations: str | None = None
+    clinical_indication: str | None = None
+
+    ai_prediction_label: str | None = None
+    ai_prediction_class: int | None = None
+    ai_confidence: float | None = None
+    ai_model_name: str | None = None
+    ai_model_version: str | None = None
+
+    findings: str | None = None
+    conclusion: str | None = None
+    reviewed_by_name: str | None = None
+    reviewed_at: datetime | None = None
+
+    original_image_available: bool = False
+    gradcam_available: bool = False
+
+
 class ExamHistoryEntryResponse(BaseModel):
     """Evento público do histórico de um exame (RF36)."""
 
