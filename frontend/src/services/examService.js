@@ -77,6 +77,45 @@ export const examService = {
   },
 
   /**
+   * Busca os dados autorizados do relatório de impressão.
+   */
+  getPrintReport: async (id) => {
+    const response = await api.get(
+      `/exams/${id}/print-report`,
+    )
+
+    return response.data
+  },
+
+  /**
+   * Carrega a imagem original usada no relatório.
+   */
+  previewPrintOriginalImage: async (id) => {
+    const response = await api.get(
+      `/exams/${id}/print-report/original-image`,
+      {
+        responseType: 'blob',
+      },
+    )
+
+    return response.data
+  },
+
+  /**
+   * Carrega o Mapa Grad-CAM usado no relatório.
+   */
+  previewPrintGradcam: async (id) => {
+    const response = await api.get(
+      `/exams/${id}/print-report/gradcam`,
+      {
+        responseType: 'blob',
+      },
+    )
+
+    return response.data
+  },
+
+  /**
    * Consulta os eventos e alterações de status do exame (RF36).
    */
   getHistory: async (id) => {
@@ -217,6 +256,23 @@ export const examService = {
     const response = await api.get(`/exams/${id}/ai-file/preview`, {
       responseType: 'blob',
     })
+
+    return response.data
+  },
+
+  /**
+   * Gera e baixa o relatório PDF de um exame finalizado.
+   */
+  downloadPrintReport: async (id) => {
+    const response = await api.get(
+      `/exams/${id}/print-report.pdf`,
+      {
+        responseType: 'blob',
+        params: {
+          download_request: Date.now(),
+        },
+      },
+    )
 
     return response.data
   },

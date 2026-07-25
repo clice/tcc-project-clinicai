@@ -2,7 +2,8 @@
  * Listagem de exames.
  *
  * Somente o Médico recebe ações clínicas.
- * Administrador Master e Gestor da Clínica recebem acesso operacional à listagem.
+ * Médico e Gestor da Clínica podem imprimir exames finalizados.
+ * Administrador Master recebe somente acesso operacional à listagem.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
@@ -60,6 +61,11 @@ const packageDownloadStatuses = new Set([
 
 const originalDownloadStatuses = new Set(['pending', 'failed', 'canceled'])
 
+const printableExamStatuses = new Set([
+  'completed',
+  'completed_with_divergence',
+])
+
 const triggerBlobDownload = (blob, fileName) => {
   const url = window.URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -81,6 +87,11 @@ const ExamsList = () => {
   const roleName = getUserRole(user)
 
   const canUseClinicalExamActions = roleName === ROLES.DOCTOR
+
+  const canPrintExams =
+    roleName === ROLES.DOCTOR ||
+    roleName === ROLES.CLINIC_MANAGER
+
   const hasOperationalExamAccess =
     roleName === ROLES.ADMIN_MASTER || roleName === ROLES.CLINIC_MANAGER
   const showDoctorColumn = roleName !== ROLES.DOCTOR
@@ -90,6 +101,13 @@ const ExamsList = () => {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status')
+
+  const managerCanSeeActions =
+    roleName === ROLES.CLINIC_MANAGER &&
+    printableExamStatuses.has(statusFilter)
+
+  const canShowActionsColumn =
+    canUseClinicalExamActions || managerCanSeeActions
 
   const [exams, setExams] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -213,6 +231,28 @@ const ExamsList = () => {
     [loadExams, showError, showSuccess],
   )
 
+  const handlePrintReport = useCallback(
+    async (exam) => {
+      try {
+        const blob =
+          await examService.downloadPrintReport(exam.id)
+
+        triggerBlobDownload(
+          blob,
+          `relatorio-exame-${exam.id}.pdf`,
+        )
+      } catch (error) {
+        showError(
+          getErrorMessage(
+            error,
+            'Não foi possível gerar o relatório PDF.',
+          ),
+        )
+      }
+    },
+    [showError],
+  )
+
   const columns = useMemo(() => {
     const result = [
       {
@@ -270,7 +310,7 @@ const ExamsList = () => {
         : []),
     ]
 
-    if (!canUseClinicalExamActions) {
+    if (!canShowActionsColumn) {
       return result
     }
 
@@ -291,6 +331,10 @@ const ExamsList = () => {
           canDownload &&
           exam.file_available &&
           (allowsOriginal || (requiresPackage && canReadAiAnalysis && exam.gradcam_available))
+
+        const canPrintCurrentStatus =
+          canPrintExams &&
+          printableExamStatuses.has(exam.status_name)
 
         return (
           <AppActionButtons
@@ -325,6 +369,9 @@ const ExamsList = () => {
               requiresPackage ? 'Baixar imagem original e Mapa Grad-CAM' : 'Baixar imagem original'
             }
             canDownload={canDownloadCurrentStatus}
+            printTitle="Baixar relatório em PDF"
+            canPrint={canPrintCurrentStatus}
+            onPrint={() => handlePrintReport(exam)}
             canCancel={canChangeStatus && (isProcessing || isPending)}
             canRestore={canChangeStatus && (isCanceled || isFailed)}
             canInactivate={false}
@@ -343,13 +390,15 @@ const ExamsList = () => {
     canDownload,
     canEditExam,
     canReadAiAnalysis,
-    canUseClinicalExamActions,
+    canPrintExams,
+    canShowActionsColumn,
     canView,
     showClinicColumn,
     showDoctorColumn,
     statusFilter,
     handleCancelExam,
     handleDownload,
+    handlePrintReport,
     handleRestoreExam,
   ])
 
