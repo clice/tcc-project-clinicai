@@ -13,6 +13,7 @@ from app.modules.ai_analyses.schema import AIAnalysisResponse
 from app.modules.exams.schema import (
     ExamCreate,
     ExamListItemResponse,
+    ExamPrintReportResponse,
     ExamHistoryResponse,
     ExamMedicalReview,
     ExamResponse,
@@ -27,10 +28,14 @@ from app.modules.exams.service import (
     download_exam_images_package,
     get_exam_by_id,
     get_exam_history,
+    download_exam_print_report_pdf,
+    get_exam_print_report,
     list_exam_form_options,
     list_exams,
     preview_exam_ai_file,
     preview_exam_file,
+    preview_print_exam_ai_file,
+    preview_print_exam_file,
     replace_exam_file,
     restore_exam,
     review_exam,
@@ -119,6 +124,87 @@ def list_exams_route(
         status_id=status_id,
         ai_prediction_class=ai_prediction_class,
         include_inactive=include_inactive,
+    )
+
+
+@router.get(
+    "/{exam_id}/print-report.pdf"
+)
+def download_exam_print_report_pdf_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:list")
+    ),
+):
+    """Gera o relatório PDF final do exame."""
+
+    return download_exam_print_report_pdf(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+
+
+
+
+@router.get(
+    "/{exam_id}/print-report",
+    response_model=ExamPrintReportResponse,
+)
+def get_exam_print_report_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:list")
+    ),
+):
+    """Retorna o relatório final autorizado para impressão."""
+
+    return get_exam_print_report(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get(
+    "/{exam_id}/print-report/original-image"
+)
+def preview_print_exam_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:list")
+    ),
+):
+    """Retorna a imagem original usada no relatório."""
+
+    return preview_print_exam_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+
+@router.get(
+    "/{exam_id}/print-report/gradcam"
+)
+def preview_print_exam_ai_file_route(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_permission("exams:list")
+    ),
+):
+    """Retorna o Mapa Grad-CAM usado no relatório."""
+
+    return preview_print_exam_ai_file(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
     )
 
 

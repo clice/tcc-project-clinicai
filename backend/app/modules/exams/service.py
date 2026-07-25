@@ -167,6 +167,149 @@ def build_exam_list_response(exam: Exam) -> dict:
     }
 
 
+PRINTABLE_EXAM_STATUSES = frozenset(
+    {
+        StatusName.COMPLETED.value,
+        StatusName.COMPLETED_WITH_DIVERGENCE.value,
+    }
+)
+
+
+def build_exam_print_report_response(exam: Exam) -> dict:
+    """Monta o relatório final sem incluir o histórico do exame."""
+
+    analysis = exam.ai_analysis
+
+    return {
+        "id": exam.id,
+        "clinic_name": exam.clinic.name if exam.clinic else None,
+        "patient_name": exam.patient.name if exam.patient else None,
+        "patient_cpf": exam.patient.cpf if exam.patient else None,
+        "patient_birth_date": (
+            exam.patient.birth_date if exam.patient else None
+        ),
+        "patient_sex": exam.patient.sex if exam.patient else None,
+        "patient_phone": exam.patient.phone if exam.patient else None,
+        "doctor_name": exam.doctor.name if exam.doctor else None,
+        "status_name": exam.status.name if exam.status else None,
+        "status_display_name": (
+            exam.status.display_name if exam.status else None
+        ),
+        "exam_type": exam.exam_type,
+        "exam_date": exam.exam_date,
+        "description": exam.description,
+        "observations": exam.observations,
+        "clinical_indication": exam.clinical_indication,
+        "ai_prediction_label": (
+            analysis.prediction_label if analysis else None
+        ),
+        "ai_prediction_class": (
+            analysis.prediction_class if analysis else None
+        ),
+        "ai_confidence": analysis.confidence if analysis else None,
+        "ai_model_name": analysis.model_name if analysis else None,
+        "ai_model_version": (
+            analysis.model_version if analysis else None
+        ),
+        "findings": exam.findings,
+        "conclusion": exam.conclusion,
+        "reviewed_by_name": (
+            exam.reviewed_by.name if exam.reviewed_by else None
+        ),
+        "reviewed_at": exam.reviewed_at,
+        "original_image_available": bool(exam.file_path),
+        "gradcam_available": bool(
+            analysis and analysis.gradcam_path
+        ),
+    }
+
+
+def validate_user_can_print_exam(
+    *,
+    current_user: User,
+    exam: Exam,
+) -> None:
+    """Autoriza relatório somente ao médico responsável ou gestor da clínica."""
+
+    role_name = (
+        current_user.role.name
+        if current_user.role
+        else None
+    )
+
+    doctor_is_authorized = (
+        role_name == RoleName.DOCTOR.value
+        and exam.doctor_id == current_user.id
+        and exam.clinic_id == current_user.clinic_id
+    )
+
+    manager_is_authorized = (
+        role_name == RoleName.CLINIC_MANAGER.value
+        and current_user.clinic_id is not None
+        and exam.clinic_id == current_user.clinic_id
+    )
+
+    if not doctor_is_authorized and not manager_is_authorized:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Você não tem permissão para imprimir "
+                "este exame."
+            ),
+        )
+
+    current_status = (
+        exam.status.name
+        if exam.status
+        else None
+    )
+
+    if current_status not in PRINTABLE_EXAM_STATUSES:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "A impressão está disponível somente para "
+                "exames concluídos ou com divergência."
+            ),
+        )
+
+
+def get_printable_exam_model(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> Exam:
+    """Busca um exame e valida o acesso ao relatório."""
+
+    exam = get_exam_model_by_id(
+        db=db,
+        exam_id=exam_id,
+    )
+
+    validate_user_can_print_exam(
+        current_user=current_user,
+        exam=exam,
+    )
+
+    return exam
+
+
+def get_exam_print_report(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+) -> dict:
+    """Retorna os dados autorizados do relatório de impressão."""
+
+    exam = get_printable_exam_model(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    return build_exam_print_report_response(exam)
+
+
 def validate_user_can_access_exam(
     *,
     current_user: User,
@@ -1505,6 +1648,163 @@ def build_gradcam_download_filename(
         f"{extension}"
     )
 
+
+
+def download_exam_print_report_pdf(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Gera e retorna o relatório PDF autorizado do exame."""
+
+    from fastapi.responses import Response
+
+    from app.modules.exams.pdf_report import (
+        build_exam_report_filename,
+        generate_exam_report_pdf,
+    )
+
+    exam = get_printable_exam_model(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    original_image_path = None
+
+    if exam.file_path:
+        candidate = resolve_safe_exam_file_path(
+            exam.file_path
+        )
+
+        if candidate.exists() and candidate.is_file():
+            original_image_path = candidate
+
+    gradcam_path = None
+    analysis = exam.ai_analysis
+
+    if analysis and analysis.gradcam_path:
+        candidate = resolve_safe_gradcam_path(
+            analysis.gradcam_path
+        )
+
+        if candidate.exists() and candidate.is_file():
+            gradcam_path = candidate
+
+    pdf_content = generate_exam_report_pdf(
+        exam,
+        original_image_path=original_image_path,
+        gradcam_path=gradcam_path,
+    )
+
+    filename = build_exam_report_filename(exam)
+
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{filename}"'
+            ),
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+
+
+
+
+def preview_print_exam_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Retorna a imagem original para o relatório imprimível."""
+
+    exam = get_printable_exam_model(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    if not exam.file_path:
+        raise HTTPException(
+            status_code=404,
+            detail="Imagem original não disponível.",
+        )
+
+    file_path = resolve_safe_exam_file_path(exam.file_path)
+
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Imagem original não encontrada no servidor.",
+        )
+
+    return FileResponse(
+        path=file_path,
+        filename=build_exam_download_filename(
+            exam,
+            file_path,
+        ),
+        media_type=exam.file_mime_type,
+        content_disposition_type="inline",
+        headers={
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+def preview_print_exam_ai_file(
+    db: Session,
+    exam_id: int,
+    current_user: User,
+):
+    """Retorna o Mapa Grad-CAM para o relatório imprimível."""
+
+    exam = get_printable_exam_model(
+        db=db,
+        exam_id=exam_id,
+        current_user=current_user,
+    )
+
+    analysis = exam.ai_analysis
+
+    if not analysis or not analysis.gradcam_path:
+        raise HTTPException(
+            status_code=404,
+            detail="Mapa Grad-CAM não disponível.",
+        )
+
+    file_path = resolve_safe_gradcam_path(
+        analysis.gradcam_path
+    )
+
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Mapa Grad-CAM não encontrado no servidor.",
+        )
+
+    media_type = (
+        "image/png"
+        if file_path.suffix.lower() == ".png"
+        else "image/jpeg"
+    )
+
+    return FileResponse(
+        path=file_path,
+        filename=build_gradcam_download_filename(
+            exam,
+            file_path,
+        ),
+        media_type=media_type,
+        content_disposition_type="inline",
+        headers={
+            "Cache-Control": "private, no-store",
+        },
+    )
 
 
 EXAM_IMAGE_PACKAGE_STATUSES = frozenset(
