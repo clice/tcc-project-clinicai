@@ -26,12 +26,17 @@ def test_application_never_calls_create_all() -> None:
     assert offenders == []
 
 
-def test_alembic_has_a_single_expected_head() -> None:
+def test_alembic_has_a_single_initial_revision() -> None:
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     script = ScriptDirectory.from_config(config)
 
-    assert script.get_heads() == ["0003patientrequired"]
+    assert script.get_heads() == ["0001initial"]
+
+    revisions = list(script.walk_revisions())
+    assert len(revisions) == 1
+    assert revisions[0].revision == "0001initial"
+    assert revisions[0].down_revision is None
 
 
 def test_fk_cascade_policy_is_explicit() -> None:

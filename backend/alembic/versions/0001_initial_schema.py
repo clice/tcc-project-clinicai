@@ -1,6 +1,6 @@
-"""create clinicai baseline
+"""Cria a estrutura inicial consolidada do ClinicAI.
 
-Revision ID: 0001clinicai
+Revision ID: 0001initial
 Revises:
 Create Date: 2026-07-20 01:01:26.626723
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0001clinicai'
+revision: str = "0001initial"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -156,9 +156,9 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=150), nullable=False),
     sa.Column('cpf', sa.String(length=11), nullable=False),
-    sa.Column('birth_date', sa.Date(), nullable=True),
-    sa.Column('sex', sa.String(length=20), nullable=True),
-    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('birth_date', sa.Date(), nullable=False),
+    sa.Column('sex', sa.String(length=20), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=True),
     sa.Column('zip_code', sa.String(length=8), nullable=True),
     sa.Column('address', sa.String(length=255), nullable=True),
