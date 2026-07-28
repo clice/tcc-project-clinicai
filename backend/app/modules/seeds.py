@@ -26,6 +26,10 @@ from app.core.database import SessionLocal
 from app.modules import models  # noqa: F401
 from app.modules.ai_analyses.model import AIAnalysis
 from app.modules.ai_analyses.seed import seed_ai_analysis
+from app.modules.audit_logs.model import AuditLog
+from app.modules.audit_logs.seed import (
+    seed_academic_demo_audit_logs,
+)
 from app.modules.clinics.model import Clinic
 from app.modules.clinics.seed import seed_clinics
 from app.modules.exams.model import Exam
@@ -65,6 +69,7 @@ class AcademicDemoResult:
     patients: dict[str, Patient]
     exams: dict[str, Exam]
     ai_analyses: dict[str, AIAnalysis]
+    audit_logs: dict[str, AuditLog]
 
 
 def bootstrap_reference_data(db: Session) -> BootstrapResult:
@@ -134,6 +139,13 @@ def seed_academic_demo(
         exams,
         statuses=bootstrap.statuses,
     )
+    audit_logs = seed_academic_demo_audit_logs(
+        db,
+        exams=exams,
+        ai_analyses=ai_analyses,
+        users=users,
+        statuses=bootstrap.statuses,
+    )
 
     return AcademicDemoResult(
         clinics=clinics,
@@ -141,6 +153,7 @@ def seed_academic_demo(
         patients=patients,
         exams=exams,
         ai_analyses=ai_analyses,
+        audit_logs=audit_logs,
     )
 
 
@@ -189,8 +202,9 @@ def run_seed(mode: SeedMode | None = None) -> None:
                 f"{len(demo.clinics)} clínicas, "
                 f"{len(demo.users)} usuários, "
                 f"{len(demo.patients)} pacientes, "
-                f"{len(demo.exams)} exames e "
-                f"{len(demo.ai_analyses)} análises."
+                f"{len(demo.exams)} exames, "
+                f"{len(demo.ai_analyses)} análises e "
+                f"{len(demo.audit_logs)} eventos de auditoria."
             )
         else:
             print(

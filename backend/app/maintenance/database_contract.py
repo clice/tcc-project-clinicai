@@ -138,7 +138,7 @@ EXPECTED_DEMO_COUNTS = {
     "patients": 30,
     "exams": 90,
     "ai_analyses": 72,
-    "audit_logs": 0,
+    "audit_logs": 464,
 }
 
 
