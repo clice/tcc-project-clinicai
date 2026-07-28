@@ -96,7 +96,9 @@ def create_exam_route(
 
 
 @router.get(
-    "/", response_model=list[ExamListItemResponse]
+    "/",
+    response_model=list[ExamListItemResponse],
+    response_model_exclude_unset=True,
 )
 def list_exams_route(
     search: str | None = Query(default=None),
