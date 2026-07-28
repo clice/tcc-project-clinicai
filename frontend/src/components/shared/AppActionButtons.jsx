@@ -251,8 +251,8 @@ const AppActionButtons = ({
             color="info"
             className="clinicai-action-button rounded-pill"
             type="button"
-            title="Retomar exame"
-            aria-label="Retomar exame"
+            title="Restaurar exame"
+            aria-label="Restaurar exame"
             onClick={() => openExamConfirm('restore')}
           >
             <CIcon icon={cilReload} className="text-white" />
@@ -318,7 +318,7 @@ const AppActionButtons = ({
         <CModal visible={examConfirmVisible} onClose={handleCloseExamModal}>
           <CModalHeader>
             <CModalTitle>
-              {examActionType === 'cancel' ? 'Cancelar Exame' : 'Retomar Exame'}
+              {examActionType === 'cancel' ? 'Cancelar Exame' : 'Restaurar Exame'}
             </CModalTitle>
           </CModalHeader>
 
@@ -330,7 +330,7 @@ const AppActionButtons = ({
               </>
             ) : (
               <>
-                Você deseja retomar <strong>{itemLabel}</strong>? O exame voltará para o fluxo de
+                Você deseja restaurar <strong>{itemLabel}</strong>? O exame voltará para o fluxo de
                 atendimento.
               </>
             )}
@@ -361,7 +361,7 @@ const AppActionButtons = ({
               ) : examActionType === 'cancel' ? (
                 'Cancelar Exame'
               ) : (
-                'Retomar'
+                'Restaurar'
               )}
             </CButton>
           </CModalFooter>

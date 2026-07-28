@@ -222,10 +222,10 @@ const ExamsList = () => {
       try {
         showError('')
         await examService.restore(exam.id)
-        showSuccess('Exame retomado com sucesso.')
+        showSuccess('Exame restaurado com sucesso.')
         await loadExams()
       } catch (err) {
-        showError(getErrorMessage(err, 'Erro ao retomar exame.'))
+        showError(getErrorMessage(err, 'Erro ao restaurar exame.'))
       }
     },
     [loadExams, showError, showSuccess],
