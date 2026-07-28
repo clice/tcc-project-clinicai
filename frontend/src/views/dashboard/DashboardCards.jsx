@@ -30,18 +30,36 @@ const DashboardCards = ({ roleName, counts, isLoading }) => {
             icon: cilDescription,
           },
         ]
-      : [
-          {
-            label: 'Pacientes ativos',
-            value: counts.patients,
-            icon: cilPeople,
-          },
-          {
-            label: 'Exames',
-            value: counts.exams,
-            icon: cilDescription,
-          },
-        ]
+      : roleName === ROLES.CLINIC_MANAGER
+        ? [
+            {
+              label: 'Médicos ativos',
+              value: counts.doctors,
+              icon: cilUser,
+            },
+            {
+              label: 'Pacientes ativos',
+              value: counts.patients,
+              icon: cilPeople,
+            },
+            {
+              label: 'Exames',
+              value: counts.exams,
+              icon: cilDescription,
+            },
+          ]
+        : [
+            {
+              label: 'Pacientes ativos',
+              value: counts.patients,
+              icon: cilPeople,
+            },
+            {
+              label: 'Exames',
+              value: counts.exams,
+              icon: cilDescription,
+            },
+          ]
 
   return (
     <CRow className="mb-4">

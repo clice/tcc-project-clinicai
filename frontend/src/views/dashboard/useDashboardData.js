@@ -7,12 +7,13 @@ import { patientService } from 'src/services/patientService'
 import { userService } from 'src/services/userService'
 import { ROLES } from 'src/utils/permissions'
 
-const emptySummary = { clinics: 0, users: 0, patients: 0, exams: 0 }
+const emptySummary = { clinics: 0, users: 0, doctors: 0, patients: 0, exams: 0 }
 const countActive = (items) =>
   items.filter((item) => !item.status_name || item.status_name === 'active').length
 
 export const useDashboardData = (roleName) => {
   const isAdminMaster = roleName === ROLES.ADMIN_MASTER
+  const isClinicManager = roleName === ROLES.CLINIC_MANAGER
   const [exams, setExams] = useState([])
   const [summary, setSummary] = useState(emptySummary)
   const [aiMetrics, setAiMetrics] = useState(null)
@@ -52,6 +53,15 @@ export const useDashboardData = (roleName) => {
           }
         }
 
+        if (isClinicManager) {
+          const doctorsData = await userService.list({
+            role: ROLES.DOCTOR,
+            status: 'active',
+          })
+
+          nextSummary.doctors = Array.isArray(doctorsData) ? doctorsData.length : 0
+        }
+
         setExams(scopedExams)
         setSummary(nextSummary)
       } catch {
@@ -62,7 +72,7 @@ export const useDashboardData = (roleName) => {
     }
 
     void loadDashboard()
-  }, [isAdminMaster])
+  }, [isAdminMaster, isClinicManager])
 
   return { exams, summary, aiMetrics, isLoading, error, isAdminMaster }
 }
