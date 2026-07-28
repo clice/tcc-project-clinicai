@@ -1699,6 +1699,48 @@ def download_exam_print_report_pdf(
 
     filename = build_exam_report_filename(exam)
 
+    create_audit_log(
+        db=db,
+        user_id=current_user.id,
+        clinic_id=exam.clinic_id,
+        action=AuditAction.PRINT_REPORT,
+        entity=AuditEntity.EXAM,
+        entity_id=exam.id,
+        description=(
+            "Geração e download do relatório PDF "
+            "do exame autorizados."
+        ),
+        new_data={
+            "artifact_type": "exam_print_report_pdf",
+            "media_type": "application/pdf",
+            "delivery_mode": "attachment",
+            "exam_status": (
+                exam.status.name
+                if exam.status
+                else None
+            ),
+            "actor_role": (
+                current_user.role.name
+                if current_user.role
+                else None
+            ),
+            "original_image_included": (
+                original_image_path is not None
+            ),
+            "gradcam_included": (
+                gradcam_path is not None
+            ),
+            "ai_analysis_id": (
+                analysis.id
+                if analysis
+                else None
+            ),
+            "report_size_bytes": len(pdf_content),
+        },
+    )
+
+    db.commit()
+
     return Response(
         content=pdf_content,
         media_type="application/pdf",

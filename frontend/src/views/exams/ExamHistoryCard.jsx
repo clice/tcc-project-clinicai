@@ -14,6 +14,7 @@ const actionLabels = {
   review_exam: 'Revisão médica',
   upload: 'Upload',
   download: 'Download',
+  print_report: 'Impressão do relatório',
   run_ai_analysis: 'Análise por IA',
   ai_analysis_failed: 'Falha da IA',
 }

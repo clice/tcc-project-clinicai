@@ -24,6 +24,7 @@ class AuditAction(StrEnum):
     REVIEW_EXAM = "review_exam"
     UPLOAD = "upload"
     DOWNLOAD = "download"
+    PRINT_REPORT = "print_report"
     RUN_AI_ANALYSIS = "run_ai_analysis"
     AI_ANALYSIS_FAILED = "ai_analysis_failed"
 
