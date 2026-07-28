@@ -24,7 +24,7 @@
     "period_end": "2026-07-26",
     "period_start": "2026-02-02",
     "purpose": "academic_demonstration",
-    "real_source_prediction_divergences": 2,
+    "real_source_prediction_divergences": 1,
     "reviewed_exams": 50,
     "source_abnormal": 45,
     "source_images": 90,
@@ -35,19 +35,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4973384737968445,
-          "pvt_v2_b2": 0.15727227926254272,
-          "resnet50": 0.5183647274971008
+          "efficientnet_b4": 0.5344003438949585,
+          "pvt_v2_b2": 0.14734283089637756,
+          "resnet50": 0.63974928855896
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792797164553022,
-          "pvt_v2_b2": 0.34069932140191267,
-          "resnet50": 0.48002096214278517
+          "efficientnet_b4": 0.29781675330489477,
+          "pvt_v2_b2": 0.4615868622734501,
+          "resnet50": 0.24059638442165504
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651721747546831,
-          "pvt_v2_b2": 1.238518007068764,
-          "resnet50": 1.7449832389979492
+          "efficientnet_b4": 1.233700161504653,
+          "pvt_v2_b2": 1.9121146819842858,
+          "resnet50": 0.9966658860677096
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -56,19 +56,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/032e1815-45bd-4a82-bbb7-98aedc04c96e_gradcam.jpg",
-          "sha256": "ddb35a963f47560401a1eda1322e3a8e6b9577f1ab4c72e5256b5587e652b9d8",
-          "size_bytes": 80344
+          "sha256": "70787a139f73a6dd629843b3ebfef824d9e5d97758e4115000ae7c3dab047157",
+          "size_bytes": 80886
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 368
+        "processing_time_ms": 1417
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -96,19 +96,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.48381274938583374,
-          "pvt_v2_b2": 0.14352481067180634,
-          "resnet50": 0.5722564458847046
+          "efficientnet_b4": 0.5983126163482666,
+          "pvt_v2_b2": 0.14321738481521606,
+          "resnet50": 0.6381743550300598
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17914201562125667,
-          "pvt_v2_b2": 0.34074718830756373,
-          "resnet50": 0.48011079607117957
+          "efficientnet_b4": 0.29782212252998436,
+          "pvt_v2_b2": 0.4615612180100157,
+          "resnet50": 0.2406166594599999
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6510794367225653,
-          "pvt_v2_b2": 1.2384224139641853,
-          "resnet50": 1.7449299405636174
+          "efficientnet_b4": 1.2336039404803576,
+          "pvt_v2_b2": 1.9118248586544941,
+          "resnet50": 0.9966541663646634
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -117,19 +117,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03adaef7-3900-4624-9ffa-6df25d1ee70c_gradcam.jpg",
-          "sha256": "62c4a00c3be28202ec149e46b5e1744df29b06ff29638c0153d224921d0b1eb4",
-          "size_bytes": 80885
+          "sha256": "b2f109cebd86b6261365bdce48dba73ecdbf454c568289689f810a884a71a1d3",
+          "size_bytes": 81652
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 331
+        "processing_time_ms": 695
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -157,19 +157,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5538804531097412,
-          "pvt_v2_b2": 0.09285102039575577,
-          "resnet50": 0.4762614965438843
+          "efficientnet_b4": 0.5720921158790588,
+          "pvt_v2_b2": 0.08163808286190033,
+          "resnet50": 0.5940789580345154
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17964477795147338,
-          "pvt_v2_b2": 0.33936508779326896,
-          "resnet50": 0.4809901342552577
+          "efficientnet_b4": 0.3084354926418229,
+          "pvt_v2_b2": 0.44239146255461514,
+          "resnet50": 0.2491730448035619
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279607068552,
-          "pvt_v2_b2": 1.2311725346247175,
-          "resnet50": 1.744969839329107
+          "efficientnet_b4": 1.2337008242187197,
+          "pvt_v2_b2": 1.7695068336858055,
+          "resnet50": 0.9966589386787036
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -178,19 +178,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9529,
+        "confidence": 0.9632,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03b32e65-b829-4257-8eb1-b3f3c224f3ac_gradcam.jpg",
-          "sha256": "6146be09e46d335166632d2cd3fa83585838db546cab36bed2912ae52d178a15",
-          "size_bytes": 79208
+          "sha256": "1091f05534e3128d1deb4c132c601f51ffdacfc83e0dd930563ebc840466f562",
+          "size_bytes": 80152
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 344
+        "processing_time_ms": 838
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -218,19 +218,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.27059298753738403,
-          "pvt_v2_b2": 0.14192599058151245,
-          "resnet50": 0.4865221381187439
+          "efficientnet_b4": 0.5742021203041077,
+          "pvt_v2_b2": 0.12074194848537445,
+          "resnet50": 0.735205888748169
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1789530697603396,
-          "pvt_v2_b2": 0.3409010692464656,
-          "resnet50": 0.4801458609931948
+          "efficientnet_b4": 0.29794483063593985,
+          "pvt_v2_b2": 0.46135542401318463,
+          "resnet50": 0.24069974535087552
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6501175291265654,
-          "pvt_v2_b2": 1.2384574408917692,
-          "resnet50": 1.7443190060236875
+          "efficientnet_b4": 1.233696853203492,
+          "pvt_v2_b2": 1.910329283440072,
+          "resnet50": 0.996662763950089
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -239,19 +239,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/02dcedf1-c0bd-4ef4-b072-ea8f11da6a1d_gradcam.jpg",
-          "sha256": "7769f2a16c421e7e7de6739a6e1ce59e36bb2c013275251d3cf5df595578697f",
-          "size_bytes": 85798
+          "sha256": "a02b459289566d3f99512bc9beb88254bedd9be74276f7ecfec034ba9b7bb27a",
+          "size_bytes": 86578
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 373
+        "processing_time_ms": 1062
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -300,19 +300,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.422000527381897,
-          "pvt_v2_b2": 0.14466485381126404,
-          "resnet50": 0.45435553789138794
+          "efficientnet_b4": 0.42713844776153564,
+          "pvt_v2_b2": 0.1408906877040863,
+          "resnet50": 0.5161707401275635
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17933162218208443,
-          "pvt_v2_b2": 0.34077636293402386,
-          "resnet50": 0.47989201488389177
+          "efficientnet_b4": 0.29781625245342597,
+          "pvt_v2_b2": 0.4616108058042485,
+          "resnet50": 0.2405729417423256
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517267813363407,
-          "pvt_v2_b2": 1.2384490781274131,
-          "resnet50": 1.7440230252962894
+          "efficientnet_b4": 1.2336435690969283,
+          "pvt_v2_b2": 1.912129366059758,
+          "resnet50": 0.996524736424726
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -321,19 +321,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/03eb7061-0329-405a-a4b6-d629cf01baad_gradcam.jpg",
-          "sha256": "80b6ef696de39b953e7a6e4487d83cd446d31a2f38a0063a8313c7ed532fa089",
-          "size_bytes": 88478
+          "sha256": "16531f75af552e4f4cdc145bb22803414a2a7ecbea7316e7e34260a379626fa5",
+          "size_bytes": 88428
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 389
+        "processing_time_ms": 825
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -361,19 +361,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.6094093322753906,
-          "pvt_v2_b2": 0.17665450274944305,
-          "resnet50": 0.5434293746948242
+          "efficientnet_b4": 0.748980700969696,
+          "pvt_v2_b2": 0.181499183177948,
+          "resnet50": 0.7042276859283447
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17929759271926235,
-          "pvt_v2_b2": 0.3407353627442252,
-          "resnet50": 0.47996704453651245
+          "efficientnet_b4": 0.2977953106350051,
+          "pvt_v2_b2": 0.4616283052948415,
+          "resnet50": 0.24057638407015355
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517200078476614,
-          "pvt_v2_b2": 1.2385222239394034,
-          "resnet50": 1.7446086212754237
+          "efficientnet_b4": 1.2336992754495881,
+          "pvt_v2_b2": 1.912422679037051,
+          "resnet50": 0.99665407787903
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -382,19 +382,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2bef68d0-afdf-4dd9-8724-513d2bf356ad_gradcam.jpg",
-          "sha256": "212d135d3f6b96c8e7721ad484caaa8ad805daf41e643a11c6e0ccfd913aedd6",
-          "size_bytes": 260821
+          "sha256": "98f3650d78f2e09884d10b527e9c6f23e83567eb436b62026865479c07adf47d",
+          "size_bytes": 260977
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 921
+        "processing_time_ms": 1763
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -422,19 +422,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.49650540947914124,
-          "pvt_v2_b2": 0.063339464366436,
-          "resnet50": 0.375296950340271
+          "efficientnet_b4": 0.5452381372451782,
+          "pvt_v2_b2": 0.1822175830602646,
+          "resnet50": 0.6986303329467773
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 0.3410620122235171,
-          "resnet50": 0.6589379877764829
+          "efficientnet_b4": 0.2977620300858098,
+          "pvt_v2_b2": 0.46164946003704826,
+          "resnet50": 0.24058850987714187
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 0.8918152190828648,
-          "resnet50": 1.7230031632657625
+          "efficientnet_b4": 1.2334933728845978,
+          "pvt_v2_b2": 1.9124048468750325,
+          "resnet50": 0.9966493459226913
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -443,19 +443,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.8618,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2c3eb894-3a67-4cf4-bc75-9bd7442c9709_gradcam.jpg",
-          "sha256": "0c2d2b73c9a034d87ae1a95aa107723e5ea55533246b2cc0f5892be64534c936",
-          "size_bytes": 232001
+          "sha256": "10a5c57894fe092531b4bf0690121f06872000d255f222bafb6fd10c90ad5327",
+          "size_bytes": 222519
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 714
+        "processing_time_ms": 1186
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -479,19 +479,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.7180724143981934,
-          "pvt_v2_b2": 0.16124612092971802,
-          "resnet50": 0.4786260724067688
+          "efficientnet_b4": 0.6596693992614746,
+          "pvt_v2_b2": 0.14715750515460968,
+          "resnet50": 0.4416637718677521
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17929745718821202,
-          "pvt_v2_b2": 0.34073012604023667,
-          "resnet50": 0.47997241677155134
+          "efficientnet_b4": 0.2979365572983825,
+          "pvt_v2_b2": 0.46170195093273425,
+          "resnet50": 0.2403614917688832
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517280123087423,
-          "pvt_v2_b2": 1.2385193368626888,
-          "resnet50": 1.7446508949492916
+          "efficientnet_b4": 1.2337002501329088,
+          "pvt_v2_b2": 1.9118224950894893,
+          "resnet50": 0.9952925388092352
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -500,19 +500,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/02f88968-7b55-468b-ae66-a0458c7d874f_gradcam.jpg",
-          "sha256": "849d2b2e553009e85bfa986884902820a4f5c36d2051c8045854e0752850c4ca",
-          "size_bytes": 76912
+          "sha256": "2be460d2188721a448578bda002f10eced152631316fea583a540c6d210e8db7",
+          "size_bytes": 77208
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 411
+        "processing_time_ms": 764
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -557,19 +557,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.7222491502761841,
-          "pvt_v2_b2": 0.18163271248340607,
-          "resnet50": 0.5302369594573975
+          "efficientnet_b4": 0.9225112199783325,
+          "pvt_v2_b2": 0.1635453999042511,
+          "resnet50": 0.6220492124557495
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17926535099133223,
-          "pvt_v2_b2": 0.34073719944656466,
-          "resnet50": 0.479997449562103
+          "efficientnet_b4": 0.29780151308043057,
+          "pvt_v2_b2": 0.4616142387297828,
+          "resnet50": 0.24058424818978666
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.65160405796577,
-          "pvt_v2_b2": 1.2385312645833537,
-          "resnet50": 1.744722469893299
+          "efficientnet_b4": 1.233696172020977,
+          "pvt_v2_b2": 1.9123197641964347,
+          "resnet50": 0.9966633915661881
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -578,19 +578,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/2c923b19-3c0f-4cbf-b7ec-004a9319bca2_gradcam.jpg",
-          "sha256": "837a52200de5c111b1ead3ab40bfbeaa2cfc27f150657e9876e65db2d69ec394",
-          "size_bytes": 198370
+          "sha256": "601c0db0948e79c802a2b2ad0390088105fa2861ce78616192d7274f0224b2e5",
+          "size_bytes": 200253
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 430
+        "processing_time_ms": 896
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -618,19 +618,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.38961678743362427,
-          "pvt_v2_b2": 0.18351545929908752,
-          "resnet50": 0.5569546222686768
+          "efficientnet_b4": 0.6275971531867981,
+          "pvt_v2_b2": 0.203912615776062,
+          "resnet50": 0.5724045038223267
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17908731296837352,
-          "pvt_v2_b2": 0.34081544125822943,
-          "resnet50": 0.4800972457733971
+          "efficientnet_b4": 0.2977960518163049,
+          "pvt_v2_b2": 0.4616348186012761,
+          "resnet50": 0.24056912958241897
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6508073357269356,
-          "pvt_v2_b2": 1.2385310026905068,
-          "resnet50": 1.7446842226439714
+          "efficientnet_b4": 1.2336904805661686,
+          "pvt_v2_b2": 1.9124312687583533,
+          "resnet50": 0.996614438887835
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -639,19 +639,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3ad256a5-baae-4f9a-a808-44fc492a4839_gradcam.jpg",
-          "sha256": "8380ec4cf87b76955496a09b19e43f16bedf89808884529b5e3b5ad2d1af6650",
-          "size_bytes": 397432
+          "sha256": "7bace6c0ae1fd01ee2d262e5f68c3128736181f64520cca6ebbfcdd6aebb2f32",
+          "size_bytes": 398488
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 895
+        "processing_time_ms": 1496
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -679,19 +679,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5584349632263184,
-          "pvt_v2_b2": 0.1412477344274521,
-          "resnet50": 0.4154810309410095
+          "efficientnet_b4": 0.31959080696105957,
+          "pvt_v2_b2": 0.17010024189949036,
+          "resnet50": 0.19405688345432281
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17899717769278686,
-          "pvt_v2_b2": 0.34117915489472656,
-          "resnet50": 0.47982366741248667
+          "efficientnet_b4": 0.067524767881698,
+          "pvt_v2_b2": 0.760860750366004,
+          "resnet50": 0.17161448175229807
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6495270376972941,
-          "pvt_v2_b2": 1.2380367593458885,
-          "resnet50": 1.7411360856559652
+          "efficientnet_b4": 0.16972033529466424,
+          "pvt_v2_b2": 1.9123877906682671,
+          "resnet50": 0.43134494642690263
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -700,19 +700,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9529,
+        "confidence": 0.8554,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3b2a2f84-2974-433d-95ef-30de7fb2a228_gradcam.jpg",
-          "sha256": "4c0b8f7eed9264ddc2ab612a5df1907fc38c9355d37caf8ad863e1036b174410",
-          "size_bytes": 314326
+          "sha256": "2056845f7ecc2e717a0553d10981bb650344e1abb30de28d137b21343dbdfc80",
+          "size_bytes": 316586
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 676
+        "processing_time_ms": 1270
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -736,19 +736,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4531259834766388,
-          "pvt_v2_b2": 0.15162275731563568,
-          "resnet50": 0.5958888530731201
+          "efficientnet_b4": 0.5048513412475586,
+          "pvt_v2_b2": 0.12722502648830414,
+          "resnet50": 0.5798240900039673
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 0.41519034304690655,
-          "resnet50": 0.5848096569530935
+          "efficientnet_b4": 0.29840460552604237,
+          "pvt_v2_b2": 0.4605218641471845,
+          "resnet50": 0.2410735303267731
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 1.2384149801155104,
-          "resnet50": 1.744349433496102
+          "efficientnet_b4": 1.2335521393872124,
+          "pvt_v2_b2": 1.9037163644036632,
+          "resnet50": 0.9965555610644432
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -757,19 +757,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.8648,
+        "confidence": 0.9676,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/032a3076-c75c-4089-a57c-1b19e5f6589e_gradcam.jpg",
-          "sha256": "01391002b5f282a079af8963c685b4df864ed44ff0edf44037d40048121b739f",
-          "size_bytes": 85915
+          "sha256": "c75d20c02c93c16539213b63a1c81564e34335e6e0212bf5145f692578c32625",
+          "size_bytes": 86872
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 392
+        "processing_time_ms": 641
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -818,19 +818,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 2.797667980194092,
-          "pvt_v2_b2": 0.1732850968837738,
-          "resnet50": 0.984339714050293
+          "efficientnet_b4": 2.376988649368286,
+          "pvt_v2_b2": 0.1716536283493042,
+          "resnet50": 1.2217947244644165
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1793327175980966,
-          "pvt_v2_b2": 0.3408671741903647,
-          "resnet50": 0.4798001082115387
+          "efficientnet_b4": 0.29786415183543713,
+          "pvt_v2_b2": 0.46155007130591663,
+          "resnet50": 0.24058577685864616
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6515628051575455,
-          "pvt_v2_b2": 1.2384598592842437,
-          "resnet50": 1.743239653133557
+          "efficientnet_b4": 1.2336682501158491,
+          "pvt_v2_b2": 1.9116085816308481,
+          "resnet50": 0.9964375790475948
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -839,19 +839,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/85b99115-d334-4a40-a60c-98017e6e4fc3_gradcam.jpg",
-          "sha256": "5e55654ea1851739f90d215619f08eacea4eed5c607b16c4f328dd1416ae62cf",
-          "size_bytes": 67816
+          "sha256": "5b979935e2302fa97f87f6659188965d1c7ae167282bf1729e6c930cd9773e99",
+          "size_bytes": 70109
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 548
+        "processing_time_ms": 889
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -879,19 +879,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 2.4539668560028076,
-          "pvt_v2_b2": 0.2191188931465149,
-          "resnet50": 1.0212604999542236
+          "efficientnet_b4": 1.5001742839813232,
+          "pvt_v2_b2": 0.16797178983688354,
+          "resnet50": 1.4844896793365479
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17929180367144862,
-          "pvt_v2_b2": 0.3407233462777041,
-          "resnet50": 0.4799848500508473
+          "efficientnet_b4": 0.2979962744744593,
+          "pvt_v2_b2": 0.4612610661159529,
+          "resnet50": 0.24074265940958775
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517270461466259,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.7447485167364896
+          "efficientnet_b4": 1.2336991345234722,
+          "pvt_v2_b2": 1.9096123904911368,
+          "resnet50": 0.996670213680618
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -900,19 +900,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/85ca4da2-a727-49cf-b436-be431d57f294_gradcam.jpg",
-          "sha256": "2f895b7840a4ea0d737e945152463394a8bea1b643e481560dcf9018c0c86309",
-          "size_bytes": 267151
+          "sha256": "39c1c399ec581bf52d57b6ccf6c6c4bb85b59892b041e9b0fb25503ae2e6f2a4",
+          "size_bytes": 268368
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 1553
+        "processing_time_ms": 2254
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -940,19 +940,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 7.188290119171143,
-          "pvt_v2_b2": 0.12890303134918213,
-          "resnet50": 0.7514084577560425
+          "efficientnet_b4": 6.718395233154297,
+          "pvt_v2_b2": 0.061335690319538116,
+          "resnet50": 1.4156094789505005
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1741599180344283,
-          "pvt_v2_b2": 0.34418940032646966,
-          "resnet50": 0.4816506816391021
+          "efficientnet_b4": 0.30833088980963547,
+          "pvt_v2_b2": 0.44239925548771175,
+          "resnet50": 0.24926985470265278
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6261599139756006,
-          "pvt_v2_b2": 1.2374696068536952,
-          "resnet50": 1.7316863305012036
+          "efficientnet_b4": 1.2327342173881606,
+          "pvt_v2_b2": 1.7687514226143763,
+          "resnet50": 0.9966029658755664
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -961,19 +961,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9855,
+        "confidence": 0.9913,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/87d5f55a-465e-4c4b-beaf-e3aa08fa87ef_gradcam.jpg",
-          "sha256": "117561717b0c9a3aea37eb01fa0a8f87609c49f292c87b0acc9887065fe0b2c9",
-          "size_bytes": 379166
+          "sha256": "32d3fce1cebfb972528fea4bcb1345e44979919b617d43c85745b843fc119d2d",
+          "size_bytes": 376889
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 1322
+        "processing_time_ms": 2109
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -997,19 +997,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.0261223316192627,
-          "pvt_v2_b2": 0.18694260716438293,
-          "resnet50": 0.7857698202133179
+          "efficientnet_b4": 0.4966371953487396,
+          "pvt_v2_b2": 0.1923181116580963,
+          "resnet50": 0.7323569059371948
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927537690776546,
-          "pvt_v2_b2": 0.34071576795152425,
-          "resnet50": 0.4800088551407103
+          "efficientnet_b4": 0.29779373638901896,
+          "pvt_v2_b2": 0.46162757307363306,
+          "resnet50": 0.2405786905373479
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651681673990702,
-          "pvt_v2_b2": 1.2385316145669703,
-          "resnet50": 1.744874168689636
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124322726527505,
+          "resnet50": 0.996670213680618
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1018,19 +1018,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/76594c04-8899-4982-b973-5e484a98789c_gradcam.jpg",
-          "sha256": "bd80be898ab7c4f8abdfb95da143036f3fb1f61bd174797b7799b658b5cace9c",
-          "size_bytes": 83367
+          "sha256": "dd944e32bfaf8929a604d94303ee4225bf0c68ef468ce2f33e2d74a929c0e164",
+          "size_bytes": 84611
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 377
+        "processing_time_ms": 525
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1075,19 +1075,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.788297176361084,
-          "pvt_v2_b2": 0.135275200009346,
-          "resnet50": 1.0135009288787842
+          "efficientnet_b4": 0.629075288772583,
+          "pvt_v2_b2": 0.13709336519241333,
+          "resnet50": 0.5811065435409546
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17293527162122538,
-          "pvt_v2_b2": 0.3434070815846378,
-          "resnet50": 0.48365764679413675
+          "efficientnet_b4": 0.15880641150566163,
+          "pvt_v2_b2": 0.5519893202814727,
+          "resnet50": 0.2892042682128656
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6229018202584407,
-          "pvt_v2_b2": 1.2369304087209436,
-          "resnet50": 1.7421040007954336
+          "efficientnet_b4": 0.5472629525000657,
+          "pvt_v2_b2": 1.902211014666581,
+          "resnet50": 0.9966271525010261
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1096,19 +1096,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9856,
+        "confidence": 0.9376,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/88bac517-668e-42ed-979b-785c52c599bb_gradcam.jpg",
-          "sha256": "5aff8ef96b2534bf42cefbc96d96ce1d8a02fb6b8c2422e4a5ce33918728d623",
-          "size_bytes": 227155
+          "sha256": "9cb3c32f18cc3fe36630476cdd59b6c83d31de3d537fc70f07b59093120c2e5e",
+          "size_bytes": 226019
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
-        "prediction_class": 1,
-        "prediction_label": "abnormal",
-        "processing_time_ms": 1095
+        "model_version": "0.1.2",
+        "prediction_class": 0,
+        "prediction_label": "normal",
+        "processing_time_ms": 1762
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1119,8 +1119,8 @@
       "exam_type": "colonoscopy",
       "patient_key": "clinic_primary_patient_01",
       "review": {
-        "agrees_with_ai": true,
-        "review_notes": "Resultado da IA confirmado na revisão demonstrativa.",
+        "agrees_with_ai": false,
+        "review_notes": "Resultado da IA divergente da revisão demonstrativa.",
         "reviewed_label": "abnormal"
       },
       "source_asset": {
@@ -1131,24 +1131,24 @@
         "sha256": "3397c97102b63c7787b0afb9a49e67652ae9989821d07325663653733b983778",
         "size_bytes": 442961
       },
-      "status": "completed"
+      "status": "completed_with_divergence"
     },
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 2.4334018230438232,
-          "pvt_v2_b2": 0.14416688680648804,
-          "resnet50": 1.2200558185577393
+          "efficientnet_b4": 2.718280553817749,
+          "pvt_v2_b2": 0.045300304889678955,
+          "resnet50": 0.36639589071273804
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1791619486908951,
-          "pvt_v2_b2": 0.34058221839639646,
-          "resnet50": 0.4802558329127084
+          "efficientnet_b4": 0.9459964216930895,
+          "pvt_v2_b2": 0.05400357830691056,
+          "resnet50": 0.0
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6510031893371357,
-          "pvt_v2_b2": 1.2375401809795044,
-          "resnet50": 1.7450584859586555
+          "efficientnet_b4": 1.2331363029616924,
+          "pvt_v2_b2": 0.07039537504898832,
+          "resnet50": 0.0
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1157,19 +1157,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.7503,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f0bc5ab-981c-41fb-8f8e-d4b5dd88a337_gradcam.jpg",
-          "sha256": "0b2d9f663e03871806026b4dcd422a4440d33b3cf9b906279992097d26f878bd",
-          "size_bytes": 237937
+          "sha256": "aa20bd27e089b96e1291dae87261d82e45fcb8fbb196c187de07b55470d1e719",
+          "size_bytes": 242022
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 841
+        "processing_time_ms": 1326
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1197,19 +1197,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 2.4815566539764404,
-          "pvt_v2_b2": 0.16026422381401062,
-          "resnet50": 1.5644092559814453
+          "efficientnet_b4": 4.3535380363464355,
+          "pvt_v2_b2": 0.1477002501487732,
+          "resnet50": 1.4378421306610107
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.16221118444069765,
-          "pvt_v2_b2": 0.34775227019863053,
-          "resnet50": 0.4900365453606718
+          "efficientnet_b4": 0.2978698631972502,
+          "pvt_v2_b2": 0.46142193937239645,
+          "resnet50": 0.2407081974303535
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.5776622846602394,
-          "pvt_v2_b2": 1.2384064119337357,
-          "resnet50": 1.7451055014245678
+          "efficientnet_b4": 1.2333526408836621,
+          "pvt_v2_b2": 1.9105523512116747,
+          "resnet50": 0.9966704513053709
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1218,19 +1218,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.985,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f8b5d47-f221-4012-a2dc-e989c8b36ff0_gradcam.jpg",
-          "sha256": "df006f113074f1f4e57a1e4f517053db43b6ed7bb303dd00f9cf053195cc030b",
-          "size_bytes": 226597
+          "sha256": "571e45773cfdc522241384d721eaa38ea03426c735a0d218fb1a9ca2ea63c0fd",
+          "size_bytes": 220138
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 1331
+        "processing_time_ms": 2246
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1254,19 +1254,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 5.43568754196167,
-          "pvt_v2_b2": 0.13930317759513855,
-          "resnet50": 1.0889753103256226
+          "efficientnet_b4": 5.394566535949707,
+          "pvt_v2_b2": 0.09907834231853485,
+          "resnet50": 1.3486051559448242
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17999605446947406,
-          "pvt_v2_b2": 0.33694753029967744,
-          "resnet50": 0.48305641523084847
+          "efficientnet_b4": 0.3063478574136006,
+          "pvt_v2_b2": 0.4461644256023287,
+          "resnet50": 0.24748771698407065
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6502565687576358,
-          "pvt_v2_b2": 1.217261931378534,
-          "resnet50": 1.7450971801031674
+          "efficientnet_b4": 1.2337003110723341,
+          "pvt_v2_b2": 1.7967587411974673,
+          "resnet50": 0.9966633225627859
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1275,19 +1275,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9857,
+        "confidence": 0.9915,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/820bb90d-3a37-4b1a-8498-56a385ccc69d_gradcam.jpg",
-          "sha256": "58657956d44230cffc0104e47627b511d66f7c748f974f0523ef4f522b93ff3e",
-          "size_bytes": 252393
+          "sha256": "bd860ba35b988128cef94e18e3f9be7add8ef8524e0c1e079346c11a9b60efdf",
+          "size_bytes": 250100
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 931
+        "processing_time_ms": 1397
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1336,19 +1336,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.23096175491809845,
-          "pvt_v2_b2": 0.21298599243164062,
-          "resnet50": 0.6583303809165955
+          "efficientnet_b4": 1.1056064367294312,
+          "pvt_v2_b2": 0.18231472373008728,
+          "resnet50": 1.0263558626174927
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17933186439097992,
-          "pvt_v2_b2": 0.3408007771011115,
-          "resnet50": 0.4798673585079085
+          "efficientnet_b4": 0.29742770692158327,
+          "pvt_v2_b2": 0.46187299092514233,
+          "resnet50": 0.24069930215327437
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517233169283307,
-          "pvt_v2_b2": 1.238529547542365,
-          "resnet50": 1.743921793455357
+          "efficientnet_b4": 1.2314804575072682,
+          "pvt_v2_b2": 1.9123556714395318,
+          "resnet50": 0.9966001143785325
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1357,19 +1357,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8fffbd0c-11a5-4a62-a4d4-053046f617ab_gradcam.jpg",
-          "sha256": "b79b4d7be1297b2a76598dc82b14e8cedbd03051a8d34a103abf7c8bd5b90269",
-          "size_bytes": 195382
+          "sha256": "3c128505bdeb8049f5b3fc1568eb4020a4b56db51c339d2c8c236552bc215178",
+          "size_bytes": 193849
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 2057
+        "processing_time_ms": 3379
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1397,19 +1397,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4690566956996918,
-          "pvt_v2_b2": 0.18885764479637146,
-          "resnet50": 0.5876262187957764
+          "efficientnet_b4": 0.4595988392829895,
+          "pvt_v2_b2": 0.20248892903327942,
+          "resnet50": 0.9218268394470215
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17931481260556256,
-          "pvt_v2_b2": 0.3407666658709149,
-          "resnet50": 0.4799185215235225
+          "efficientnet_b4": 0.2977945918273328,
+          "pvt_v2_b2": 0.4616290091997989,
+          "resnet50": 0.24057639897286828
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279784511997,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7442860592996607
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966578571934708
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1418,19 +1418,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/90d76564-923d-4f7a-8552-2205f9b95909_gradcam.jpg",
-          "sha256": "dbb78be8e7644e4107e8a5b26caaa438f215e295a439e801a3e87cc2ecb96ea9",
-          "size_bytes": 104151
+          "sha256": "65a7614abb76f320e659cfd7c1f986b4f3558df0f2da26cccf1c16e92483321d",
+          "size_bytes": 104403
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 633
+        "processing_time_ms": 917
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1458,19 +1458,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.3931182622909546,
-          "pvt_v2_b2": 0.03314630687236786,
-          "resnet50": 0.47481420636177063
+          "efficientnet_b4": 4.2070817947387695,
+          "pvt_v2_b2": 0.07869119942188263,
+          "resnet50": 2.1367156505584717
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.29505403098142735,
-          "pvt_v2_b2": 0.0,
-          "resnet50": 0.7049459690185726
+          "efficientnet_b4": 0.30174478271919963,
+          "pvt_v2_b2": 0.45444181067674577,
+          "resnet50": 0.24381340660405457
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651397298410229,
-          "pvt_v2_b2": 0.0,
-          "resnet50": 1.5563247796224287
+          "efficientnet_b4": 1.233484708493403,
+          "pvt_v2_b2": 1.8576858871209012,
+          "resnet50": 0.9966704513053709
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1479,19 +1479,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.6119,
+        "confidence": 0.992,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/55866948-68f1-430b-875b-953fc91c6dc6_gradcam.jpg",
-          "sha256": "9e9dce723f5ba3471573fc25007939fa6330932231e9cd285b49f1ed356408d8",
-          "size_bytes": 259103
+          "sha256": "3508aed9df6424e4dc06419a4952d089c10224da5200588558198e378c4ea225",
+          "size_bytes": 253269
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
-        "prediction_class": 0,
-        "prediction_label": "normal",
-        "processing_time_ms": 1470
+        "model_version": "0.1.2",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 2114
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1515,19 +1515,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.1865849792957306,
-          "pvt_v2_b2": 0.1662140041589737,
-          "resnet50": 1.0630099773406982
+          "efficientnet_b4": 0.43903160095214844,
+          "pvt_v2_b2": 0.19374017417430878,
+          "resnet50": 0.7485288977622986
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792740910639664,
-          "pvt_v2_b2": 0.34068879201869057,
-          "resnet50": 0.48003711691734297
+          "efficientnet_b4": 0.2977948097217499,
+          "pvt_v2_b2": 0.461629016787704,
+          "resnet50": 0.2405761734905462
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517256476897652,
-          "pvt_v2_b2": 1.238526004071613,
-          "resnet50": 1.745107165688848
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124313607335455,
+          "resnet50": 0.996656193820201
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1536,19 +1536,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8513d335-0b58-43eb-8668-f6f836d1c8c1_gradcam.jpg",
-          "sha256": "b2bcf2354577f00c438fde5d4f3e4b8879ef5e40199c5eb688ba049f56ec8869",
-          "size_bytes": 87967
+          "sha256": "660153e41ee4dec88d0e74b2ef4968bcb65f58d21198f3c12cd4ac88abb693be",
+          "size_bytes": 88437
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 524
+        "processing_time_ms": 714
       },
       "clinic_key": "clinic_primary",
       "clinic_name": "ClinicAI Endoscopia Especializada",
@@ -1593,19 +1593,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5608570575714111,
-          "pvt_v2_b2": 0.15434984862804413,
-          "resnet50": 0.4405587613582611
+          "efficientnet_b4": 0.6969850063323975,
+          "pvt_v2_b2": 0.17247271537780762,
+          "resnet50": 0.5121336579322815
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792810113580692,
-          "pvt_v2_b2": 0.340698394847512,
-          "resnet50": 0.4800205937944188
+          "efficientnet_b4": 0.2977978216383644,
+          "pvt_v2_b2": 0.46162234829012916,
+          "resnet50": 0.24057983007150643
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281098020117,
-          "pvt_v2_b2": 1.2385177839223216,
-          "resnet50": 1.744986331178431
+          "efficientnet_b4": 1.233700899224781,
+          "pvt_v2_b2": 1.9123843923860993,
+          "resnet50": 0.9966612618644026
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1614,19 +1614,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3ed83478-0f49-400e-9e75-080aefd04205_gradcam.jpg",
-          "sha256": "472e4a9e0246beaaec7f18d97f84db374de45191e5a252c34d7cd7083b486ea0",
-          "size_bytes": 76556
+          "sha256": "87d777474ead1efce92f95f65ec3cc2a9ca8240f54fcc3cb79c2ab4f93d384d3",
+          "size_bytes": 75343
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 380
+        "processing_time_ms": 503
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1654,19 +1654,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5662494897842407,
-          "pvt_v2_b2": 0.15969158709049225,
-          "resnet50": 0.5848052501678467
+          "efficientnet_b4": 0.5450679063796997,
+          "pvt_v2_b2": 0.15405863523483276,
+          "resnet50": 0.5518186092376709
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17852660357892083,
-          "pvt_v2_b2": 0.34103193837912604,
-          "resnet50": 0.48044145804195315
+          "efficientnet_b4": 0.29732099003555823,
+          "pvt_v2_b2": 0.46198168670163353,
+          "resnet50": 0.2406973232628081
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6483463874578316,
-          "pvt_v2_b2": 1.238509111938065,
-          "resnet50": 1.7447958873466884
+          "efficientnet_b4": 1.23073795636373,
+          "pvt_v2_b2": 1.9123385701784392,
+          "resnet50": 0.9963485312599696
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1675,19 +1675,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.953,
+        "confidence": 0.9678,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f14fa3b-7342-42ea-a1c8-5d09d437c404_gradcam.jpg",
-          "sha256": "386ee6a2a8932b86c224716d34e257b30504c7f686967ca32f006b36b24bbf32",
-          "size_bytes": 87439
+          "sha256": "096e03e03af6f9f838119855054a560ed33abba1fa2bd7ddc1150e3b2d8783e7",
+          "size_bytes": 87799
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 366
+        "processing_time_ms": 647
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1715,19 +1715,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5201842188835144,
-          "pvt_v2_b2": 0.15077424049377441,
-          "resnet50": 0.6747635006904602
+          "efficientnet_b4": 0.47234082221984863,
+          "pvt_v2_b2": 0.1545666754245758,
+          "resnet50": 0.6163630485534668
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17930573346096268,
-          "pvt_v2_b2": 0.3407398781733722,
-          "resnet50": 0.4799543883656651
+          "efficientnet_b4": 0.2978204047057895,
+          "pvt_v2_b2": 0.46165003143489913,
+          "resnet50": 0.24052956385931132
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517153394062928,
-          "pvt_v2_b2": 1.2384735338168358,
-          "resnet50": 1.7444709161035754
+          "efficientnet_b4": 1.233696433593658,
+          "pvt_v2_b2": 1.9123471338784452,
+          "resnet50": 0.9963738562514346
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1736,19 +1736,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f3eacce-e63b-45f4-a890-ade671eb1135_gradcam.jpg",
-          "sha256": "fb0644594f42e916a71e0abde99fe90a726d99e86f8612892e3e5ebc96fc97a7",
-          "size_bytes": 74810
+          "sha256": "2d1dd7f5894065186e6bdaf30af9cb47fbaab67fa4965cf8fd18d5b3ec7d4ba2",
+          "size_bytes": 74382
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 411
+        "processing_time_ms": 724
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1772,19 +1772,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.44954293966293335,
-          "pvt_v2_b2": 0.1775818169116974,
-          "resnet50": 0.4346980154514313
+          "efficientnet_b4": 0.5442509055137634,
+          "pvt_v2_b2": 0.12922655045986176,
+          "resnet50": 0.4480767548084259
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17894128428391218,
-          "pvt_v2_b2": 0.34150619369635077,
-          "resnet50": 0.479552522019737
+          "efficientnet_b4": 0.29788033260239816,
+          "pvt_v2_b2": 0.46101453862777664,
+          "resnet50": 0.2411051287698253
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6489596760404143,
-          "pvt_v2_b2": 1.238527764645668,
-          "resnet50": 1.739175230465649
+          "efficientnet_b4": 1.2310422723354064,
+          "pvt_v2_b2": 1.9052227458384008,
+          "resnet50": 0.9964088699628938
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1793,19 +1793,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9528,
+        "confidence": 0.9676,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3c0cda87-4530-4d04-a58c-fb290ecb0139_gradcam.jpg",
-          "sha256": "033cf07f53f538448b94187e7cd35fb3a7b770c0c48626d3f33b4684aadc3a3d",
-          "size_bytes": 271422
+          "sha256": "487d962d17973252575ced451b5033464246ea03e69737248b014d018a2100f1",
+          "size_bytes": 279683
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 596
+        "processing_time_ms": 871
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1854,19 +1854,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5287511348724365,
-          "pvt_v2_b2": 0.14928829669952393,
-          "resnet50": 0.40863025188446045
+          "efficientnet_b4": 0.3922690451145172,
+          "pvt_v2_b2": 0.1394343078136444,
+          "resnet50": 0.5777435302734375
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17928805933012096,
-          "pvt_v2_b2": 0.34070805604046167,
-          "resnet50": 0.48000388462941734
+          "efficientnet_b4": 0.29730028739879755,
+          "pvt_v2_b2": 0.4619320074307623,
+          "resnet50": 0.2407677051704403
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517242972519272,
-          "pvt_v2_b2": 1.2384969708561924,
-          "resnet50": 1.744846787661925
+          "efficientnet_b4": 1.230677747280007,
+          "pvt_v2_b2": 1.9121725285749633,
+          "resnet50": 0.9966605132119116
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1875,19 +1875,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9678,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3f7c1c00-6f4d-42dc-a97a-e36e04037664_gradcam.jpg",
-          "sha256": "869d86f888e6ee8c3f8aac0a6cbe0c162e0570b97c51ef2da84ebf7967ee7291",
-          "size_bytes": 89161
+          "sha256": "73aa47a32ee726cfff8ce26ffa151dc1f7b540f50a55f5d8e6d6169dab173fb8",
+          "size_bytes": 89310
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 403
+        "processing_time_ms": 633
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1915,19 +1915,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5441307425498962,
-          "pvt_v2_b2": 0.14503343403339386,
-          "resnet50": 0.4984648525714874
+          "efficientnet_b4": 0.5468859672546387,
+          "pvt_v2_b2": 0.12927468121051788,
+          "resnet50": 0.5890333652496338
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17921852388834744,
-          "pvt_v2_b2": 0.3408321935796754,
-          "resnet50": 0.47994928253197716
+          "efficientnet_b4": 0.29784578830938135,
+          "pvt_v2_b2": 0.4613554654228597,
+          "resnet50": 0.24079874626775882
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6512279128267285,
-          "pvt_v2_b2": 1.2384849134642328,
-          "resnet50": 1.743995892526751
+          "efficientnet_b4": 1.23266759114383,
+          "pvt_v2_b2": 1.909370394162208,
+          "resnet50": 0.9965721261232399
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1936,19 +1936,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9678,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/4c944674-3dfa-417d-915c-a69a1c30704d_gradcam.jpg",
-          "sha256": "2e4a4cbe156236510f22cf4c81249ad4212fed745ce5f1a762bfe481e02e6db1",
-          "size_bytes": 79695
+          "sha256": "3271aa9490c40dc742892ac6abb34298b258f09e94cf5cc3aa18163a94d5f791",
+          "size_bytes": 81413
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 409
+        "processing_time_ms": 800
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -1976,19 +1976,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.9005635380744934,
-          "pvt_v2_b2": 0.1954931914806366,
-          "resnet50": 0.6380853056907654
+          "efficientnet_b4": 1.0096384286880493,
+          "pvt_v2_b2": 0.1928054690361023,
+          "resnet50": 0.5264686942100525
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792808467265307,
-          "pvt_v2_b2": 0.34072677577731875,
-          "resnet50": 0.47999237749615065
+          "efficientnet_b4": 0.29788764799028955,
+          "pvt_v2_b2": 0.46177276309650245,
+          "resnet50": 0.24033958891320806
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6516808168507187,
-          "pvt_v2_b2": 1.2385322114200814,
-          "resnet50": 1.7447587422762896
+          "efficientnet_b4": 1.2337003271186915,
+          "pvt_v2_b2": 1.912429779247603,
+          "resnet50": 0.9953653045441552
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -1997,19 +1997,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7a85bcd3-b3c8-42a3-a0f5-565609cbb44c_gradcam.jpg",
-          "sha256": "baaf9dc590fc56d81ef777f65b5bb7ff3fe7e8935cf4060c6795acb18a3e2875",
-          "size_bytes": 286254
+          "sha256": "5aa286badb89f9458286dfce7d90381282c9a996dd445f422a6cd8edeea74c40",
+          "size_bytes": 289452
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 487
+        "processing_time_ms": 756
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2033,19 +2033,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5432099103927612,
-          "pvt_v2_b2": 0.18633565306663513,
-          "resnet50": 0.5004758238792419
+          "efficientnet_b4": 0.690823495388031,
+          "pvt_v2_b2": 0.18047800660133362,
+          "resnet50": 0.4359325170516968
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927845454560704,
-          "pvt_v2_b2": 0.34069788362803927,
-          "resnet50": 0.4800236618263537
+          "efficientnet_b4": 0.29781633286789194,
+          "pvt_v2_b2": 0.46165909574544756,
+          "resnet50": 0.24052457138666059
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517263530195986,
-          "pvt_v2_b2": 1.2385302502812012,
-          "resnet50": 1.7450176669479127
+          "efficientnet_b4": 1.2337008308840802,
+          "pvt_v2_b2": 1.912417645203487,
+          "resnet50": 0.9963703491688246
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2054,19 +2054,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3c0f73a8-5755-4a9d-94b1-2f540b8109e3_gradcam.jpg",
-          "sha256": "61a1140285d67ca968dcdd5febaf5d1250ddc6e8f9b43efd63039cb03120bfda",
-          "size_bytes": 331651
+          "sha256": "32348fafbeb4c6227fe4601f47c1e44e5df3afa4e2eb2a2c5d733f56b462f40b",
+          "size_bytes": 332343
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 954
+        "processing_time_ms": 1326
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2115,19 +2115,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.548988938331604,
-          "pvt_v2_b2": 0.17777566611766815,
-          "resnet50": 0.6648088097572327
+          "efficientnet_b4": 0.6317407488822937,
+          "pvt_v2_b2": 0.18316403031349182,
+          "resnet50": 0.32251328229904175
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17776837991700956,
-          "pvt_v2_b2": 0.34139178742837073,
-          "resnet50": 0.48083983265461977
+          "efficientnet_b4": 0.29869989840822186,
+          "pvt_v2_b2": 0.4630467260743744,
+          "resnet50": 0.23825337551740366
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6449153570084427,
-          "pvt_v2_b2": 1.238515007966563,
-          "resnet50": 1.7444102966180113
+          "efficientnet_b4": 1.2336596771757637,
+          "pvt_v2_b2": 1.9124280846775252,
+          "resnet50": 0.9840096494614202
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2136,19 +2136,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9529,
+        "confidence": 0.9675,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7ac3a14e-fe8e-4bc3-b01e-a33cf9fc96c2_gradcam.jpg",
-          "sha256": "ac0f162523b7d41c9cb59edbf5c01bf747ac8477a71a0c2fcabd11d62df9af47",
-          "size_bytes": 246777
+          "sha256": "71cd5fe47b2be96205b4bdc9eb6e03e4f848c4a70bd92e297287f045fa29ca47",
+          "size_bytes": 244988
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 686
+        "processing_time_ms": 1126
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2176,19 +2176,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4903739094734192,
-          "pvt_v2_b2": 0.19745078682899475,
-          "resnet50": 0.6073665618896484
+          "efficientnet_b4": 0.8067807555198669,
+          "pvt_v2_b2": 0.1900591403245926,
+          "resnet50": 0.7853207588195801
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927077448011272,
-          "pvt_v2_b2": 0.3407038811625872,
-          "resnet50": 0.4800253443573001
+          "efficientnet_b4": 0.2977940816867807,
+          "pvt_v2_b2": 0.4616276492330816,
+          "resnet50": 0.24057826908013785
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6516879929376017,
-          "pvt_v2_b2": 1.2385322099756346,
-          "resnet50": 1.7449958261774188
+          "efficientnet_b4": 1.2337008821075934,
+          "pvt_v2_b2": 1.912430343941884,
+          "resnet50": 0.9966672980837123
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2197,19 +2197,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7c015078-9f75-48d3-87bb-79ea92630a74_gradcam.jpg",
-          "sha256": "b95d43c5f9b20da92565c4a0c539f3aa574ddc38a638044c133e9d9ed5334f0b",
-          "size_bytes": 66910
+          "sha256": "8c541c218fa6035aa189c6384244255a44157f35b9f4f14da5fd03371f6c18f3",
+          "size_bytes": 66903
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 379
+        "processing_time_ms": 664
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2233,19 +2233,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.8285753726959229,
-          "pvt_v2_b2": 0.17252251505851746,
-          "resnet50": 0.454069048166275
+          "efficientnet_b4": 0.6862763166427612,
+          "pvt_v2_b2": 0.18610265851020813,
+          "resnet50": 0.540148913860321
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17941100884989683,
-          "pvt_v2_b2": 0.34093987725097485,
-          "resnet50": 0.4796491138991283
+          "efficientnet_b4": 0.2978157953524456,
+          "pvt_v2_b2": 0.46166034610815365,
+          "resnet50": 0.24052385853940075
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651728055782628,
-          "pvt_v2_b2": 1.2384974855442015,
-          "resnet50": 1.7423723686926862
+          "efficientnet_b4": 1.2337008203366038,
+          "pvt_v2_b2": 1.912426260119895,
+          "resnet50": 0.9963691859910183
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2254,19 +2254,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/7ca978f1-93fe-4ea6-8a94-106f48c8e01a_gradcam.jpg",
-          "sha256": "76b394d5597f23f0368c02416ceb8f25af7be12f7b21ed6ea377bbd1bf63920b",
-          "size_bytes": 326493
+          "sha256": "372b3c6fa648955792adb194a23860b26a506e622d2fba6172448b4a52da8db4",
+          "size_bytes": 326837
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 624
+        "processing_time_ms": 921
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2294,19 +2294,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.48124632239341736,
-          "pvt_v2_b2": 0.15340885519981384,
-          "resnet50": 0.37161311507225037
+          "efficientnet_b4": 0.5435341596603394,
+          "pvt_v2_b2": 0.14366711676120758,
+          "resnet50": 0.4963064193725586
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17932655941808948,
-          "pvt_v2_b2": 0.3407562975830149,
-          "resnet50": 0.47991714299889565
+          "efficientnet_b4": 0.2978101259603815,
+          "pvt_v2_b2": 0.46160324782920853,
+          "resnet50": 0.24058662621041005
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517234224493794,
-          "pvt_v2_b2": 1.2384047360448025,
-          "resnet50": 1.744154596744121
+          "efficientnet_b4": 1.2337005720913563,
+          "pvt_v2_b2": 1.912225748166408,
+          "resnet50": 0.9966479730538037
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2315,19 +2315,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/3e078f14-f99d-42d3-8ab4-426af1ac119f_gradcam.jpg",
-          "sha256": "7c9b4d463d1225a8137b41a59b681589f58c1d3e425b50d68e262006bd2d0193",
-          "size_bytes": 82423
+          "sha256": "353fdc869457d5e4116f6978a5d79b1554f4e9cbac98bf75f403479ee447e240",
+          "size_bytes": 82556
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 369
+        "processing_time_ms": 747
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2376,19 +2376,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.776238203048706,
-          "pvt_v2_b2": 0.18143661320209503,
-          "resnet50": 1.1275420188903809
+          "efficientnet_b4": 1.7089630365371704,
+          "pvt_v2_b2": 0.18330803513526917,
+          "resnet50": 1.1830509901046753
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927434654083524,
-          "pvt_v2_b2": 0.3406896836576706,
-          "resnet50": 0.48003596980149416
+          "efficientnet_b4": 0.2977922393078263,
+          "pvt_v2_b2": 0.4616284441267644,
+          "resnet50": 0.2405793165654094
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517276676830084,
-          "pvt_v2_b2": 1.238531319277741,
-          "resnet50": 1.7451059174906378
+          "efficientnet_b4": 1.2336908986814394,
+          "pvt_v2_b2": 1.9124299928547381,
+          "resnet50": 0.9966697384311124
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2397,19 +2397,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94eced16-7a89-4b32-a92b-3670f59c0a62_gradcam.jpg",
-          "sha256": "e02a2c616d084df2abe40f1ae0e67faa24f6100f1c0405fa9d85ad5466f57efe",
-          "size_bytes": 77291
+          "sha256": "d0c580d1a6fde7740384cfec4ef4ab354810d72aa0b3b46fdec4d656760f5609",
+          "size_bytes": 77526
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 438
+        "processing_time_ms": 689
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2437,19 +2437,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.7919012308120728,
-          "pvt_v2_b2": 0.18238580226898193,
-          "resnet50": 0.9942917227745056
+          "efficientnet_b4": 0.7495114803314209,
+          "pvt_v2_b2": 0.16414032876491547,
+          "resnet50": 0.8902047872543335
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17920760107874756,
-          "pvt_v2_b2": 0.3408228309613024,
-          "resnet50": 0.47996956795995
+          "efficientnet_b4": 0.297811002127437,
+          "pvt_v2_b2": 0.4616241793305339,
+          "resnet50": 0.24056481854202913
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6512244562893121,
-          "pvt_v2_b2": 1.2385198029977973,
-          "resnet50": 1.7441666483375646
+          "efficientnet_b4": 1.2337003110723341,
+          "pvt_v2_b2": 1.9123064278024626,
+          "resnet50": 0.9965544904259885
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2458,19 +2458,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9625b393-0496-41bc-a829-8d7d7edd3d37_gradcam.jpg",
-          "sha256": "4555da59e9bdfc3ce529fb82f860bba90feb184284482994563f74a0a62ad1f7",
-          "size_bytes": 87547
+          "sha256": "b50e13e1dc89708417db021d4abd9630dc8445b99b0cb9d15fb37cae02a63713",
+          "size_bytes": 89097
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 523
+        "processing_time_ms": 734
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2498,19 +2498,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.6623919010162354,
-          "pvt_v2_b2": 0.17228195071220398,
-          "resnet50": 0.9763124585151672
+          "efficientnet_b4": 0.2492642104625702,
+          "pvt_v2_b2": 0.2039114534854889,
+          "resnet50": 1.2807176113128662
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17901946888467402,
-          "pvt_v2_b2": 0.3408034695447844,
-          "resnet50": 0.4801770615705416
+          "efficientnet_b4": 0.2977446896611973,
+          "pvt_v2_b2": 0.46166381347324215,
+          "resnet50": 0.2405914968655605
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6505839630471273,
-          "pvt_v2_b2": 1.2385316145669703,
-          "resnet50": 1.7450364344569442
+          "efficientnet_b4": 1.2334008793869973,
+          "pvt_v2_b2": 1.9124322726527505,
+          "resnet50": 0.9966450254568178
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2519,19 +2519,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/98631a86-77cc-4aaf-91e8-be0d3b9ae3d0_gradcam.jpg",
-          "sha256": "a99907830fe68ddd4ce665622b55690eda5abe3a8fb57c5aa186b8a5d52bf83b",
-          "size_bytes": 80901
+          "sha256": "cad67efd06a51e2eafc7f53e05490c0e49a7434b811bd3572babea96e3b0de3c",
+          "size_bytes": 81575
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 352
+        "processing_time_ms": 529
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2555,19 +2555,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.33985546231269836,
-          "pvt_v2_b2": 0.1954154372215271,
-          "resnet50": 0.8900926113128662
+          "efficientnet_b4": 0.41315698623657227,
+          "pvt_v2_b2": 0.19621151685714722,
+          "resnet50": 0.6168676614761353
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927711053895004,
-          "pvt_v2_b2": 0.34069485508112324,
-          "resnet50": 0.48002803437992675
+          "efficientnet_b4": 0.29779882799624,
+          "pvt_v2_b2": 0.4616355759357609,
+          "resnet50": 0.24056559606799918
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.745051412835465
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9965989262547682
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2576,19 +2576,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94a5709e-0b95-45cf-9529-dab11496823a_gradcam.jpg",
-          "sha256": "b80b876e4c2c47e5ba1ca69ff76c072f9730d6ee1bebe24d8d7285200f06cdb0",
-          "size_bytes": 71285
+          "sha256": "e3277e4055150090958f36ad213a72dd2d2609bbfe005af0d5193b5dd9aa05bf",
+          "size_bytes": 71766
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 349
+        "processing_time_ms": 609
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2637,19 +2637,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.3154718577861786,
-          "pvt_v2_b2": 0.1923903524875641,
-          "resnet50": 0.7535951137542725
+          "efficientnet_b4": 0.3004591464996338,
+          "pvt_v2_b2": 0.18941304087638855,
+          "resnet50": 1.0177088975906372
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927473638104657,
-          "pvt_v2_b2": 0.3406904245029821,
-          "resnet50": 0.48003483911597133
+          "efficientnet_b4": 0.2977937719375937,
+          "pvt_v2_b2": 0.4616277382402238,
+          "resnet50": 0.24057848982218238
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7450992604335176
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966692631816068
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2658,19 +2658,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/995f90a6-1d87-4d29-b6d7-4f9e09558497_gradcam.jpg",
-          "sha256": "f0aa9532f541b0cfa18de2ee16ef3118c6e1e9b893b22020f0ad57c1d28dc480",
-          "size_bytes": 86836
+          "sha256": "b758be1eb80cb9ef0b7a4013e7f4cedb28faf1d448d1ae4d4ac8fba4065c9e85",
+          "size_bytes": 87141
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 349
+        "processing_time_ms": 589
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2698,19 +2698,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4281691312789917,
-          "pvt_v2_b2": 0.16187921166419983,
-          "resnet50": 0.6420954465866089
+          "efficientnet_b4": 0.4049188792705536,
+          "pvt_v2_b2": 0.19705918431282043,
+          "resnet50": 0.9216195344924927
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792880807092945,
-          "pvt_v2_b2": 0.34071139723618005,
-          "resnet50": 0.4800005220545254
+          "efficientnet_b4": 0.2977944851810467,
+          "pvt_v2_b2": 0.46162851369832564,
+          "resnet50": 0.2405770011206276
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279784511997,
-          "pvt_v2_b2": 1.238515964237816,
-          "resnet50": 1.7448442119325944
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124313607335455,
+          "resnet50": 0.9966607086905047
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2719,19 +2719,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9a6f4254-3cf2-4922-87f8-0e70293780df_gradcam.jpg",
-          "sha256": "c53a3f5398e86d5462efcd6bb11f978b6a3f2178db8488c9101bcbf686534559",
-          "size_bytes": 79609
+          "sha256": "969427d1e8ccc2d3689dc69c0b594192a0de2ee37ffd4a18cfe6fe012cf9348b",
+          "size_bytes": 81482
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 512
+        "processing_time_ms": 709
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2759,19 +2759,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.3054841160774231,
-          "pvt_v2_b2": 0.11728060990571976,
-          "resnet50": 0.29842743277549744
+          "efficientnet_b4": 2.287301540374756,
+          "pvt_v2_b2": 0.1379532516002655,
+          "resnet50": 0.991985559463501
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 0.437243944498827,
-          "resnet50": 0.562756055501173
+          "efficientnet_b4": 0.2982941244516566,
+          "pvt_v2_b2": 0.4610820605992059,
+          "resnet50": 0.2406238149491375
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.0,
-          "pvt_v2_b2": 1.2343486546173619,
-          "resnet50": 1.5886719272506928
+          "efficientnet_b4": 1.233691192818655,
+          "pvt_v2_b2": 1.9069530061096003,
+          "resnet50": 0.9951770985461935
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2780,19 +2780,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.8884,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8f7ec633-bde3-4923-8921-d06c4a356afd_gradcam.jpg",
-          "sha256": "c4d32a21aac2640447e6bd33d4a6d41953a021c0fbc20b1868a272e6e05f4e87",
-          "size_bytes": 276032
+          "sha256": "6d030c9a2ebb7955407f8ae59568ce2bf7a917b9ab8512b29ff71b2d578e1f5e",
+          "size_bytes": 279275
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
-        "prediction_class": 0,
-        "prediction_label": "normal",
-        "processing_time_ms": 1095
+        "model_version": "0.1.2",
+        "prediction_class": 1,
+        "prediction_label": "abnormal",
+        "processing_time_ms": 1628
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2816,19 +2816,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5447523593902588,
-          "pvt_v2_b2": 0.21406830847263336,
-          "resnet50": 0.7852563261985779
+          "efficientnet_b4": 0.4198530316352844,
+          "pvt_v2_b2": 0.19995903968811035,
+          "resnet50": 1.1778075695037842
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927239993806782,
-          "pvt_v2_b2": 0.34069077676209125,
-          "resnet50": 0.48003682329984093
+          "efficientnet_b4": 0.2977939953773031,
+          "pvt_v2_b2": 0.46162819466807037,
+          "resnet50": 0.2405778099546265
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517191215577488,
-          "pvt_v2_b2": 1.2385325004346583,
-          "resnet50": 1.745105085358498
+          "efficientnet_b4": 1.2337006052095496,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966654611855614
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2837,19 +2837,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94a9e2e3-e972-43a4-9958-142cad87f38c_gradcam.jpg",
-          "sha256": "1b6d5ddfb47404523addddcc0cb1ff471a00413a3ea30be63bc55a29908fc256",
-          "size_bytes": 79432
+          "sha256": "cb2398bc72ef0942a0d0cf018a94946f7687e039005181f95bcdeb04428d0020",
+          "size_bytes": 79405
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 399
+        "processing_time_ms": 591
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2898,19 +2898,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 4.185798645019531,
-          "pvt_v2_b2": 0.14860886335372925,
-          "resnet50": 0.934921145439148
+          "efficientnet_b4": 3.961427688598633,
+          "pvt_v2_b2": 0.1709679663181305,
+          "resnet50": 0.6363927721977234
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17920041587001442,
-          "pvt_v2_b2": 0.3407151937733797,
-          "resnet50": 0.48008439035660583
+          "efficientnet_b4": 0.29712767348033237,
+          "pvt_v2_b2": 0.46290630026408996,
+          "resnet50": 0.23996602625557772
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6513818603781849,
-          "pvt_v2_b2": 1.2384775766380034,
-          "resnet50": 1.7450755446675263
+          "efficientnet_b4": 1.2275347538304993,
+          "pvt_v2_b2": 1.9124222415414958,
+          "resnet50": 0.9913806866825613
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2919,19 +2919,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9abc35de-a9ad-4983-be5c-4f83c60f4710_gradcam.jpg",
-          "sha256": "17bdec6ef3429f93a20dfffc9d628103cf3df03052240fa60fce4306f897fdcb",
-          "size_bytes": 87370
+          "sha256": "d3dee191519e74bb3ab9b6a4eb09b34363cc19641a6dcf917499dc9997bafeb3",
+          "size_bytes": 86546
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 346
+        "processing_time_ms": 607
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -2959,19 +2959,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.0465868711471558,
-          "pvt_v2_b2": 0.19466868042945862,
-          "resnet50": 0.7189735174179077
+          "efficientnet_b4": 2.9403023719787598,
+          "pvt_v2_b2": 0.18795245885849,
+          "resnet50": 0.7299124002456665
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17928223766142312,
-          "pvt_v2_b2": 0.34070484225950654,
-          "resnet50": 0.48001292007907037
+          "efficientnet_b4": 0.2977947386251478,
+          "pvt_v2_b2": 0.46162868645407956,
+          "resnet50": 0.24057657492077253
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279784511997,
-          "pvt_v2_b2": 1.2385325004346583,
-          "resnet50": 1.7449461481197497
+          "efficientnet_b4": 1.2336997227979032,
+          "pvt_v2_b2": 1.9124286249759306,
+          "resnet50": 0.9966571443192123
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -2980,19 +2980,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9ae87823-cd0e-4309-aef4-71ff1a43902c_gradcam.jpg",
-          "sha256": "937738605a0831363494c342ec3c4773b3b6b10155e738d6a198ca1a0a6cb64c",
-          "size_bytes": 75887
+          "sha256": "46588c6ffe48d0153afaade6ecae3517ac050d6864cf9a8e11b11a6d54c3cc6a",
+          "size_bytes": 77054
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 391
+        "processing_time_ms": 613
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -3020,19 +3020,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.49731793999671936,
-          "pvt_v2_b2": 0.1874145120382309,
-          "resnet50": 1.0221521854400635
+          "efficientnet_b4": 0.6631161570549011,
+          "pvt_v2_b2": 0.16183188557624817,
+          "resnet50": 1.0565739870071411
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927464239726748,
-          "pvt_v2_b2": 0.340690083444084,
-          "resnet50": 0.48003527415864844
+          "efficientnet_b4": 0.2978056875087738,
+          "pvt_v2_b2": 0.4616429073200452,
+          "resnet50": 0.24055140517118095
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2385316145669703,
-          "resnet50": 1.7451017568299376
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124190498242783,
+          "resnet50": 0.9965171833397938
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3041,19 +3041,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/9b69ae9c-9df1-4953-a750-3ff7927018b4_gradcam.jpg",
-          "sha256": "e2429516d2f99ba25514204d235bfc8a92f6701630097f444320f0cf82dbb557",
-          "size_bytes": 70558
+          "sha256": "d8527736e1a4d73942535ee497dc197d1b0ebca83444aaaaf9b326b8f5f9b243",
+          "size_bytes": 71202
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 360
+        "processing_time_ms": 518
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -3077,19 +3077,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.9378862977027893,
-          "pvt_v2_b2": 0.19596773386001587,
-          "resnet50": 0.915401816368103
+          "efficientnet_b4": 0.45082175731658936,
+          "pvt_v2_b2": 0.194260835647583,
+          "resnet50": 1.0836632251739502
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927502958886846,
-          "pvt_v2_b2": 0.3406910629368534,
-          "resnet50": 0.48003390747427815
+          "efficientnet_b4": 0.2977942843681516,
+          "pvt_v2_b2": 0.46162853258913816,
+          "resnet50": 0.24057718304271028
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2385325004346583,
-          "resnet50": 1.7450930194424672
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966621344390217
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3098,19 +3098,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/94aaec39-2b33-4c51-b4f0-11c70f4cd7b5_gradcam.jpg",
-          "sha256": "3a21526d97b579ab7994657c18456472d50076d3b302a6cfc79fa6acff9216a1",
-          "size_bytes": 73338
+          "sha256": "b1bb46c8523a652f90fdd00c1f170a68c493f44939ec1e06a1081945596278bc",
+          "size_bytes": 73194
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 450
+        "processing_time_ms": 755
       },
       "clinic_key": "clinic_large",
       "clinic_name": "Hospital Regional do Cariri",
@@ -3155,19 +3155,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.3161022961139679,
-          "pvt_v2_b2": 0.1475159078836441,
-          "resnet50": 0.48795342445373535
+          "efficientnet_b4": 0.5831512808799744,
+          "pvt_v2_b2": 0.14186622202396393,
+          "resnet50": 0.5303793549537659
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.00292065428284849,
-          "pvt_v2_b2": 0.41390821257203986,
-          "resnet50": 0.5831711331451116
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 0.6573166587407613,
+          "resnet50": 0.34268334125923877
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.008738451923989267,
-          "pvt_v2_b2": 1.2383927251319697,
-          "resnet50": 1.744818940185143
+          "efficientnet_b4": 0.0,
+          "pvt_v2_b2": 1.9116845971986889,
+          "resnet50": 0.9966314659617265
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3176,19 +3176,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9145,
+        "confidence": 0.7263,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8990a6e0-41ee-4159-92cb-eb9748396aca_gradcam.jpg",
-          "sha256": "47eae80c06f82220e8fee92beeab8e797565b98bf610ab2ff1a896601eda5683",
-          "size_bytes": 240650
+          "sha256": "d618ffc88a88266c66f0db2bdc43be64d95c1dd93de6ae93d63dac2fd5b00988",
+          "size_bytes": 238060
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 824
+        "processing_time_ms": 1365
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3216,19 +3216,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.46815699338912964,
-          "pvt_v2_b2": 0.15460273623466492,
-          "resnet50": 0.49621662497520447
+          "efficientnet_b4": 0.36840811371803284,
+          "pvt_v2_b2": 0.14999446272850037,
+          "resnet50": 0.49783480167388916
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17119267067388214,
-          "pvt_v2_b2": 0.3441556458361271,
-          "resnet50": 0.48465168348999077
+          "efficientnet_b4": 0.2977328879812175,
+          "pvt_v2_b2": 0.46164924377782474,
+          "resnet50": 0.24061786824095788
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6160663719208851,
-          "pvt_v2_b2": 1.2385034900836966,
-          "resnet50": 1.744102730085979
+          "efficientnet_b4": 1.2332269991236406,
+          "pvt_v2_b2": 1.9121781117702399,
+          "resnet50": 0.996653253855663
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3237,19 +3237,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9515,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a98d59d6-8d81-4a17-89da-0974dcf69314_gradcam.jpg",
-          "sha256": "2c1d1623d014676572c3ec48477956ae4a194ac4c5a47d1e4b98d31ff772f828",
-          "size_bytes": 72228
+          "sha256": "603a1dd368b5910177e60ddc578923966820b642c067f20cdc5e5b2c4fa1fce1",
+          "size_bytes": 72716
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 393
+        "processing_time_ms": 660
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3277,19 +3277,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.3660842478275299,
-          "pvt_v2_b2": 0.21387751400470734,
-          "resnet50": 0.971534788608551
+          "efficientnet_b4": 0.3739073574542999,
+          "pvt_v2_b2": 0.20827221870422363,
+          "resnet50": 0.7349000573158264
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792747509429906,
-          "pvt_v2_b2": 0.3406903709492615,
-          "resnet50": 0.4800348781077479
+          "efficientnet_b4": 0.29781960362789844,
+          "pvt_v2_b2": 0.46166734119031294,
+          "resnet50": 0.24051305518178864
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.7450992604335176
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124309047739432,
+          "resnet50": 0.9963117567409698
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3298,19 +3298,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/aa3978e4-6885-4919-88bc-bede64743e00_gradcam.jpg",
-          "sha256": "d5acd2e86ddabeca56825b6ba3d0ffc42f0c5fc7c64b0303f3274493b53b9e54",
-          "size_bytes": 70621
+          "sha256": "69f26c9407653811208e657f8f1e33d45c4935c0b7b166b21f1b93adf3db9b9f",
+          "size_bytes": 71583
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 428
+        "processing_time_ms": 657
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3334,19 +3334,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.6216429471969604,
-          "pvt_v2_b2": 0.18469911813735962,
-          "resnet50": 0.4226069152355194
+          "efficientnet_b4": 0.543734610080719,
+          "pvt_v2_b2": 0.1392655372619629,
+          "resnet50": 0.6079832315444946
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17928744844847117,
-          "pvt_v2_b2": 0.34072317260325946,
-          "resnet50": 0.47998937894826943
+          "efficientnet_b4": 0.2954951743847344,
+          "pvt_v2_b2": 0.4629116483173213,
+          "resnet50": 0.2415931772979443
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517080185157819,
-          "pvt_v2_b2": 1.2385252040858885,
-          "resnet50": 1.74475642199182
+          "efficientnet_b4": 1.219014130673394,
+          "pvt_v2_b2": 1.9096617795098565,
+          "resnet50": 0.9966507832612889
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3355,19 +3355,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9674,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/8710bd86-02d1-40d9-b373-fa7e753578e9_gradcam.jpg",
-          "sha256": "ce4e8d309b374242397e67f66d7b4d64d3722aa5dcaf4d88c780d9f1d233f9bb",
-          "size_bytes": 237107
+          "sha256": "32b9afc200fab23af02b0e312947377933361c86646c3c557a63741b6948dd63",
+          "size_bytes": 243490
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 1735
+        "processing_time_ms": 2537
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3416,19 +3416,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.44515877962112427,
-          "pvt_v2_b2": 0.20600584149360657,
-          "resnet50": 0.7235910296440125
+          "efficientnet_b4": 0.3174092173576355,
+          "pvt_v2_b2": 0.20508436858654022,
+          "resnet50": 0.8350787162780762
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927768240866238,
-          "pvt_v2_b2": 0.3406961855364895,
-          "resnet50": 0.4800261320548482
+          "efficientnet_b4": 0.297794608908417,
+          "pvt_v2_b2": 0.4616290356781978,
+          "resnet50": 0.24057635541338512
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2385327957238876,
-          "resnet50": 1.7450389308533645
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966576195687179
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3437,19 +3437,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/aa73426e-5f8a-4a97-9dba-aa0c654b64f6_gradcam.jpg",
-          "sha256": "071fe237a2a31832232bcf08ac45db5daa5d2f9519f56d98d8d2cb9ccbf9eced",
-          "size_bytes": 94076
+          "sha256": "365df8e42da086b442ce6f6d94fc01d66480b71cd351e4333ff7178172859a20",
+          "size_bytes": 94676
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 500
+        "processing_time_ms": 1055
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3477,19 +3477,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4888157844543457,
-          "pvt_v2_b2": 0.2013825923204422,
-          "resnet50": 0.76310133934021
+          "efficientnet_b4": 0.5006516575813293,
+          "pvt_v2_b2": 0.19385792315006256,
+          "resnet50": 1.1320098638534546
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17934114680779017,
-          "pvt_v2_b2": 0.3408166296612517,
-          "resnet50": 0.4798422235309582
+          "efficientnet_b4": 0.29779385734256425,
+          "pvt_v2_b2": 0.4616278706315197,
+          "resnet50": 0.24057827202591606
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7437530786639635
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.9966680750578426
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3498,19 +3498,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/ad337369-7968-4eef-a761-d06eab0d1ae2_gradcam.jpg",
-          "sha256": "eed790e060edb17719f36bc828666fdf4c28066715ae2035cd786ae63838a2a0",
-          "size_bytes": 75074
+          "sha256": "1904ccb9e40323c32a79cd9dfccbbd4c7aa66c56769b2d5478c06e71afa378bf",
+          "size_bytes": 75493
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 407
+        "processing_time_ms": 572
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3538,19 +3538,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 3.3730993270874023,
-          "pvt_v2_b2": 0.2074187844991684,
-          "resnet50": 0.8146268129348755
+          "efficientnet_b4": 4.326417446136475,
+          "pvt_v2_b2": 0.16187311708927155,
+          "resnet50": 1.0142477750778198
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1791955792319945,
-          "pvt_v2_b2": 0.3407256590481587,
-          "resnet50": 0.4800787617198468
+          "efficientnet_b4": 0.29472777366988007,
+          "pvt_v2_b2": 0.46362433860141383,
+          "resnet50": 0.241647887728706
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651373003484734,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7450784571300164
+          "efficientnet_b4": 1.215588370824649,
+          "pvt_v2_b2": 1.912192893861442,
+          "resnet50": 0.9966633225627859
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3559,19 +3559,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9923,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/ad879312-1a6e-4c89-b72c-25d0629fc0c4_gradcam.jpg",
-          "sha256": "3b80f876b63cbd4aa3915698d28bbaa50625df3c754fc5b47c9bce76aa9b2652",
-          "size_bytes": 349014
+          "sha256": "844fb860f1d704e2dae20135ad0998027e837a945de20f08df599ba3ff605b4c",
+          "size_bytes": 354504
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 2291
+        "processing_time_ms": 3205
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3595,19 +3595,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5047712326049805,
-          "pvt_v2_b2": 0.10920676589012146,
-          "resnet50": 0.5081169009208679
+          "efficientnet_b4": 0.8695796132087708,
+          "pvt_v2_b2": 0.08070315420627594,
+          "resnet50": 0.6690611839294434
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17972533631743273,
-          "pvt_v2_b2": 0.3402410638058039,
-          "resnet50": 0.4800335998767634
+          "efficientnet_b4": 0.3034445157438309,
+          "pvt_v2_b2": 0.45145225098681296,
+          "resnet50": 0.2451032332693562
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6516676255954985,
-          "pvt_v2_b2": 1.2336829671516285,
-          "resnet50": 1.7405579126876134
+          "efficientnet_b4": 1.2336971972195097,
+          "pvt_v2_b2": 1.8354438713634678,
+          "resnet50": 0.9965023463107091
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3616,19 +3616,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9528,
+        "confidence": 0.9654,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/882f9f9d-f941-4e08-986d-d78d8a268697_gradcam.jpg",
-          "sha256": "ff914af9049ffadff093080fcc44efbc87ff58156f5ca6e1498c344162528cc4",
-          "size_bytes": 185368
+          "sha256": "86060a79e6aa50fab393baf0cfc54d1e5a63b379d3a13f0a37cb3ce39d2f14c0",
+          "size_bytes": 189183
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 2561
+        "processing_time_ms": 3688
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3677,19 +3677,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.9601149559020996,
-          "pvt_v2_b2": 0.19443228840827942,
-          "resnet50": 0.910241425037384
+          "efficientnet_b4": 1.435360074043274,
+          "pvt_v2_b2": 0.1974424421787262,
+          "resnet50": 0.8906372785568237
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927595290528914,
-          "pvt_v2_b2": 0.3406928175908427,
-          "resnet50": 0.4800312295038681
+          "efficientnet_b4": 0.29779477417292727,
+          "pvt_v2_b2": 0.46162885162038503,
+          "resnet50": 0.24057637420668762
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.651727823067104,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.7450734643371761
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124309047739432,
+          "resnet50": 0.9966571443192123
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3698,19 +3698,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/adc09942-ecb5-479e-bb59-f02f336e4ac7_gradcam.jpg",
-          "sha256": "9fa55797eb7e4f118ec1958cedd29902a3819a6abcee0d6cd594feb2e7f435ad",
-          "size_bytes": 90296
+          "sha256": "6d48bd79fd01fe900ec84963d22347c4b5fd1660944f4a1a00402794a8e671b1",
+          "size_bytes": 90003
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 430
+        "processing_time_ms": 567
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3738,19 +3738,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5389225482940674,
-          "pvt_v2_b2": 0.16733212769031525,
-          "resnet50": 0.7561688423156738
+          "efficientnet_b4": 0.6097403168678284,
+          "pvt_v2_b2": 0.13829493522644043,
+          "resnet50": 1.1272897720336914
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792938731729768,
-          "pvt_v2_b2": 0.34071688096173103,
-          "resnet50": 0.47998924586529224
+          "efficientnet_b4": 0.2978100188254538,
+          "pvt_v2_b2": 0.46160020155910186,
+          "resnet50": 0.24058977961544425
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279784511997,
-          "pvt_v2_b2": 1.2384958845702216,
-          "resnet50": 1.7447468524722094
+          "efficientnet_b4": 1.2337006052095496,
+          "pvt_v2_b2": 1.9122138680031568,
+          "resnet50": 0.9966614215647632
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3759,19 +3759,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/d324ff38-94db-45c2-98c7-d21c8640ff11_gradcam.jpg",
-          "sha256": "38e101f313ebc30bb163363b51fdb76dc656e3c072866dd63845322a1ae95713",
-          "size_bytes": 82107
+          "sha256": "24ef01b0c9f9ad85608d74397b6aa6b3a84f136255316c17fe023ee1380190ca",
+          "size_bytes": 83876
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 374
+        "processing_time_ms": 607
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3795,19 +3795,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.5557384490966797,
-          "pvt_v2_b2": 0.17865914106369019,
-          "resnet50": 0.6076502799987793
+          "efficientnet_b4": 1.6110687255859375,
+          "pvt_v2_b2": 0.19697512686252594,
+          "resnet50": 0.5085848569869995
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17933636478928802,
-          "pvt_v2_b2": 0.3408074919678804,
-          "resnet50": 0.47985614324283166
+          "efficientnet_b4": 0.2978059162780877,
+          "pvt_v2_b2": 0.4616453194428113,
+          "resnet50": 0.24054876427910105
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281296902913,
-          "pvt_v2_b2": 1.2385320154428199,
-          "resnet50": 1.7438501506568245
+          "efficientnet_b4": 1.2337008992341878,
+          "pvt_v2_b2": 1.9124275731044493,
+          "resnet50": 0.9965054774925414
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3816,19 +3816,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9531,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dcfe9caf-07e3-44cf-a743-0082d788f4ac_gradcam.jpg",
-          "sha256": "af1628ef871541a79e7701c77ccb8b6b2c9bf9c8f42fc79ffd15e6274caf122f",
-          "size_bytes": 213714
+          "sha256": "c6e61f4d39cd976f36a9b72d4b710b2e39802bcfc5843885fe338afa45a990ef",
+          "size_bytes": 217994
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 750
+        "processing_time_ms": 1261
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3856,19 +3856,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.7863191366195679,
-          "pvt_v2_b2": 0.14425121247768402,
-          "resnet50": 0.5905805826187134
+          "efficientnet_b4": 0.892916738986969,
+          "pvt_v2_b2": 0.13905805349349976,
+          "resnet50": 0.6709215044975281
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792772099963403,
-          "pvt_v2_b2": 0.34068220862946413,
-          "resnet50": 0.48004058137419564
+          "efficientnet_b4": 0.29782954720052035,
+          "pvt_v2_b2": 0.46156478502158343,
+          "resnet50": 0.2406056677778962
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517257280550852,
-          "pvt_v2_b2": 1.2384806772650265,
-          "resnet50": 1.74508961511879
+          "efficientnet_b4": 1.2337007792295067,
+          "pvt_v2_b2": 1.9119420497343869,
+          "resnet50": 0.9966620256947687
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3877,19 +3877,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/891fd052-5d07-4aaa-87f1-528685a1946d_gradcam.jpg",
-          "sha256": "54d4e6cec1e2989fcc6d2cf1ae5d1279e89ddf836faf22f8c463d94e55d4d4a3",
-          "size_bytes": 240151
+          "sha256": "16c0e90cd83e4f755b0eb39541ab3d36b291a464694eb5f6809b548e41f8e35f",
+          "size_bytes": 244715
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 1028
+        "processing_time_ms": 1562
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3938,19 +3938,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.0464198589324951,
-          "pvt_v2_b2": 0.18578118085861206,
-          "resnet50": 0.46921002864837646
+          "efficientnet_b4": 0.8169426918029785,
+          "pvt_v2_b2": 0.19502270221710205,
+          "resnet50": 0.502400815486908
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1794631292910242,
-          "pvt_v2_b2": 0.34106011769970485,
-          "resnet50": 0.47947675300927095
+          "efficientnet_b4": 0.2977923263353582,
+          "pvt_v2_b2": 0.4616296017931091,
+          "resnet50": 0.24057807187153274
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517058431289591,
-          "pvt_v2_b2": 1.2385322402503376,
-          "resnet50": 1.7411810593914072
+          "efficientnet_b4": 1.2336873009761269,
+          "pvt_v2_b2": 1.9124286528641992,
+          "resnet50": 0.9966613841721139
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -3959,19 +3959,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.953,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dd2357a6-25e2-4064-b308-b82ef7298be5_gradcam.jpg",
-          "sha256": "3282d28b8b2d5d9e3da84ac55ce9d76d3c28bd4222aad06f08de285f97145237",
-          "size_bytes": 236392
+          "sha256": "6f2be050dffa803cd887525c918e55cb684c5e97683eae61f7e4ac0a703bc231",
+          "size_bytes": 241047
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 716
+        "processing_time_ms": 1123
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -3999,19 +3999,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 1.5552442073822021,
-          "pvt_v2_b2": 0.1853390634059906,
-          "resnet50": 0.5138317346572876
+          "efficientnet_b4": 1.5419299602508545,
+          "pvt_v2_b2": 0.2055954933166504,
+          "resnet50": 0.6384178400039673
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17932413773839917,
-          "pvt_v2_b2": 0.3407841632292879,
-          "resnet50": 0.47989169903231294
+          "efficientnet_b4": 0.29779457056581826,
+          "pvt_v2_b2": 0.4616286104509213,
+          "resnet50": 0.24057681898326042
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.65172813330492,
-          "pvt_v2_b2": 1.2385316854851067,
-          "resnet50": 1.7440982856145855
+          "efficientnet_b4": 1.2337008993411218,
+          "pvt_v2_b2": 1.9124312132111927,
+          "resnet50": 0.9966596683624768
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4020,19 +4020,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/dd8be1a0-e023-4681-8ad6-dbe7f70395f4_gradcam.jpg",
-          "sha256": "2e37f36f334079513e88791642333a8c8d57250096e9adb7cd8ed2eb3098a400",
-          "size_bytes": 416825
+          "sha256": "0dc7913d2ee604aa65089963784a85502de96d507e99f2613ca2204c838c28e3",
+          "size_bytes": 419211
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 598
+        "processing_time_ms": 1194
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4060,19 +4060,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.2867136299610138,
-          "pvt_v2_b2": 0.1857520341873169,
-          "resnet50": 0.4588809013366699
+          "efficientnet_b4": 0.43313708901405334,
+          "pvt_v2_b2": 0.18625712394714355,
+          "resnet50": 0.3852808177471161
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17890721050414077,
-          "pvt_v2_b2": 0.34267093987215763,
-          "resnet50": 0.4784218496237016
+          "efficientnet_b4": 0.29849919226226884,
+          "pvt_v2_b2": 0.46280267582050155,
+          "resnet50": 0.2386981319172296
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6466279033954115,
-          "pvt_v2_b2": 1.2385224205311725,
-          "resnet50": 1.7291696443591296
+          "efficientnet_b4": 1.2334819470971752,
+          "pvt_v2_b2": 1.9124297837003335,
+          "resnet50": 0.9863672805755178
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4081,19 +4081,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9522,
+        "confidence": 0.9676,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/de2bfb04-2fd2-4034-b342-7a79be78c92a_gradcam.jpg",
-          "sha256": "fa278b0b2af3bc2662f6a8a4b8b3a55b4abe63c71e04d07843a2788b617341e4",
-          "size_bytes": 225147
+          "sha256": "bed2f50f4d33eb025a6e19e1aefea3613890e73b7e68b8dbd8c37c36610432ee",
+          "size_bytes": 221501
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 1075
+        "processing_time_ms": 1694
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4117,19 +4117,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 2.201648235321045,
-          "pvt_v2_b2": 0.17759816348552704,
-          "resnet50": 0.8260164856910706
+          "efficientnet_b4": 1.1377074718475342,
+          "pvt_v2_b2": 0.19140316545963287,
+          "resnet50": 0.9335484504699707
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17929536100802881,
-          "pvt_v2_b2": 0.3408009595635131,
-          "resnet50": 0.47990367942845813
+          "efficientnet_b4": 0.29793187735290316,
+          "pvt_v2_b2": 0.4618439157441425,
+          "resnet50": 0.24022420690295432
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6515915512152369,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.744056182795974
+          "efficientnet_b4": 1.2336950166024558,
+          "pvt_v2_b2": 1.9124322726527505,
+          "resnet50": 0.9947354729430539
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4138,19 +4138,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9924,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a4391f84-6aa1-4963-b0ad-b60b23f805e6_gradcam.jpg",
-          "sha256": "8375bcc6b113d29a69edd8f03476c5147799321b4e9866c1bba68412a3622d71",
-          "size_bytes": 77217
+          "sha256": "ed50e65d303c00a3935c53cd0b6a937ab4de3940ad839e94f1694205d3f0603e",
+          "size_bytes": 77343
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 519
+        "processing_time_ms": 693
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4199,19 +4199,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5313552021980286,
-          "pvt_v2_b2": 0.15911515057086945,
-          "resnet50": 0.4919072389602661
+          "efficientnet_b4": 0.477006733417511,
+          "pvt_v2_b2": 0.15762746334075928,
+          "resnet50": 0.46962809562683105
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17930168527440854,
-          "pvt_v2_b2": 0.3407182138127742,
-          "resnet50": 0.4799801009128173
+          "efficientnet_b4": 0.29789531720473966,
+          "pvt_v2_b2": 0.46148252569127624,
+          "resnet50": 0.24062215710398419
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517233272165759,
-          "pvt_v2_b2": 1.2384379299587283,
-          "resnet50": 1.744625143293601
+          "efficientnet_b4": 1.233675246650831,
+          "pvt_v2_b2": 1.9111397052137866,
+          "resnet50": 0.9964896454243076
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4220,19 +4220,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9532,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/df59d76a-9d60-4663-9adf-dedae66e1cf2_gradcam.jpg",
-          "sha256": "ecbf4a37bf9e830454220f6de0675a52b1c448e51ef33be39adb088b51b8998b",
-          "size_bytes": 246050
+          "sha256": "dd788cf895308ad5f0c3f14b3384dd52049cba54a10797404b908a4a692df335",
+          "size_bytes": 248572
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 944
+        "processing_time_ms": 1506
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4260,19 +4260,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.6050039529800415,
-          "pvt_v2_b2": 0.1794428676366806,
-          "resnet50": 0.727959394454956
+          "efficientnet_b4": 0.7366983294487,
+          "pvt_v2_b2": 0.1819019615650177,
+          "resnet50": 0.6245261430740356
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927459275549523,
-          "pvt_v2_b2": 0.34069015155961574,
-          "resnet50": 0.4800352556848891
+          "efficientnet_b4": 0.29779639965991644,
+          "pvt_v2_b2": 0.4616315915047534,
+          "resnet50": 0.2405720088353301
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7451021728960077
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.912431816693148,
+          "resnet50": 0.9966336194686818
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4281,19 +4281,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e05779e5-50c8-4340-886c-72e46782ce79_gradcam.jpg",
-          "sha256": "9c8b63c3bf0b67dedf3e51c05926f7293f81f5d13ce9164a14a7d76ebd2db469",
-          "size_bytes": 85460
+          "sha256": "61480a6cb55f289126471a94cbdb4724d84c2efd80bc7d6b2bf5a947e159afba",
+          "size_bytes": 85195
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 461
+        "processing_time_ms": 798
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4321,19 +4321,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.47526097297668457,
-          "pvt_v2_b2": 0.2140103280544281,
-          "resnet50": 0.5612871050834656
+          "efficientnet_b4": 0.6160953044891357,
+          "pvt_v2_b2": 0.188784658908844,
+          "resnet50": 0.8048704266548157
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.1792756861682271,
-          "pvt_v2_b2": 0.3406923106885154,
-          "resnet50": 0.4800320031432575
+          "efficientnet_b4": 0.29779733774723205,
+          "pvt_v2_b2": 0.4616329356267155,
+          "resnet50": 0.24056972662605236
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517279784511997,
-          "pvt_v2_b2": 1.238532205145429,
-          "resnet50": 1.7450792892621565
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124313607335455,
+          "resnet50": 0.9966210253567817
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4342,19 +4342,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e062f910-d08b-4a98-8e96-a0ad1a744154_gradcam.jpg",
-          "sha256": "015893463f3ab5315f16fb7e2a85ef83288ba7a48a261958ecd0b4ee5f3b3772",
-          "size_bytes": 74206
+          "sha256": "5e44e06bc80c1209ccf0d3542d072ae888b11789fe3c16c22a1190f15f27d0ec",
+          "size_bytes": 76420
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 547
+        "processing_time_ms": 774
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4378,19 +4378,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4766787886619568,
-          "pvt_v2_b2": 0.16077116131782532,
-          "resnet50": 1.480385184288025
+          "efficientnet_b4": 0.43093249201774597,
+          "pvt_v2_b2": 0.16612301766872406,
+          "resnet50": 1.3954302072525024
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.179285047157128,
-          "pvt_v2_b2": 0.3406858118850182,
-          "resnet50": 0.4800291409578539
+          "efficientnet_b4": 0.2977942820367242,
+          "pvt_v2_b2": 0.46162698812323594,
+          "resnet50": 0.24057872984003978
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517281338352953,
-          "pvt_v2_b2": 1.2384442089550896,
-          "resnet50": 1.7449781852071413
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124263451779182,
+          "resnet50": 0.9966685503073482
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4399,19 +4399,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a5302d7a-18f8-4c15-9daa-9b0777f855eb_gradcam.jpg",
-          "sha256": "865c36363b8d9efbffa8d97794285d3444ec66daddaaa26dfb6cc61b8b5773b7",
-          "size_bytes": 59384
+          "sha256": "829ded62c644ed8f8cec6deb08a3372abd0fe6f5dfa2e176da3344e97164bdf6",
+          "size_bytes": 58950
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 402
+        "processing_time_ms": 605
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4460,19 +4460,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.5236304998397827,
-          "pvt_v2_b2": 0.16859832406044006,
-          "resnet50": 0.6194813251495361
+          "efficientnet_b4": 0.4963145852088928,
+          "pvt_v2_b2": 0.17598600685596466,
+          "resnet50": 0.6994276642799377
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17988185863761197,
-          "pvt_v2_b2": 0.3418546705519803,
-          "resnet50": 0.4782634708104077
+          "efficientnet_b4": 0.2976983753229241,
+          "pvt_v2_b2": 0.461686896609062,
+          "resnet50": 0.24061472806801387
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6516878824644793,
-          "pvt_v2_b2": 1.2384936871895877,
-          "resnet50": 1.7326845014452015
+          "efficientnet_b4": 1.2331193685285504,
+          "pvt_v2_b2": 1.9123888525992667,
+          "resnet50": 0.9966687967713957
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4481,19 +4481,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9526,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e11e8c02-40ee-479b-8a92-89a08eb96ca1_gradcam.jpg",
-          "sha256": "4996aa0ca0e6912bdc6b90e5a8858960f8127ed5154f4b4159eebfe257bbf2a5",
-          "size_bytes": 231608
+          "sha256": "336f9117efb163bf0c3348581964234abe441c57cbe7dfb73c45c5d2c6cf9c77",
+          "size_bytes": 231171
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 645
+        "processing_time_ms": 1136
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4521,19 +4521,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.6994562149047852,
-          "pvt_v2_b2": 0.17947034537792206,
-          "resnet50": 0.28503087162971497
+          "efficientnet_b4": 0.5340274572372437,
+          "pvt_v2_b2": 0.19178533554077148,
+          "resnet50": 0.6196445226669312
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.19375574923688396,
-          "pvt_v2_b2": 0.36820632734674147,
-          "resnet50": 0.4380379234163746
+          "efficientnet_b4": 0.29780740426641744,
+          "pvt_v2_b2": 0.46164733605352387,
+          "resnet50": 0.24054525968005858
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517277837939345,
-          "pvt_v2_b2": 1.238519603396183,
-          "resnet50": 1.4734091048664784
+          "efficientnet_b4": 1.233699890239612,
+          "pvt_v2_b2": 1.9124248076422519,
+          "resnet50": 0.9964851652897999
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4542,19 +4542,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.9395,
+        "confidence": 0.9679,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e15c7bed-37ef-4720-a0c8-0f255cc8cf4b_gradcam.jpg",
-          "sha256": "a67b4b095bfd342267e2a26ed123b9ebd689242198fbf34b35f2ff4bcea26b35",
-          "size_bytes": 216999
+          "sha256": "705d71715c7d2132fbde4ba6443ebd5453b0b2c38d6842e6e8bb751cfdcb0219",
+          "size_bytes": 220557
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 0,
         "prediction_label": "normal",
-        "processing_time_ms": 1802
+        "processing_time_ms": 2661
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4582,19 +4582,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.4535052180290222,
-          "pvt_v2_b2": 0.1820765882730484,
-          "resnet50": 0.9321568608283997
+          "efficientnet_b4": 0.5489791631698608,
+          "pvt_v2_b2": 0.18523083627223969,
+          "resnet50": 0.798237681388855
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17927102651298876,
-          "pvt_v2_b2": 0.3406918219747205,
-          "resnet50": 0.48003715151229065
+          "efficientnet_b4": 0.2977946033619835,
+          "pvt_v2_b2": 0.46162858683649133,
+          "resnet50": 0.24057680980152507
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6517118185052542,
-          "pvt_v2_b2": 1.2385319098561998,
-          "resnet50": 1.7451000925656577
+          "efficientnet_b4": 1.233700899346765,
+          "pvt_v2_b2": 1.9124309047739432,
+          "resnet50": 0.9966595205667406
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4603,19 +4603,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/e274b42b-5309-4234-bb68-8776817f4f1d_gradcam.jpg",
-          "sha256": "e2378727c6b4a2db71004ed1b28e767628da1b427f83fe190a45bf679f808803",
-          "size_bytes": 75985
+          "sha256": "11c33447a7be9aa18d0ceb25938685228aeaa27648e057dbc1c89c59a2a9c208",
+          "size_bytes": 75757
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 354
+        "processing_time_ms": 688
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4639,19 +4639,19 @@
     {
       "analysis": {
         "attribution_branch_cam_raw_maxima": {
-          "efficientnet_b4": 0.998442530632019,
-          "pvt_v2_b2": 0.16543956100940704,
-          "resnet50": 1.0036582946777344
+          "efficientnet_b4": 0.27924588322639465,
+          "pvt_v2_b2": 0.20512577891349792,
+          "resnet50": 1.169335126876831
         },
         "attribution_branch_weights": {
-          "efficientnet_b4": 0.17922397048246935,
-          "pvt_v2_b2": 0.340702518006299,
-          "resnet50": 0.48007351151123157
+          "efficientnet_b4": 0.29779280619852555,
+          "pvt_v2_b2": 0.46162822228438466,
+          "resnet50": 0.24057897151708976
         },
         "attribution_local_evidence": {
-          "efficientnet_b4": 0.6514937369270382,
-          "pvt_v2_b2": 1.2384814153979846,
-          "resnet50": 1.7451063335567079
+          "efficientnet_b4": 1.2336956048768868,
+          "pvt_v2_b2": 1.912432728612353,
+          "resnet50": 0.996670213680618
         },
         "attribution_method": "weighted_base_gradcam_oriented_by_ensemble_stacking_v1",
         "attribution_target_layers": {
@@ -4660,19 +4660,19 @@
           "resnet50": "layer4[-1]"
         },
         "attribution_unavailable_reason": null,
-        "confidence": 0.986,
+        "confidence": 0.9925,
         "device": "cpu",
         "gradcam_asset": {
           "kind": "gradcam",
           "path": "gradcam/a673ca7c-b308-4a4d-8ef7-b13025b13371_gradcam.jpg",
-          "sha256": "2b34b271ed372bf31670b8a88d525a37a1dade4d5346fa9ebf9222a52bb1ac35",
-          "size_bytes": 81635
+          "sha256": "069d68ed5f724c734daa3b64c3883fb6af252fbc0491964ec21ad8f116afb42f",
+          "size_bytes": 80708
         },
         "model_name": "ensemble_stacking",
-        "model_version": "0.1.1",
+        "model_version": "0.1.2",
         "prediction_class": 1,
         "prediction_label": "abnormal",
-        "processing_time_ms": 474
+        "processing_time_ms": 627
       },
       "clinic_key": "clinic_specialized",
       "clinic_name": "Centro Endoscópico Cariri",
@@ -4717,28 +4717,28 @@
   ],
   "model": {
     "name": "ensemble_stacking",
-    "operational_fold": 3,
-    "release": "models-v0.1.1",
+    "operational_fold": 1,
+    "release": "models-v0.1.2",
     "training_protocol": "viana_codigo_kfold3_roi_sh_da",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "schema_version": 2,
   "summary": {
     "prediction_labels": {
-      "abnormal": 34,
-      "normal": 38
+      "abnormal": 35,
+      "normal": 37
     },
     "source_labels": {
       "abnormal": 45,
       "normal": 45
     },
     "statuses": {
-      "awaiting_review": 18,
-      "canceled": 3,
-      "completed": 52,
-      "completed_with_divergence": 2,
+      "awaiting_review": 22,
+      "canceled": 6,
+      "completed": 43,
+      "completed_with_divergence": 7,
       "failed": 6,
-      "pending": 9
+      "pending": 6
     }
   }
 }

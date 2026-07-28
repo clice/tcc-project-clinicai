@@ -40,15 +40,15 @@ EXPECTED_CLINIC_KEYS = {
 EXPECTED_STATUS_COUNTS = {
     "awaiting_review": 22,
     "canceled": 6,
-    "completed": 44,
-    "completed_with_divergence": 6,
+    "completed": 43,
+    "completed_with_divergence": 7,
     "failed": 6,
     "pending": 6,
 }
 EXPECTED_ANALYSIS_EXAM_STATUS_COUNTS = {
     "awaiting_review": 22,
-    "completed": 44,
-    "completed_with_divergence": 6,
+    "completed": 43,
+    "completed_with_divergence": 7,
 }
 EXPECTED_ATTRIBUTION_KEYS = {
     "attribution_method",
@@ -175,6 +175,18 @@ def test_academic_demo_is_predictable_and_idempotent(
 ) -> None:
     manifest = get_demo_manifest()
     assert manifest["schema_version"] == 2
+    assert manifest["model"] == {
+        "name": "ensemble_stacking",
+        "operational_fold": 1,
+        "release": "models-v0.1.2",
+        "training_protocol": (
+            "viana_codigo_kfold3_roi_sh_da"
+        ),
+        "version": "0.1.2",
+    }
+    assert manifest["dataset"][
+        "real_source_prediction_divergences"
+    ] == 1
     assert len(verify_bundled_demo_assets()) == 162
 
     bootstrap = bootstrap_reference_data(db_session)
@@ -288,6 +300,36 @@ def test_academic_demo_is_predictable_and_idempotent(
     status_counts = Counter(exam.status.name for exam in demo.exams.values())
     assert dict(sorted(status_counts.items())) == EXPECTED_STATUS_COUNTS
 
+    for definition in manifest["exams"]:
+        review = definition.get("review")
+
+        if review is None:
+            continue
+
+        analysis_definition = definition.get(
+            "analysis"
+        )
+        assert analysis_definition is not None
+
+        expected_agreement = (
+            review["reviewed_label"]
+            == analysis_definition[
+                "prediction_label"
+            ]
+        )
+        expected_status = (
+            "completed"
+            if expected_agreement
+            else "completed_with_divergence"
+        )
+
+        assert review["agrees_with_ai"] is (
+            expected_agreement
+        )
+        assert definition["status"] == (
+            expected_status
+        )
+
     monthly_counts = Counter(
         exam.exam_date.strftime("%Y-%m")
         for exam in demo.exams.values()
@@ -332,14 +374,14 @@ def test_academic_demo_is_predictable_and_idempotent(
     label_counts = Counter(
         analysis.prediction_label for analysis in demo.ai_analyses.values()
     )
-    assert dict(sorted(label_counts.items())) == {"abnormal": 34, "normal": 38}
+    assert dict(sorted(label_counts.items())) == {"abnormal": 35, "normal": 37}
 
     metrics = get_ai_metrics(db_session)
 
     assert metrics["total_analyses"] == 72
     assert metrics["reviewed_analyses_count"] == 50
     assert metrics["false_positive_count"] == 2
-    assert metrics["false_negative_count"] == 4
+    assert metrics["false_negative_count"] == 5
     assert metrics["confidence_mean"] is not None
     assert metrics["processing_time_mean_ms"] is not None
 
@@ -354,7 +396,7 @@ def test_academic_demo_is_predictable_and_idempotent(
     for analysis in demo.ai_analyses.values():
         assert analysis.status.name == "completed"
         assert analysis.model_name == "ensemble_stacking"
-        assert analysis.model_version == "0.1.1"
+        assert analysis.model_version == "0.1.2"
         assert analysis.gradcam_path
         assert resolve_safe_gradcam_path(analysis.gradcam_path).is_file()
 
