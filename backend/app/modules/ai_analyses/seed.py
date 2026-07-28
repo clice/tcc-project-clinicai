@@ -138,9 +138,6 @@ def seed_ai_analysis(
     result: dict[str, AIAnalysis] = {}
 
     for definition in get_demo_exam_definitions():
-        if definition.get("analysis") is None:
-            continue
-
         exam_key = definition["exam_key"]
         exam = exams.get(exam_key)
 
@@ -149,6 +146,25 @@ def seed_ai_analysis(
                 "Exame acadêmico ausente para análise: "
                 f"{exam_key}."
             )
+
+        if definition.get("analysis") is None:
+            stale_analysis = (
+                db.query(AIAnalysis)
+                .filter(
+                    AIAnalysis.exam_id == exam.id
+                )
+                .one_or_none()
+            )
+
+            if stale_analysis is not None:
+                db.delete(stale_analysis)
+                db.flush()
+                db.expire(
+                    exam,
+                    ["ai_analysis"],
+                )
+
+            continue
 
         result[exam_key] = (
             get_or_create_ai_analysis(

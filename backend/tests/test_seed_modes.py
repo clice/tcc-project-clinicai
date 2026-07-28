@@ -421,6 +421,27 @@ def test_academic_demo_is_predictable_and_idempotent(
         for exam in demo.exams.values()
         if exam.clinic_id == primary_clinic.id and exam.status.name == "pending"
     )
+    stale_analysis = AIAnalysis(
+        exam_id=pending_exam.id,
+        status_id=bootstrap.statuses[
+            "ai_analysis_completed"
+        ].id,
+        prediction_label="abnormal",
+        prediction_class=1,
+        confidence=0.99,
+        model_name="legacy_demo",
+        model_version="0.0.0",
+    )
+    db_session.add(stale_analysis)
+    db_session.commit()
+
+    stale_analysis_id = stale_analysis.id
+
+    assert count(
+        db_session,
+        AIAnalysis,
+    ) == 73
+
     analysis = next(iter(demo.ai_analyses.values()))
     expected_model_version = analysis.model_version
     expected_confidence = analysis.confidence
@@ -441,6 +462,10 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert count(db_session, Patient) == 30
     assert count(db_session, Exam) == 90
     assert count(db_session, AIAnalysis) == 72
+    assert db_session.get(
+        AIAnalysis,
+        stale_analysis_id,
+    ) is None
 
     db_session.refresh(primary_clinic)
     db_session.refresh(primary_doctor)
