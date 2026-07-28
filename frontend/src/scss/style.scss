@@ -195,6 +195,13 @@ body {
   white-space: nowrap;
 }
 
+.clinicai-user-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 1.75rem;
+  background-color: rgb(15 81 50 / 35%);
+}
+
 .clinicai-user-avatar.bg-primary {
   background-color: var(--clinicai-brand) !important;
   box-shadow: 0 0 0 3px rgb(25 135 84 / 16%);
