@@ -184,6 +184,17 @@ body {
   line-height: 1.6;
 }
 
+.clinicai-user-greeting {
+  max-width: clamp(10rem, 30vw, 24rem);
+  overflow: hidden;
+  color: var(--clinicai-brand-active);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .clinicai-user-avatar.bg-primary {
   background-color: var(--clinicai-brand) !important;
   box-shadow: 0 0 0 3px rgb(25 135 84 / 16%);

@@ -44,8 +44,27 @@ const AppHeaderDropdown = () => {
 
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar className="clinicai-user-avatar" color="primary" textColor="white" size="md">
+      <CDropdownToggle
+        placement="bottom-end"
+        className="d-flex align-items-center gap-2 py-0 pe-0 text-decoration-none"
+        caret={false}
+        aria-label={`Abrir menu do usuário ${user?.name || 'Usuário'}`}
+      >
+        <span
+          className="clinicai-user-greeting d-none d-sm-inline"
+          title={`Olá, ${user?.name || 'Usuário'}`}
+        >
+          Olá, {user?.name || 'Usuário'}
+        </span>
+
+        <span className="clinicai-user-divider d-none d-sm-block" aria-hidden="true" />
+
+        <CAvatar
+          className="clinicai-user-avatar"
+          color="primary"
+          textColor="white"
+          size="md"
+        >
           <CIcon icon={cilUser} />
         </CAvatar>
       </CDropdownToggle>
