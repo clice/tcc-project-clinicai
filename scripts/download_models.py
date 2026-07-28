@@ -100,7 +100,7 @@ def _arquivo_valido(caminho: Path, tamanho: int, hash_esperado: str) -> bool:
 
 def baixar_modelos() -> None:
     repositorio = os.environ.get("MODEL_RELEASE_REPOSITORY", "clice/tcc-project-clinicai")
-    release_tag = os.environ.get("MODEL_RELEASE_TAG", "models-v0.1.1")
+    release_tag = os.environ.get("MODEL_RELEASE_TAG", "models-v0.1.2")
     nome_manifesto = os.environ.get("MODEL_RELEASE_MANIFEST", "manifesto_modelos.json")
     destino = Path(os.environ.get("MODEL_DESTINATION_DIR", "/models/gastrointestinal"))
     servidor = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
