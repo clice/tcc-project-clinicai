@@ -12,17 +12,17 @@ from app.modules.users.model import User
 ACADEMIC_DEMO_PASSWORD = "clinicai123"
 
 ACADEMIC_DEMO_EMAILS = (
-    "medico@clinicai.com",
-    "gestor@clinicai.com",
-    "lucas.andrade@clinicai.com",
-    "doctor.cariri@clinicai.com",
-    "manager.cariri@clinicai.com",
-    "doctor.endoscopia@clinicai.com",
-    "manager@clinicai.com",
-    "renato.moura@clinicai.com",
-    "paula.freire@clinicai.com",
-    "gestor.inativo.cariri@clinicai.com",
-    "gestor.inativo.endoscopia@clinicai.com",
+    "dr.joao@clinicai.com",
+    "gestor.clinicai@clinicai.com",
+    "dr.lucas@clinicai.com",
+    "dr.marcos@hospitalcariri.com",
+    "gestor.hospital@hospitalcariri.com",
+    "dra.helena@cariri.com",
+    "gestor.centro@cariri.com",
+    "dr.renato@clinicai.com",
+    "dra.paula@clinicai.com",
+    "gestor.inativo@hospitalcariri.com",
+    "gestor.inativo@cariri.com",
     "admin.inativo@clinicai.com",
 )
 
@@ -149,7 +149,7 @@ def seed_users(
     definitions = {
         "doctor_primary": {
             "name": "Dr. João Silva",
-            "email": "medico@clinicai.com",
+            "email": "dr.joao@clinicai.com",
             "cpf": "11144477735",
             "role": "doctor",
             "clinic": "clinic_primary",
@@ -158,7 +158,7 @@ def seed_users(
         },
         "doctor_primary_secondary": {
             "name": "Dr. Lucas Andrade",
-            "email": "lucas.andrade@clinicai.com",
+            "email": "dr.lucas@clinicai.com",
             "cpf": _build_demo_cpf(810_000_001),
             "role": "doctor",
             "clinic": "clinic_primary",
@@ -167,14 +167,14 @@ def seed_users(
         },
         "manager_primary": {
             "name": "Gestor ClinicAI Endoscopia Especializada",
-            "email": "gestor@clinicai.com",
+            "email": "gestor.clinicai@clinicai.com",
             "cpf": "15350946056",
             "role": "clinic_manager",
             "clinic": "clinic_primary",
         },
         "doctor_large": {
             "name": "Dr. Marcos Lima",
-            "email": "doctor.cariri@clinicai.com",
+            "email": "dr.marcos@hospitalcariri.com",
             "cpf": "31415926590",
             "role": "doctor",
             "clinic": "clinic_large",
@@ -183,14 +183,14 @@ def seed_users(
         },
         "manager_large": {
             "name": "Gestor Hospital Cariri",
-            "email": "manager.cariri@clinicai.com",
+            "email": "gestor.hospital@hospitalcariri.com",
             "cpf": "27182818205",
             "role": "clinic_manager",
             "clinic": "clinic_large",
         },
         "doctor_specialized": {
             "name": "Dra. Helena Costa",
-            "email": "doctor.endoscopia@clinicai.com",
+            "email": "dra.helena@cariri.com",
             "cpf": "16180339805",
             "role": "doctor",
             "clinic": "clinic_specialized",
@@ -199,14 +199,14 @@ def seed_users(
         },
         "manager_specialized": {
             "name": "Gestão Centro Endoscópico",
-            "email": "manager@clinicai.com",
+            "email": "gestor.centro@cariri.com",
             "cpf": "14142135651",
             "role": "clinic_manager",
             "clinic": "clinic_specialized",
         },
         "doctor_inactive_archive": {
             "name": "Dr. Renato Moura",
-            "email": "renato.moura@clinicai.com",
+            "email": "dr.renato@clinicai.com",
             "cpf": _build_demo_cpf(810_000_002),
             "role": "doctor",
             "clinic": "clinic_inactive",
@@ -216,7 +216,7 @@ def seed_users(
         },
         "doctor_inactive_primary": {
             "name": "Dra. Paula Freire",
-            "email": "paula.freire@clinicai.com",
+            "email": "dra.paula@clinicai.com",
             "cpf": _build_demo_cpf(810_000_003),
             "role": "doctor",
             "clinic": "clinic_primary",
@@ -226,7 +226,7 @@ def seed_users(
         },
         "manager_inactive_large": {
             "name": "Gestor Inativo Hospital Cariri",
-            "email": "gestor.inativo.cariri@clinicai.com",
+            "email": "gestor.inativo@hospitalcariri.com",
             "cpf": _build_demo_cpf(810_000_004),
             "role": "clinic_manager",
             "clinic": "clinic_large",
@@ -234,7 +234,7 @@ def seed_users(
         },
         "manager_inactive_specialized": {
             "name": "Gestor Inativo Centro Endoscópico",
-            "email": "gestor.inativo.endoscopia@clinicai.com",
+            "email": "gestor.inativo@cariri.com",
             "cpf": _build_demo_cpf(810_000_005),
             "role": "clinic_manager",
             "clinic": "clinic_specialized",

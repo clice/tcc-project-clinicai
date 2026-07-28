@@ -1,6 +1,7 @@
 """Pacientes fictícios da massa acadêmica demonstrativa."""
 
 from datetime import date
+import unicodedata
 
 from sqlalchemy.orm import Session
 
@@ -59,6 +60,56 @@ DOCTOR_BY_CLINIC = {
 }
 
 
+def _normalize_email_component(
+    value: str,
+) -> str:
+    """Remove acentos e caracteres não alfanuméricos."""
+
+    normalized = unicodedata.normalize(
+        "NFKD",
+        value,
+    )
+
+    ascii_value = normalized.encode(
+        "ascii",
+        "ignore",
+    ).decode("ascii")
+
+    return "".join(
+        character
+        for character in ascii_value.lower()
+        if character.isalnum()
+    )
+
+
+def _build_demo_email(name: str) -> str:
+    """Gera nome.segundo_nome@example.com."""
+
+    name_parts = [
+        part
+        for part in name.split()
+        if part
+    ]
+
+    if len(name_parts) < 2:
+        raise RuntimeError(
+            "O paciente acadêmico deve possuir "
+            "pelo menos dois componentes no nome."
+        )
+
+    first_name = _normalize_email_component(
+        name_parts[0]
+    )
+    second_name = _normalize_email_component(
+        name_parts[1]
+    )
+
+    return (
+        f"{first_name}.{second_name}"
+        "@example.com"
+    )
+
+
 def _build_demo_cpf(base: int) -> str:
     """Gera CPF fictício com dígitos verificadores válidos."""
 
@@ -114,8 +165,8 @@ def get_demo_patient_definitions() -> dict[str, dict]:
                     (patient_index * 2 + clinic_index) % 27 + 1,
                 ),
                 "sex": "female" if patient_index % 2 else "male",
-                "email": (
-                    f"paciente.{clinic_index}.{patient_index:02d}@example.com"
+                "email": _build_demo_email(
+                    name
                 ),
                 "phone": f"8898{clinic_index:02d}{patient_index:05d}",
             }
