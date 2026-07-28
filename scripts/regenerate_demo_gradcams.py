@@ -407,10 +407,17 @@ def main() -> None:
                 else "completed_with_divergence"
             )
 
+            stored_agreement = bool(
+                review["agrees_with_ai"]
+            )
+            stored_status = str(
+                definition["status"]
+            )
+
             if (
-                bool(review["agrees_with_ai"])
+                stored_agreement
                 != expected_agreement
-                or definition["status"]
+                or stored_status
                 != expected_status
             ):
                 review_inconsistencies.append(
@@ -422,20 +429,36 @@ def main() -> None:
                         "reviewed_label": (
                             reviewed_label
                         ),
-                        "stored_agreement": bool(
-                            review["agrees_with_ai"]
+                        "stored_agreement": (
+                            stored_agreement
                         ),
                         "expected_agreement": (
                             expected_agreement
                         ),
                         "stored_status": (
-                            definition["status"]
+                            stored_status
                         ),
                         "expected_status": (
                             expected_status
                         ),
                     }
                 )
+
+                review["review_notes"] = (
+                    "Resultado da IA confirmado "
+                    "na revisão demonstrativa."
+                    if expected_agreement
+                    else
+                    "Resultado da IA divergente "
+                    "da revisão demonstrativa."
+                )
+
+            review["agrees_with_ai"] = (
+                expected_agreement
+            )
+            definition["status"] = (
+                expected_status
+            )
 
         print(
             f"[{index:02d}/{len(definitions)}] "
@@ -511,7 +534,7 @@ def main() -> None:
         f"{len(prediction_changes)}"
     )
     print(
-        "Revisões que precisam ser reconciliadas: "
+        "Revisões identificadas e reconciliadas: "
         f"{len(review_inconsistencies)}"
     )
     print(
