@@ -8,7 +8,7 @@
     {
       "doctor_key": "doctor_large",
       "key": "clinic_large",
-      "name": "Hospital Regional Cariri"
+      "name": "Hospital Regional do Cariri"
     },
     {
       "doctor_key": "doctor_specialized",
@@ -1629,7 +1629,7 @@
         "processing_time_ms": 380
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 01",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-04",
@@ -1690,7 +1690,7 @@
         "processing_time_ms": 366
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 02",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-10",
@@ -1751,7 +1751,7 @@
         "processing_time_ms": 411
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 03",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-17",
@@ -1808,7 +1808,7 @@
         "processing_time_ms": 596
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 04",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-03",
@@ -1833,7 +1833,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 05",
       "doctor_key": "doctor_large",
       "exam_date": "2026-02-23",
@@ -1890,7 +1890,7 @@
         "processing_time_ms": 403
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 06",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-08",
@@ -1951,7 +1951,7 @@
         "processing_time_ms": 409
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 07",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-13",
@@ -2012,7 +2012,7 @@
         "processing_time_ms": 487
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 08",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-18",
@@ -2069,7 +2069,7 @@
         "processing_time_ms": 954
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 09",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-02",
@@ -2094,7 +2094,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 10",
       "doctor_key": "doctor_large",
       "exam_date": "2026-03-24",
@@ -2151,7 +2151,7 @@
         "processing_time_ms": 686
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 11",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-08",
@@ -2212,7 +2212,7 @@
         "processing_time_ms": 379
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 12",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-14",
@@ -2269,7 +2269,7 @@
         "processing_time_ms": 624
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 13",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-02",
@@ -2330,7 +2330,7 @@
         "processing_time_ms": 369
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 14",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-06",
@@ -2355,7 +2355,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 15",
       "doctor_key": "doctor_large",
       "exam_date": "2026-04-22",
@@ -2412,7 +2412,7 @@
         "processing_time_ms": 438
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 16",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-10",
@@ -2473,7 +2473,7 @@
         "processing_time_ms": 523
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 17",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-14",
@@ -2534,7 +2534,7 @@
         "processing_time_ms": 352
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 18",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-18",
@@ -2591,7 +2591,7 @@
         "processing_time_ms": 349
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 19",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-02",
@@ -2616,7 +2616,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 20",
       "doctor_key": "doctor_large",
       "exam_date": "2026-05-23",
@@ -2673,7 +2673,7 @@
         "processing_time_ms": 349
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 21",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-07",
@@ -2734,7 +2734,7 @@
         "processing_time_ms": 512
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 22",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-13",
@@ -2795,7 +2795,7 @@
         "processing_time_ms": 1095
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 23",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-18",
@@ -2852,7 +2852,7 @@
         "processing_time_ms": 399
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 24",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-03",
@@ -2877,7 +2877,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 25",
       "doctor_key": "doctor_large",
       "exam_date": "2026-06-22",
@@ -2934,7 +2934,7 @@
         "processing_time_ms": 346
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 26",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-08",
@@ -2995,7 +2995,7 @@
         "processing_time_ms": 391
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 27",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-12",
@@ -3056,7 +3056,7 @@
         "processing_time_ms": 360
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 28",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-17",
@@ -3113,7 +3113,7 @@
         "processing_time_ms": 450
       },
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Colonoscopia demonstrativa 29",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-21",
@@ -3134,7 +3134,7 @@
     {
       "analysis": null,
       "clinic_key": "clinic_large",
-      "clinic_name": "Hospital Regional Cariri",
+      "clinic_name": "Hospital Regional do Cariri",
       "description": "Endoscopia demonstrativa 30",
       "doctor_key": "doctor_large",
       "exam_date": "2026-07-24",

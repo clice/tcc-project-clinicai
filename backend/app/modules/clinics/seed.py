@@ -24,7 +24,7 @@ ACADEMIC_DEMO_CLINICS = {
     },
     "clinic_large": {
         "status": "clinic_active",
-        "name": "Hospital Regional Cariri",
+        "name": "Hospital Regional do Cariri",
         "cnpj": "11666555000122",
         "email": "contato@hospitalcariri.com",
         "phone": "8833338888",

@@ -196,6 +196,38 @@ def test_academic_demo_is_predictable_and_idempotent(
     assert {user.email for user in demo.users.values()} == expected_emails
     assert demo.users["admin_master"].id == bootstrap.admin_user.id
 
+    manifest_clinic_names = {
+        item["key"]: item["name"]
+        for item in manifest["clinics"]
+    }
+    assert manifest_clinic_names["clinic_large"] == (
+        "Hospital Regional do Cariri"
+    )
+    assert all(
+        item["clinic_name"]
+        == manifest_clinic_names[item["clinic_key"]]
+        for item in manifest["exams"]
+    )
+
+    assert demo.clinics["clinic_large"].name == (
+        "Hospital Regional do Cariri"
+    )
+
+    expected_functional_user_names = {
+        "manager_large": "Gestor Hospital Cariri",
+        "manager_specialized": "Gestão Centro Endoscópico",
+        "manager_inactive_large": (
+            "Gestor Inativo Hospital Cariri"
+        ),
+        "admin_master_inactive": (
+            "Administrador Master Inativo"
+        ),
+    }
+    assert {
+        key: demo.users[key].name
+        for key in expected_functional_user_names
+    } == expected_functional_user_names
+
     invalid_demo_cpfs = {
         patient.name: patient.cpf
         for patient in demo.patients.values()
