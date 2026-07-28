@@ -124,10 +124,58 @@ def build_exam_response(exam: Exam, current_user: User | None = None) -> dict:
     }
 
 
-def build_exam_list_response(exam: Exam) -> dict:
-    """Monta somente os campos da listagem operacional."""
+AI_RESULT_LIST_STATUSES = frozenset(
+    {
+        StatusName.AWAITING_REVIEW.value,
+        StatusName.COMPLETED.value,
+        StatusName.COMPLETED_WITH_DIVERGENCE.value,
+    }
+)
 
-    return {
+
+def build_exam_list_response(
+    exam: Exam,
+    current_user: User,
+) -> dict:
+    """
+    Monta os campos da listagem operacional.
+
+    O rótulo da predição é incluído somente para o médico com permissão
+    de leitura da análise e nos estados em que o resultado é apresentado.
+    """
+    role_name = (
+        current_user.role.name
+        if current_user.role
+        else None
+    )
+
+    permission_names = {
+        role_permission.permission.name
+        for role_permission in getattr(
+            current_user.role,
+            "role_permissions",
+            [],
+        )
+        if getattr(
+            role_permission,
+            "permission",
+            None,
+        )
+        is not None
+    }
+
+    can_see_ai_prediction = (
+        role_name == RoleName.DOCTOR.value
+        and "ai_analysis:read" in permission_names
+    )
+
+    status_name = (
+        exam.status.name
+        if exam.status
+        else None
+    )
+
+    response = {
         "id": exam.id,
         "clinic_id": exam.clinic_id,
         "clinic_name": (
@@ -142,9 +190,7 @@ def build_exam_list_response(exam: Exam) -> dict:
             exam.doctor.name if exam.doctor else None
         ),
         "status_id": exam.status_id,
-        "status_name": (
-            exam.status.name if exam.status else None
-        ),
+        "status_name": status_name,
         "status_display_name": (
             exam.status.display_name if exam.status else None
         ),
@@ -165,6 +211,17 @@ def build_exam_list_response(exam: Exam) -> dict:
             and exam.ai_analysis.gradcam_path
         ),
     }
+
+    if (
+        can_see_ai_prediction
+        and status_name in AI_RESULT_LIST_STATUSES
+        and exam.ai_analysis
+    ):
+        response["ai_prediction_label"] = (
+            exam.ai_analysis.prediction_label
+        )
+
+    return response
 
 
 PRINTABLE_EXAM_STATUSES = frozenset(
@@ -919,7 +976,11 @@ def list_exams(
     exams = query.order_by(Exam.created_at.desc()).all()
 
     return [
-        build_exam_list_response(exam) for exam in exams
+        build_exam_list_response(
+            exam,
+            current_user=current_user,
+        )
+        for exam in exams
     ]
 
 

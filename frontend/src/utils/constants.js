@@ -86,6 +86,11 @@ export const predictionLabels = {
   abnormal: 'Anormal',
 }
 
+export const predictionColors = {
+  normal: 'success',
+  abnormal: 'danger',
+}
+
 export const aiStatusColors = {
   pending: 'secondary',
   processing: 'info',

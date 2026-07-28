@@ -121,6 +121,7 @@ class ExamListItemResponse(BaseModel):
     description: str
     analysis_in_progress: bool = False
     ai_analysis_status: str | None = None
+    ai_prediction_label: str | None = None
     file_available: bool = False
     gradcam_available: bool = False
 

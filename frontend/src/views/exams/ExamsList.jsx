@@ -23,6 +23,8 @@ import {
   examStatusDisplayLabels,
   examStatusLabels,
   examTypeLabels,
+  predictionColors,
+  predictionLabels,
   statusColors,
 } from 'src/utils/constants'
 import {
@@ -33,6 +35,12 @@ import { getErrorMessage } from 'src/utils/errors'
 import { formatDateBR } from 'src/utils/formatters'
 import { getActionAccess } from 'src/utils/actionPermissions.mjs'
 import { getUserRole, hasPermission, PERMISSIONS, ROLES } from 'src/utils/permissions'
+
+const aiResultColumnStatuses = new Set([
+  'awaiting_review',
+  'completed',
+  'completed_with_divergence',
+])
 
 const summaryCards = [
   {
@@ -101,6 +109,11 @@ const ExamsList = () => {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status')
+
+  const showAiResultColumn =
+    roleName === ROLES.DOCTOR &&
+    canReadAiAnalysis &&
+    aiResultColumnStatuses.has(statusFilter)
 
   const managerCanSeeActions =
     roleName === ROLES.CLINIC_MANAGER &&
@@ -274,6 +287,27 @@ const ExamsList = () => {
         accessorKey: 'description',
         header: 'Descrição',
       },
+      ...(showAiResultColumn
+        ? [
+            {
+              accessorKey: 'ai_prediction_label',
+              header: 'Resultado da IA',
+              cell: ({ getValue }) => {
+                const predictionLabel = getValue()
+
+                if (!predictionLabel) {
+                  return '-'
+                }
+
+                return (
+                  <CBadge color={predictionColors[predictionLabel] || 'secondary'}>
+                    {predictionLabels[predictionLabel] || predictionLabel}
+                  </CBadge>
+                )
+              },
+            },
+          ]
+        : []),
       ...(showDoctorColumn
         ? [
             {
@@ -393,6 +427,7 @@ const ExamsList = () => {
     canPrintExams,
     canShowActionsColumn,
     canView,
+    showAiResultColumn,
     showClinicColumn,
     showDoctorColumn,
     statusFilter,
