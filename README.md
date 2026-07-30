@@ -1,22 +1,27 @@
-# 📌 ClinicAI: Protótipo de Sistema Web Inteligente para Clínicas com IA Aplicada a Exames Endoscópicos
+# 📌 Protótipo de Sistema Web para Gerenciamento Clínico e Apoio à Análise Automatizada de Exames Gastrointestinais
 
 ## 🧠 Objetivo Geral
 
-Desenvolver um protótipo de sistema web para clínicas e profissionais da saúde, integrando recursos de gestão administrativa a um módulo de análise automatizada de exames endoscópicos por meio de técnicas de Inteligência Artificial.
+Desenvolver o ClinicAI, um protótipo de sistema web para gerenciamento clínico, integrando um
+método de classificação binária automatizada de imagens de exames gastrointestinais em normais
+ou anormais como recurso de apoio à análise realizada por profissionais médicos.
 
 ---
 
 ## 🎯 Objetivos Específicos
 
-- **Desenvolver Backend:** API REST em FastAPI, com arquitetura modular.
-- **Implementar Autenticação Segura:** JWT (_access_ + _refresh token_) para controle de acesso.
-- **Gerenciar Estrutura Administrativa:** usuários, clínicas, pacientes, perfis e permissões.
-- **Organizar Dados Clínicos:** exames endoscópicos, com fluxo de status e revisão médica.
-- **Aplicar Inteligência Artificial:** classificação binária de imagens endoscópicas por
-  _Ensemble Stacking_, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2, com explicabilidade
-  visual post-hoc por Grad-CAM.
-- **Aplicar Boas Práticas de Engenharia de Software:** separação de camadas, Docker, migrations
-  e organização modular.
+- Realizar um levantamento bibliográfico para compreender o problema investigado e identificar
+  lacunas relacionadas ao uso de métodos computacionais na análise de exames gastrointestinais;
+- Desenvolver uma plataforma web para gerenciamento de clínicas, usuários, médicos, pacientes e
+  exames, incluindo autenticação e controle de acesso baseado em papéis;
+- Projetar uma arquitetura modular para a comunicação entre o *frontend*, o *backend*, a camada
+  de persistência de dados e o módulo de Inteligência Artificial;
+- Reproduzir, em ambiente experimental, o método de *Ensemble Stacking* proposto por Viana
+  (2026), gerando os artefatos necessários à composição e à execução do modelo preditivo;
+- Integrar o modelo preditivo ao sistema, incorporando a classificação automatizada das imagens
+  e a disponibilização de mapas de ativação Grad-CAM;
+- Verificar tecnicamente o funcionamento dos módulos e dos principais fluxos do protótipo por
+  meio de testes automatizados e funcionais.
 
 ---
 
@@ -34,7 +39,7 @@ segurança ou avaliação com profissionais e pacientes em cenário real.
 ## 👩‍💻 Autoria
 
 | Nome | Função | Contato |
-|------|--------|---------|
+|---|---|---|
 | Luana Batista da Cruz | Orientadora | luana.batista@ufca.edu.br |
 | Clice Bezerra Brito Romão | Autora | clice.romao@aluno.ufca.edu.br |
 
@@ -44,47 +49,107 @@ segurança ou avaliação com profissionais e pacientes em cenário real.
 
 ### 🔧 Backend
 
-- FastAPI, SQLAlchemy, PostgreSQL, Alembic, Pydantic
-- Autenticação JWT (_access_ + _refresh token_)
+- **FastAPI**: *framework* Python para construção da API REST, com geração automática de
+  documentação interativa;
+- **Pydantic**: validação e serialização de dados;
+- **SQLAlchemy**: ORM para acesso ao banco de dados relacional;
+- **Alembic**: versionamento e controle histórico do esquema do banco de dados;
+- **Python-JOSE**: emissão e verificação de *tokens* JWT (*access token* e *refresh token*);
+- **HTTPX**: comunicação assíncrona entre o *backend* e o serviço de IA;
+- **ReportLab**: geração do relatório do exame em PDF;
+- **PostgreSQL**: sistema gerenciador de banco de dados relacional.
 
 ### 💻 Frontend
 
-- React, CoreUI React Admin Template, Vite, React Router, Axios, Context API
+- **React** (v19): biblioteca para construção da interface, organizada em componentes
+  reutilizáveis;
+- **Vite**: ferramenta de *build* e servidor de desenvolvimento;
+- **CoreUI React Admin Template**: componentes visuais padronizados, como menus, tabelas e
+  formulários;
+- **React Router**: navegação entre telas sem recarregamento da página;
+- **Axios**: requisições HTTP ao *backend*;
+- **Redux** (com React Redux): gerenciamento de estado global da interface, utilizado
+  principalmente para controlar a exibição da barra lateral;
+- **Context API**: gerenciamento de estados específicos, utilizado nos contextos de
+  autenticação (`AuthContext`) e de notificações (`FeedbackContext`);
+- **Chart.js** (via `@coreui/react-chartjs`): renderização dos gráficos do *dashboard*.
 
 ### 🧠 Inteligência Artificial
 
-- PyTorch e torchvision (ResNet-50, EfficientNet-B4 e PVTv2-B2 integrados ao serviço de inferência)
-- OpenCV (pré-processamento: ROI e remoção de _Specular Highlights_)
-- Grad-CAM (explicabilidade visual post-hoc)
-- Scikit-learn (meta-classificador de regressão logística do _Ensemble Stacking_)
+- **PyTorch** e **torchvision**: construção, treinamento e execução das arquiteturas ResNet-50,
+  EfficientNet-B4 e PVTv2-B2;
+- **timm**: construção da arquitetura *Vision Transformer* PVTv2-B2;
+- **Scikit-learn** e **joblib**: treinamento, serialização e carregamento do
+  meta-classificador de Regressão Logística do *Ensemble Stacking*;
+- **OpenCV**, **Pillow** e **NumPy**: pré-processamento das imagens, incluindo extração de ROI e
+  remoção de *Specular Highlights*;
+- **pytorch-grad-cam**: geração dos mapas de ativação Grad-CAM combinados do *ensemble*.
 
 ### ⚙️ Infraestrutura
 
-- Docker / Docker Compose (GPU opcional via `docker-compose.gpu.yml`)
+- **Docker** e **Docker Compose**: conteinerização e orquestração do *frontend*, do *backend*, do
+  banco de dados e do módulo de IA, com suporte opcional a GPU por meio de
+  `docker-compose.gpu.yml`.
+
+### 🛠️ Ferramentas de Apoio ao Desenvolvimento
+
+O desenvolvimento contou com o apoio de **Claude Code** e **Codex** em atividades de
+implementação, revisão, depuração e elaboração de testes. As decisões de arquitetura, a
+validação dos resultados e a responsabilidade pelo conteúdo permaneceram sob responsabilidade
+da autora.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
 
+O sistema é estruturado em quatro componentes principais, *frontend*, *backend*, persistência
+de dados e módulo de IA, executados em *containers* Docker e orquestrados pelo Docker Compose:
+
 ```text
-Frontend (React) → API REST (FastAPI) → PostgreSQL
-                          ↓
-                 Serviço de IA (FastAPI + PyTorch)
+┌─────────────────────────────────────────────────────────┐
+│                Docker Compose - ClinicAI                │
+│                                                         │
+│   Frontend (React)                                      │
+│         │  REST API (Axios)                             │
+│         ▼                                               │
+│   Backend (FastAPI)                                     │
+│      │              │                                   │
+│      │ SQL          │ HTTP (HTTPX)                      │
+│      ▼              ▼                                   │
+│   Persistência    Módulo de IA (FastAPI + PyTorch)      │
+│   (PostgreSQL)         ▲                                │
+│                        │ artefatos compartilhados       │
+│                 model-downloader (auxiliar)             │
+└─────────────────────────────────────────────────────────┘
+                        │ download da release
+                        ▼
+                 GitHub Releases
 ```
+
+Essa organização separa as responsabilidades entre os componentes, facilitando a manutenção e
+a evolução independente de cada camada.
+
+O `model-downloader` é um serviço auxiliar executado sob demanda por meio do perfil `models`.
+Ele não permanece ativo durante a utilização normal do sistema e tem como função baixar,
+validar e instalar os artefatos versionados da GitHub Release no diretório compartilhado com o
+serviço de IA.
 
 ---
 
 ## 📁 Estrutura do Projeto
 
-    tcc-project-clinicai/
-    ├── backend/        -> API FastAPI e lógica de negócio
-    ├── frontend/       -> Interface web React
-    ├── ai/             -> Serviço de inferência + scripts de treino do modelo
-    ├── docs/           -> Documentação técnica
-    ├── scripts/        -> Download e geração do manifesto dos modelos
-    ├── docker-compose.yml
-    ├── docker-compose.gpu.yml  -> override opcional para GPU NVIDIA
-    └── README.md
+```text
+tcc-project-clinicai/
+├── backend/        -> API FastAPI, regras de negócio e modelagem do banco
+├── frontend/       -> Interface web React
+├── ai/             -> Serviço de inferência e scripts de treinamento
+├── data/           -> Persistência local de exames e mapas Grad-CAM do protótipo
+├── docs/           -> Documentação técnica complementar
+├── scripts/        -> Download e geração do manifesto dos modelos
+├── docker-compose.yml
+├── docker-compose.gpu.yml  -> configuração opcional para GPU NVIDIA
+└── README.md
+```
 
 ---
 
@@ -92,8 +157,8 @@ Frontend (React) → API REST (FastAPI) → PostgreSQL
 
 ### 1. Pré-requisitos
 
-- Docker e Docker Compose instalados
-- (Opcional) NVIDIA Container Toolkit, só se for usar GPU no serviço de IA
+- Docker e Docker Compose instalados;
+- NVIDIA Container Toolkit, apenas para execução opcional do serviço de IA com GPU NVIDIA.
 
 ### 2. Clonar o repositório
 
@@ -102,7 +167,7 @@ git clone https://github.com/clice/tcc-project-clinicai.git
 cd tcc-project-clinicai
 ```
 
-### 3. Configurar variáveis de ambiente
+### 3. Configurar as variáveis de ambiente
 
 ```bash
 cp .env.example .env
@@ -110,22 +175,22 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Eles não possuem valores padrão
-no código, então o backend não sobe sem essas variáveis definidas.
+Confira principalmente `DATABASE_URL` e `SECRET_KEY` em `backend/.env`. Essas variáveis não
+possuem valores padrão no código, e o *backend* não inicia sem que estejam definidas.
 
-O `.env` da raiz define o repositório, a tag da release e o nome do manifesto usados para
-baixar os modelos. A tag padrão é `models-v0.1.1`.
+O arquivo `.env` da raiz define o repositório, a tag da *release* e o nome do manifesto usados
+para baixar os modelos.
 
 ### 4. Baixar os modelos treinados
 
-Os pesos e o meta-classificador não são armazenados diretamente no Git. Antes de subir o
-sistema pela primeira vez, baixe os artefatos da GitHub Release configurada em `.env`:
+Os pesos e o meta-classificador não são armazenados no Git. Antes de iniciar o sistema pela
+primeira vez, baixe os artefatos da GitHub Release configurada no arquivo `.env`:
 
 ```bash
 docker compose --profile models run --rm model-downloader
 ```
 
-O comando baixa e verifica os seguintes arquivos em
+O comando baixa e valida o tamanho e o *hash* SHA-256 dos seguintes arquivos, instalando-os em
 `ai/models/exported/gastrointestinal/`:
 
 - `resnet50.pt`;
@@ -134,12 +199,12 @@ O comando baixa e verifica os seguintes arquivos em
 - `meta_classificador.joblib`;
 - `manifesto_modelos.json`.
 
-O download valida o tamanho e o hash SHA-256 de cada artefato. Arquivos já existentes e
-válidos são preservados; arquivos incompletos ou com hash divergente não são instalados.
+Arquivos já existentes e válidos são preservados. Arquivos incompletos ou com *hash*
+divergente não são instalados.
 
 ### 5. Validar dependências e configuração
 
-Antes do primeiro build ou após alterar arquivos de dependências:
+Antes do primeiro *build* ou após alterar arquivos de dependências, execute:
 
 ```bash
 python3 scripts/check_dependency_locks.py
@@ -152,117 +217,121 @@ docker compose config --quiet
 docker compose up --build -d
 ```
 
-Para usar GPU NVIDIA no serviço de IA (opcional):
+Para usar GPU NVIDIA no serviço de IA:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build -d
 ```
 
-### 7. Banco de dados: migrations e dados iniciais
+### 7. Banco de dados, migrations e dados iniciais
 
-**Isso acontece automaticamente.** O container do backend, ao subir, executa nesta ordem
-(veja `backend/entrypoint.sh`):
+O processo ocorre automaticamente quando o *container* do *backend* é iniciado. O arquivo
+`backend/entrypoint.sh` executa, nesta ordem:
 
 1. aguarda o PostgreSQL aceitar conexões;
-2. aplica as migrations pendentes (`alembic upgrade head`);
-3. executa os seeds no modo definido por `SEED_MODE`.
+2. aplica as *migrations* pendentes com `alembic upgrade head`;
+3. executa os *seeds* no modo definido pela variável `SEED_MODE`.
 
-Os modos são separados:
+| `SEED_MODE` | Resultado | Comando manual equivalente |
+|---|---|---|
+| `bootstrap` (padrão) | cria *statuses*, papéis, permissões, a matriz inicial de papel-permissão e um único Administrador Master | `docker compose exec backend python -m app.modules.seeds --mode bootstrap` |
+| `academic_demo` | executa o *bootstrap* e acrescenta clínicas, profissionais, pacientes, exames e análises fictícios | `docker compose exec backend python -m app.modules.seeds --mode academic_demo` |
 
-| `SEED_MODE` | Resultado |
-|---|---|
-| `bootstrap` | cria statuses, roles, permissions, a matriz inicial de role-permissions e um único Administrador Master |
-| `academic_demo` | executa o bootstrap e acrescenta somente clínicas, profissionais, pacientes, exames e análises fictícios |
+Para carregar a massa demonstrativa em um banco novo, defina
+`SEED_MODE=academic_demo` em `backend/.env` antes de iniciar os *containers*.
 
-O padrão seguro do backend e do arquivo `backend/.env.example` é `bootstrap`.
-Para carregar a massa demonstrativa em um banco novo, defina explicitamente
-`SEED_MODE=academic_demo` no arquivo local `backend/.env` antes de subir os containers.
-Nunca habilite esse modo em um banco com dados reais.
+> **Atenção:** o modo `academic_demo` é destinado exclusivamente ao ambiente acadêmico e não
+> deve ser habilitado em um banco com dados reais.
 
-No modo `bootstrap`, o primeiro acesso utiliza as variáveis
-`BOOTSTRAP_ADMIN_NAME`, `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_CPF` e
-`BOOTSTRAP_ADMIN_PASSWORD`. Os valores do `.env.example` são destinados somente
-ao ambiente acadêmico e devem ser alterados em qualquer outro ambiente.
-
-Os seeds são idempotentes e não apagam registros existentes. Alterar
-`SEED_MODE` de `academic_demo` para `bootstrap` não remove dados de demonstração
-já persistidos; uma validação realmente limpa deve usar um banco novo.
-
-Comandos manuais equivalentes:
-
-```bash
-docker compose exec backend alembic upgrade head
-docker compose exec backend python -m app.modules.seeds --mode bootstrap
-docker compose exec backend python -m app.modules.seeds --mode academic_demo
-```
-
-Os seeds não atualizam registros existentes e não reconciliam customizações administrativas.
-As fases de bootstrap e demonstração possuem transações separadas para impedir dados parciais.
-
-A integridade das migrations, dos seeds e dos contratos do banco é protegida pela suíte
-automatizada do backend. Para executá-la:
-
-```bash
-docker compose run --rm --no-deps --entrypoint python backend -m pytest -q
-```
-
-A qualidade estática e a geração do build do frontend podem ser verificadas,
-a partir da raiz do projeto, com:
-
-```bash
-docker compose run --rm --no-deps frontend npm run lint
-docker compose run --rm --no-deps frontend npm run build
-```
+Os *seeds* são idempotentes. O *bootstrap* preserva as customizações administrativas feitas
+após a inicialização da matriz de permissões. O modo `academic_demo` reconcilia apenas os
+registros reservados da massa demonstrativa com o manifesto atual, inclusive removendo análises
+obsoletas vinculadas a exames acadêmicos quando necessário. Ele não apaga registros externos à
+massa. Alterar o modo de `academic_demo` para `bootstrap` não remove os dados demonstrativos já
+persistidos.
 
 ---
 
-## 🔑 Credenciais iniciais e acadêmicas
+## 🔑 Credenciais Iniciais e Acadêmicas
 
-O Administrador Master é criado pelo modo `bootstrap` e também é reutilizado pelo
+O Administrador Master é criado pelo modo `bootstrap` e também é reutilizado pelo modo
 `academic_demo`. No arquivo `backend/.env.example`, os valores acadêmicos locais são:
 
 | Perfil | E-mail padrão | Senha padrão |
 |---|---|---|
-| Administrador _Master_ | valor de `BOOTSTRAP_ADMIN_EMAIL` (`admin@clinicai.com`) | valor de `BOOTSTRAP_ADMIN_PASSWORD` (`clinicai123`) |
+| Administrador *Master* | `admin@clinicai.com` | `clinicai123` |
 
-O modo `academic_demo` acrescenta as contas fictícias abaixo:
+O modo `academic_demo` acrescenta as contas fictícias abaixo. Todas utilizam a senha
+`clinicai123`.
 
-| Perfil | E-mail | Senha |
-|---|---|---|
-| Médico — Clínica Primária | doctor@clinicai.com | clinicai123 |
-| Gestor — Clínica Primária | clinic_manager@clinicai.com | clinicai123 |
-| Médico — Hospital Regional Cariri | doctor.cariri@clinicai.com | clinicai123 |
-| Gestor — Hospital Regional Cariri | manager.cariri@clinicai.com | clinicai123 |
-| Médico — Centro Endoscópico Cariri | doctor.endoscopia@clinicai.com | clinicai123 |
-| Gestor — Centro Endoscópico Cariri | manager@clinicai.com | clinicai123 |
+| Perfil | Nome | E-mail | Clínica |
+|---|---|---|---|
+| Médico | Dr. João Silva | `dr.joao@clinicai.com` | ClinicAI Endoscopia Especializada |
+| Médico | Dr. Lucas Andrade | `dr.lucas@clinicai.com` | ClinicAI Endoscopia Especializada |
+| Gestor | Gestor ClinicAI Endoscopia Especializada | `gestor.clinicai@clinicai.com` | ClinicAI Endoscopia Especializada |
+| Médico | Dr. Marcos Lima | `dr.marcos@hospitalcariri.com` | Hospital Regional do Cariri |
+| Gestor | Gestor Hospital Cariri | `gestor.hospital@hospitalcariri.com` | Hospital Regional do Cariri |
+| Médico | Dra. Helena Costa | `dra.helena@cariri.com` | Centro Endoscópico Cariri |
+| Gestor | Gestão Centro Endoscópico | `gestor.centro@cariri.com` | Centro Endoscópico Cariri |
 
-Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem
-ser reutilizadas em ambiente real. O seed não redefine a senha nem os dados de
-um usuário que já exista.
+Também existem contas inativas, utilizadas para validar o bloqueio de autenticação de usuários
+e clínicas inativos:
 
-O `academic_demo` consolidado reúne três clínicas, um Administrador Master criado
-pelo bootstrap, seis contas demonstrativas, 30 pacientes fictícios e 90 exames,
-sendo 30 exames por clínica. A massa contempla
-`pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed`
-e `canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão
-`0.1.1`, todas com mapas Grad-CAM.
+| Perfil | Nome | E-mail | Situação |
+|---|---|---|---|
+| Médico | Dr. Renato Moura | `dr.renato@clinicai.com` | Usuário inativo vinculado à clínica inativa |
+| Médica | Dra. Paula Freire | `dra.paula@clinicai.com` | Usuária inativa |
+| Gestor | Gestor Inativo Hospital Cariri | `gestor.inativo@hospitalcariri.com` | Usuário inativo |
+| Gestor | Gestor Inativo Centro Endoscópico | `gestor.inativo@cariri.com` | Usuário inativo |
+| Administrador *Master* | Administrador Master Inativo | `admin.inativo@clinicai.com` | Usuário inativo |
 
-As 90 imagens acadêmicas — 45 normais e 45 anormais segundo seus rótulos de
-origem — têm procedência, licença, hashes, vínculos e resultados registrados em
-`backend/demo_assets/manifest.json`. Esse conjunto serve exclusivamente à
-demonstração acadêmica e não representa uma avaliação formal ou validação
-clínica do modelo.
+Essas credenciais existem apenas para reprodutibilidade acadêmica e não devem ser reutilizadas
+em ambiente real. Para contas acadêmicas já existentes, o *seed* preserva a senha armazenada,
+mas reconcilia os campos reservados da demonstração, como nome, e-mail, papel, situação e
+vínculo com a clínica.
+
+A massa `academic_demo` reúne quatro clínicas (três ativas e uma inativa de teste), 13
+usuários no total, 30 pacientes fictícios e 90 exames, sendo 30 por clínica ativa. A massa
+contempla os estados `pending`, `awaiting_review`, `completed`,
+`completed_with_divergence`, `failed` e `canceled`, além de 72 análises concluídas pelo
+`ensemble_stacking` versão `0.1.2`, todas com mapas Grad-CAM, 50 exames revisados e 464 eventos
+de auditoria.
+
+As 90 imagens acadêmicas (45 normais e 45 anormais segundo seus rótulos de origem da base de imagens Kvasir V1) têm
+procedência, licença, *hashes*, vínculos e resultados registrados em
+`backend/demo_assets/manifest.json`. Esse conjunto serve exclusivamente à demonstração
+acadêmica e não representa avaliação formal nem validação clínica do modelo.
+
+---
+
+## ✅ Testes
+
+| Camada | Comando |
+|---|---|
+| Backend | `docker compose run --rm --no-deps --entrypoint python backend -m pytest -q` |
+| Módulo de IA | `docker compose run --rm --no-deps --entrypoint python -w /app ai -m unittest discover -s tests -p 'test_*.py' -v` |
+| Frontend (qualidade estática) | `docker compose run --rm --no-deps frontend npm run lint` |
+| Frontend (build de produção) | `docker compose run --rm --no-deps frontend npm run build` |
+
+A suíte automatizada do *backend* contempla testes unitários, de integração e de contrato,
+incluindo isolamento de dados entre clínicas, autorização por perfil, exclusividade da revisão
+médica, integridade dos registros de auditoria e comportamento da máquina de estados dos
+exames.
+
+Na validação técnica realizada antes da consolidação desta versão, foram registrados 273 testes
+aprovados e 2 testes ignorados conforme a configuração existente. Essa contagem pode aumentar
+com a evolução do projeto.
 
 ---
 
 ## 🌐 Acesso Local
 
 | Serviço | URL |
-|---------|-----|
+|---|---|
 | Frontend | http://localhost:3000 |
 | Backend | http://localhost:8000 |
-| Documentação Backend API | http://localhost:8000/docs |
-| Documentação IA API | http://localhost:8001/docs |
+| Documentação da API do Backend | http://localhost:8000/docs |
+| Documentação da API de IA | http://localhost:8001/docs |
 
 ---
 
@@ -270,63 +339,120 @@ clínica do modelo.
 
 ### ✔ Escopo concluído
 
-- Autenticação (JWT com access + refresh token, invalidação de sessão)
-- Usuários, Clínicas, Pacientes
-- Perfis (Roles) e Permissões, com controle de acesso por escopo de clínica
-- Status (motor de fluxo de estados por entidade)
-- Logs de Auditoria
-- Exames: upload, download, análise por IA, revisão médica, cancelamento e restauração
-- Integração automática entre backend e serviço de IA
-- Classificação binária pelo _Ensemble Stacking_ com ResNet-50, EfficientNet-B4 e PVTv2-B2
-- Revisão médica com confirmação ou divergência e histórico auditável
-- Disponibilização autenticada do mapa Grad-CAM
-- Massa `academic_demo` reproduzível com três clínicas, 30 pacientes, 90 exames e 72 análises com Grad-CAM
+- Autenticação com JWT, utilizando *access token*, *refresh token* e invalidação de sessão;
+- Gerenciamento de usuários, clínicas e pacientes;
+- Perfis e permissões com controle de acesso baseado em papéis e escopo de clínica;
+- Motor de fluxo de estados por entidade;
+- Registros de auditoria;
+- Gerenciamento de exames, incluindo *upload*, *download*, análise por IA, revisão médica,
+  cancelamento e restauração;
+- Impressão do relatório do exame em PDF pelo médico responsável e pelo gestor da clínica,
+  conforme as regras de autorização;
+- Integração automática entre o *backend* e o serviço de IA;
+- Classificação binária por *Ensemble Stacking*, combinando ResNet-50, EfficientNet-B4 e
+  PVTv2-B2;
+- Revisão médica com confirmação ou divergência e histórico auditável;
+- Disponibilização autenticada do mapa Grad-CAM combinado;
+- Apresentação do resultado da IA nas listagens médicas dos exames em estados compatíveis;
+- Navegação dos cards do *dashboard* para as listas correspondentes;
+- Massa `academic_demo` reproduzível com três clínicas ativas, uma clínica inativa de teste,
+  30 pacientes, 90 exames e 72 análises com mapas Grad-CAM.
 
 ### Fora do escopo entregue
 
-Um prontuário eletrônico completo, agenda médica, faturamento, bloqueio automático por
-tentativas inválidas e implantação clínica não integram o escopo concluído deste protótipo.
+Não integram o escopo concluído deste protótipo:
+
+- prontuário eletrônico completo;
+- agenda médica;
+- faturamento;
+- bloqueio automático por tentativas inválidas de autenticação;
+- implantação clínica;
+- validação diagnóstica em pacientes reais;
+- avaliação de usabilidade com profissionais ou pacientes;
+- certificação para uso assistencial.
 
 ---
 
 ## 🧠 Inteligência Artificial no Projeto
 
-O diferencial do ClinicAI é a integração com visão computacional para exames endoscópicos.
+O ClinicAI integra um método de visão computacional voltado à classificação binária de imagens
+de exames gastrointestinais.
 
 ### Pipeline de pré-processamento
 
-- Extração de ROI (_Region of Interest_)
-- Remoção de _Specular Highlights_
-- _Data Augmentation_ (treino)
+- Extração de ROI (*Region of Interest*);
+- Remoção de *Specular Highlights*;
+- Normalização com média e desvio padrão da ImageNet;
+- *Data Augmentation* durante o treinamento.
 
 ### Modelo
 
-- _Ensemble Stacking_ operacional, combinando ResNet-50, EfficientNet-B4 e PVTv2-B2
-- Meta-classificador de regressão logística, baseado na reprodução operacional adaptada
-  do método de Viana
-- Artefatos operacionais distribuídos pela GitHub Release `models-v0.1.1`
-- Protocolo de treinamento dos artefatos: `viana_codigo_kfold3_roi_sh_da`
-- Fold operacional 3, selecionado como execução representativa por proximidade do
-  resultado à média agregada dos três folds, sem alegação de superioridade estatística
+- *Ensemble Stacking* combinando ResNet-50, EfficientNet-B4 e PVTv2-B2;
+- Meta-classificador de Regressão Logística treinado sobre as predições dos três modelos-base;
+- Artefatos operacionais distribuídos pela GitHub Release configurada;
+- Protocolo de treinamento `viana_codigo_kfold3_roi_sh_da`;
+- *Fold* operacional 1 integrado ao protótipo.
 
 ### Explicabilidade
 
-- Grad-CAM
+O mapa de ativação Grad-CAM apresentado ao usuário é uma combinação ponderada dos três mapas
+individuais (ResNet-50, EfficientNet-B4 e PVTv2-B2). O peso de cada modelo na combinação é
+determinado pela evidência local fornecida ao meta-classificador na predição do exame
+específico.
 
-### Métricas de avaliação
+O mapa composto destaca as regiões da imagem que mais influenciaram a classificação final do
+*Ensemble Stacking*. Essa visualização é um recurso de explicabilidade *post hoc* e não
+constitui localização validada de lesões ou achados clínicos.
 
-- Accuracy, Precision, Recall, F1-Score, Matriz de Confusão
+### Avaliação Experimental
+
+Na reprodução do método, foi utilizada validação cruzada estratificada com \(k = 3\) *folds*.
+Essa configuração permitiu observar a variação dos resultados entre diferentes divisões da
+base de imagens, reduzindo a dependência de uma única separação entre treinamento e teste.
+
+| Métrica | Média dos 3 *folds* | *Fold* operacional integrado ao protótipo |
+|---|---:|---:|
+| Acurácia | 95,97% ± 0,61% | 96,40% |
+| Precisão | 96,05% ± 0,51% | 96,41% |
+| Sensibilidade | 95,97% ± 0,61% | 96,40% |
+| Especificidade | 96,01% ± 0,31% | 96,24% |
+| F1-*Score* | 95,99% ± 0,60% | 96,40% |
+
+O *fold* 1 foi integrado ao protótipo por apresentar o melhor desempenho entre as três
+execuções tanto em acurácia quanto em F1-*Score*. Mais detalhes sobre a metodologia
+experimental e a comparação com o método original são apresentados na monografia do projeto.
+
+Essas métricas representam o desempenho experimental observado nas divisões da base de imagens
+utilizada. Elas não correspondem a validação clínica, estimativa de desempenho diagnóstico em
+pacientes reais nem avaliação de impacto assistencial.
 
 ---
 
 ## 📦 Publicação dos Modelos no GitHub Releases
 
-Esta seção é destinada à manutenção dos artefatos de IA. Quem deseja apenas executar o sistema
-deve seguir a seção **Como Executar o Projeto**.
+Esta seção é destinada à manutenção dos artefatos de IA. Para apenas executar o sistema,
+consulte a seção **Como Executar o Projeto**.
 
-### 1. Preparar os artefatos
+### Release atual
 
-Os quatro arquivos finais devem estar em `ai/models/exported/gastrointestinal/` com estes nomes:
+- Tag: `models-v0.1.2`;
+- Domínio: `gastrointestinal`;
+- Protocolo de treinamento: `viana_codigo_kfold3_roi_sh_da`;
+- *Fold* operacional: `1`;
+- Critério de seleção: melhor desempenho entre as três execuções da validação cruzada em
+  acurácia e F1-*Score*.
+
+As *releases* anteriores, `models-v0.1.0` e `models-v0.1.1`, permanecem preservadas para
+manutenção do histórico e reprodutibilidade.
+
+### Publicando uma nova versão
+
+Os passos abaixo devem ser executados sempre que os pesos, o meta-classificador ou alguma
+etapa do pré-processamento forem alterados.
+
+#### 1. Preparar os artefatos
+
+Os quatro arquivos finais devem estar em `ai/models/exported/gastrointestinal/`:
 
 ```text
 resnet50.pt
@@ -335,31 +461,25 @@ pvt_v2_b2.pt
 meta_classificador.joblib
 ```
 
-A ordem das meta-features do meta-classificador deve ser ResNet-50, EfficientNet-B4 e PVTv2-B2,
-a mesma definida em `ai/app/inference/domains/gastrointestinal.py`.
+A ordem das *meta-features* deve ser ResNet-50, EfficientNet-B4 e PVTv2-B2, a mesma definida em
+`ai/app/inference/domains/gastrointestinal.py`.
 
-### 2. Gerar o manifesto
+#### 2. Gerar o manifesto
 
-Na raiz do projeto, execute:
+Na raiz do projeto, execute, ajustando a tag e a versão:
 
 ```bash
-python scripts/generate_model_manifest.py \
-  --release-tag models-v0.1.1 \
-  --model-version 0.1.1
+python3 scripts/generate_model_manifest.py \
+  --release-tag models-v0.1.3 \
+  --model-version 0.1.3
 ```
 
-O comando gera `manifesto_modelos.json` com o tamanho e o hash SHA-256 de cada artefato. Os
-modelos e o manifesto são ignorados pelo Git e devem ser anexados manualmente à release.
+O comando gera `manifesto_modelos.json` com o tamanho e o *hash* SHA-256 de cada artefato. Os
+modelos e o manifesto são ignorados pelo Git e devem ser anexados manualmente à *release*.
 
-### 3. Criar a release
+#### 3. Criar a release no GitHub
 
-No GitHub, abra **Releases** e selecione **Draft a new release**. Use:
-
-- tag: `models-v0.1.1`;
-- título: `Modelos ClinicAI v0.1.1`;
-- use **Set as a pre-release** somente enquanto os artefatos ainda estiverem em validação;
-
-Anexe exatamente os cinco arquivos:
+Na seção **Releases**, selecione **Draft a new release** e anexe exatamente os cinco arquivos:
 
 ```text
 resnet50.pt
@@ -369,69 +489,82 @@ meta_classificador.joblib
 manifesto_modelos.json
 ```
 
-Salve primeiro como rascunho, confira os nomes dos arquivos e somente depois publique.
+Salve inicialmente como rascunho, confira os nomes dos arquivos e publique somente depois da
+validação.
 
-### 4. Versionar atualizações futuras
+#### 4. Atualizar a tag padrão
 
-A tag configurada em `.env` é fixa. Alterações posteriores no frontend, backend, README ou RBAC
-não modificam os artefatos da release `models-v0.1.1`.
+Depois de validar a nova *release* conforme o procedimento descrito em
+[`docs/model-release-guide.md`](docs/model-release-guide.md), atualize
+`MODEL_RELEASE_TAG` em `.env.example`.
 
-Se algum peso, meta-classificador, classe ou etapa de pré-processamento mudar, publique uma nova
-release, por exemplo `models-v0.1.2` ou `models-v0.2.0`, e atualize `MODEL_RELEASE_TAG` em
-`.env.example`. Não substitua os arquivos de uma versão já publicada, pois as releases antigas
-devem continuar disponíveis para reprodutibilidade. A release `models-v0.1.0`
-permanece preservada como versão histórica anterior ao conjunto operacional do fold 3.
+As *releases* anteriores não devem ser sobrescritas, pois precisam permanecer disponíveis para
+reprodutibilidade.
 
-O download atual usa assets públicos. Repositórios privados exigem um mecanismo de autenticação
-específico; tokens não devem ser armazenados no Compose, no README ou em arquivos versionados.
-
----
-
-## 📚 Contribuição Acadêmica
-
-O projeto contribui com:
-
-- Aplicação de Engenharia de Software em sistemas reais
-- Integração entre sistemas web e Inteligência Artificial
-- Estruturação de dados clínicos com fluxo de revisão médica
-- Base para pesquisa em apoio computacional à detecção e triagem de achados em endoscopia gastrointestinal
+O mecanismo atual utiliza *assets* públicos. Repositórios privados exigem um mecanismo
+específico de autenticação. *Tokens* não devem ser armazenados no Docker Compose, no README ou
+em arquivos versionados.
 
 ---
 
-## Bootstrap e evolução da matriz RBAC
+## 🔐 Bootstrap e Evolução da Matriz RBAC
 
-No modo `bootstrap`, o executor `python -m app.modules.seeds`, chamado pelo
-entrypoint do backend, cria o bootstrap estrutural e garante um único
-Administrador Master inicial. O campo
-`roles.permissions_initialized`
-distingue uma role nunca inicializada de uma role configurada sem permissões.
-Depois do primeiro bootstrap, reinícios não alteram a matriz e as edições
-administrativas permanecem como fonte da verdade.
+No modo `bootstrap`, o executor `python -m app.modules.seeds`, chamado pelo *entrypoint* do
+*backend*, cria a estrutura inicial e garante a existência de um único Administrador Master.
 
-A baseline `0001clinicai` já contém o marcador de bootstrap e o catálogo
-estrutural atual. Na matriz padrão, `clinic_manager` possui acesso operacional
-à própria clínica, sem receber `exams:read` ou `ai_analysis:read`. Mudanças
-oficiais futuras em bancos existentes devem ser implementadas por novas
-migrations de dados do Alembic.
+O campo `roles.permissions_initialized` distingue um papel nunca inicializado de um papel
+configurado deliberadamente sem permissões. Depois do primeiro *bootstrap*, as reinicializações
+não alteram automaticamente a matriz, e as edições administrativas permanecem como fonte da
+verdade.
 
-Somente quando houver intenção de descartar customizações e restaurar toda a
-matriz padrão, execute manualmente:
+A *baseline* `0001initial` contém o marcador de *bootstrap* e o catálogo estrutural atual. Na
+matriz padrão, `clinic_manager` possui acesso operacional à própria clínica, sem receber
+`exams:read` ou `ai_analysis:read`.
+
+O perfil `admin_master` administra os componentes estruturais e operacionais da plataforma,
+mas esse privilégio administrativo não concede acesso aos resultados clínicos da IA nem às
+revisões médicas.
+
+Mudanças oficiais futuras em bancos existentes devem ser implementadas por novas *migrations*
+de dados do Alembic.
+
+Somente quando houver intenção de descartar customizações e restaurar toda a matriz padrão,
+execute manualmente:
 
 ```bash
 docker compose exec backend python -m app.modules.role_permissions.reconcile \
   --confirm RECONCILE_RBAC
 ```
 
-O comando registra quantos vínculos foram adicionados e removidos por role e
-não é executado automaticamente pelo entrypoint.
+O comando registra quantos vínculos foram adicionados e removidos por papel e não é executado
+automaticamente pelo *entrypoint*.
+
+Para consultar os princípios de autenticação, autorização e segurança que orientam essa matriz,
+acesse [`docs/access-control-and-security.md`](docs/access-control-and-security.md).
 
 ---
 
-## 📄 Observações
+## 📚 Contribuição Acadêmica
 
-O ClinicAI é um protótipo funcional concluído para fins acadêmicos no escopo do Trabalho de
-Conclusão de Curso. Foi verificado tecnicamente em ambiente local com dados demonstrativos,
-mas não foi implantado nem validado em ambiente clínico real.
+O ClinicAI reúne, em um único protótipo acadêmico:
+
+- aplicação de práticas de Engenharia de Software em um sistema web modular;
+- integração entre uma aplicação de gerenciamento clínico e um serviço de visão computacional;
+- implementação de controle de acesso baseado em papéis e escopo de clínica;
+- reprodução experimental de um método de *Ensemble Stacking*;
+- integração de classificação binária, revisão médica e explicabilidade visual por Grad-CAM;
+- disponibilização de uma massa demonstrativa sintética e reproduzível.
+
+---
+
+## 📄 Observações Acadêmicas
+
+O ClinicAI é um protótipo desenvolvido para fins acadêmicos no escopo de um Trabalho de
+Conclusão de Curso. O sistema foi verificado tecnicamente em ambiente local com dados
+demonstrativos e não foi implantado, validado ou avaliado em ambiente clínico real.
+
+Os resultados automatizados não constituem diagnóstico médico e não substituem a análise nem a
+conclusão de um profissional qualificado.
 
 ---
 

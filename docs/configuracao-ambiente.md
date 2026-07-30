@@ -1,22 +1,23 @@
-# Configuração de Ambiente do ClinicAI
+# Configuração de Ambiente
 
-Este documento registra a configuração reproduzível do ambiente local do ClinicAI. O
-`docker-compose.yml` é voltado ao desenvolvimento e publica portas somente em `127.0.0.1`.
-O ClinicAI é um protótipo acadêmico: esta é sua configuração oficial de demonstração local,
-não uma configuração para uso clínico ou hospedagem pública.
+Este documento registra a configuração reproduzível do ambiente local do ClinicAI.
 
-## Arquivos locais
+O `docker-compose.yml` foi preparado para desenvolvimento e demonstração acadêmica. As portas
+são publicadas no host pelas associações padrão do Docker Compose. Portanto, a configuração não
+deve ser tratada como pronta para hospedagem pública ou uso clínico.
+
+## Arquivos de configuração
 
 | Arquivo | Consumidor | Versionado? |
 |---|---|---|
-| `.env` | Docker Compose e distribuidor dos modelos | Não |
-| `.env.example` | Modelo da configuração da raiz | Sim |
-| `backend/.env` | Backend FastAPI | Não |
-| `backend/.env.example` | Modelo da configuração do backend | Sim |
-| `frontend/.env` | Frontend Vite | Não |
-| `frontend/.env.example` | Modelo da configuração do frontend | Sim |
+| `.env` | serviço auxiliar de distribuição dos modelos | Não |
+| `.env.example` | exemplo da configuração dos modelos | Sim |
+| `backend/.env` | backend FastAPI | Não |
+| `backend/.env.example` | exemplo da configuração do backend | Sim |
+| `frontend/.env` | frontend Vite | Não |
+| `frontend/.env.example` | exemplo da configuração do frontend | Sim |
 
-Crie os arquivos locais com:
+Crie os arquivos locais:
 
 ```bash
 cp .env.example .env
@@ -24,47 +25,93 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
+Arquivos `.env` locais não devem ser versionados.
+
 ## Variáveis da raiz
+
+O `.env` da raiz controla a distribuição dos artefatos de IA:
 
 | Variável | Finalidade |
 |---|---|
-| `COMPOSE_PROJECT_NAME` | Prefixo dos recursos do Compose |
-| `POSTGRES_DB` | Nome do banco PostgreSQL |
-| `POSTGRES_USER` | Usuário do PostgreSQL |
-| `POSTGRES_PASSWORD` | Senha técnica do PostgreSQL |
-| `POSTGRES_PORT` | Porta local do banco |
-| `BACKEND_PORT` | Porta local da API principal |
-| `AI_PORT` | Porta local do serviço de IA |
-| `FRONTEND_PORT` | Porta local do frontend |
-| `MODEL_RELEASE_REPOSITORY` | Repositório dos artefatos de IA |
-| `MODEL_RELEASE_TAG` | Versão imutável dos modelos |
-| `MODEL_RELEASE_MANIFEST` | Nome do manifesto de integridade |
+| `MODEL_RELEASE_REPOSITORY` | repositório que hospeda os anexos da release |
+| `MODEL_RELEASE_TAG` | tag imutável dos modelos |
+| `MODEL_RELEASE_MANIFEST` | nome do manifesto de integridade |
 
-`POSTGRES_PASSWORD` não é a senha dos usuários do sistema. Ela autentica exclusivamente a
-conexão entre PostgreSQL e backend. O Compose usa as variáveis da raiz para injetar a
-`DATABASE_URL` no container do backend. O valor `clinicai123` é uma credencial local
-padronizada para facilitar a reprodução do protótipo; não representa uma credencial real.
+A configuração acadêmica atual utiliza:
+
+```dotenv
+MODEL_RELEASE_REPOSITORY=clice/tcc-project-clinicai
+MODEL_RELEASE_TAG=models-v0.1.2
+MODEL_RELEASE_MANIFEST=manifesto_modelos.json
+```
+
+O serviço `model-downloader` também possui esses valores como *fallback* no
+`docker-compose.yml`.
+
+## Variáveis do backend
+
+O arquivo `backend/.env` reúne:
+
+- identificação do ambiente;
+- host e porta da API;
+- modo de seed;
+- credenciais do Administrador Master inicial;
+- conexão com PostgreSQL;
+- segredo e tempos de expiração dos tokens JWT;
+- origens CORS;
+- raiz do armazenamento operacional;
+- limites de tamanho e dimensões das imagens.
+
+`DATABASE_URL` e `SECRET_KEY` são obrigatórias. Os valores de
+`backend/.env.example` servem apenas à reprodução acadêmica local e devem ser substituídos em
+qualquer ambiente exposto.
+
+O modo seguro padrão é:
+
+```dotenv
+SEED_MODE=bootstrap
+```
+
+Para carregar a massa acadêmica em um banco novo:
+
+```dotenv
+SEED_MODE=academic_demo
+```
+
+Nunca use `academic_demo` em um banco com dados reais.
+
+## Variáveis do frontend
+
+O arquivo `frontend/.env` define:
+
+- nome e ambiente da aplicação;
+- host e porta do Vite;
+- endereço da API principal;
+- chaves usadas para armazenar a sessão no navegador;
+- tema e idioma padrão.
+
+A URL local padrão do backend é:
+
+```dotenv
+VITE_API_URL=http://localhost:8000
+```
+
+Variáveis com prefixo `VITE_` são incorporadas ao código entregue ao navegador. Não armazene
+segredos nelas.
 
 ## Instalação limpa
 
 ```bash
 git clone https://github.com/clice/tcc-project-clinicai.git
 cd tcc-project-clinicai
+
 cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-```
 
-Os arquivos copiados já são funcionais para a demonstração local. Antes de subir os serviços:
-
-1. mantenha os três arquivos `.env` fora do Git;
-2. baixe e valide os modelos conforme `model-release-guide.md`;
-3. altere `POSTGRES_PASSWORD` e `SECRET_KEY` somente se o sistema for exposto fora da
-   máquina local.
-
-```bash
+python3 scripts/check_dependency_locks.py
+docker compose config --quiet
 docker compose --profile models run --rm model-downloader
-docker compose config
 docker compose up --build -d
 docker compose ps
 ```
@@ -73,37 +120,87 @@ docker compose ps
 
 | Recurso | Porta local padrão | Armazenamento ou montagem |
 |---|---:|---|
-| PostgreSQL | 5432 | `postgres_data` |
-| Backend | 8000 | `./data:/clinicai-data` |
-| Serviço de IA | 8001 | `torch_cache` |
-| Frontend | 3000 | — |
+| PostgreSQL | 5432 | volume `postgres_data` |
+| Backend | 8000 | `./backend:/app` e `./data:/clinicai-data` |
+| Serviço de IA | 8001 | `./ai:/app`, modelos locais e volume `torch_cache` |
+| Frontend | 3000 | `./frontend:/app` e volume interno de `node_modules` |
 
-O código-fonte é montado nos containers para recarga automática em desenvolvimento. A
-demonstração acadêmica utiliza essa configuração simples. Uma eventual hospedagem pública
-deverá ser planejada separadamente, com imagens imutáveis, HTTPS, credenciais próprias e banco
-não publicado diretamente.
+Por padrão, associações como `3000:3000` e `8000:8000` podem escutar nas interfaces do host.
+Para restringir uma execução estritamente local, ajuste as portas para o formato
+`127.0.0.1:PORTA:PORTA`, utilize regras de firewall ou uma configuração Compose específica.
+
+## GPU opcional
+
+O serviço de IA utiliza CPU quando CUDA não está disponível. Para habilitar GPU NVIDIA:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.gpu.yml \
+  up --build -d
+```
+
+Esse modo exige NVIDIA Container Toolkit corretamente instalado.
+
+## Inicialização do banco
+
+Ao iniciar, o backend:
+
+1. aguarda o PostgreSQL aceitar conexões;
+2. aplica `alembic upgrade head`;
+3. executa os seeds no modo definido por `SEED_MODE`;
+4. inicia a API.
+
+O modo `bootstrap` cria os catálogos estruturais, a matriz inicial de permissões e um
+Administrador Master. O modo `academic_demo` acrescenta a massa acadêmica determinística.
 
 ## Dados de demonstração
 
-O entrypoint aplica migrations e executa seeds conforme `SEED_MODE`. O modo `bootstrap`
-cria os catálogos estruturais e um único Administrador Master inicial; `academic_demo`
-executa esse bootstrap e acrescenta dados acadêmicos para a demonstração local.
+Em um banco novo, a massa consolidada possui:
 
-Em um banco novo, a massa consolidada contém três clínicas, um Administrador Master
-criado pelo bootstrap, seis contas demonstrativas, 30 pacientes fictícios e 90 exames,
-sendo 30 exames por clínica. Ela cobre os estados
-`pending`, `awaiting_review`, `completed`, `completed_with_divergence`, `failed` e
-`canceled`, além de 72 análises concluídas pelo `ensemble_stacking` versão `0.1.1`,
-todas com mapas Grad-CAM. Os ativos versionados ficam em `backend/demo_assets/`;
-origem, licença, hashes, vínculos e resultados estão em `manifest.json`.
+- quatro clínicas, sendo três ativas e uma inativa;
+- 13 usuários no total, incluindo o Administrador Master e contas inativas de teste;
+- 30 pacientes fictícios;
+- 90 exames, sendo 30 por clínica ativa;
+- 72 análises concluídas pelo `ensemble_stacking` versão `0.1.2`;
+- 72 mapas Grad-CAM;
+- 464 registros de auditoria.
 
-As imagens originais e os mapas de atribuição são copiados para
-`data/exams/{clinic_id}/{patient_id}/{exam_id}/`, respectivamente nas subpastas
-`original/` e `attribution/`. O diretório `backend/demo_assets/` permanece
-versionado como fonte da massa acadêmica, mas não é utilizado diretamente para
-servir os arquivos. O serviço de IA transfere o mapa em memória, enquanto o
-backend valida o conteúdo, o tipo MIME e o SHA-256 antes da persistência.
+Os exames cobrem os estados `pending`, `awaiting_review`, `completed`,
+`completed_with_divergence`, `failed` e `canceled`.
 
-Os seeds são idempotentes e não devem sobrescrever usuários, registros existentes ou
-customizações administrativas. Alterar o modo não remove dados já persistidos; a validação
-das contagens finais deve usar um banco novo.
+As imagens e os mapas são instalados em:
+
+```text
+data/exams/<clinic_id>/<patient_id>/<exam_id>/original/
+data/exams/<clinic_id>/<patient_id>/<exam_id>/attribution/
+```
+
+A fonte versionada da massa permanece em `backend/demo_assets/`.
+
+## Validação
+
+```bash
+python3 scripts/check_dependency_locks.py
+docker compose config --quiet
+
+docker compose run --rm --no-deps \
+  --entrypoint python \
+  -w /app \
+  backend -m pytest -q
+
+docker compose run --rm --no-deps frontend npm run lint
+docker compose run --rm --no-deps frontend npm run build
+
+docker compose run --rm --no-deps \
+  --entrypoint python \
+  -w /app \
+  ai -m unittest discover -s tests -p 'test_*.py' -v
+```
+
+## Limitações
+
+Essa configuração é destinada ao desenvolvimento e à demonstração local. Uma eventual
+hospedagem pública exigiria planejamento separado, incluindo HTTPS, gestão segura de segredos,
+banco não publicado diretamente, imagens imutáveis, política de backups, observabilidade,
+endurecimento dos containers e revisão profissional de segurança.
