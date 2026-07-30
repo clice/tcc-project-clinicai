@@ -1,19 +1,26 @@
-# Como adicionar um novo domínio clínico
+# Como Adicionar um Novo Domínio de Inferência
 
-O contrato da CHK-12 exige que cada requisição informe `exam_type`. O serviço
-resolve esse valor para um domínio, escolhe o modelo ativo e usa o catálogo de
-classes daquele domínio. Tipos ausentes ou não mapeados retornam HTTP 422; não
-há fallback silencioso para gastrointestinal.
+Este guia descreve o contrato técnico para registrar um novo domínio no serviço de IA do
+ClinicAI.
 
-## 1. Declare artefatos, manifesto e classes em `app/config.py`
+A inclusão de um domínio não implica validação clínica. Cada modalidade precisa de dados,
+artefatos, testes, pré-processamento e explicabilidade próprios.
 
-Cada domínio precisa informar:
+## 1. Mapear o tipo de exame
 
-- caminhos de todos os artefatos em `MODEL_ARTIFACTS_BY_DOMAIN`;
-- caminho do manifesto em `MODEL_MANIFEST_BY_DOMAIN`;
-- tipos de exame em `EXAM_TYPE_TO_DOMAIN`;
+Cada requisição deve informar `exam_type`. O serviço resolve esse valor por meio de
+`EXAM_TYPE_TO_DOMAIN`.
+
+Tipos ausentes ou não mapeados retornam erro de validação. Não existe *fallback* silencioso para
+o domínio gastrointestinal.
+
+Em `app/config.py`, declare:
+
+- artefatos em `MODEL_ARTIFACTS_BY_DOMAIN`;
+- manifesto em `MODEL_MANIFEST_BY_DOMAIN`;
+- tipos em `EXAM_TYPE_TO_DOMAIN`;
 - modelo ativo em `ACTIVE_MODEL_BY_DOMAIN`;
-- mapa de classes em `CLASS_LABELS_BY_DOMAIN`.
+- classes em `CLASS_LABELS_BY_DOMAIN`.
 
 Exemplo resumido:
 
@@ -22,64 +29,142 @@ HEAD_CT_MODEL_DIR = MODEL_DIR / "head_ct"
 HEAD_CT_RESNET50_PATH = HEAD_CT_MODEL_DIR / "resnet50.pt"
 HEAD_CT_MANIFEST_PATH = HEAD_CT_MODEL_DIR / "manifesto_modelos.json"
 
-MODEL_ARTIFACTS_BY_DOMAIN["head_ct"] = (HEAD_CT_RESNET50_PATH,)
-MODEL_MANIFEST_BY_DOMAIN["head_ct"] = HEAD_CT_MANIFEST_PATH
+MODEL_ARTIFACTS_BY_DOMAIN["head_ct"] = (
+    HEAD_CT_RESNET50_PATH,
+)
+MODEL_MANIFEST_BY_DOMAIN["head_ct"] = (
+    HEAD_CT_MANIFEST_PATH
+)
 EXAM_TYPE_TO_DOMAIN["head_ct"] = "head_ct"
 ACTIVE_MODEL_BY_DOMAIN["head_ct"] = "resnet50"
-CLASS_LABELS_BY_DOMAIN["head_ct"] = {0: "normal", 1: "abnormal"}
+CLASS_LABELS_BY_DOMAIN["head_ct"] = {
+    0: "normal",
+    1: "abnormal",
+}
 ```
 
-O domínio gastrointestinal atual possui exatamente quatro artefatos: três
-`state_dict` e um meta-classificador. Um domínio novo pode ter outra quantidade,
-mas a regra de readiness deve ser ajustada de forma consciente caso não use o
-mesmo contrato de ensemble.
+O domínio gastrointestinal atual exige exatamente quatro artefatos: três pesos dos modelos base
+e um meta-classificador. Um domínio novo pode ter outro contrato, mas a lógica de *readiness*
+deve ser ajustada conscientemente.
 
-## 2. Crie e registre o preditor
+## 2. Criar e registrar o preditor
 
-Crie `app/inference/domains/head_ct.py` e registre o preditor com namespace de
-domínio:
+Crie um módulo em `app/inference/domains/`, por exemplo `head_ct.py`, e registre o preditor com
+o domínio correto:
 
 ```python
 from app.inference.registry import register
-from app.inference.timm_predictor import TimmCNNPredictor
+from app.inference.timm_predictor import (
+    TimmCNNPredictor,
+)
 
 resnet50 = TimmCNNPredictor(
     name="resnet50",
     domain="head_ct",
     timm_model_name="resnet50",
     weights_path=HEAD_CT_RESNET50_PATH,
-    num_classes=len(CLASS_LABELS_BY_DOMAIN["head_ct"]),
 )
+
 register(resnet50)
 ```
 
-Depois importe o módulo em `app/inference/domains/__init__.py`.
+Depois, importe o módulo em `app/inference/domains/__init__.py`.
 
-## 3. Publique um manifesto compatível
+O nome registrado deve coincidir com `ACTIVE_MODEL_BY_DOMAIN`.
 
-O manifesto deve conter ao menos:
+## 3. Publicar um manifesto compatível
+
+O manifesto deve registrar, no mínimo:
 
 ```json
 {
+  "schema_version": 1,
+  "release_tag": "models-v1.0.0",
+  "model_version": "1.0.0",
   "domain": "head_ct",
-  "model_version": "models-v1.0.0",
-  "artifacts": [{"name": "resnet50.pt"}]
+  "artifacts": [
+    {
+      "name": "resnet50.pt",
+      "size_bytes": 123,
+      "sha256": "HASH_SHA256_DE_64_CARACTERES"
+    }
+  ]
 }
 ```
 
-A versão gravada no banco vem desse manifesto, não de uma constante solta no
-código.
+`release_tag` identifica a GitHub Release. `model_version` é a versão informada pelo serviço e
+persistida pelo backend.
 
-## 4. Atualize backend e frontend
+A versão da resposta é lida do manifesto, não de uma constante solta no código.
 
-O valor persistido em `Exam.exam_type` precisa corresponder exatamente a uma
-chave de `EXAM_TYPE_TO_DOMAIN`. O cliente backend envia esse campo no multipart
-e valida que `exam_type` e `exam_domain` retornados correspondem ao pedido.
+## 4. Atualizar o runtime
 
-## 5. Pré-processamento e explicabilidade
+O runtime valida:
 
-O pipeline atual ainda é específico para imagens gastrointestinais. Um domínio
-com modalidade diferente deve selecionar seu próprio pré-processamento. O
-Grad-CAM clássico está habilitado apenas para `gastrointestinal` e usa a
-ResNet-50 como explicador parcial do ensemble; outros domínios retornam
-`gradcam_available=false` até possuírem explicador próprio.
+- presença do domínio;
+- catálogo de classes;
+- lista de artefatos;
+- manifesto;
+- nomes dos artefatos descritos;
+- carregamento do preditor ativo;
+- correspondência entre o preditor e os artefatos declarados.
+
+A inicialização deve permanecer observável pelos endpoints de saúde e catálogo do serviço.
+
+## 5. Atualizar backend e frontend
+
+O valor persistido em `Exam.exam_type` precisa corresponder a uma chave de
+`EXAM_TYPE_TO_DOMAIN`.
+
+O backend envia esse valor ao serviço de IA e valida se `exam_type` e `exam_domain` retornados
+correspondem ao pedido.
+
+O frontend deve apresentar apenas tipos suportados pelo fluxo acadêmico implementado.
+
+## 6. Pré-processamento
+
+O pipeline gastrointestinal não deve ser reutilizado automaticamente em outra modalidade.
+
+O novo domínio precisa definir, testar e documentar:
+
+- decodificação da entrada;
+- tamanho esperado;
+- normalização;
+- região de interesse;
+- transformações específicas;
+- ordem das classes.
+
+## 7. Explicabilidade
+
+O domínio gastrointestinal utiliza atribuição combinada das três arquiteturas do
+`ensemble_stacking`.
+
+Um novo domínio deve implementar explicitamente o próprio mecanismo de atribuição ou informar
+que o recurso não está disponível. Não apresente um mapa produzido por arquitetura ou camada
+incompatível como explicação válida para outro domínio.
+
+A resposta deve manter coerência entre:
+
+- classe final;
+- mapa gerado;
+- camada alvo;
+- método de atribuição;
+- motivo de indisponibilidade, quando aplicável.
+
+## 8. Testes mínimos
+
+Adicione testes para:
+
+- resolução de `exam_type`;
+- rejeição de tipo desconhecido;
+- carregamento do manifesto;
+- ausência ou adulteração de artefatos;
+- catálogo de classes;
+- formato das probabilidades;
+- classe e confiança;
+- contrato de atribuição;
+- *readiness* e catálogo do runtime;
+- integração do backend com o novo domínio.
+
+Somente registre o novo domínio como ativo depois que os artefatos e o contrato correspondente
+estiverem disponíveis.
